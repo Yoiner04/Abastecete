@@ -1,0 +1,15 @@
+{
+  "name": "abastecete",
+  "version": "1.0.0",
+  "description": "Descripción de tu proyecto",
+  "main": "index.js",
+  "scripts": {
+    "build:css": "tailwindcss build styles.css -o output.css"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.0.0",
+    "postcss": "^8.0.0",
+    "autoprefixer": "^10.0.0"
+  },
+  "dependencies": {}
+}

@@ -1,0 +1,238 @@
+﻿
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Abastecete</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link rel="icon" type="image/x-icon" href="~/css/Images/Logo A naranja.png" />
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link rel="stylesheet" href="~/css/styles.css" asp-append-version="true" />
+    
+</head>
+
+<body>
+    <section class="w-full bg-gray-200 h-80 flex items-center justify-center mb-8 rounded-lg" style="margin-top: 10px;">
+        <h1 class="text-3xl font-bold text-gray-800">Promociones especiales</h1>
+    </section>
+
+    <div class="min-h-screen bg-[#F4F1E9] flex">
+
+        <aside class="w-1/4 bg-white p-6 border-r border-gray-200">
+            <h2 class="text-xl font-bold text-green-600 mb-4">Filtrar productos</h2>
+
+            <!-- Categorías -->
+            <div class="mb-6">
+                <h3 class="text-lg font-semibold text-orange-600 mb-2">Categorías</h3>
+                <hr class="border-gray-300 mb-4">
+                <ul class="space-y-2">
+                    <li>
+                        <a href="#" class="text-sm text-gray-700 hover:text-green-600">Todos los productos</a>
+                    </li>
+                    <li>
+                        <a href="#" class="text-sm text-gray-700 hover:text-green-600">Frutas y Verduras</a>
+                    </li>
+                    <li>
+                        <a href="#" class="text-sm text-gray-700 hover:text-green-600">Proteínas</a>
+                    </li>
+                    <li>
+                        <a href="#" class="text-sm text-gray-700 hover:text-green-600">Lácteos y Huevos</a>
+                    </li>
+                    <li>
+                        <a href="#" class="text-sm text-gray-700 hover:text-green-600">Panadería y Repostería</a>
+                    </li>
+                    <li>
+                        <a href="#" class="text-sm text-gray-700 hover:text-green-600">Despensa</a>
+                    </li>
+                    <li>
+                        <a href="#" class="text-sm text-gray-700 hover:text-green-600">Congelados</a>
+                    </li>
+                    <li>
+                        <a href="#" class="text-sm text-gray-700 hover:text-green-600">Bebidas</a>
+                    </li>
+                    <li>
+                        <a href="#" class="text-sm text-gray-700 hover:text-green-600">Snacks y Aperitivos</a>
+                    </li>
+                    <li>
+                        <a href="#" class="text-sm text-gray-700 hover:text-green-600">Dulces y Chocolatería</a>
+                    </li>
+                    <li>
+                        <a href="#" class="text-sm text-gray-700 hover:text-green-600">Charcutería y Especialidades</a>
+                    </li>
+                    <li>
+                        <a href="#" class="text-sm text-gray-700 hover:text-green-600">Aseo del Hogar</a>
+                    </li>
+                    <li>
+                        <a href="#" class="text-sm text-gray-700 hover:text-green-600">Cuidado Personal</a>
+                    </li>
+                    <li>
+                        <a href="#" class="text-sm text-gray-700 hover:text-green-600">Licores y Tabaco</a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="bg-gray-200 rounded-lg h-60 mb-6 flex items-center justify-center">
+                <p class="text-sm font-bold text-gray-800">¡Promoción especial aquí!</p>
+            </div>
+
+            <!-- Botón Filtrar -->
+            <button class="w-full bg-green-600 text-white py-2 rounded-lg font-semibold hover:bg-green-700">
+                Filtrar
+            </button>
+        </aside>
+
+        <!-- Galería de proveedores -->
+        <main class="w-3/4 p-6">
+
+            <h2 class="text-2xl font-bold text-green-600 mb-6">Todos los productos</h2>
+
+            <!-- Tarjetas de proveedores -->
+            <div class="grid grid-cols-4 gap-6">
+                <!-- Tarjeta individual -->
+
+                <div class="bg-white border border-gray-200 rounded-lg shadow-md p-4 flex flex-col items-center">
+                    <!-- Imagen y botones -->
+                    <div class="relative w-full">
+                        <div class="bg-gray-200 h-52 rounded-lg"></div>
+                        <!-- Calificación -->
+                        <div class="absolute top-2 left-2 bg-white rounded-full flex items-center px-2 py-1 text-sm font-medium shadow">
+                            <span class="text-yellow-500 mr-1"><i class="fas fa-star"></i></span>
+                            <span>5.0</span>
+                        </div>
+                        <!-- Botón favorito -->
+                        <button class="absolute top-2 right-2 bg-white p-2 rounded-full shadow text-gray-600 hover:text-green-600">
+                            <i class="far fa-heart"></i>
+                        </button>
+                    </div>
+
+                    <!-- Información del proveedor -->
+                    <div class="mt-4 text-center">
+                        <p class="text-lg font-bold text-gray-800">Producto</p>
+                        <button class="mt-2 bg-green-600 text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-green-700">
+                            <a asp-area="" asp-controller="Productos" asp-action="ConsultarIndividual">
+                                Ver
+                            </a>
+                        </button>
+                    </div>
+                </div>
+
+
+                <!-- Copia la tarjeta para mostrar más proveedores -->
+                <div class="bg-white border border-gray-200 rounded-lg shadow-md p-4 flex flex-col items-center">
+                    <!-- Imagen y botones -->
+                    <div class="relative w-full">
+                        <div class="bg-gray-200 h-52 rounded-lg"></div>
+                        <!-- Calificación -->
+                        <div class="absolute top-2 left-2 bg-white rounded-full flex items-center px-2 py-1 text-sm font-medium shadow">
+                            <span class="text-yellow-500 mr-1"><i class="fas fa-star"></i></span>
+                            <span>5.0</span>
+                        </div>
+                        <!-- Botón favorito -->
+                        <button class="absolute top-2 right-2 bg-white p-2 rounded-full shadow text-gray-600 hover:text-green-600">
+                            <i class="far fa-heart"></i>
+                        </button>
+                    </div>
+
+                    <!-- Información del proveedor -->
+                    <div class="mt-4 text-center">
+                        <p class="text-lg font-bold text-gray-800">Producto</p>
+                        <button class="mt-2 bg-green-600 text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-green-700">
+                            Ver
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-white border border-gray-200 rounded-lg shadow-md p-4 flex flex-col items-center">
+                    <!-- Imagen y botones -->
+                    <div class="relative w-full">
+                        <div class="bg-gray-200 h-52 rounded-lg"></div>
+                        <!-- Calificación -->
+                        <div class="absolute top-2 left-2 bg-white rounded-full flex items-center px-2 py-1 text-sm font-medium shadow">
+                            <span class="text-yellow-500 mr-1"><i class="fas fa-star"></i></span>
+                            <span>5.0</span>
+                        </div>
+                        <!-- Botón favorito -->
+                        <button class="absolute top-2 right-2 bg-white p-2 rounded-full shadow text-gray-600 hover:text-green-600">
+                            <i class="far fa-heart"></i>
+                        </button>
+                    </div>
+
+                    <!-- Información del proveedor -->
+                    <div class="mt-4 text-center">
+                        <p class="text-lg font-bold text-gray-800">Producto</p>
+                        <button class="mt-2 bg-green-600 text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-green-700">
+                            Ver
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Copia la tarjeta para mostrar más proveedores -->
+                <div class="bg-white border border-gray-200 rounded-lg shadow-md p-4 flex flex-col items-center">
+                    <!-- Imagen y botones -->
+                    <div class="relative w-full">
+                        <div class="bg-gray-200 h-52 rounded-lg"></div>
+                        <!-- Calificación -->
+                        <div class="absolute top-2 left-2 bg-white rounded-full flex items-center px-2 py-1 text-sm font-medium shadow">
+                            <span class="text-yellow-500 mr-1"><i class="fas fa-star"></i></span>
+                            <span>5.0</span>
+                        </div>
+                        <!-- Botón favorito -->
+                        <button class="absolute top-2 right-2 bg-white p-2 rounded-full shadow text-gray-600 hover:text-green-600">
+                            <i class="far fa-heart"></i>
+                        </button>
+                    </div>
+
+                    <!-- Información del proveedor -->
+                    <div class="mt-4 text-center">
+                        <p class="text-lg font-bold text-gray-800">Producto</p>
+                        <button class="mt-2 bg-green-600 text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-green-700">
+                            Ver
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Copia la tarjeta para mostrar más proveedores -->
+                <div class="bg-white border border-gray-200 rounded-lg shadow-md p-4 flex flex-col items-center">
+                    <!-- Imagen y botones -->
+                    <div class="relative w-full">
+                        <div class="bg-gray-200 h-52 rounded-lg"></div>
+                        <!-- Calificación -->
+                        <div class="absolute top-2 left-2 bg-white rounded-full flex items-center px-2 py-1 text-sm font-medium shadow">
+                            <span class="text-yellow-500 mr-1"><i class="fas fa-star"></i></span>
+                            <span>5.0</span>
+                        </div>
+                        <!-- Botón favorito -->
+                        <button class="absolute top-2 right-2 bg-white p-2 rounded-full shadow text-gray-600 hover:text-green-600">
+                            <i class="far fa-heart"></i>
+                        </button>
+                    </div>
+
+                    <!-- Información del proveedor -->
+                    <div class="mt-4 text-center">
+                        <p class="text-lg font-bold text-gray-800">Producto</p>
+                        <button class="mt-2 bg-green-600 text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-green-700">
+                            Ver
+                        </button>
+                    </div>
+                </div>
+                <!-- Agrega más tarjetas según sea necesario -->
+            </div>
+
+            <!-- Paginación -->
+            <div class="mt-6 flex justify-center space-x-2">
+                <button class="w-8 h-8 bg-gray-300 rounded-full text-gray-600 font-bold hover:bg-gray-400">&lt;</button>
+                <button class="w-8 h-8 bg-green-600 text-white rounded-full font-bold">1</button>
+                <button class="w-8 h-8 bg-gray-300 rounded-full text-gray-600 font-bold hover:bg-gray-400">2</button>
+                <button class="w-8 h-8 bg-gray-300 rounded-full text-gray-600 font-bold hover:bg-gray-400">3</button>
+                <button class="w-8 h-8 bg-gray-300 rounded-full text-gray-600 font-bold hover:bg-gray-400">&gt;</button>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    
+</body>
+</html>

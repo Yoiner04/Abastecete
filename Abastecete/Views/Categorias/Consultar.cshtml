@@ -1,0 +1,295 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+
+<body>
+    <section class="mt-12 px-6 md:px-16 lg:px-36">
+        <!-- Encabezado -->
+        <div class="flex flex-col md:flex-row justify-between items-center mb-6 space-y-4 md:space-y-0">
+            <h2 class="text-lg font-bold text-gray-800 text-center md:text-left">Gestión de Categorías</h2>
+            <button id="open-add-modal"
+                    class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700">
+                + Agregar Categoría
+            </button>
+        </div>
+
+        <!-- Tabla de Categorías -->
+        <div class="overflow-x-auto">
+            <table class="w-full bg-white rounded-lg shadow-md overflow-hidden">
+                <thead class="bg-gray-200">
+                    <tr>
+                        <th class="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Nombre</th>
+                        <th class="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Imagen</th>
+                        <th class="px-4 md:px-6 py-3 text-center text-xs font-medium text-gray-700 uppercase">Estado</th>
+                        <th class="px-4 md:px-6 py-3 text-center text-xs font-medium text-gray-700 uppercase">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="category-table-body" class="divide-y divide-gray-300">
+                    <!-- Se llenará dinámicamente con JS -->
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Modal Agregar/Editar Categoría -->
+    <div id="category-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="p-6 rounded-lg shadow-lg bg-white w-full max-w-md mx-4">
+            <h2 class="text-center text-xl font-bold text-gray-800" id="modal-title">Agregar Categoría</h2>
+            <form id="category-form" class="mt-4">
+                <input type="text" id="category-name" placeholder="Nombre de la categoría"
+                       class="w-full p-3 rounded-lg bg-gray-100 border border-gray-300 text-black mb-3" required>
+
+                <label class="block text-gray-700 font-medium">Imagen</label>
+                <input type="file" id="category-image" accept="image/*"
+                       class="w-full p-2 border border-gray-300 rounded-lg mb-3">
+
+                <div class="flex justify-center mb-3">
+                    <img id="image-preview" src="" alt="Vista previa"
+                         class="hidden w-24 h-24 rounded-lg object-cover border">
+                </div>
+
+                <button type="submit" class="w-full bg-green-600 text-white py-3 rounded-lg font-bold hover:bg-green-700">
+                    Guardar
+                </button>
+            </form>
+            <button id="close-category-modal" class="block w-full text-center mt-3 text-gray-600 hover:text-gray-800">
+                Cerrar
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal Cambiar Estado -->
+    <div id="status-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="p-6 rounded-lg shadow-lg bg-white w-full max-w-md mx-4">
+            <h2 class="text-center text-xl font-bold text-gray-800">Cambiar Estado</h2>
+            <div class="flex items-center justify-center mt-4">
+                <input type="checkbox" id="status-checkbox" class="w-5 h-5">
+                <label for="status-checkbox" class="ml-2 text-gray-700 font-medium">Activar Categoría</label>
+            </div>
+            <div class="flex justify-between mt-6">
+                <button id="confirm-status" class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700">
+                    Confirmar
+                </button>
+                <button id="cancel-status" class="bg-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-400">
+                    Cancelar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Subcategorías -->
+    <div id="subcategory-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="p-6 rounded-lg shadow-lg bg-white w-full max-w-md mx-4">
+            <h2 class="text-center text-xl font-bold text-gray-800">Gestionar Subcategorías</h2>
+            <div id="subcategory-list" class="mt-4 space-y-2">
+                <!-- Subcategorías se llenarán aquí dinámicamente -->
+            </div>
+            <div class="mt-4 flex">
+                <input type="text" id="new-subcategory" placeholder="Nueva subcategoría"
+                       class="flex-grow p-2 border border-gray-300 rounded-lg">
+                <button id="add-subcategory" class="ml-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
+                    ➕
+                </button>
+            </div>
+            <button id="close-subcategory-modal" class="block w-full text-center mt-3 text-gray-600 hover:text-gray-800">
+                Cerrar
+            </button>
+        </div>
+    </div>
+
+
+    <script>
+        let categories = [
+            { name: "Frutas y Verduras", image: "/images/frutaverdura.jpeg", active: true, subcategories: ["Frutas frescas", "Verduras frescas", "Hierbas y especias frescas", "Tubérculos y raíces"] },
+            { name: "Proteínas", image: "/images/proteinas.jpg", active: true, subcategories: ["Carnes de res", "Carnes de cerdo", "Carnes de pollo", "Pescados y mariscos", "Carnes procesadas"] },
+            { name: "Lácteos y Huevos", image: "/images/lacteoshuevos.png", active: true, subcategories: ["Leche y derivados", "Quesos y cuajadas", "Yogurt y bebidas lácteas", "Mantequilla y margarinas", "Huevos"] },
+            { name: "Panadería y Repostería", image: "/images/pan.jpeg", active: true, subcategories: ["Pan fresco y artesanal", "Panadería empacada", "Tortas y postres frescos", "Repostería industrial"] },
+            { name: "Despensa", image: "/images/despensa.jpg", active: true, subcategories: ["Arroz, granos y legumbres", "Pastas y harinas", "Aceites y vinagres", "Salsas y condimentos", "Café y bebidas calientes", "Conservas y enlatados", "Cereales y granolas", "Azúcar, endulzantes y sal"] },
+            { name: "Congelados", image: "/images/congelados.jpg", active: true, subcategories: ["Verduras y tubérculos congelados", "Comidas listas para calentar", "Pasabocas congelados", "Helados y postres congelados"] },
+            { name: "Bebidas", image: "/images/bebidas.jpeg", active: true, subcategories: ["Gaseosas y sodas", "Jugos y zumos", "Agua embotellada y té", "Bebidas isotónicas y energizantes"] },
+            { name: "Snacks y Aperitivos", image: "/images/snacks.jpeg", active: true, subcategories: ["Pasabocas empacados", "Frutos secos y semillas", "Galletas dulces y saladas"] },
+            { name: "Dulces y Chocolatería", image: "/images/dulces.jpg", active: true, subcategories: ["Chocolatería fina", "Confitería", "Arequipe y derivados lácteos dulces", "Chicles y masticables"] },
+            { name: "Charcutería y Especialidades", image: "/images/charcucheria.jpg", active: true, subcategories: ["Quesos madurados y gourmet", "Carnes curadas y especiales", "Encurtidos, conservas y patés"] },
+            { name: "Aseo del Hogar", image: "/images/aseo.png", active: true, subcategories: ["Jabones y detergentes", "Limpiadores multiusos", "Papel higiénico y servilletas", "Ambientadores y control de plagas", "Implementos de limpieza"] },
+            { name: "Cuidado Personal", image: "/images/cuidado.jpg", active: true, subcategories: ["Cuidado capilar", "Cuidado facial y corporal", "Higiene íntima", "Higiene para bebés y niños", "Bienestar sexual", "Protección solar y repelentes", "Salud y medicamentos"] },
+            { name: "Licores y Tabaco", image: "/images/licor.jpg", active: true, subcategories: ["Cervezas", "Vinos", "Whisky y ron", "Tequilas y otros destilados", "Coctelería", "Cigarrillos y vapeadores"] },
+        ];
+
+
+        const tableBody = document.getElementById("category-table-body");
+        const categoryModal = document.getElementById("category-modal");
+        const statusModal = document.getElementById("status-modal");
+        const categoryForm = document.getElementById("category-form");
+        const categoryNameInput = document.getElementById("category-name");
+        const categoryImageInput = document.getElementById("category-image");
+        const imagePreview = document.getElementById("image-preview");
+        const statusCheckbox = document.getElementById("status-checkbox");
+        const modalTitle = document.getElementById("modal-title");
+        let selectedCategoryIndex = null;
+
+        function renderCategories() {
+            tableBody.innerHTML = "";
+            categories.forEach((category, index) => {
+                const row = document.createElement("tr");
+                row.className = "hover:bg-gray-100";
+                row.innerHTML = `
+                <td class="px-4 py-3 text-gray-700">${category.name}</td>
+                <td class="px-4 py-3">
+                    <img src="${category.image}" alt="${category.name}" class="w-14 h-14 md:w-16 md:h-16 rounded-full object-cover border">
+                </td>
+                <td class="px-4 py-3 text-center">
+                    <button class="${category.active ? 'text-green-600' : 'text-red-600'}" onclick="changeStatus(${index})">
+                        ${category.active ? '🟢 Activo' : '🔴 Inactivo'}
+                    </button>
+                </td>
+                <td class="px-4 py-3 text-center">
+                    <button class="text-blue-600 hover:text-blue-800 mr-2 md:mr-4" onclick="editCategory(${index})">✏️Editar</button>
+                    <button class="text-purple-600 hover:text-purple-800" onclick="manageSubcategories(${index})">📂 Subcategorías</button>
+                </td>
+            `;
+                tableBody.appendChild(row);
+            });
+        }
+
+
+        function openModal() {
+            categoryModal.classList.remove("hidden");
+            document.body.classList.add("overflow-hidden");
+        }
+
+        function closeModal() {
+            categoryModal.classList.add("hidden");
+            document.body.classList.remove("overflow-hidden");
+            categoryForm.reset();
+            imagePreview.classList.add("hidden");
+            modalTitle.textContent = "Agregar Categoría";
+        }
+
+        function editCategory(index) {
+            selectedCategoryIndex = index;
+            categoryNameInput.value = categories[index].name;
+            imagePreview.src = categories[index].image;
+            imagePreview.classList.remove("hidden");
+            modalTitle.textContent = "Editar Categoría";
+            openModal();
+        }
+
+        function changeStatus(index) {
+            selectedCategoryIndex = index;
+            statusCheckbox.checked = categories[index].active;
+            statusModal.classList.remove("hidden");
+            document.body.classList.add("overflow-hidden");
+        }
+
+        document.getElementById("confirm-status").addEventListener("click", () => {
+            categories[selectedCategoryIndex].active = statusCheckbox.checked;
+            renderCategories();
+            closeStatusModal();
+        });
+
+        function closeStatusModal() {
+            statusModal.classList.add("hidden");
+            document.body.classList.remove("overflow-hidden");
+        }
+
+        categoryImageInput.addEventListener("change", (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = () => {
+                    imagePreview.src = reader.result;
+                    imagePreview.classList.remove("hidden");
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        document.getElementById("open-add-modal").addEventListener("click", openModal);
+        document.getElementById("close-category-modal").addEventListener("click", closeModal);
+        document.getElementById("cancel-status").addEventListener("click", closeStatusModal);
+
+        renderCategories();
+
+        const subcategoryModal = document.getElementById("subcategory-modal");
+        const subcategoryList = document.getElementById("subcategory-list");
+        const newSubcategoryInput = document.getElementById("new-subcategory");
+        let selectedCategoryForSubcategories = null;
+
+        function manageSubcategories(index) {
+            selectedCategoryForSubcategories = index;
+            renderSubcategories();
+            subcategoryModal.classList.remove("hidden");
+            document.body.classList.add("overflow-hidden");
+        }
+
+        function renderSubcategories() {
+            subcategoryList.innerHTML = "";
+            categories[selectedCategoryForSubcategories].subcategories.forEach((sub, i) => {
+                const subItem = document.createElement("div");
+                subItem.className = "flex justify-between items-center bg-gray-100 p-2 rounded-lg";
+
+                subItem.innerHTML = `
+                <input type="text" id="edit-subcategory-${i}" value="${sub}"
+                    class="hidden flex-grow p-1 border border-gray-300 rounded-lg">
+                <span class="text-gray-700 flex-grow" id="subcategory-text-${i}">${sub}</span>
+                <button class="text-blue-600 hover:text-blue-800 mx-2" onclick="editSubcategory(${i})">✏️</button>
+                <button class="text-red-600 hover:text-red-800" onclick="deleteSubcategory(${i})">❌</button>
+            `;
+
+                subcategoryList.appendChild(subItem);
+            });
+        }
+
+        function editSubcategory(index) {
+            const inputField = document.getElementById(`edit-subcategory-${index}`);
+            const textField = document.getElementById(`subcategory-text-${index}`);
+
+            inputField.classList.remove("hidden");
+            textField.classList.add("hidden");
+
+            inputField.focus();
+            inputField.setSelectionRange(0, inputField.value.length);
+
+            inputField.addEventListener("blur", () => saveSubcategoryEdit(index));
+            inputField.addEventListener("keypress", (event) => {
+                if (event.key === "Enter") saveSubcategoryEdit(index);
+            });
+        }
+
+        function saveSubcategoryEdit(index) {
+            const inputField = document.getElementById(`edit-subcategory-${index}`);
+            const textField = document.getElementById(`subcategory-text-${index}`);
+
+            const newName = inputField.value.trim();
+            if (newName) {
+                categories[selectedCategoryForSubcategories].subcategories[index] = newName;
+            }
+
+            inputField.classList.add("hidden");
+            textField.textContent = newName;
+            textField.classList.remove("hidden");
+        }
+
+        document.getElementById("add-subcategory").addEventListener("click", () => {
+            const newSubcategory = newSubcategoryInput.value.trim();
+            if (newSubcategory) {
+                categories[selectedCategoryForSubcategories].subcategories.push(newSubcategory);
+                newSubcategoryInput.value = "";
+                renderSubcategories();
+            }
+        });
+
+        function deleteSubcategory(index) {
+            categories[selectedCategoryForSubcategories].subcategories.splice(index, 1);
+            renderSubcategories();
+        }
+
+        document.getElementById("close-subcategory-modal").addEventListener("click", () => {
+            subcategoryModal.classList.add("hidden");
+            document.body.classList.remove("overflow-hidden");
+        });
+
+    </script>
+
+</body>
+
+</html>

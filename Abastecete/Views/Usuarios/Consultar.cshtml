@@ -1,0 +1,171 @@
+﻿@model BusinessLogic.Models.Usuario;
+
+<html lang="es">
+<head>
+</head>
+
+<body>
+    <section class="encabezado">
+        <div class="row mt-4">
+            <div class="col">
+                <h1>Usuarios inscritos</h1>
+            </div>
+        </div>
+    </section>
+    <hr />
+
+    <section class="tabla3">
+        <div clas="row mt-4">
+            <div class="col">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th scope="col">N°</th>
+                            <th scope="col">Identificación</th>
+                            <th scope="col">Nombre</th>
+                            <th scope="col">Teléfono</th>
+                            <th scope="col">Correo</th>
+                            <th scope="col">Rol</th>
+                            @if (ViewBag.administrar)
+                            {
+                                @* <th scope="col">Editar</th>*@
+                            }
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @{
+                            int cont = 0;
+
+                            foreach (var usuario in ViewBag.usuarios)
+                            {
+                                cont++;
+                                <tr>
+                                    <td>@cont</td>
+                                    <td>@usuario.Persona.Documento</td>
+                                    <td>@usuario.Persona.Nombre @usuario.Persona.Apellido</td>
+                                    <td>@usuario.Persona.Telefono</td>
+                                    <td>@usuario.Nombre</td>
+                                    <td>@usuario.Rol.Nombre</td>
+                                    @if (ViewBag.administrar)
+                                    {
+                                        //<td>
+                                        //    <button type="button" class="btn btn-primary fw-bolder" data-bs-toggle="modal" data-bs-target="#exampleModal">
+                                        //        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil-square" viewBox="0 0 16 16">
+                                        //            <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z" />
+                                        //            <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5v11z" />
+                                        //        </svg>
+                                        //    </button>
+                                        //    <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                                        //        <div class="modal-dialog">
+                                        //            <div class="modal-content">
+                                        //                <form class="needs-validation" novalidate>
+                                        //                    <div class="modal-header">
+                                        //                        <h5 class="modal-title" id="exampleModalLabel">Gestión usuario</h5>
+                                        //                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        //                    </div>
+                                        //                    <div class="modal-body">
+                                        //                        <div class="container">
+
+                                        //                            <div class="row mb-2">
+                                        //                                <label for="numeroUsuario" class="col-sm-1 col-form-label">N°</label>
+
+                                        //                                <div class="col-sm-2">
+                                        //                                    <input type="text" class="form-control" id="numeroUsuario" required pattern="[0-9]+" required>
+                                        //                                    <div class="invalid-feedback">Ingrese un numero valido</div>
+                                        //                                </div>
+
+
+                                        //                                <label for="identificacionUsuario" class="col-sm-3 col-form-label">Identificación</label>
+                                        //                                <div class="col-sm-5">
+                                        //                                    <input type="text" class="form-control" id="identificacionUsuario" required pattern="[0-9]+" required>
+                                        //                                    <div class="invalid-feedback">Ingrese una identificación valida</div>
+                                        //                                </div>
+
+                                        //                            </div>
+
+                                        //                            <div class="row mb-2">
+                                        //                                <label for="idNombre1" class="col-sm-2 col-form-label">Nombre</label>
+                                        //                                <div class="col-sm-9">
+                                        //                                    <input type="text" class="form-control" id="idNombre1" required>
+                                        //                                    <div class="invalid-feedback">Necesita un nombre</div>
+                                        //                                </div>
+                                        //                            </div>
+
+                                        //                            <div class="row mb-2">
+                                        //                                <label for="correo1" class="col-sm-2 col-form-label">Correo</label>
+                                        //                                <div class="col-sm-9">
+                                        //                                    <input type="email" class="form-control" id="correo1" required>
+                                        //                                    <div class="invalid-feedback">Necesita un correo valido</div>
+                                        //                                </div>
+                                        //                            </div>
+
+                                        //                            <div class="row mb-2">
+                                        //                                <label for="telefonoUsuario" class="col-sm-2 col-form-label">Teléfono</label>
+                                        //                                <div class="col-sm-4">
+                                        //                                    <input type="text" class="form-control" id="telefonoUsuario" required pattern="[0-9]+" required>
+                                        //                                    <div class="invalid-feedback">Ingrese un teléfono valido</div>
+                                        //                                </div>
+
+                                        //                                <label for="estado1" class="col-sm-2 col-form-label">Estado</label>
+                                        //                                <div class="col-sm-3">
+                                        //                                    <input type="text" class="form-control" id="estado1" required>
+                                        //                                    <div class="invalid-feedback">Necesita un estado</div>
+                                        //                                </div>
+
+                                        //                            </div>
+
+                                        //                        </div>
+                                        //                    </div>
+                                        //                    <div class="modal-footer">
+                                        //                        <button type="submit" class="btn btn-primary fw-bolder">Actualizar</button>
+                                        //                        <button type="button" class="btn btn-primary fw-bolder">Eliminar</button>
+                                        //                    </div>
+                                        //                </form>
+                                        //            </div>
+                                        //        </div>
+                                        //    </div>
+                                        //</td>
+                                    }
+                                </tr>
+                            }
+                        };
+
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <div class="d-grid gap-2 d-md-flex justify-content-md-center margen">
+        @using (Html.BeginForm("ExportarUsuario", "Usuarios", FormMethod.Post))
+        {
+            <button type="submit" class="btn btn-primary fw-bolder me-md-2 ">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-download" viewBox="0 0 16 16">
+                    <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z" />
+                    <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z" />
+                </svg>
+                Generar reporte
+            </button>
+        }
+    </div>
+
+    <script>
+        (function () {
+            'use strict'
+            var forms = document.querySelectorAll('.needs-validation')
+
+            Array.prototype.slice.call(forms)
+                .forEach(function (form) {
+                    form.addEventListener('submit', function (event) {
+                        if (!form.checkValidity()) {
+                            event.preventDefault()
+                            event.stopPropagation()
+                        }
+
+                        form.classList.add('was-validated')
+                    }, false)
+                })
+        })()
+    </script>
+</body>
+</html>

@@ -1,0 +1,83 @@
+﻿<!-- Burbuja de soporte -->
+<div id="support-bubble" class="fixed bottom-6 right-6 z-50 flex flex-col items-center space-y-2">
+    <!-- Redes Sociales (ocultas por defecto) -->
+    <div id="social-links" class="hidden flex flex-col items-end space-y-3 mb-2">
+        <a href="https://wa.me/573204276025" target="_blank"
+           class="group relative w-11 h-11 flex items-center justify-center text-white rounded-full shadow-lg transition-all duration-300 bg-green-500 hover:scale-110 social-btn">
+            <span class="tooltip">WhatsApp</span>
+            <box-icon type='logo' name='whatsapp' color="white" size="md"></box-icon>
+        </a>
+        <a href="https://www.facebook.com/profile.php?id=61571549591292" target="_blank"
+           class="group relative w-11 h-11 flex items-center justify-center text-white rounded-full shadow-lg transition-all duration-300 bg-blue-600 hover:scale-110 social-btn">
+            <span class="tooltip">Facebook</span>
+            <box-icon type='logo' name='facebook' color="white" size="md"></box-icon>
+        </a>
+        <a href="https://www.instagram.com/websencol" target="_blank"
+           class="group relative w-11 h-11 flex items-center justify-center text-white rounded-full shadow-lg transition-all duration-300 bg-pink-500 hover:scale-110 social-btn">
+            <span class="tooltip">Instagram</span>
+            <box-icon type='logo' name='instagram' color="white" size="md"></box-icon>
+        </a>
+        <a href="https://www.tiktok.com/@@websencol" target="_blank"
+           class="group relative w-11 h-11 flex items-center justify-center text-white rounded-full shadow-lg transition-all duration-300 bg-black hover:scale-110 social-btn">
+            <span class="tooltip">TikTok</span>
+            <box-icon type='logo' name='tiktok' color="white" size="md"></box-icon>
+        </a>
+        <a href="https://www.youtube.com/@@WEBSENCOL" target="_blank"
+           class="group relative w-11 h-11 flex items-center justify-center text-white rounded-full shadow-lg transition-all duration-300 bg-red-600 hover:scale-110 social-btn">
+            <span class="tooltip">YouTube</span>
+            <box-icon type='logo' name='youtube' color="white" size="md"></box-icon>
+        </a>
+        <a href="https://www.linkedin.com/in/websen-col-99459733b/" target="_blank"
+           class="group relative w-11 h-11 flex items-center justify-center text-white rounded-full shadow-lg transition-all duration-300 bg-blue-700 hover:scale-110 social-btn">
+            <span class="tooltip">LinkedIn</span>
+            <box-icon type='logo' name='linkedin' color="white" size="md"></box-icon>
+        </a>
+    </div>
+
+    <!-- Botón de Soporte -->
+    <button id="open-support-chat"
+            class="w-16 h-16 flex items-center justify-center bg-black text-white rounded-full shadow-lg transition-transform duration-200 hover:scale-110">
+        <box-icon name='support' flip='horizontal' color="white" size="lg"></box-icon>
+    </button>
+</div>
+
+<!-- Estilos con Tailwind -->
+<style>
+    .tooltip {
+        position: absolute;
+        right: 100%;
+        margin-right: 10px;
+        background-color: rgba(0, 0, 0, 0.8);
+        color: white;
+        font-size: 14px;
+        padding: 6px 10px;
+        border-radius: 5px;
+        white-space: nowrap;
+        opacity: 0;
+        transform: translateX(10px);
+        transition: opacity 0.3s ease, transform 0.3s ease;
+        visibility: hidden;
+    }
+
+    .group:hover .tooltip {
+        opacity: 1;
+        transform: translateX(0);
+        visibility: visible;
+    }
+
+    .social-btn {
+        box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.7);
+        transition: box-shadow 0.3s ease-in-out;
+    }
+
+        .social-btn:hover {
+            box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.5);
+        }
+</style>
+
+<!-- Script para desplegar redes sociales -->
+<script>
+    document.getElementById("open-support-chat").addEventListener("click", function () {
+        document.getElementById("social-links").classList.toggle("hidden");
+    });
+</script>

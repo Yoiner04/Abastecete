@@ -1,0 +1,601 @@
+﻿@using BusinessLogic.Utilidades
+@using Microsoft.AspNetCore.Http
+@inject IHttpContextAccessor HttpContextAccessor
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Abastecete</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/Abastecete.styles.css" asp-append-version="true" />
+    <link rel="icon" type="image/x-icon" href="~/css/Images/Logo A naranja.png" />
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link rel="stylesheet" href="~/css/styles.css" asp-append-version="true" />
+</head>
+
+<body>
+    <!-- IMAGENES CON CARRUSEL -->
+    <section class="hero-section flex flex-col items-center p-5 sm:p-10 gap-5">
+        <!-- Carrusel y dos imágenes -->
+        <div class="flex flex-col sm:flex-row justify-between w-full gap-4 sm:gap-8">
+            <!-- Carrusel -->
+            <div class="flex-grow sm:flex-grow-[2] h-[200px] sm:h-[250px] lg:h-[400px] relative rounded-lg overflow-hidden">
+                <img id="carouselImage" src="~/css/Images/carrusel1.jpg" alt="Carrusel"
+                     class="w-full h-full object-cover rounded-lg transition-opacity duration-500">
+                <button id="prevBtn"
+                        class="absolute left-2 sm:left-3 top-1/2 transform -translate-y-1/2 bg-white text-black rounded-full px-2 sm:px-3 py-1 sm:py-2 z-10">
+                    &lt;
+                </button>
+                <button id="nextBtn"
+                        class="absolute right-2 sm:right-3 top-1/2 transform -translate-y-1/2 bg-white text-black rounded-full px-2 sm:px-3 py-1 sm:py-2 z-10">
+                    &gt;
+                </button>
+            </div>
+
+            <div class="flex flex-col sm:flex-col gap-2 w-full sm:w-[200px] lg:w-[250px] h-[200px] sm:h-[250px] lg:h-[400px]">
+                <div class="flex-1 h-1/2">
+                    <img src="~/css/Images/1.jpg" alt="Imagen 1" class="w-full h-full object-cover rounded-lg">
+                </div>
+                <div class="flex-1 h-1/2">
+                    <img src="~/css/Images/2.jpg" alt="Imagen 2" class="w-full h-full object-cover rounded-lg">
+                </div>
+            </div>
+
+
+        </div>
+    </section>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const images = ["/css/Images/carrusel1.jpg", "/css/Images/carrusel2.jpg", "/css/Images/carrusel3.jpg"];           
+            let currentIndex = 0;
+            const carouselImage = document.getElementById("carouselImage");
+            const prevBtn = document.getElementById("prevBtn");
+            const nextBtn = document.getElementById("nextBtn");
+
+            function updateImage() {
+                carouselImage.classList.add("opacity-0");
+                setTimeout(() => {
+                    carouselImage.src = images[currentIndex];
+                    carouselImage.classList.remove("opacity-0");
+                }, 300);
+            }
+
+            prevBtn.addEventListener("click", function () {
+                currentIndex = (currentIndex - 1 + images.length) % images.length;
+                updateImage();
+            });
+
+            nextBtn.addEventListener("click", function () {
+                currentIndex = (currentIndex + 1) % images.length;
+                updateImage();
+            });
+
+            // Cambio automático cada 5 segundos
+            setInterval(() => {
+                currentIndex = (currentIndex + 1) % images.length;
+                updateImage();
+            }, 5000);
+        });
+    </script>
+
+    <!-- CATEGORÍAS (BURBUJAS) -->
+    <section class="p-10 space-y-3" id="categories-container">
+        <!-- Encabezado -->
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-lg font-bold text-gray-800 pl-10">Categorías</h2>
+            <a href="@Url.Action("Consultar", "Proveedores")" class="text-sm pr-10 font-medium text-gray-600 hover:text-gray-800 flex items-center">
+                Ver todo <span class="ml-1">&gt;</span>
+            </a>
+        </div>
+    </section>
+    <script>
+        // Lista de categorías con imágenes
+        const categories = [
+            { name: "Frutas y Verduras", image: "/css/Images/frutaverdura.jpeg" },
+            { name: "Proteínas", image: "/css/Images/proteinas.jpg" },
+            { name: "Lácteos y Huevos", image: "/css/Images/lacteoshuevos.png" },
+            { name: "Panadería y Repostería", image: "/css/Images/pan.jpeg" },
+            { name: "Despensa", image: "/css/Images/despensa.jpg" },
+            { name: "Congelados", image: "/css/Images/congelados.jpg" },
+            { name: "Bebidas", image: "/css/Images/bebidas.jpeg" },
+            { name: "Snacks y Aperitivos", image: "/css/Images/snacks.jpeg" },
+            { name: "Dulces y Chocolatería", image: "/css/Images/dulces.jpg" },
+            { name: "Charcutería y Especialidades", image: "/css/Images/charcucheria.jpg" },
+            { name: "Aseo del Hogar", image: "/css/Images/aseo.png" },
+            { name: "Cuidado Personal", image: "/css/Images/cuidado.jpg" },
+            { name: "Licores y Tabaco", image: "/css/Images/licor.jpg" },
+        ];
+
+        // Breakpoints para cantidad de categorías por fila
+        const breakpoints = {
+            xl: 7, // 7 categorías por fila en pantallas grandes
+            lg: 5, // 5 categorías por fila en pantallas medianas
+            md: 4, // 4 categorías por fila en pantallas pequeñas
+            sm: 3, // 3 categorías por fila en pantallas extra pequeñas
+        };
+
+        const container = document.getElementById("categories-container");
+
+        // Generar filas según las categorías y breakpoints
+        const renderCategories = () => {
+            container.querySelectorAll(".category-row").forEach(row => row.remove()); // Limpiar filas existentes
+
+            const screenWidth = window.innerWidth;
+            let maxPerRow = breakpoints.sm; // Valor predeterminado para pantallas pequeñas
+
+            if (screenWidth >= 1280) maxPerRow = breakpoints.xl; // Pantallas grandes
+            else if (screenWidth >= 1024) maxPerRow = breakpoints.lg; // Pantallas medianas
+            else if (screenWidth >= 768) maxPerRow = breakpoints.md; // Pantallas pequeñas
+
+            const rows = [];
+            let startIndex = 0;
+
+            while (startIndex < categories.length) {
+                rows.push(categories.slice(startIndex, startIndex + maxPerRow));
+                startIndex += maxPerRow;
+            }
+
+            rows.forEach(row => {
+                const rowDiv = document.createElement("div");
+                rowDiv.className = "category-row flex justify-center space-x-6 mb-6";
+
+                row.forEach(category => {
+                    const categoryDiv = document.createElement("div");
+                    categoryDiv.className = "flex flex-col items-center";
+                    categoryDiv.innerHTML = `
+                        <div class="category rounded-full w-24 h-24 md:w-32 md:h-32 lg:w-40 lg:h-40 bg-gray-300 overflow-hidden shadow-lg">
+                            <img src="${category.image}" alt="${category.name}" class="w-full h-full object-cover">
+                        </div>
+                        <p class="text-center mt-2 text-sm font-medium">${category.name}</p>
+                    `;
+                    rowDiv.appendChild(categoryDiv);
+                });
+
+                container.appendChild(rowDiv);
+            });
+        };
+
+        // Renderizar al cargar y al cambiar el tamaño de la pantalla
+        renderCategories();
+        window.addEventListener("resize", renderCategories);
+    </script>
+
+    <!-- OFERTAS FLASH -->
+    <section class="off-section p-6 lg:p-10">
+        <div class="flex flex-col lg:flex-row justify-between items-center mb-4">
+            <!-- Título y Temporizador -->
+            <div class="flex items-center gap-3 pl-0 lg:pl-10 mb-4 lg:mb-0">
+                <h2 class="text-lg font-bold text-gray-800">Ofertas Flash</h2>
+                <span class="bg-green-600 text-white px-3 py-1 rounded-full text-xs lg:text-sm font-medium">
+                    05 : 02 : 00
+                </span>
+            </div>
+
+            <!-- Enlace Ver Todo -->
+            <a href="#" class="text-sm pr-0 lg:pr-10 font-medium text-gray-600 hover:text-gray-800 flex items-center">
+                Ver todo <span class="ml-1">&gt;</span>
+            </a>
+        </div>
+
+        <div id="offers-container" class="grid grid-cols-1 lg:grid-cols-3 gap-6"></div>
+    </section>
+
+    <script>
+        const offers = [
+            { name: "PAPA PASTUSA 50 KG", oldPrice: "$60", newPrice: "$50", available: 30, sold: 30, progress: 30, bgColor: "bg-green-100", image: "/css/Images/papa.jpg" },
+            { name: "Cerveza X 6 LATA DORADA", oldPrice: "$1500", newPrice: "$1400", available: 99, sold: 1, progress: 1, bgColor: "bg-orange-200", image: "/css/Images/lata.jpg" },
+            { name: "TOMATE UVALINA 500 gr", oldPrice: "$300", newPrice: "$200", available: 100, sold: 199, progress: 199, bgColor: "bg-green-100", image: "/css/Images/tomate.jpg" },
+            { name: "YOGURT NATURAL 1L", oldPrice: "$250", newPrice: "$200", available: 80, sold: 50, progress: 62, bgColor: "bg-orange-200", image: "/css/Images/yogurt.jpeg" },
+            { name: "CAFÉ PREMIUM 500g", oldPrice: "$400", newPrice: "$350", available: 20, sold: 15, progress: 75, bgColor: "bg-green-100", image: "/css/Images/cafe.jpeg" },
+            { name: "ARROZ EXTRA 25KG", oldPrice: "$100", newPrice: "$90", available: 50, sold: 10, progress: 20, bgColor: "bg-orange-200", image: "/css/Images/arroz.jpg" }
+        ];
+
+        const offersContainer = document.getElementById("offers-container");
+
+        const renderOffers = () => {
+            offersContainer.innerHTML = ""; // Limpiar contenedor antes de renderizar
+
+            const maxOffers = window.innerWidth < 768 ? 4 : offers.length;
+
+            offers.slice(0, maxOffers).forEach((offer) => {
+                const card = document.createElement("div");
+                card.className = `${offer.bgColor} p-4 rounded-lg shadow-md flex flex-col lg:flex-row items-center lg:items-start`;
+
+                card.innerHTML = `
+                    <div class="relative w-24 h-32 lg:w-32 lg:h-48 flex-shrink-0 overflow-hidden rounded-md bg-gray-300">
+                        <img src="${offer.image}" alt="${offer.name}" class="absolute inset-0 w-full h-full object-cover">
+                    </div>
+                    <div class="text-center lg:text-left lg:ml-4">
+                        <h3 class="text-sm lg:text-lg font-bold text-gray-800 mb-1">${offer.name}</h3>
+                        <p class="text-xs lg:text-sm text-gray-500 line-through">${offer.oldPrice}</p>
+                        <p class="text-sm lg:text-lg text-green-600 font-bold mb-2">${offer.newPrice}</p>
+                        <p class="text-xs lg:text-sm text-gray-600">Disponible: <span class="text-green-600 font-bold">${offer.available}</span></p>
+                        <div class="flex flex-col lg:flex-row items-center lg:justify-between gap-2 mt-4">
+                            <button class="bg-orange-500 text-white px-4 py-2 rounded-full text-xs lg:text-sm hover:bg-orange-600">
+                                Ver Ahora
+                            </button>
+                            <button class="text-gray-500 hover:text-gray-800"❤️</button>
+                        </div>
+                        <div class="relative mt-2">
+                            <div class="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
+                                <div class="bg-orange-500 h-2" style="width: ${offer.progress}%;"></div>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1">${offer.sold} vendidos</p>
+                        </div>
+                    </div>
+                `;
+
+                offersContainer.appendChild(card);
+            });
+        };
+
+        // Renderizar ofertas al cargar la página y ajustar dinámicamente en `resize`
+        renderOffers();
+        window.addEventListener("resize", renderOffers);
+    </script>
+
+    <!-- PROVEEDORES -->
+    <section class="proovedores-section p-6 lg:p-10" style="background-color: #F4F1E9">
+        <div class="flex flex-col lg:flex-row justify-between items-center mb-4">
+            <h2 class="text-lg font-bold text-gray-800 text-center lg:text-left pl-0 lg:pl-10">Mejores proveedores</h2>
+            <a href="#" class="text-sm font-medium text-gray-600 hover:text-gray-800 flex items-center pr-0 lg:pr-10">
+                Ver todo <span class="ml-1">&gt;</span>
+            </a>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6" id="providers-grid"></div>
+    </section>
+    <script>
+        const providers = [
+            { name: "MERCA FRUVER", category: "FRUTAS Y VERDURAS", image: "/images/aa.jpg", buttonColor: "#23916A" },
+            { name: "LICORERIA MANOLO", category: "BEBIDAS", image: "/images/provider2.jpg", buttonColor: "#F66623" },
+            { name: "CATCH BIG", category: "DESPENSA", image: "/images/provider3.jpg", buttonColor: "#F66623" },
+            { name: "RAPICUNDI", category: "MERCADO", image: "/images/provider4.jpg", buttonColor: "#23916A" },
+            { name: "SUPER CARNES", category: "CARNES", image: "/images/provider5.jpg", buttonColor: "#23916A" },
+            { name: "LACTEOMANIA", category: "LÁCTEOS", image: "/images/provider6.jpg", buttonColor: "#F66623" }
+        ];
+
+        const providersGrid = document.getElementById("providers-grid");
+
+        const isSmallScreen = window.innerWidth < 1024;
+
+        providers.forEach((provider, index) => {
+            const card = document.createElement("div");
+
+            if (index === 2) {
+                const highlightedSection = document.createElement("div");
+                highlightedSection.className = "rounded-xl flex flex-col lg:flex-row items-center py-6 px-6 lg:row-span-2 lg:col-span-1";
+                highlightedSection.style.backgroundColor = "#23916A";
+
+                highlightedSection.innerHTML = `
+                    <img src="/images/a.png" alt="Imagen de mujer" class="w-40 lg:w-72 h-40 lg:h-72">
+                    <div class="mt-4 lg:mt-0 lg:ml-6 text-center lg:text-left">
+                        <h3 class="text-white text-base lg:text-xl font-bold mb-2">Encuentra mejores proveedores</h3>
+                        <p class="text-white text-lg lg:text-3xl font-bold mb-4 leading-tight">ABASTECE TU NEGOCIO YA</p>
+                        <button class="text-white text-sm lg:text-base px-4 lg:px-5 py-2 mt-3 rounded-full" style="background-color: #F66623">
+                            Ver más
+                        </button>
+                    </div>
+                `;
+                providersGrid.appendChild(highlightedSection);
+            }
+
+            if (isSmallScreen && index > 1 && index > 3) return;
+
+            card.className = "bg-white rounded-xl shadow-md p-4 lg:p-6 flex items-center gap-4 col-span-1";
+
+            card.innerHTML = `
+                <img src="${provider.image}" alt="${provider.name}" class="w-16 lg:w-20 h-16 lg:h-20 rounded-xl">
+                <div>
+                    <h3 class="text-sm lg:text-lg font-bold text-gray-600">${provider.name}</h3>
+                    <p class="text-base lg:text-xl text-black">${provider.category}</p>
+                    <button class="text-white text-xs lg:text-sm px-3 lg:px-4 py-1 mt-3 rounded-full" style="background-color: ${provider.buttonColor}">
+                        Ver Ahora &rarr;
+                    </button>
+                </div>
+            `;
+
+            providersGrid.appendChild(card);
+
+            if (!isSmallScreen && index === 5) {
+                const additionalProvider = document.createElement("div");
+                additionalProvider.className = "bg-white rounded-xl shadow-md p-4 lg:p-6 flex items-center gap-4 col-span-1";
+
+                additionalProvider.innerHTML = `
+                    <img src="/images/provider7.jpg" alt="NEW PROVIDER" class="w-16 lg:w-20 h-16 lg:h-20 rounded-xl">
+                    <div>
+                        <h3 class="text-sm lg:text-lg font-bold text-gray-600">NEW PROVIDER</h3>
+                        <p class="text-base lg:text-xl text-black">NUEVO</p>
+                        <button class="text-white text-xs lg:text-sm px-3 lg:px-4 py-1 mt-3 rounded-full" style="background-color: #23916A">
+                            Ver Ahora &rarr;
+                        </button>
+                    </div>
+                `;
+
+                providersGrid.appendChild(additionalProvider);
+            }
+        });
+    </script>
+
+    <!-- CARRUSEL DE LOCALES -->
+    <section class="carousel-section p-10" style="background-color: #23916A">
+        <div class="relative flex items-center">
+            <!-- Botón Izquierdo -->
+            <button id="carousel-prev"
+                    class="absolute left-0 z-10 bg-transparent text-orange-300 hover:text-orange-100 rounded-full focus:outline-none">
+                <span class="text-5xl">&lt;</span>
+            </button>
+
+            <!-- Contenedor del Carrusel -->
+            <div id="carousel-container" class="flex gap-4 overflow-hidden mx-auto touch-pan-x">
+            </div>
+
+            <!-- Botón Derecho -->
+            <button id="carousel-next"
+                    class="absolute right-0 z-10 bg-transparent text-orange-300 hover:text-orange-100 rounded-full focus:outline-none">
+                <span class="text-5xl">&gt;</span>
+            </button>
+        </div>
+    </section>
+    <style>
+        /* Carrusel en pantallas grandes */
+        #carousel-container .card {
+            flex: 0 0 auto;
+            width: 20rem;
+            /* Tamaño del local */
+            height: 15rem;
+            /* Altura consistente */
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+            #carousel-container .card .flex-1 {
+                flex: 1;
+                background-size: cover;
+                background-position: center;
+            }
+
+        /* Carrusel en pantallas pequeñas */
+        @@media (max-width: 768px) {
+            #carousel-container {
+                scroll-snap-align: center;
+            }
+
+                #carousel-container .card {
+                    flex: 0 0 100%;
+                    /* Ocupa toda la pantalla */
+                    width: 100%;
+                    /* Ancho completo */
+                    height: 20rem;
+                    /* Ajustar altura si es necesario */
+                }
+        }
+    </style>
+    <script>
+        const locales = [
+            { name: "Frutas y Verduras Don Juan", image: "https://via.placeholder.com/300x200" },
+            { name: "Verduras frescas JJ", image: "https://via.placeholder.com/300x200" },
+            { name: "Carnes Premium", image: "https://via.placeholder.com/300x200" },
+            { name: "Panadería La Espiga", image: "https://via.placeholder.com/300x200" }
+        ];
+
+        const carouselContainer = document.getElementById('carousel-container');
+        const prevButton = document.getElementById('carousel-prev');
+        const nextButton = document.getElementById('carousel-next');
+
+        let currentIndex = 0;
+
+        const updateCarousel = () => {
+            const children = Array.from(carouselContainer.children);
+            children.forEach((child, index) => {
+                child.style.order = (index - currentIndex + locales.length) % locales.length;
+            });
+        };
+
+        const createCard = (local) => {
+            const card = document.createElement('div');
+            card.className = 'card bg-gray-200 rounded-lg shadow-md flex flex-col';
+            card.innerHTML = `
+                <div class="flex-1 bg-gray-300 rounded-t-lg" style="background-image: url('${local.image}'); background-size: cover; background-position: center;"></div>
+                <div class="bg-white rounded-b-lg py-2 text-center">
+                    <p class="font-bold text-sm text-gray-800">${local.name}</p>
+                </div>
+            `;
+            return card;
+        };
+
+        const initializeCarousel = () => {
+            locales.forEach((local) => {
+                const card = createCard(local);
+                carouselContainer.appendChild(card);
+            });
+            updateCarousel();
+        };
+
+        prevButton.addEventListener('click', () => {
+            currentIndex = (currentIndex - 1 + locales.length) % locales.length;
+            updateCarousel();
+        });
+
+        nextButton.addEventListener('click', () => {
+            currentIndex = (currentIndex + 1) % locales.length;
+            updateCarousel();
+        });
+
+        // Drag/Swipe functionality
+        let isDragging = false;
+        let startX = 0;
+
+        // Mouse events
+        carouselContainer.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            startX = e.clientX;
+            carouselContainer.style.cursor = 'grabbing';
+        });
+
+        carouselContainer.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            const dx = e.clientX - startX;
+            if (dx > 50) {
+                prevButton.click();
+                isDragging = false;
+            } else if (dx < -50) {
+                nextButton.click();
+                isDragging = false;
+            }
+        });
+
+        carouselContainer.addEventListener('mouseup', () => {
+            isDragging = false;
+            carouselContainer.style.cursor = 'grab';
+        });
+
+        carouselContainer.addEventListener('mouseleave', () => {
+            isDragging = false;
+            carouselContainer.style.cursor = 'grab';
+        });
+
+        // Touch events
+        carouselContainer.addEventListener('touchstart', (e) => {
+            isDragging = true;
+            startX = e.touches[0].clientX;
+        });
+
+        carouselContainer.addEventListener('touchmove', (e) => {
+            if (!isDragging) return;
+            const dx = e.touches[0].clientX - startX;
+            if (dx > 50) {
+                prevButton.click();
+                isDragging = false;
+            } else if (dx < -50) {
+                nextButton.click();
+                isDragging = false;
+            }
+        });
+
+        carouselContainer.addEventListener('touchend', () => {
+            isDragging = false;
+        });
+
+        initializeCarousel();
+    </script>
+
+    <!-- ULTIMAS PROMOCIONES -->
+    <section class="hero-section flex flex-col items-center p-10 gap-5">
+        <!-- Títulos y subtítulos -->
+        <div class="w-full text-center lg:text-left">
+            <h1 class="text-4xl lg:text-8xl font-bold" style="color: #23916A;">
+                <span class="text-black">Nuestras</span> últimas promociones
+            </h1>
+            <p class="mt-1 text-gray-600 text-lg lg:text-2xl">
+                Para que no gastes de más y conozcas a todos nuestros
+                vendedores
+            </p>
+        </div>
+
+        <!-- Botón y vendedor del mes -->
+        <div class="flex flex-col lg:flex-row items-center w-full max-w-7xl mt-3 gap-6">
+            <!-- Botón -->
+            <button class="flex items-center justify-center gap-3 text-white px-6 py-3 lg:px-10 lg:py-4 rounded-full text-sm lg:text-lg font-bold shadow-md"
+                    style="background-color: #23916A;">
+                <i class="fas fa-shopping-cart text-xl lg:text-2xl"></i> Llévame ahí
+            </button>
+
+            <!-- Vendedor del mes -->
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 lg:w-16 lg:h-16 bg-gray-300 rounded-md flex items-center justify-center">
+                    <img src="/images/vendedor-placeholder.png" alt="Imagen del vendedor"
+                         class="w-10 h-10 lg:w-12 lg:h-12 object-cover rounded-md" />
+                </div>
+                <div class="text-center lg:text-left">
+                    <p class="text-base lg:text-lg font-bold" style="color: #F66623;">Nuestro vendedor del mes</p>
+                    <p class="text-yellow-500 text-sm lg:text-base font-medium">⭐ 4.8/5</p>
+                    <p class="text-xs lg:text-sm text-gray-500">(1k+ reviews)</p>
+                </div>
+            </div>
+        </div>
+
+    </section>
+
+    <!-- DESCUENTOS -->
+    <section id="discounts-section" class="discounts-section p-6 lg:p-10">
+        <div class="mb-6 text-center lg:text-start">
+            <h2 class="text-3xl lg:text-5xl font-bold text-[#F66623]">DESCUENTOS</h2>
+            <h2 class="text-5xl lg:text-8xl font-bold text-[#23916A]">IMPERDIBLES</h2>
+        </div>
+    </section>
+    <script>
+        const categorias = [
+            "Frutas y Verduras",
+            "Proteínas",
+            "Lácteos y Huevos",
+            "Panadería y Repostería",
+            "Despensa",
+            "Congelados",
+            "Bebidas",
+            "Snacks y Aperitivos",
+            "Dulces y Chocolatería",
+            "Charcutería y Especialidades",
+            "Aseo del Hogar",
+            "Cuidado Personal",
+            "Licores y Tabaco",
+        ];
+
+        const discountsSection = document.getElementById('discounts-section');
+
+        categorias.forEach((category, index) => {
+            const categoryBlock = document.createElement('div');
+
+            // Intercalar colores de fondo
+            if (index % 2 === 0) {
+                categoryBlock.classList.add('bg-white', 'p-5');
+            } else {
+                categoryBlock.classList.add('bg-green-100', 'p-5');
+            }
+
+            categoryBlock.classList.add('mb-10');
+
+            categoryBlock.innerHTML = `
+            <div class="flex flex-col lg:flex-row justify-between items-center mb-4">
+                <h2 class="text-lg font-bold text-gray-800 text-center lg:text-left pl-0 lg:pl-10">${category}</h2>
+                <a href="#" class="text-sm font-medium text-gray-600 hover:text-gray-800 flex items-center pr-0 lg:pr-10 mt-2 lg:mt-0">
+                Ver más
+                <svg xmlns="http://www.w3.org/2000/svg" class="ml-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+                </a>
+            </div>
+
+            <!-- Rejilla de imágenes -->
+            <div class="grid grid-cols-1 lg:grid-cols-5 gap-4">
+                <!-- Pantallas grandes -->
+                <div class="hidden lg:block bg-gray-300 rounded-tl-3xl h-60 col-span-3"></div>
+                <div class="hidden lg:block bg-gray-300 rounded-tl-3xl rounded-br-3xl h-60 col-span-1"></div>
+                <div class="hidden lg:block bg-gray-300 rounded-tl-3xl rounded-br-3xl h-60 col-span-1"></div>
+                <div class="hidden lg:block bg-gray-300 h-60 col-span-1"></div>
+                <div class="hidden lg:block bg-gray-300 h-60 col-span-1"></div>
+                <div class="hidden lg:block bg-gray-300 h-60 col-span-3"></div>
+
+                <!-- Pantallas pequeñas -->
+                <div class="block lg:hidden bg-gray-300 h-60 rounded-tl-3xl"></div>
+                <div class="block lg:hidden grid grid-cols-2 gap-4">
+                    <div class="bg-gray-300 h-40 rounded-tl-3xl"></div>
+                    <div class="bg-gray-300 h-40 rounded-br-3xl"></div>
+                </div>
+                <div class="block lg:hidden bg-gray-300 h-60 rounded-br-3xl"></div>
+                <div class="block lg:hidden grid grid-cols-2 gap-4">
+                    <div class="bg-gray-300 h-40 rounded-tl-3xl"></div>
+                    <div class="bg-gray-300 h-40 rounded-br-3xl"></div>
+                </div>
+            </div>
+            `;
+            discountsSection.appendChild(categoryBlock);
+        });
+    </script>
+</body>
+</html>

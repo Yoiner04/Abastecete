@@ -1,0 +1,64 @@
+﻿@model BusinessLogic.Models.Usuario;
+
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesión - Abastecete</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/login.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/Abastecete.styles.css" asp-append-version="true" />
+</head>
+
+<body>
+    <div class="login-container">
+        <div class="login-box">
+            <!-- Imagen Superior -->
+            <div class="login-image text-center">
+                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Principal">
+                    <img src="~/css/Images/LOGO FINAL.png" alt="Abastecete Login" class="img-fluid">
+                </a>
+            </div>
+            
+            @using (Html.BeginForm("Login", "Login", FormMethod.Post))
+            {
+                <form method="POST" action="/Login/Authenticate">
+                    <div class="form-group mb-3">
+                        <label for="email">Correo Electrónico</label>
+                        @Html.TextBoxFor(m => m.Correo, new { @class = "form-control", @type = "email", @id = "email", @name = "email", @placeholder = "Ingresa tu correo" })
+                        
+                    </div>
+                    <div class="form-group mb-3">
+                        <label for="password">Contraseña</label>
+                        @Html.TextBoxFor(m => m.Contrasenia, new { @class = "form-control", @type = "password", @id = "password", @name = "password", @placeholder = "Ingresa tu contraseña" })
+             
+                    </div>
+
+                    <button type="submit" class="btn-login">Iniciar Sesión</button>
+
+                    <div class="forgot-password">
+                        <a href="/Login/ForgotPassword">¿Olvidaste tu contraseña?</a>
+                    </div>
+                    <div class="register">
+                        <p>¿No tienes cuenta? <a asp-area="" asp-controller="Usuarios" asp-action="Registrar">Regístrate aquí</a></p>
+                    </div>
+                </form>
+            }
+
+            <div class="back-button text-center mb-3">
+                <a href="/" class="btn-back">Regresar</a>
+            </div>
+        </div>
+        <div class="image-section">
+            <img src="~/css/Images/hombre.png" alt="Promoción" style="width: 100%; height: auto;" />
+        </div>
+    </div>
+</body>
+</html>
+
+

@@ -1,0 +1,89 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.principal .sticky-header {
+    position: sticky;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+}
+
+.bg-color {
+    background-color: #F4F1E9;
+}
+
+/* Centrar el contenido del navbar */
+.navbar .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* Centrar las opciones del navbar */
+.navbar-nav {
+    display: flex;
+    justify-content: center;
+    flex-grow: 1;
+}
+
+    .navbar-nav .nav-item {
+        margin: 0 20px;
+    }
+
+    .navbar-nav .nav-link {
+        text-align: center;
+        font-weight: bold;
+        font-size: 18px;
+        color: black;
+    }
+
+/* Estilo para el botón "Únete a Nosotros" */
+.btn-custom2 {
+    color: white;
+    background-color: #23916A;
+    font-weight: bold;
+    border-radius: 5px;
+    padding: 8px 15px;
+    text-decoration: none;
+    margin-right: 10px;
+}
+
+    .btn-custom2:hover {
+        background-color: #1d7457;
+        color: white;
+    }
+
+/* Submenú */
+.submenu-container {
+    background-color: #fff;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    padding: 10px 0;
+    /*border-top: 1px solid #ddd;*/
+}
+
+.submenu {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+    .submenu li {
+        font-size: 16px;
+    }
+
+        .submenu li a {
+            text-decoration: none;
+            color: #333;
+            /*font-weight: bold;*/
+            transition: color 0.2s ease;
+        }
+
+            .submenu li a:hover {
+                color: #23916A;
+            }
+
+

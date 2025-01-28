@@ -1,0 +1,122 @@
+﻿@model BusinessLogic.Models.PermisosViewModel;
+
+<html lang="es">
+<head>
+
+</head>
+
+<body>
+    <br />
+    <section class="encabezado">
+        <div class="row">
+            <div class="col">
+                <h1>Gestión de roles</h1>
+            </div>
+        </div>
+    </section>
+    <hr />
+
+    <section class="contenido">
+        <div class="row mt-4">
+            @using (Html.BeginForm("AsignarRol", "Roles", FormMethod.Post))
+            {
+                <div class="row">
+                    <div class="col-4">
+
+                        <label class="col-sm-2 col-form-label  fw-bolder">Roles</label>
+                        <select class="form-select" asp-for="Rol.Id" size="3" aria-label="size 3 select example">
+                            @foreach (var tipo in ViewBag.roles)
+                            {
+                                @if (ViewBag.idRol == tipo.Id)
+                                {
+                                    <option value="@tipo.Id" selected onclick="window.location.href = '@Url.Action("Consultar", "Roles")' + '?idRol=' + @tipo.Id">@tipo.Nombre</option>
+                                }
+                                else
+                                {
+                                    <option value="@tipo.Id" onclick="window.location.href = '@Url.Action("Consultar", "Roles")' + '?idRol=' + @tipo.Id">@tipo.Nombre</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="col-4">
+                        <label class="col-sm-2 col-form-label  fw-bolder">Usuario</label>
+                        <select class="form-select" asp-for="Usuario.Id" aria-label="Default select example" required>
+                            <option selected></option>
+                            @foreach (var usuario in ViewBag.usuarios)
+                            {
+                                <option value="@usuario.Id">@usuario.Persona.Nombre @usuario.Persona.Apellido</option>
+                            }
+                        </select>
+                        <br />
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end " id="separarboton">
+                            <button type="submit" class="btn btn-primary fw-bolder me-md-2 btn-sm">Cambiar rol</button>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <div class="col-4">
+                @using (Html.BeginForm("CrearRol", "Roles", FormMethod.Post))
+                {
+                    <div class="mb-3">
+                        <label for="exampleFormControlInput1" class="form-label fw-bolder">Nuevo rol</label>
+                        @Html.TextBoxFor(m=>m.Rol.Nombre, new { @class = "form-control" })
+                        <div class="invalid-feedback">
+                            @Html.ValidationMessageFor(m=>m.Rol.Nombre)
+                        </div>
+                    </div>
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end " id="separarboton">
+                        <button type="submit" class="btn btn-primary fw-bolder me-md-2 btn-sm">Crear rol</button>
+                    </div>
+                }
+            </div>
+        </div>
+    </section>
+
+    <section class="permisos permisos1">
+        <div class="row mt-4">
+            <div>
+                <div>
+                    <label class="form-label fw-bolder" id="check">Permisos asignados al rol</label>
+                </div>
+                @foreach (var permiso in ViewBag.permisos)
+                {
+                    <div class="form-check form-check-inline" id="check">
+
+                        @if (permiso.Estado)
+                        {
+                            <input class="form-check-input" checked type="checkbox" id="inlineCheckbox1" value="option1" onclick="window.location.href = '@Url.Action("AsignarPermisoRol", "Roles")' + '?idRol=' + @ViewBag.idRol + '&idPermiso=' + @permiso.Id">
+                        }
+                        else
+                        {
+                            <input class="form-check-input" type="checkbox" id="inlineCheckbox1" value="option1" onclick="window.location.href = '@Url.Action("AsignarPermisoRol", "Roles")' + '?idRol=' + @ViewBag.idRol + '&idPermiso=' + @permiso.Id">
+                        }
+                        <label class="form-check-label" for="inlineCheckbox1">@permiso.Nombre</label>
+                    </div>
+                }
+
+
+            </div>
+        </div>
+    </section>
+
+    <script>
+        (function () {
+            'use strict'
+            var forms = document.querySelectorAll('.needs-validation')
+
+            Array.prototype.slice.call(forms)
+                .forEach(function (form) {
+                    form.addEventListener('submit', function (event) {
+                        if (!form.checkValidity()) {
+                            event.preventDefault()
+                            event.stopPropagation()
+                        }
+
+                        form.classList.add('was-validated')
+                    }, false)
+                })
+        })()
+    </script>
+</body>
+</html>

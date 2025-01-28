@@ -1,0 +1,251 @@
+﻿
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Abastecete</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link rel="icon" type="image/x-icon" href="~/css/Images/Logo A naranja.png" />
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link rel="stylesheet" href="~/css/styles.css" asp-append-version="true" />
+
+</head>
+
+<body>
+
+    <section class="product-gallery-section py-6 px-4 lg:py-10 lg:px-40 w-full">
+        <div class="flex flex-col lg:flex-row gap-4 lg:gap-8">
+            <!-- Imagen principal y miniaturas -->
+            <div class="flex flex-col lg:w-1/2">
+                <div id="main-image" class="bg-gray-200 w-full h-48 lg:h-full rounded-lg mb-4 flex items-center justify-center">
+                    <p class="text-gray-500 text-sm lg:text-base">Imagen principal</p>
+                </div>
+                <div class="grid grid-cols-2 gap-2 lg:flex lg:flex-row justify-center">
+                    <div class="bg-gray-200 w-full h-24 lg:w-[calc(25%-0.5rem)] lg:h-36 rounded-md flex items-center justify-center cursor-pointer border border-transparent" data-image="Imagen 1">
+                        <p class="text-gray-500 text-xs lg:text-sm">Miniatura 1</p>
+                    </div>
+                    <div class="bg-gray-200 w-full h-24 lg:w-[calc(25%-0.5rem)] lg:h-36 rounded-md flex items-center justify-center cursor-pointer border border-transparent" data-image="Imagen 2">
+                        <p class="text-gray-500 text-xs lg:text-sm">Miniatura 2</p>
+                    </div>
+                    <div class="bg-gray-200 w-full h-24 lg:w-[calc(25%-0.5rem)] lg:h-36 rounded-md flex items-center justify-center cursor-pointer border border-transparent" data-image="Imagen 3">
+                        <p class="text-gray-500 text-xs lg:text-sm">Miniatura 3</p>
+                    </div>
+                    <div class="bg-gray-200 w-full h-24 lg:w-[calc(25%-0.5rem)] lg:h-36 rounded-md flex items-center justify-center cursor-pointer border border-transparent" data-image="Imagen 4">
+                        <p class="text-gray-500 text-xs lg:text-sm">Miniatura 4</p>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Información del producto -->
+            <div class="flex flex-col lg:w-1/2">
+                <h1 class="text-2xl lg:text-4xl font-bold text-gray-800">Producto 1</h1>
+                <p class="text-xl lg:text-3xl font-bold" style="color: #23916A;">$100.000 <span class="line-through text-gray-400">$150.000</span></p>
+                <div class="flex items-center gap-2 mt-2">
+                    <span class="text-yellow-500 text-base lg:text-lg">★</span>
+                    <p class="text-xs lg:text-sm font-bold">5.0 · 20 Reseñas</p>
+                </div>
+                <p id="description" class="text-gray-500 mt-4 text-sm lg:text-base">
+                    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam sed aliquet dui...
+                    <span id="full-description" class="hidden"> Lorem ipsum dolor sit amet, consectetur adipiscing elit...</span>
+                    <a href="#" id="toggle-description" class="text-blue-600">Ver más</a>
+                </p>
+                <hr class="my-4 lg:my-6 border-gray-300">
+
+                <p class="text-gray-600 text-sm lg:text-base"><strong>Categoría :</strong> Lácteos, Bebidas</p>
+                <p class="text-gray-600 mt-2 text-sm lg:text-base"><strong>Etiquetas :</strong> Leche, Yogurt, Alpina...</p>
+
+                <hr class="my-4 lg:my-6 border-gray-300">
+
+                <!-- Cantidad -->
+                <div class="flex flex-col gap-4 lg:flex-row items-start lg:items-center lg:gap-4">
+                    <p class="text-gray-600 text-sm lg:text-base"><strong>Cantidad:</strong></p>
+                    <div class="flex items-center gap-2">
+                        <button id="decrease-btn" class="text-white px-4 py-2 rounded-full text-sm lg:text-base" style="background-color: #23916A">-</button>
+                        <span id="quantity" class="text-gray-800 px-6 lg:px-8 py-1 border-2 rounded-full text-sm lg:text-base">1</span>
+                        <button id="increase-btn" class="text-white px-4 py-2 rounded-full text-sm lg:text-base" style="background-color: #23916A">+</button>
+                    </div>
+                    <p class="text-gray-600 text-sm lg:text-lg"><strong>Total :</strong> <span id="total-price" class="text-black font-bold">$100.000</span></p>
+                </div>
+
+                <hr class="my-4 lg:my-6 border-gray-300">
+
+                <!-- Método de envío -->
+                <div class="flex flex-col gap-4">
+                    <p class="text-gray-600 text-sm lg:text-base"><strong>Método de envío :</strong></p>
+                    <div class="flex flex-col gap-4 lg:flex-row">
+                        <select class="w-full lg:w-1/2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600">
+                            <option>Entrega normal</option>
+                            <option>Entrega rápida</option>
+                            <option>Recoger en tienda</option>
+                        </select>
+                        <select class="w-full lg:w-1/2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-600">
+                            <option>Dirección establecida</option>
+                            <option>Otra dirección</option>
+                        </select>
+                    </div>
+                    <p class="text-gray-500 text-xs lg:text-sm">Entrega estimada</p>
+                </div>
+
+                <hr class="my-4 lg:my-6 border-gray-300">
+
+                <div class="flex flex-col gap-4 lg:flex-row lg:gap-8 mt-4">
+                    <button class="text-gray-500 hover:text-black flex items-center justify-center gap-2 text-sm lg:text-base">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
+                        </svg>
+                    </button>
+                    <button class="text-gray-500 hover:text-black flex items-center justify-center gap-2 text-sm lg:text-base">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M7.217 10.907a2.25 2.25 0 1 0 0 2.186m0-2.186c.18.324.283.696.283 1.093s-.103.77-.283 1.093m0-2.186 9.566-5.314m-9.566 7.5 9.566 5.314m0 0a2.25 2.25 0 1 0 3.935 2.186 2.25 2.25 0 0 0-3.935-2.186Zm0-12.814a2.25 2.25 0 1 0 3.933-2.185 2.25 2.25 0 0 0-3.933 2.185Z" />
+                        </svg>
+                    </button>
+                    <button class="text-white px-10 lg:px-20 py-3 rounded-full text-sm lg:text-base" style="background-color: #23916A">
+                        Contáctanos
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pestañas -->
+        <div class="grid grid-cols-2 border-b-2 border-gray-300 mb-4 lg:mb-6 py-6 lg:py-10">
+            <button id="description-tab" class="py-2 lg:py-3 text-sm lg:text-lg font-bold text-white bg-orange-600 border-b-4 border-orange-600 focus:outline-none">
+                Descripción
+            </button>
+            <button id="reviews-tab" class="py-2 lg:py-3 text-sm lg:text-lg font-bold text-orange-600 border-b-4 border-transparent focus:outline-none">
+                Reseñas
+            </button>
+        </div>
+
+        <!-- Contenido -->
+        <div id="description-content" class="space-y-4 lg:space-y-6">
+            <!-- Descripción -->
+            <h2 class="text-lg lg:text-2xl font-bold text-gray-800">Descripción del producto</h2>
+            <p class="text-sm lg:text-base text-gray-600">
+                Este es un producto de alta calidad diseñado para satisfacer tus necesidades diarias.
+                Ofrecemos los mejores estándares de producción y garantizamos la satisfacción del cliente.
+            </p>
+            <!-- Ubicación -->
+            <h2 class="text-lg lg:text-2xl font-bold text-gray-800 mt-4 lg:mt-6">Ubicación:</h2>
+            <div class="rounded-lg overflow-hidden">
+                <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3153.8354345079346!2d-122.41941508468364!3d37.77492927975951!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x8085809c69e841c1%3A0xc72e29f8286a76e2!2sSan%20Francisco%2C%20CA%2C%20USA!5e0!3m2!1sen!2s!4v1613925729857!5m2!1sen!2s"
+                        width="100%"
+                        height="200"
+                        lg:height="400"
+                        style="border:0;"
+                        allowfullscreen=""
+                        loading="lazy"></iframe>
+            </div>
+        </div>
+
+        <div id="reviews-content" class="hidden space-y-4 lg:space-y-6">
+            <!-- Reseñas -->
+            <h2 class="text-lg lg:text-2xl font-bold text-gray-800">Reseñas</h2>
+            <div class="space-y-4">
+                <div class="border-b border-gray-300 pb-4">
+                    <p class="text-gray-800 font-bold">Usuario 1</p>
+                    <p class="text-xs lg:text-sm text-gray-600">★★★★★</p>
+                    <p class="text-sm lg:text-base text-gray-600">El producto cumplió completamente mis expectativas. Muy recomendado.</p>
+                </div>
+                <div class="border-b border-gray-300 pb-4">
+                    <p class="text-gray-800 font-bold">Usuario 2</p>
+                    <p class="text-xs lg:text-sm text-gray-600">★★★★☆</p>
+                    <p class="text-sm lg:text-base text-gray-600">Buen producto, aunque me gustaría que incluyeran más opciones de envío.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    <script>
+        // Cambiar la imagen principal según la miniatura seleccionada
+        const mainImage = document.getElementById("main-image");
+        const thumbnails = document.querySelectorAll(".cursor-pointer");
+
+        thumbnails.forEach((thumbnail, index) => {
+            thumbnail.addEventListener("click", () => {
+                const selectedImage = thumbnail.getAttribute("data-image");
+                mainImage.innerHTML = `<p class="text-gray-500">${selectedImage}</p>`;
+
+                thumbnails.forEach((thumb) => thumb.classList.remove("border-orange-500"));
+
+                thumbnail.classList.add("border-orange-500");
+            });
+        });
+        thumbnails[0].classList.add("border-orange-500");
+
+
+        // Actualizar cantidad y total
+        const decreaseBtn = document.getElementById("decrease-btn");
+        const increaseBtn = document.getElementById("increase-btn");
+        const quantityElement = document.getElementById("quantity");
+        const totalPriceElement = document.getElementById("total-price");
+
+        let quantity = 1;
+        const pricePerUnit = 100000;
+
+        const updateTotalPrice = () => {
+            const total = pricePerUnit * quantity;
+            totalPriceElement.textContent = `$${total.toLocaleString("es-CO")}`;
+        };
+
+        increaseBtn.addEventListener("click", () => {
+            quantity++;
+            quantityElement.textContent = quantity;
+            updateTotalPrice();
+        });
+
+        decreaseBtn.addEventListener("click", () => {
+            if (quantity > 1) {
+                quantity--;
+                quantityElement.textContent = quantity;
+                updateTotalPrice();
+            }
+        });
+
+
+        //Para el "ver más"
+        const toggleDescription = document.getElementById("toggle-description");
+        const fullDescription = document.getElementById("full-description");
+        const description = document.getElementById("description");
+
+        toggleDescription.addEventListener("click", (event) => {
+            event.preventDefault();
+            if (fullDescription.classList.contains("hidden")) {
+                fullDescription.classList.remove("hidden");
+                toggleDescription.textContent = "Ver menos";
+            } else {
+                fullDescription.classList.add("hidden");
+                toggleDescription.textContent = "Ver más";
+            }
+        });
+
+        //Para el manejo de pestañas Descripción-Reseñas
+        const descriptionTab = document.getElementById("description-tab");
+        const reviewsTab = document.getElementById("reviews-tab");
+        const descriptionContent = document.getElementById("description-content");
+        const reviewsContent = document.getElementById("reviews-content");
+
+        descriptionTab.addEventListener("click", () => {
+            descriptionContent.classList.remove("hidden");
+            reviewsContent.classList.add("hidden");
+            descriptionTab.classList.add("text-white", "bg-orange-600", "border-orange-600");
+            descriptionTab.classList.remove("text-orange-600", "border-transparent");
+            reviewsTab.classList.add("text-orange-600", "border-transparent");
+            reviewsTab.classList.remove("text-white", "bg-orange-600", "border-orange-600");
+        });
+
+        reviewsTab.addEventListener("click", () => {
+            reviewsContent.classList.remove("hidden");
+            descriptionContent.classList.add("hidden");
+            reviewsTab.classList.add("text-white", "bg-orange-600", "border-orange-600");
+            reviewsTab.classList.remove("text-orange-600", "border-transparent");
+            descriptionTab.classList.add("text-orange-600", "border-transparent");
+            descriptionTab.classList.remove("text-white", "bg-orange-600", "border-orange-600");
+        });
+
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,292 @@
+﻿@using BusinessLogic.Utilidades
+@using Microsoft.AspNetCore.Http
+@inject IHttpContextAccessor HttpContextAccessor
+
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Abastecete</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" type="image/x-icon" href="~/css/Images/Logo A naranja.png">
+    <script src="https://unpkg.com/boxicons@2.1.4/dist/boxicons.js"></script>
+</head>
+
+@Html.Partial("_SupportBubble")
+
+<body class="bg-gray-100" style="color: black">
+
+    @{
+        string permisos = HttpContextAccessor.HttpContext.Session.GetString("permisos");
+    }
+
+    <header class="sticky top-0 shadow-md z-50" style="background-color: #F4F1E9;">
+        <nav class="container mx-auto flex justify-between items-center py-2 px-6">
+            <!-- Logo -->
+            <a href="@Url.Action("Principal", "Home")" class="flex items-center">
+                <img src="~/css/Images/LOGO FINAL.png" alt="Abastecete Logo" class="h-14">
+            </a>
+
+            <!-- Botón Menú Móvil -->
+            <button id="menu-toggle" class="md:hidden text-black focus:outline-none">
+                <i class="fas fa-bars text-2xl"></i>
+            </button>
+
+            <!-- Contenedor del Menú de Navegación -->
+            <div id="menu-container"
+            class="hidden md:flex flex-col md:flex-row absolute md:relative w-full md:w-auto top-16 left-0 md:top-0 md:left-auto z-50 bg-gray-100 md:bg-transparent">
+                <ul id="menu" class="md:flex md:space-x-6 text-base font-bold text-black md:flex-row flex-col">
+                    <li>
+                        <a href="#" class="block px-4 py-2 md:px-0 md:py-0 hover:text-green-600 text-black">
+                            <i class="fa fa-search mr-1"></i>Buscar
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#categories-container"
+                        class="block px-4 py-2 md:px-0 md:py-0 hover:text-green-600 text-black">
+                            Categorías
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#ofertas-container"
+                        class="block px-4 py-2 md:px-0 md:py-0 hover:text-green-600 text-black">
+                            Ofertas flash
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#promociones-container"
+                        class="block px-4 py-2 md:px-0 md:py-0 hover:text-green-600 text-black">
+                            Promociones
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" id="open-contact-modal"
+                        class="block px-4 py-2 md:px-0 md:py-0 hover:text-green-600 text-black">
+                            Contacto
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Usuario -->
+            <div class="flex items-center space-x-4">
+                @if (permisos != null)
+                {
+                    <div class="relative">
+                        <button id="user-btn" class="focus:outline-none flex items-center">
+                            <img src="~/css/Images/avatar.png" alt="Usuario" class="w-8 h-8 rounded-full">
+                        </button>
+                        <ul id="user-menu"
+                        class="absolute right-0 mt-2 bg-white shadow-lg rounded-md min-w-[150px] md:min-w-[200px] text-sm hidden z-50 p-3 md:p-4">
+
+                            <li class="py-3 px-5 border-b hover:bg-gray-100">
+                                <a href="@Url.Action("Actualizar", "Usuarios")" class="block text-black">
+                                    Actualizar
+                                    Información
+                                </a>
+                            </li>
+                            <li class="py-3 px-5 hover:bg-gray-100">
+                                <a href="@Url.Action("Logout", "Login")" class="block text-red-600 font-semibold">
+                                    Cerrar
+                                    Sesión
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                }
+                else
+                {
+                    <a href="@Url.Action("Login", "Login")" class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700
+                        sm:px-2 sm:py-1 sm:text-xs
+                        md:px-6 md:py-3 md:text-lg">
+                        Únete a nosotros
+                    </a>
+                }
+            </div>
+        </nav>
+
+        <!-- Botón para mostrar las opciones en móviles -->
+        <button id="admin-menu-toggle" class="block md:hidden w-full text-center py-2 bg-gray-300 text-black font-bold">
+            Menú de Administración ⬇
+        </button>
+
+        <!-- Contenedor con alineación corregida -->
+        <div id="admin-menu" class="hidden md:flex justify-center bg-gray-200 py-2">
+            <ul class="flex flex-col md:flex-row md:space-x-6 text-sm text-center md:text-left">
+
+                @if (permisos != null)
+                {
+                    @if (RolPermisos.TienePermiso("Publica tu negocio", permisos))
+                    {
+                        <li class="group">
+                            <a href="@Url.Action("Publicar", "Proveedores")" class="text-black group-hover:text-green-600">
+                                Publica tu negocio
+                            </a>
+                        </li>
+                    }
+                    @if (RolPermisos.TienePermiso("Dejanos tu reseña", permisos))
+                    {
+                        <li class="group">
+                            <a href="@Url.Action("", "")" class="text-black group-hover:text-green-600">
+                                Dejanos tu reseña
+                            </a>
+                        </li>
+                    }
+                    @if (RolPermisos.TienePermiso("Administrar Categorias", permisos))
+                    {
+                        <li class="group">
+                            <a href="@Url.Action("Consultar", "Categorias")" class="text-black group-hover:text-green-600">
+                                Gestionar Categorías
+                            </a>
+                        </li>
+                    }
+                    @if (RolPermisos.TienePermiso("Administrar Proveedores", permisos))
+                    {
+                        <li class="group">
+                            <a href="@Url.Action("Gestionar", "Proveedores")" class="text-black group-hover:text-green-600">
+                                Gestionar Proveedores
+                            </a>
+                        </li>
+                    }
+                    @if (RolPermisos.TienePermiso("Administrar Usuarios", permisos))
+                    {
+                        <li class="group">
+                            <a href="@Url.Action("Listar", "Usuarios")" class="text-black group-hover:text-green-600">
+                                Gestionar Usuarios
+                            </a>
+                        </li>
+                    }
+                } else {
+                    <li class="group">
+                        <a href="@Url.Action("Login", "Login")" class="text-black group-hover:text-green-600">
+                            ¡Publica tu negocio o dejanos tu reseña!
+                        </a>
+                    </li>
+                }
+            </ul>
+            </div>
+
+    </header>
+
+    <main role="main">
+        @RenderBody()
+    </main>
+
+    <!-- Modal de Contacto -->
+    <div id="contact-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
+        <div class="p-6 rounded-lg shadow-lg w-full max-w-md" style="background-color: #F4F1E9;">
+            <div class="flex justify-center">
+                <img src="~/css/Images/LOGO FINAL.png" alt="Abastecete Logo" class="h-12">
+            </div>
+            <h2 class="text-center text-xl font-bold text-black mt-2">Contáctanos</h2>
+
+            <form id="contact-form" class="mt-4">
+                <input type="email" id="email" name="email" placeholder="Tu correo electrónico"
+                       class="w-full p-3 rounded-lg bg-gray-100 border border-gray-300 text-black mb-3" required>
+
+                <div class="flex items-center space-x-2 mb-3">
+                    <span class="bg-white border border-gray-300 px-4 py-3 rounded-lg flex items-center">
+                        +57
+                    </span>
+                    <input type="text" id="phone" name="phone" placeholder="Tu número"
+                           class="w-full p-3 rounded-lg bg-gray-100 border border-gray-300 text-black" required>
+                </div>
+
+                <textarea id="message" name="message" placeholder="Escribe un mensaje..."
+                          class="w-full p-3 rounded-lg bg-gray-100 border border-gray-300 text-black h-32 resize-none mb-3"
+                          required></textarea>
+
+                <button type="submit" class="w-full bg-black text-white py-3 rounded-lg font-bold hover:bg-gray-800">
+                    Enviar Mensaje
+                </button>
+            </form>
+
+            <button id="close-contact-modal" class="block w-full text-center mt-3 text-black font-medium">
+                Cerrar
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const menuToggle = document.getElementById('menu-toggle');
+        const menuContainer = document.getElementById('menu-container');
+
+        if (menuToggle && menuContainer) {
+            menuToggle.addEventListener('click', () => {
+                menuContainer.classList.toggle('hidden');
+
+                if (!menuContainer.classList.contains('hidden')) {
+                    menuContainer.style.position = 'absolute';
+                    menuContainer.style.top = '100%';
+                    menuContainer.style.left = '0';
+                    menuContainer.style.width = '100%';
+                } else {
+                    menuContainer.style.position = 'relative';
+                }
+            });
+        }
+
+        const userBtn = document.getElementById('user-btn');
+        const userMenu = document.getElementById('user-menu');
+
+        if (userBtn && userMenu) {
+            userBtn.addEventListener('click', () => {
+                userMenu.classList.toggle('hidden');
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!userBtn.contains(e.target) && !userMenu.contains(e.target)) {
+                    userMenu.classList.add('hidden');
+                }
+            });
+        }
+
+        const adminMenuToggle = document.getElementById('admin-menu-toggle');
+        const adminMenu = document.getElementById('admin-menu');
+
+        if (adminMenuToggle && adminMenu) {
+            adminMenuToggle.addEventListener('click', () => {
+                adminMenu.classList.toggle('hidden');
+
+                if (!adminMenu.classList.contains('hidden')) {
+                    adminMenu.style.position = 'absolute';
+                    adminMenu.style.top = '100%';
+                    adminMenu.style.left = '0';
+                    adminMenu.style.width = '100%';
+                } else {
+                    adminMenu.style.position = 'relative';
+                }
+            });
+        }
+
+        const openModalBtn = document.getElementById("open-contact-modal");
+        const closeModalBtn = document.getElementById("close-contact-modal");
+        const modal = document.getElementById("contact-modal");
+
+        if (openModalBtn && closeModalBtn && modal) {
+            openModalBtn.addEventListener("click", (e) => {
+                e.preventDefault();
+                modal.classList.remove("hidden");
+                document.body.classList.add("overflow-hidden");
+            });
+
+            closeModalBtn.addEventListener("click", () => {
+                modal.classList.add("hidden");
+                document.body.classList.remove("overflow-hidden");
+            });
+
+            window.addEventListener("click", (e) => {
+                if (e.target === modal) {
+                    modal.classList.add("hidden");
+                    document.body.classList.remove("overflow-hidden");
+                }
+            });
+        }
+    </script>
+
+</body>
+
+</html>

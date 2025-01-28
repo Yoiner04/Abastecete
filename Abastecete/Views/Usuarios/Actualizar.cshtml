@@ -1,0 +1,146 @@
+﻿
+
+<html lang="es">
+<head>
+    
+</head>
+
+<body>
+
+    <section class="encabezado">
+        <div class="row mt-4">
+            <div class="col">
+                <h1>
+                    <svg style="align-self:auto" xmlns="http://www.w3.org/2000/svg" width="50" height="50" fill="currentColor" class="bi bi-person-circle" viewBox="0 0 16 16">
+                        <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z" />
+                        <path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z" />
+                    </svg>
+                    Usuario
+                </h1>
+            </div>
+            <div class="col">
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end margen">
+                    <button type="button" class="btn btn-primary fw-bolder" data-bs-toggle="modal" data-bs-target="#exampleModal">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-lock-fill" viewBox="0 0 16 16">
+                            <path d="M8 1a2 2 0 0 1 2 2v4H6V3a2 2 0 0 1 2-2zm3 6V3a3 3 0 0 0-6 0v4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z" />
+                        </svg>
+                        Cambiar contraseña
+                    </button>
+                </div>
+                <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <form class="needs-validation" novalidate>
+                                <div class="modal-header">
+                                    <h5 class="modal-title fw-bolder" id="exampleModalLabel">cambiar contraseña</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="container">
+                                        <label for="contraseña1" class="col-sm-11 col-form-label">Contraseña actual</label>
+                                        <div class="row mb-10">
+                                            <div class="col-sm-11">
+                                                <input type="password" class="form-control" id="contraseña1" required>
+                                                <div class="invalid-feedback">Necesita una contraseña</div>
+                                            </div>
+                                        </div>
+
+                                        <label for="contraseña2" class="col-sm-11 col-form-label">Nueva contraseña </label>
+                                        <div class="row mb-10">
+                                            <div class="col-sm-11">
+                                                <input type="password" class="form-control" id="contraseña2" required>
+                                                <div class="invalid-feedback">Necesita una contraseña</div>
+                                            </div>
+                                        </div>
+
+                                        <label for="contraseña3" class="col-sm-11 col-form-label">Confirma contraseña</label>
+                                        <div class="row mb-10">
+                                            <div class="col-sm-11">
+                                                <input type="password" class="form-control" id="contraseña3" required>
+                                                <div class="invalid-feedback">Necesita una contraseña</div>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="submit" class="btn btn-primary fw-bolder">Actualizar</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="margen">
+        <form class="needs-validation" novalidate>
+            <div class="row">
+                <div class="col">
+                    <label for="idNombre1" class="col-sm-2 col-form-label  fw-bolder">Nombres</label>
+                    <input type="text" class="form-control" id="idNombre1" required>
+                    <div class="invalid-feedback">Necesita un nombre</div>
+                </div>
+                <div class="col">
+                    <label for="idapellido1" class="col-sm-2 col-form-label  fw-bolder">Apellidos</label>
+                    <input type="text" class="form-control" id="idapellido1" required>
+                    <div class="invalid-feedback">Necesita un apellido</div>
+                </div>
+            </div>
+            <br>
+            <div class="row">
+                <div class="col">
+                    <label for="numerodocumento1" class="col-sm-8 col-form-label  fw-bolder">Número de documento</label>
+                    <input type="text" class="form-control" id="numerodocumento1" required pattern="[0-9]+" required>
+                    <div class="invalid-feedback">Necesita un número de documento</div>
+                </div>
+                <div class="col">
+                    <label for="telefono1" class="col-sm-2 col-form-label  fw-bolder">Teléfono</label>
+                    <input type="text" class="form-control" id="telefono1" required pattern="[0-9]+" required>
+                    <div class="invalid-feedback">Necesita un teléfono</div>
+                </div>
+            </div>
+            <br>
+            <div class="row">
+                <div class="col-6">
+                    <label for="correo1" class="col-sm-8 col-form-label  fw-bolder">Correo electrónico</label>
+                    <input type="email" class="form-control" id="correo1" disabled>
+                    <div class="invalid-feedback">Necesita un correo</div>
+                </div>
+            </div>
+            <br>
+            <br>
+            <div class="d-grid gap-2 d-md-flex justify-content-md-center margen">
+                <button type="submit" class="btn btn-primary fw-bolder me-md-2 ">
+                    Actualizar datos
+                </button>
+            </div>
+
+
+        </form>
+
+    </section>
+
+
+    <script>
+        (function () {
+            'use strict'
+            var forms = document.querySelectorAll('.needs-validation')
+
+            Array.prototype.slice.call(forms)
+                .forEach(function (form) {
+                    form.addEventListener('submit', function (event) {
+                        if (!form.checkValidity()) {
+                            event.preventDefault()
+                            event.stopPropagation()
+                        }
+
+                        form.classList.add('was-validated')
+                    }, false)
+                })
+        })()
+    </script>
+
+</body>
+</html>
