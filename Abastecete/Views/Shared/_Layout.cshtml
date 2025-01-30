@@ -159,6 +159,14 @@
                             </a>
                         </li>
                     }
+                    @if (RolPermisos.TienePermiso("Administrar Roles", permisos))
+                    {
+                        <li class="group">
+                            <a href="@Url.Action("Consultar", "Roles")" class="text-black group-hover:text-green-600">
+                                Gestionar Roles y permisos
+                            </a>
+                        </li>
+                    }
                 } else {
                     <li class="group">
                         <a href="@Url.Action("Login", "Login")" class="text-black group-hover:text-green-600">

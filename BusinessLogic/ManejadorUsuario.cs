@@ -1,5 +1,4 @@
-﻿
-using BusinessLogic.Models;
+﻿using BusinessLogic.Models;
 using BusinessLogic.Utilidades;
 using DataAccess;
 using System;

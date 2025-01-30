@@ -1,122 +1,126 @@
 ﻿@model BusinessLogic.Models.PermisosViewModel;
 
+<!DOCTYPE html>
 <html lang="es">
 <head>
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Abastecete</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/Abastecete.styles.css" asp-append-version="true" />
+    <link rel="icon" type="image/x-icon" href="~/css/Images/Logo A naranja.png" />
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link rel="stylesheet" href="~/css/styles.css" asp-append-version="true" />
 </head>
 
-<body>
+<body class="bg-gray-100 p-10">
     <br />
-    <section class="encabezado">
-        <div class="row">
-            <div class="col">
-                <h1>Gestión de roles</h1>
+
+    <div class="max-w-5xl mx-auto bg-white shadow-lg rounded-xl p-8">
+        @using (Html.BeginForm("AsignarRol", "Roles", FormMethod.Post))
+        {
+            <div class="grid grid-cols-3 gap-6">
+                <!-- Sección de roles -->
+                <div class="col-span-1">
+                    <h2 class="text-xl font-semibold text-gray-700 mb-2">Roles</h2>
+                    <select asp-for="Rol.Id"
+                            class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                            onchange="window.location.href = '@Url.Action("Consultar", "Roles")' + '?idRol=' + this.value">
+                        <option value="">Seleccionar rol</option>
+                        @foreach (var tipo in ViewBag.roles)
+                        {
+                            <option value="@tipo.Id" selected="@(ViewBag.idRol == tipo.Id ? "selected" : null)">@tipo.Nombre</option>
+                        }
+                    </select>
+                </div>
+
+                <!-- Sección de usuarios -->
+                <div class="col-span-1">
+                    <h2 class="text-xl font-semibold text-gray-700 mb-2">Usuarios</h2>
+                    <select class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500" asp-for="Usuario.Id">
+                        <option>Seleccionar usuario</option>
+                        @foreach (var usuario in ViewBag.usuarios)
+                        {
+                            <option value="@usuario.Id">@usuario.Persona.Nombre @usuario.Persona.Apellido</option>
+                        }
+                    </select>
+                </div>
+
+                <!-- Botón asignar rol -->
+                <div class="col-span-1 flex items-end">
+                    <button class="bg-[#16A34A] text-white font-bold px-6 py-3 w-full rounded-lg hover:bg-[#15803D]">Asignar rol</button>
+                </div>
             </div>
-        </div>
-    </section>
-    <hr />
+        }
 
-    <section class="contenido">
-        <div class="row mt-4">
-            @using (Html.BeginForm("AsignarRol", "Roles", FormMethod.Post))
+        <!-- Crear nuevo rol -->
+        <div class="mt-8 border-t pt-6">
+            @using (Html.BeginForm("CrearRol", "Roles", FormMethod.Post))
             {
-                <div class="row">
-                    <div class="col-4">
+                <h2 class="text-xl font-semibold text-gray-700 mb-2">Crear nuevo rol</h2>
+                <div class="flex gap-4">
+                    @Html.TextBoxFor(m => m.Rol.Nombre, new { @type = "text", @class = "w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500", @placeholder = "Nombre del rol" })
+                    <div class="invalid-feedback">
+                        @Html.ValidationMessageFor(m => m.Rol.Nombre)
+                    </div>
+                    @* <input type="text" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500" placeholder="Nombre del rol"> *@
+                    <button class="bg-[#16A34A] text-white font-bold px-6 py-3 rounded-lg hover:bg-[#15803D]">Crear</button>
+                </div>
+            }
+        </div>
 
-                        <label class="col-sm-2 col-form-label  fw-bolder">Roles</label>
-                        <select class="form-select" asp-for="Rol.Id" size="3" aria-label="size 3 select example">
-                            @foreach (var tipo in ViewBag.roles)
-                            {
-                                @if (ViewBag.idRol == tipo.Id)
-                                {
-                                    <option value="@tipo.Id" selected onclick="window.location.href = '@Url.Action("Consultar", "Roles")' + '?idRol=' + @tipo.Id">@tipo.Nombre</option>
-                                }
-                                else
-                                {
-                                    <option value="@tipo.Id" onclick="window.location.href = '@Url.Action("Consultar", "Roles")' + '?idRol=' + @tipo.Id">@tipo.Nombre</option>
-                                }
-                            }
-                        </select>
-                    </div>
-                    <div class="col-4">
-                        <label class="col-sm-2 col-form-label  fw-bolder">Usuario</label>
-                        <select class="form-select" asp-for="Usuario.Id" aria-label="Default select example" required>
-                            <option selected></option>
-                            @foreach (var usuario in ViewBag.usuarios)
-                            {
-                                <option value="@usuario.Id">@usuario.Persona.Nombre @usuario.Persona.Apellido</option>
-                            }
-                        </select>
-                        <br />
-                        <div class="d-grid gap-2 d-md-flex justify-content-md-end " id="separarboton">
-                            <button type="submit" class="btn btn-primary fw-bolder me-md-2 btn-sm">Cambiar rol</button>
-                        </div>
-                    </div>
+        <!-- Permisos -->
+        <div class="mt-8 border-t pt-6">
+            <h2 class="text-xl font-semibold text-gray-700 mb-2">Permisos asignados</h2>
+            <div class="grid grid-cols-3 gap-4 bg-gray-50 p-4 rounded-lg">
+                @foreach (var permiso in ViewBag.permisos)
+                {
+                    <label class="flex items-center">
+                        <input type="checkbox"
+                               class="mr-2"
+                        @(permiso.Estado ? "checked" : "")
+                               onclick="window.location.href = '@Url.Action("AsignarPermisoRol", "Roles")' + '?idRol=@ViewBag.idRol&idPermiso=@permiso.Id'">
+                        @permiso.Nombre
+                    </label>
+                }
+            </div>
+            @* @foreach (var permiso in ViewBag.permisos)
+            {
+                <div class="form-check form-check-inline" id="check">
+
+                    @if (permiso.Estado)
+                    {
+                        <input class="form-check-input" checked type="checkbox" id="inlineCheckbox1" value="option1" onclick="window.location.href = '@Url.Action("AsignarPermisoRol", "Roles")' + '?idRol=' + @ViewBag.idRol + '&idPermiso=' + @permiso.Id">
+                    }
+                    else
+                    {
+                        <input class="form-check-input" type="checkbox" id="inlineCheckbox1" value="option1" onclick="window.location.href = '@Url.Action("AsignarPermisoRol", "Roles")' + '?idRol=' + @ViewBag.idRol + '&idPermiso=' + @permiso.Id">
+                    }
+                    <label class="form-check-label" for="inlineCheckbox1">@permiso.Nombre</label>
                 </div>
             }
 
-            <div class="col-4">
-                @using (Html.BeginForm("CrearRol", "Roles", FormMethod.Post))
-                {
-                    <div class="mb-3">
-                        <label for="exampleFormControlInput1" class="form-label fw-bolder">Nuevo rol</label>
-                        @Html.TextBoxFor(m=>m.Rol.Nombre, new { @class = "form-control" })
-                        <div class="invalid-feedback">
-                            @Html.ValidationMessageFor(m=>m.Rol.Nombre)
-                        </div>
-                    </div>
-                    <div class="d-grid gap-2 d-md-flex justify-content-md-end " id="separarboton">
-                        <button type="submit" class="btn btn-primary fw-bolder me-md-2 btn-sm">Crear rol</button>
-                    </div>
-                }
-            </div>
+            
+
+
+            <div class="grid grid-cols-3 gap-4 bg-gray-50 p-4 rounded-lg">
+                <label class="flex items-center"><input type="checkbox" class="mr-2"> Administrar Sedes</label>
+                <label class="flex items-center"><input type="checkbox" class="mr-2"> Consultar Sedes</label>
+                <label class="flex items-center"><input type="checkbox" class="mr-2"> Consultar Inventario</label>
+                <label class="flex items-center"><input type="checkbox" class="mr-2"> Administrar Usuarios</label>
+                <label class="flex items-center"><input type="checkbox" class="mr-2"> Consultar Usuarios</label>
+                <label class="flex items-center"><input type="checkbox" class="mr-2"> Administrar Roles</label>
+                <label class="flex items-center"><input type="checkbox" class="mr-2"> Administrar Reportes</label>
+                <label class="flex items-center"><input type="checkbox" class="mr-2"> Administrar Eventos</label>
+                <label class="flex items-center"><input type="checkbox" class="mr-2"> Consultar Eventos</label>
+                <label class="flex items-center"><input type="checkbox" class="mr-2"> Consultar Productos</label>
+                <label class="flex items-center"><input type="checkbox" class="mr-2"> Administrar Registro</label>
+                <label class="flex items-center"><input type="checkbox" class="mr-2"> Administrar Ubicaciones</label>
+                <label class="flex items-center"><input type="checkbox" class="mr-2"> Consultar Ubicaciones</label>
+            </div> *@
         </div>
-    </section>
-
-    <section class="permisos permisos1">
-        <div class="row mt-4">
-            <div>
-                <div>
-                    <label class="form-label fw-bolder" id="check">Permisos asignados al rol</label>
-                </div>
-                @foreach (var permiso in ViewBag.permisos)
-                {
-                    <div class="form-check form-check-inline" id="check">
-
-                        @if (permiso.Estado)
-                        {
-                            <input class="form-check-input" checked type="checkbox" id="inlineCheckbox1" value="option1" onclick="window.location.href = '@Url.Action("AsignarPermisoRol", "Roles")' + '?idRol=' + @ViewBag.idRol + '&idPermiso=' + @permiso.Id">
-                        }
-                        else
-                        {
-                            <input class="form-check-input" type="checkbox" id="inlineCheckbox1" value="option1" onclick="window.location.href = '@Url.Action("AsignarPermisoRol", "Roles")' + '?idRol=' + @ViewBag.idRol + '&idPermiso=' + @permiso.Id">
-                        }
-                        <label class="form-check-label" for="inlineCheckbox1">@permiso.Nombre</label>
-                    </div>
-                }
-
-
-            </div>
-        </div>
-    </section>
-
-    <script>
-        (function () {
-            'use strict'
-            var forms = document.querySelectorAll('.needs-validation')
-
-            Array.prototype.slice.call(forms)
-                .forEach(function (form) {
-                    form.addEventListener('submit', function (event) {
-                        if (!form.checkValidity()) {
-                            event.preventDefault()
-                            event.stopPropagation()
-                        }
-
-                        form.classList.add('was-validated')
-                    }, false)
-                })
-        })()
-    </script>
+    </div>
 </body>
 </html>

@@ -25,13 +25,13 @@ namespace BusinessLogic
         public List<Rol> ObtenerRoles()
         {
 
-            DataTable data = conexion.EjecutarConsulta("consultar_roles");
+            DataTable data = conexion.EjecutarConsulta("consultar_rol");
             List<Rol> roles = new List<Rol>();
             foreach (DataRow row in data.AsEnumerable())
             {
                 roles.Add(new Rol()
                 {
-                    Id = Convert.ToInt32(row["PK_ID_ROLES"].ToString()),
+                    Id = Convert.ToInt32(row["PK_ID_ROL"].ToString()),
                     Nombre = row["NOMBRE_ROL"].ToString(),
                 });
             }
