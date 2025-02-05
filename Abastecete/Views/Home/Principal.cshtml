@@ -1,6 +1,8 @@
 ﻿@using BusinessLogic.Utilidades
 @using Microsoft.AspNetCore.Http
 @inject IHttpContextAccessor HttpContextAccessor
+@model List<BusinessLogic.Models.Categoria>
+
 
 <!DOCTYPE html>
 <html lang="es">
@@ -44,13 +46,11 @@
                     <img src="~/css/Images/2.jpg" alt="Imagen 2" class="w-full h-full object-cover rounded-lg">
                 </div>
             </div>
-
-
         </div>
     </section>
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            const images = ["/css/Images/carrusel1.jpg", "/css/Images/carrusel2.jpg", "/css/Images/carrusel3.jpg"];           
+            const images = ["/css/Images/carrusel1.jpg", "/css/Images/carrusel2.jpg", "/css/Images/carrusel3.jpg"];
             let currentIndex = 0;
             const carouselImage = document.getElementById("carouselImage");
             const prevBtn = document.getElementById("prevBtn");
@@ -91,78 +91,40 @@
                 Ver todo <span class="ml-1">&gt;</span>
             </a>
         </div>
-    </section>
-    <script>
-        // Lista de categorías con imágenes
-        const categories = [
-            { name: "Frutas y Verduras", image: "/css/Images/frutaverdura.jpeg" },
-            { name: "Proteínas", image: "/css/Images/proteinas.jpg" },
-            { name: "Lácteos y Huevos", image: "/css/Images/lacteoshuevos.png" },
-            { name: "Panadería y Repostería", image: "/css/Images/pan.jpeg" },
-            { name: "Despensa", image: "/css/Images/despensa.jpg" },
-            { name: "Congelados", image: "/css/Images/congelados.jpg" },
-            { name: "Bebidas", image: "/css/Images/bebidas.jpeg" },
-            { name: "Snacks y Aperitivos", image: "/css/Images/snacks.jpeg" },
-            { name: "Dulces y Chocolatería", image: "/css/Images/dulces.jpg" },
-            { name: "Charcutería y Especialidades", image: "/css/Images/charcucheria.jpg" },
-            { name: "Aseo del Hogar", image: "/css/Images/aseo.png" },
-            { name: "Cuidado Personal", image: "/css/Images/cuidado.jpg" },
-            { name: "Licores y Tabaco", image: "/css/Images/licor.jpg" },
-        ];
 
-        // Breakpoints para cantidad de categorías por fila
-        const breakpoints = {
-            xl: 7, // 7 categorías por fila en pantallas grandes
-            lg: 5, // 5 categorías por fila en pantallas medianas
-            md: 4, // 4 categorías por fila en pantallas pequeñas
-            sm: 3, // 3 categorías por fila en pantallas extra pequeñas
-        };
+        @{
+            int totalCategorias = Model.Count;
+            int mitad = totalCategorias / 2;
+            int primeraFila = (totalCategorias % 2 == 0) ? mitad : mitad + 1;
+        }
 
-        const container = document.getElementById("categories-container");
-
-        // Generar filas según las categorías y breakpoints
-        const renderCategories = () => {
-            container.querySelectorAll(".category-row").forEach(row => row.remove()); // Limpiar filas existentes
-
-            const screenWidth = window.innerWidth;
-            let maxPerRow = breakpoints.sm; // Valor predeterminado para pantallas pequeñas
-
-            if (screenWidth >= 1280) maxPerRow = breakpoints.xl; // Pantallas grandes
-            else if (screenWidth >= 1024) maxPerRow = breakpoints.lg; // Pantallas medianas
-            else if (screenWidth >= 768) maxPerRow = breakpoints.md; // Pantallas pequeñas
-
-            const rows = [];
-            let startIndex = 0;
-
-            while (startIndex < categories.length) {
-                rows.push(categories.slice(startIndex, startIndex + maxPerRow));
-                startIndex += maxPerRow;
+        <!-- Primera Fila -->
+        <div class="flex flex-wrap justify-center gap-4 sm:space-x-6 mb-6">
+            @for (int i = 0; i < primeraFila; i++)
+            {
+                <div class="flex flex-col items-center">
+                    <div class="category rounded-full w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 lg:w-40 lg:h-40 bg-gray-300 overflow-hidden shadow-lg">
+                        <img src="@Model[i].Imagen" alt="@Model[i].Nombre" class="w-full h-full object-cover">
+                    </div>
+                    <p class="text-center mt-2 text-xs sm:text-sm font-medium">@Model[i].Nombre</p>
+                </div>
             }
+        </div>
 
-            rows.forEach(row => {
-                const rowDiv = document.createElement("div");
-                rowDiv.className = "category-row flex justify-center space-x-6 mb-6";
+        <!-- Segunda Fila -->
+        <div class="flex flex-wrap justify-center gap-4 sm:space-x-6">
+            @for (int i = primeraFila; i < totalCategorias; i++)
+            {
+                <div class="flex flex-col items-center">
+                    <div class="category rounded-full w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 lg:w-40 lg:h-40 bg-gray-300 overflow-hidden shadow-lg">
+                        <img src="@Model[i].Imagen" alt="@Model[i].Nombre" class="w-full h-full object-cover">
+                    </div>
+                    <p class="text-center mt-2 text-xs sm:text-sm font-medium">@Model[i].Nombre</p>
+                </div>
+            }
+        </div>
+    </section>
 
-                row.forEach(category => {
-                    const categoryDiv = document.createElement("div");
-                    categoryDiv.className = "flex flex-col items-center";
-                    categoryDiv.innerHTML = `
-                        <div class="category rounded-full w-24 h-24 md:w-32 md:h-32 lg:w-40 lg:h-40 bg-gray-300 overflow-hidden shadow-lg">
-                            <img src="${category.image}" alt="${category.name}" class="w-full h-full object-cover">
-                        </div>
-                        <p class="text-center mt-2 text-sm font-medium">${category.name}</p>
-                    `;
-                    rowDiv.appendChild(categoryDiv);
-                });
-
-                container.appendChild(rowDiv);
-            });
-        };
-
-        // Renderizar al cargar y al cambiar el tamaño de la pantalla
-        renderCategories();
-        window.addEventListener("resize", renderCategories);
-    </script>
 
     <!-- OFERTAS FLASH -->
     <section class="off-section p-6 lg:p-10">

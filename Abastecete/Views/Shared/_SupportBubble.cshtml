@@ -34,11 +34,13 @@
         </a>
     </div>
 
-    <!-- Botón de Soporte -->
+    <!-- Botón de Soporte con Tooltip a la Izquierda -->
     <button id="open-support-chat"
-            class="w-16 h-16 flex items-center justify-center bg-black text-white rounded-full shadow-lg transition-transform duration-200 hover:scale-110">
+            class="w-16 h-16 flex items-center justify-center bg-black text-white rounded-full shadow-lg transition-transform duration-200 hover:scale-110 group relative">
+        <span class="support-tooltip">Contáctanos a través de nuestras redes</span>
         <box-icon name='support' flip='horizontal' color="white" size="lg"></box-icon>
     </button>
+
 </div>
 
 <!-- Estilos con Tailwind -->
@@ -73,6 +75,45 @@
         .social-btn:hover {
             box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.5);
         }
+
+    #open-support-chat {
+        background: linear-gradient(135deg, #ff7e5f, #feb47b);
+        box-shadow: 0 0 15px rgba(255, 126, 95, 0.7);
+        animation: glow-animation 1.5s infinite alternate;
+    }
+
+    @@keyframes glow-animation {
+        0% {
+            box-shadow: 0 0 10px rgba(255, 126, 95, 0.7);
+        }
+
+        100% {
+            box-shadow: 0 0 20px rgba(255, 126, 95, 1);
+        }
+    }
+
+    .support-tooltip {
+        position: absolute;
+        right: 100%;
+        margin-right: 10px;
+        background-color: rgba(0, 0, 0, 0.8);
+        color: white;
+        font-size: 14px;
+        padding: 6px 12px;
+        border-radius: 5px;
+        white-space: nowrap;
+        opacity: 0;
+        transform: translateX(10px);
+        transition: opacity 0.3s ease, transform 0.3s ease;
+        visibility: hidden;
+        z-index: 10;
+    }
+
+    .group:hover .support-tooltip {
+        opacity: 1;
+        transform: translateX(0);
+        visibility: visible;
+    }
 </style>
 
 <!-- Script para desplegar redes sociales -->

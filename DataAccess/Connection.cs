@@ -80,24 +80,37 @@ namespace DataAccess
         public bool EjecutarTransaccion(string procedimiento, List<Parametro> parametros = null)
         {
             Conectar();
-
             try
             {
                 MySqlCommand comando = new MySqlCommand(procedimiento, connection);
-                comando.CommandType = System.Data.CommandType.StoredProcedure;
+                comando.CommandType = CommandType.StoredProcedure;
+
                 if (parametros != null)
                 {
                     foreach (Parametro parametro in parametros)
                     {
-                        comando.Parameters.AddWithValue(parametro.Nombre, parametro.Valor);
+                        if (parametro.Nombre == "mensaje")
+                        {
+                            var pMensaje = new MySqlParameter(parametro.Nombre, MySqlDbType.VarChar, 500);
+                            pMensaje.Direction = ParameterDirection.Output;
+                            comando.Parameters.Add(pMensaje);
+                        }
+                        else
+                        {
+                            comando.Parameters.AddWithValue(parametro.Nombre, parametro.Valor);
+                        }
                     }
                 }
+
                 comando.ExecuteNonQuery();
+                string mensaje = comando.Parameters["mensaje"].Value.ToString();
+                Console.WriteLine("Mensaje SQL: " + mensaje);
+
                 return true;
             }
             catch (Exception e)
             {
-                Console.WriteLine("Error al insertar datos de user" + e.Message);
+                Console.WriteLine("Error al ejecutar procedimiento: " + e.Message);
                 return false;
             }
             finally
@@ -105,6 +118,7 @@ namespace DataAccess
                 DesConectar();
             }
         }
+
 
         public bool EjecutarTransacciones(List<Transaccion> transacciones)
         {
@@ -144,7 +158,6 @@ namespace DataAccess
                 DesConectar();
             }
         }
-
     }
 
 }
