@@ -25,9 +25,26 @@ namespace Abastecete.Controllers
         [HttpPost]
         public IActionResult Registrar(Usuario usuario)
         {
+            if (!ModelState.IsValid)
+            {
+                // Si hay errores de validación, vuelve a mostrar la vista con los mensajes
+                return View(usuario);
+            }
+
             bool result = manejadorU.RegistrarUsuario(usuario);
-            return RedirectToAction("Registrar");
+
+            if (result)
+            {
+                return RedirectToAction("Login", "Login");
+            }
+            else
+            {
+                ModelState.AddModelError("", "No se pudo registrar el usuario. Intente nuevamente.");
+                return View(usuario);
+            }
         }
+
+
 
         //[HttpPost]
         //public IActionResult Registrar(Usuario usuario)

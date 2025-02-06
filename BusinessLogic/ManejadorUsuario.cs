@@ -1,6 +1,7 @@
 ﻿using BusinessLogic.Models;
 using BusinessLogic.Utilidades;
 using DataAccess;
+using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -71,6 +72,56 @@ namespace BusinessLogic
             }
             return usuarios;
         }
+
+        public DataTable LoginGoogle(string correo)
+        {
+            List<Parametro> parametros = new List<Parametro>()
+    {
+        new Parametro("p_correo", correo)
+    };
+
+            return conexion.EjecutarConsulta("login_usuario_google", parametros);
+        }
+
+        // 🔹 Método optimizado para registrar usuarios autenticados con Google
+        public int RegistrarUsuarioGoogle(string correo, string nombre)
+        {
+            try
+            {
+                List<Parametro> parametros = new List<Parametro>()
+        {
+            new Parametro("p_full_name", nombre),
+            new Parametro("p_correo", correo),
+            new Parametro("p_fk_id_metodo_autenticacion", 2),
+            new Parametro("p_fk_id_rol", 3)
+        };
+
+                // 🔹 Intentar registrar al usuario
+                bool registroExitoso = conexion.EjecutarTransaccion("crear_usuario_google", parametros);
+
+                if (!registroExitoso)
+                {
+                    return 0;
+                }
+
+                // 🔹 Volver a consultar la BD para obtener el ID del usuario registrado
+                DataTable data = LoginGoogle(correo);
+
+                if (data.Rows.Count > 0)
+                {
+                    return Convert.ToInt32(data.Rows[0]["PK_ID_USUARIO"]);
+                }
+                else
+                {
+                    return 0;
+                }
+            }
+            catch (Exception ex)
+            {
+                return 0;
+            }
+        }
+
 
     }
 }

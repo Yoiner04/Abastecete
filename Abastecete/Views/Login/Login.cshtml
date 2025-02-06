@@ -18,36 +18,58 @@
 <body>
     <div class="login-container">
         <div class="login-box">
+
             <!-- Imagen Superior -->
             <div class="login-image text-center">
                 <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Principal">
                     <img src="~/css/Images/LOGO FINAL.png" alt="Abastecete Login" class="img-fluid">
                 </a>
             </div>
-            
-            @using (Html.BeginForm("Login", "Login", FormMethod.Post))
+
+            @if (TempData["Error"] != null)
             {
-                <form method="POST" action="/Login/Authenticate">
-                    <div class="form-group mb-3">
-                        <label for="email">Correo Electrónico</label>
-                        @Html.TextBoxFor(m => m.Correo, new { @class = "form-control", @type = "email", @id = "email", @name = "email", @placeholder = "Ingresa tu correo" })
-                        
-                    </div>
-                    <div class="form-group mb-3">
-                        <label for="password">Contraseña</label>
-                        @Html.TextBoxFor(m => m.Contrasenia, new { @class = "form-control", @type = "password", @id = "password", @name = "password", @placeholder = "Ingresa tu contraseña" })
-             
-                    </div>
+                <div class="alert alert-danger text-center" id="errorMessage">
+                    @TempData["Error"]
+                </div>
+            }
 
-                    <button type="submit" class="btn-login">Iniciar Sesión</button>
+            @using (Html.BeginForm("Login", "Login", FormMethod.Post, new { id = "loginForm" }))
+            {
+                <div class="form-group mb-3">
+                    <label for="email">Correo Electrónico</label>
+                    @Html.TextBoxFor(m => m.Correo, new { @class = "form-control", @type = "email", @id = "email", @name = "email", @placeholder = "Ingresa tu correo" })
+                    <span id="correoError" class="text-danger text-sm hidden">El correo es obligatorio.</span>
+                </div>
+                <div class="form-group mb-3">
+                    <label for="password">Contraseña</label>
+                    @Html.PasswordFor(m => m.Contrasenia, new { @class = "form-control", @id = "password", @name = "password", @placeholder = "Ingresa tu contraseña" })
+                    <span id="contraseniaError" class="text-danger text-sm hidden">La contraseña es obligatoria.</span>
+                </div>
 
-                    <div class="forgot-password">
-                        <a href="/Login/ForgotPassword">¿Olvidaste tu contraseña?</a>
+                <button type="submit" class="btn-login">Iniciar Sesión</button>
+
+                <div class="forgot-password">
+                    <a href="/Login/ForgotPassword">¿Olvidaste tu contraseña?</a>
+                </div>
+                <div class="mt-6 text-center">
+                    <p class="text-sm">o inicia sesión con</p>
+                    <div class="flex flex-col md:flex-row gap-2 mt-2">
+                        @if (Context.Session.GetString("userEmail") != null)
+                        {
+                            <p>Bienvenido, @Context.Session.GetString("userName")</p>
+                        }
+                        else
+                        {
+                            <a href="/Login/LoginWithGoogle" class="btn btn-light">
+                                <img src="https://developers.google.com/identity/images/g-logo.png" width="20" />
+                                Iniciar sesión con Google
+                            </a>
+                        }
                     </div>
-                    <div class="register">
-                        <p>¿No tienes cuenta? <a asp-area="" asp-controller="Usuarios" asp-action="Registrar">Regístrate aquí</a></p>
-                    </div>
-                </form>
+                </div>
+                <div class="register">
+                    <p>¿No tienes cuenta? <a asp-area="" asp-controller="Usuarios" asp-action="Registrar">Regístrate aquí</a></p>
+                </div>
             }
 
             <div class="back-button text-center mb-3">
@@ -58,7 +80,74 @@
             <img src="~/css/Images/hombre.png" alt="Promoción" style="width: 100%; height: auto;" />
         </div>
     </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const form = document.getElementById("loginForm");
+            const errorMessage = document.getElementById("errorMessage");
+
+            // Evita el reenvío del formulario en la recarga
+            if (window.performance && window.performance.navigation.type === 1) {
+                window.history.replaceState({}, document.title, window.location.href);
+
+                // Ocultar mensaje de error si la página se recarga
+                if (errorMessage) {
+                    errorMessage.style.display = "none";
+                }
+            }
+
+            form.addEventListener("submit", function (event) {
+                const email = document.getElementById("email");
+                const password = document.getElementById("password");
+
+                // Limpia los errores previos
+                email.classList.remove("border-red");
+                password.classList.remove("border-red");
+                document.getElementById("correoError").classList.add("hidden");
+                document.getElementById("contraseniaError").classList.add("hidden");
+
+                let valid = true;
+
+                // Validación del correo
+                if (!email.value.trim()) {
+                    document.getElementById("correoError").classList.remove("hidden");
+                    email.classList.add("border-red");
+                    valid = false;
+                }
+
+                // Validación de la contraseña
+                if (!password.value.trim()) {
+                    document.getElementById("contraseniaError").classList.remove("hidden");
+                    password.classList.add("border-red");
+                    valid = false;
+                } else if (password.value.trim().length <= 8) {
+                    document.getElementById("contraseniaError").classList.remove("hidden");
+                    password.classList.add("border-red");
+                    valid = false;
+                }
+
+                // Si los campos no son válidos, evita el envío del formulario
+                if (!valid) {
+                    event.preventDefault();
+                }
+            });
+        });
+    </script>
+
+    <!-- Estilo para los bordes rojos -->
+    <style>
+        .border-red {
+            border: 0.5px solid red !important;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* Color rojo para los mensajes de error */
+        .text-danger {
+            color: red !important;
+        }
+    </style>
 </body>
 </html>
-
-

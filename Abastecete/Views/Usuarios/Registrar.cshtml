@@ -11,75 +11,161 @@
     <title>Registro de Usuario</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation/1.19.5/jquery.validate.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/3.2.12/jquery.validate.unobtrusive.min.js"></script>
+
 <body class="bg-gray-100 flex items-center justify-center min-h-screen">
     <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-3xl">
         <h2 class="text-2xl font-bold text-green-600 text-center mb-6">Crea tu cuenta</h2>
 
-        @using (Html.BeginForm("Registrar", "Usuarios", FormMethod.Post, new { @class = "grid grid-cols-1 md:grid-cols-2 gap-4" }))
+        @using (Html.BeginForm("Registrar", "Usuarios", FormMethod.Post, new { id = "registroForm", @class = "grid grid-cols-1 md:grid-cols-2 gap-4" }))
         {
+            <div class="md:col-span-2">
+                @Html.ValidationSummary(true, "", new { @class = "text-red-500 text-sm" })
+            </div>
+
             <div>
                 <label class="block font-medium">Nombre</label>
-                @Html.TextBoxFor(m => m.Persona.Nombre, new { @type = "text", @class = "w-full border p-2 rounded", @placeholder = "Ingresa tu nombre" })
+                @Html.TextBoxFor(m => m.Persona.Nombre, new { @type = "text", @class = "w-full border p-2 rounded", @placeholder = "Ingresa tu nombre", @id = "nombre" })
+                <span id="nombreError" class="text-red-500 text-sm hidden">Por favor, ingresa tu nombre.</span>
             </div>
             <div>
                 <label class="block font-medium">Apellido</label>
-                @Html.TextBoxFor(m => m.Persona.Apellido, new { @type = "text", @class = "w-full border p-2 rounded", @placeholder = "Ingresa tu apellido" })
+                @Html.TextBoxFor(m => m.Persona.Apellido, new { @type = "text", @class = "w-full border p-2 rounded", @placeholder = "Ingresa tu apellido", @id = "apellido" })
+                <span id="apellidoError" class="text-red-500 text-sm hidden">Por favor, ingresa tu apellido.</span>
             </div>
-            @* <div>
-                <label class="block font-medium">Tipo de Documento</label>
-                <select class="w-full border p-2 rounded">
-                    <option value="dni">DNI</option>
-                    <option value="pasaporte">Pasaporte</option>
-                    <option value="cedula">Cédula</option>
-                </select>
-            </div> *@
             <div>
                 <label class="block font-medium">Tipo de Documento</label>
-                @Html.TextBoxFor(m => m.Persona.TipoDeDocumento, new { @type = "text", @class = "w-full border p-2 rounded", @placeholder = "Ingresa tu nombre" })
+                @Html.TextBoxFor(m => m.Persona.TipoDeDocumento, new { @type = "text", @class = "w-full border p-2 rounded", @placeholder = "Ingresa tu tipo de documento", @id = "tipoDeDocumento" })
+                <span id="tipoDeDocumentoError" class="text-red-500 text-sm hidden">Por favor, ingresa el tipo de documento.</span>
             </div>
             <div>
                 <label class="block font-medium">Documento</label>
-                @Html.TextBoxFor(m => m.Persona.Documento, new { @type = "text", @class = "w-full border p-2 rounded", @placeholder = "Ingresa tu documento" })
+                @Html.TextBoxFor(m => m.Persona.Documento, new { @type = "text", @class = "w-full border p-2 rounded", @placeholder = "Ingresa tu documento", @oninput = "this.value=this.value.replace(/[^0-9]/g,'');", @id = "documento" })
+                <span id="documentoError" class="text-red-500 text-sm hidden">El documento es obligatorio.</span>
             </div>
             <div>
                 <label class="block font-medium">Teléfono</label>
-                @Html.TextBoxFor(m => m.Persona.Telefono, new { @type = "text", @class = "w-full border p-2 rounded", @placeholder = "Ingresa tu teléfono" })
+                @Html.TextBoxFor(m => m.Persona.Telefono, new { @type = "text", @class = "w-full border p-2 rounded", @placeholder = "Ingresa tu teléfono", @oninput = "this.value=this.value.replace(/[^0-9]/g,'');", @id = "telefono" })
+                <span id="telefonoError" class="text-red-500 text-sm hidden">El teléfono debe comenzar con 3 y tener 10 dígitos.</span>
             </div>
             <div>
                 <label class="block font-medium">Correo Electrónico</label>
-                @Html.TextBoxFor(m => m.Correo, new { @type = "text", @class = "w-full border p-2 rounded", @placeholder = "Ingresa tu correo" })
+                @Html.TextBoxFor(m => m.Correo, new { @type = "email", @class = "w-full border p-2 rounded", @placeholder = "Ingresa tu correo", @id = "correo" })
+                <span id="correoError" class="text-red-500 text-sm hidden">El correo es obligatorio.</span>
             </div>
             <div>
                 <label class="block font-medium">Contraseña</label>
-                @Html.TextBoxFor(m => m.Contrasenia, new { @type = "text", @class = "w-full border p-2 rounded", @placeholder = "Ingresa tu contraseña" })
+                @Html.TextBoxFor(m => m.Contrasenia, new { @type = "password", @class = "w-full border p-2 rounded", @id = "password", @placeholder = "Ingresa tu contraseña" })
+                <span id="contraseniaError" class="text-red-500 text-sm hidden">La contraseña es obligatoria.</span>
+            </div>
+            <div>
+                <label class="block font-medium">Confirmar Contraseña</label>
+                <input type="password" id="confirmPassword" class="w-full border p-2 rounded" placeholder="Confirma tu contraseña">
+                <span id="errorMessage" class="text-red-500 text-sm hidden">Las contraseñas no coinciden o son demasiado cortas.</span>
             </div>
             <div>
                 <label class="block font-medium">Código de Referido</label>
-                @Html.TextBoxFor(m => m.CodigoReferido, new { @type = "text", @class = "w-full border p-2 rounded", @placeholder = "Ingresa el código de referido (opcional)" })
+                @Html.TextBoxFor(m => m.CodigoReferido, new { @type = "text", @class = "w-full border p-2 rounded", @placeholder = "Ingresa el código de referido (opcional)", @id = "codigoReferido" })
             </div>
 
             <div class="md:col-span-2">
                 <button class="w-full bg-orange-500 text-white font-bold py-2 rounded">Registrarse</button>
             </div>
         }
-        
-        <div class="mt-6 text-center">
-            <p class="text-sm">o regístrate con</p>
-            <div class="flex flex-col md:flex-row gap-2 mt-2">
-                <button class="w-full flex items-center justify-center border p-2 rounded bg-gray-100">
-                    <img src="https://www.svgrepo.com/show/355037/google.svg" alt="Google" class="w-5 h-5 mr-2">
-                    Regístrate con Google
-                </button>
-                <button class="w-full flex items-center justify-center border p-2 rounded bg-gray-100">
-                    <img src="https://www.svgrepo.com/show/512317/apple.svg" alt="Apple" class="w-5 h-5 mr-2">
-                    Regístrate con Apple
-                </button>
-            </div>
-        </div>
 
         <p class="text-center text-sm mt-4">
             ¿Ya tienes una cuenta? <a href="@Url.Action("Login", "Login")" class="text-green-600 font-bold">Inicia sesión</a>
         </p>
     </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const form = document.querySelector("form");
+            form.addEventListener("submit", function (event) {
+                let valid = true;
+
+                // Limpia los mensajes de error previos
+                const errorMessages = document.querySelectorAll(".text-red-500");
+                errorMessages.forEach(msg => msg.classList.add("hidden"));
+                const fields = {
+                    nombre: document.querySelector("[name='Persona.Nombre']"),
+                    apellido: document.querySelector("[name='Persona.Apellido']"),
+                    tipoDeDocumento: document.querySelector("[name='Persona.TipoDeDocumento']"),
+                    documento: document.querySelector("[name='Persona.Documento']"),
+                    telefono: document.querySelector("[name='Persona.Telefono']"),
+                    correo: document.querySelector("[name='Correo']"),
+                    contrasenia: document.querySelector("[name='Contrasenia']"),
+                    confirmPassword: document.querySelector("#confirmPassword")
+                };
+
+                // Limpia los bordes rojos
+                for (const key in fields) {
+                    fields[key].classList.remove("border-red-500");
+                }
+
+                // Validaciones
+                if (!fields.nombre.value.trim()) {
+                    document.getElementById("nombreError").classList.remove("hidden");
+                    fields.nombre.classList.add("border-red-500");
+                    valid = false;
+                }
+                if (!fields.apellido.value.trim()) {
+                    document.getElementById("apellidoError").classList.remove("hidden");
+                    fields.apellido.classList.add("border-red-500");
+                    valid = false;
+                }
+                if (!fields.tipoDeDocumento.value.trim()) {
+                    document.getElementById("tipoDeDocumentoError").classList.remove("hidden");
+                    fields.tipoDeDocumento.classList.add("border-red-500");
+                    valid = false;
+                }
+                if (!/^\d{10,15}$/.test(fields.documento.value.trim())) {
+                    document.getElementById("documentoError").classList.remove("hidden");
+                    fields.documento.classList.add("border-red-500");
+                    valid = false;
+                }
+                if (!/^3\d{9}$/.test(fields.telefono.value.trim())) {
+                    document.getElementById("telefonoError").classList.remove("hidden");
+                    fields.telefono.classList.add("border-red-500");
+                    valid = false;
+                }
+                if (!fields.correo.value.trim()) {
+                    document.getElementById("correoError").classList.remove("hidden");
+                    fields.correo.classList.add("border-red-500");
+                    valid = false;
+                }
+                if (fields.contrasenia.value.trim().length < 8) {
+                    document.getElementById("contraseniaError").classList.remove("hidden");
+                    fields.contrasenia.classList.add("border-red-500");
+                    valid = false;
+                }
+
+                // Validación de que las contraseñas coinciden
+                if (fields.contrasenia.value.trim() !== fields.confirmPassword.value.trim()) {
+                    document.getElementById("errorMessage").classList.remove("hidden");
+                    fields.confirmPassword.classList.add("border-red-500");
+                    valid = false;
+                }
+
+                if (!valid) {
+                    event.preventDefault();
+                }
+            });
+        });
+    </script>
+
+    <style>
+        .border-red-500 {
+            border: 0.5px solid red !important;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+
 </body>
 </html>
