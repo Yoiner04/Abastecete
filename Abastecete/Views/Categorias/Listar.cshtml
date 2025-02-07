@@ -1,0 +1,47 @@
+﻿@model List<BusinessLogic.Models.Categoria>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Abastecete</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link rel="icon" type="image/x-icon" href="~/css/Images/Logo A naranja.png" />
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link rel="stylesheet" href="~/css/styles.css" asp-append-version="true" />
+</head>
+
+<body>
+    @* <br />
+    <section class="w-full bg-gray-200 h-80 flex items-center justify-center mb-8 rounded-lg">
+        <h1 class="text-3xl font-bold text-gray-800">Promociones especiales</h1>
+    </section> *@
+
+    <!-- CATEGORÍAS (TARJETAS RECTANGULARES) -->
+    <section class="p-10 space-y-3">
+
+        @* <!-- Encabezado -->
+        <div class="flex justify-between items-center mb-4">
+            Categorias
+        </div> *@
+
+      @*   <!-- Encabezado -->
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-lg font-bold text-gray-800 pl-10">Categorías</h2>
+        </div> *@
+
+        <!-- Contenedor de Tarjetas -->
+        <div class="grid grid-cols-4 md:grid-cols-5 lg:grid-cols-4 gap-6">
+            @foreach (var categoria in Model)
+            {
+                <div class="bg-white shadow-md rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
+                    <img src="@categoria.Imagen" alt="@categoria.Nombre" class="w-full h-90 object-cover">
+                    <div class="p-4">
+                        <p class="text-center text-lg font-semibold text-gray-800">@categoria.Nombre</p>
+                    </div>
+                </div>
+            }
+        </div>
+    </section>
+</body>

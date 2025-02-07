@@ -303,6 +303,38 @@
         }
     </script>
 
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // Mapeo de secciones en la vista principal y sus respectivas rutas en otras vistas
+            const sections = [
+                { id: "categories-container", url: "/Categorias/Listar" },
+                { id: "ofertas-container", url: "/Ofertas" },
+                { id: "promociones-container", url: "/Promociones" }
+            ];
+
+            // Detectar si estamos en la vista principal
+            const isHome = window.location.pathname === "/" || window.location.pathname.includes("Index");
+
+            sections.forEach(section => {
+                const link = document.querySelector(`a[href="#${section.id}"]`);
+
+                if (link) {
+                    if (!isHome) {
+                        // Si no estamos en la página principal, cambiar la URL a la vista correspondiente
+                        link.setAttribute("href", section.url);
+                    } else {
+                        // Si estamos en la página principal, permitir el scroll suave
+                        link.addEventListener("click", function (e) {
+                            e.preventDefault();
+                            document.querySelector(`#${section.id}`).scrollIntoView({ behavior: "smooth" });
+                        });
+                    }
+                }
+            });
+        });
+    </script>
+
+
 </body>
 
 </html>

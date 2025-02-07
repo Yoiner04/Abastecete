@@ -20,6 +20,12 @@ namespace Abastecete.Controllers
             return View(categorias);
         }
 
+        public IActionResult Listar()
+        {
+            List<Categoria> categorias = manejadorCategorias.ConsultarCategorias();
+            return View(categorias);
+        }
+
         [HttpPost]
         public IActionResult Crear(IFormFile Imagen, string Nombre, int Estado)
         {
