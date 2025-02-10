@@ -195,5 +195,15 @@ namespace ConnectionProject.Controllers
                 return RedirectToAction("Login");
             }
         }
+
+        public IActionResult RecuperarContrasenia()
+        {
+            return View();
+        }
+
+        public IActionResult IngresarNuevaContrasenia()
+        {
+            return View();
+        }
     }
 }

@@ -36,7 +36,7 @@ namespace Abastecete.Controllers
         }
 
         [HttpPost]
-        public IActionResult Editar(int Id, IFormFile Imagen, string Nombre, int Estado)
+        public IActionResult EditarCategoria(int Id, IFormFile Imagen, string Nombre, int Estado)
         {
             string imagenUrl = Imagen != null ? GuardarImagen(Imagen) : manejadorCategorias.ObtenerCategoria(Id)?.Imagen;
 

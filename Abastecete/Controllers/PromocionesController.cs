@@ -2,9 +2,9 @@
 
 namespace Abastecete.Controllers
 {
-    public class Membresias : Controller
+    public class PromocionesController : Controller
     {
-        public IActionResult Consultar()
+        public IActionResult Listar()
         {
             return View();
         }

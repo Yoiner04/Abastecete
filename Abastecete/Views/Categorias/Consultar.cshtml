@@ -94,7 +94,7 @@
         document.getElementById("category-modal").classList.add("hidden");
     }
 
-    function editarCategoria(id) {
+    window.editarCategoria = function (id) {
         fetch(/Categorias/ObtenerCategoria?id=${id})
             .then(response => response.json())
             .then(data => {
@@ -116,7 +116,7 @@
                 console.error("Error al obtener la categoría:", error);
                 alert("Error al obtener la categoría. Verifica la consola.");
             });
-    }
+    };
 
     document.getElementById("category-form").addEventListener("submit", function (event) {
         event.preventDefault();

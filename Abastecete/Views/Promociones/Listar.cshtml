@@ -1,0 +1,71 @@
+﻿<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Abastecete</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link rel="icon" type="image/x-icon" href="~/css/Images/Logo A naranja.png" />
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link rel="stylesheet" href="~/css/styles.css" asp-append-version="true" />
+</head>
+
+<body>
+    <!-- DESCUENTOS -->
+    <section id="discounts-section" class="discounts-section p-6 lg:p-10">
+        @* <div class="mb-6">
+            <h2 class="text-3xl lg:text-5xl font-bold text-[#F66623]">DESCUENTOS</h2>
+            <h2 class="text-5xl lg:text-8xl font-bold text-[#23916A]">IMPERDIBLES</h2>
+        </div> *@
+
+        @* <div class="mb-6 flex flex-wrap gap-2 lg:gap-4">
+            <h2 class="text-3xl lg:text-5xl font-bold text-[#F66623]">DESCUENTOS</h2>
+            <h2 class="text-3xl lg:text-5xl font-bold text-[#23916A]">IMPERDIBLES</h2>
+        </div> *@
+
+        <!-- Contenedor de Categorías -->
+        <div id="categories-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8"></div>
+    </section>
+
+    <script>
+        const categorias = [
+            "Frutas y Verduras",
+            "Proteínas",
+            "Lácteos y Huevos",
+            "Panadería y Repostería",
+            "Despensa",
+            "Congelados",
+            "Bebidas",
+            "Snacks y Aperitivos",
+            "Dulces y Chocolatería",
+            "Charcutería y Especialidades",
+            "Aseo del Hogar",
+            "Cuidado Personal",
+            "Licores y Tabaco",
+        ];
+
+        const categoriesContainer = document.getElementById("categories-container");
+
+        categorias.forEach((category, index) => {
+            const categoryBlock = document.createElement("div");
+            categoryBlock.className = `rounded-xl p-6 shadow-md transition-transform transform hover:scale-105 ${index % 2 === 0 ? 'bg-white' : 'bg-green-100'}`;
+
+            categoryBlock.innerHTML = `
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-bold text-gray-800">${category}</h3>
+                </div>
+
+                <!-- Imágenes representativas -->
+                <div class="grid grid-cols-2 gap-2">
+                    <div class="bg-gray-300 h-32 rounded-lg"></div>
+                    <div class="bg-gray-300 h-32 rounded-lg"></div>
+                    <div class="bg-gray-300 h-32 rounded-lg"></div>
+                    <div class="bg-gray-300 h-32 rounded-lg"></div>
+                </div>
+            `;
+
+            categoriesContainer.appendChild(categoryBlock);
+        });
+    </script>
+
+</body>

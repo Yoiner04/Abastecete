@@ -76,7 +76,6 @@ namespace DataAccess
             return datos;
         }
 
-
         public bool EjecutarTransaccion(string procedimiento, List<Parametro> parametros = null)
         {
             Conectar();
@@ -103,8 +102,17 @@ namespace DataAccess
                 }
 
                 comando.ExecuteNonQuery();
-                string mensaje = comando.Parameters["mensaje"].Value.ToString();
-                Console.WriteLine("Mensaje SQL: " + mensaje);
+
+                // Verificar si el procedimiento maneja el parámetro "mensaje"
+                if (comando.Parameters.Contains("mensaje"))
+                {
+                    string mensaje = comando.Parameters["mensaje"].Value?.ToString();
+                    Console.WriteLine("Mensaje SQL: " + mensaje);
+                }
+                else
+                {
+                    Console.WriteLine("Procedimiento ejecutado sin mensaje de salida.");
+                }
 
                 return true;
             }
@@ -118,7 +126,6 @@ namespace DataAccess
                 DesConectar();
             }
         }
-
 
         public bool EjecutarTransacciones(List<Transaccion> transacciones)
         {

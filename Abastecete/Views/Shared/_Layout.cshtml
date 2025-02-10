@@ -192,7 +192,7 @@
     </main>
 
     <!-- Modal de Contacto -->
-    <div id="contact-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
+    <div id="contact-modal" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50">
         <div class="p-6 rounded-lg shadow-lg w-full max-w-md" style="background-color: #F4F1E9;">
             <div class="flex justify-center">
                 <img src="~/css/Images/LOGO FINAL.png" alt="Abastecete Logo" class="h-12">
@@ -308,8 +308,8 @@
             // Mapeo de secciones en la vista principal y sus respectivas rutas en otras vistas
             const sections = [
                 { id: "categories-container", url: "/Categorias/Listar" },
-                { id: "ofertas-container", url: "/Ofertas" },
-                { id: "promociones-container", url: "/Promociones" }
+                { id: "ofertas-container", url: "/Ofertas/Listar" },
+                { id: "promociones-container", url: "/Promociones/Listar" }
             ];
 
             // Detectar si estamos en la vista principal

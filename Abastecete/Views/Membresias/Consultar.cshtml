@@ -12,117 +12,133 @@
 </head>
 
 <section class="mt-12 px-6 md:px-16 lg:px-36">
-    <!-- Encabezado -->
     <div class="flex flex-col md:flex-row justify-between items-center mb-6 space-y-4 md:space-y-0">
         <h2 class="text-lg font-bold text-gray-800 text-center md:text-left">Gestión de Membresías</h2>
     </div>
 
-    <!-- Tabla de Membresías -->
     <div class="overflow-x-auto">
         <table class="w-full bg-white rounded-lg shadow-md overflow-hidden">
             <thead class="bg-gray-200">
                 <tr>
                     <th class="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Nombre</th>
-                    <th class="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Precio</th>
-                    <th class="px-4 md:px-6 py-3 text-center text-xs font-medium text-gray-700 uppercase">Estado</th>
                     <th class="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Descripción</th>
+                    <th class="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Costo</th>
+                    <th class="px-4 md:px-6 py-3 text-center text-xs font-medium text-gray-700 uppercase">Estado</th>
                     <th class="px-4 md:px-6 py-3 text-center text-xs font-medium text-gray-700 uppercase">Acciones</th>
                 </tr>
             </thead>
-            <tbody id="membership-table-body" class="divide-y divide-gray-300">
-                <!-- Se llenará dinámicamente con JS -->
+            <tbody id="membership-table-body">
+                @foreach (var membresia in Model)
+                {
+                    <tr class="hover:bg-gray-100">
+                        <td class="px-4 py-3 text-gray-700">@membresia.Nombre</td>
+                        <td class="px-4 py-3 text-gray-700">@Html.Raw(membresia.Descripcion.Replace("\n", "<br>"))</td>
+                        <td class="px-4 py-3 text-gray-700">$@membresia.Costo</td>
+                        <td class="px-4 py-3 text-center">
+                            <button class="@(membresia.Estado == 1 ? "text-green-600" : "text-red-600")">
+                                @(membresia.Estado == 1 ? "🟢 Activo" : "🔴 Inactivo")
+                            </button>
+                        </td>
+                        <td class="px-4 py-3 text-center">
+                            <button class="text-blue-600 hover:text-blue-800" onclick="editarMembresia(@membresia.Id)">✏Editar</button>
+                        </td>
+                    </tr>
+                }
             </tbody>
         </table>
     </div>
+
+    <!-- Modal Editar Membresía -->
+    <div id="membership-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="p-6 rounded-lg shadow-lg bg-white w-full max-w-md mx-4">
+            <h2 class="text-center text-xl font-bold text-gray-800" id="modal-title">Editar Membresía</h2>
+            <form id="membership-form" class="mt-4">
+                <input type="hidden" id="membership-id">
+
+                <label class="block text-gray-700 font-medium">Nombre</label>
+                <input type="text" id="membership-name"
+                       class="w-full p-3 rounded-lg bg-gray-100 border border-gray-300 text-black mb-3" required>
+
+                <label class="block text-gray-700 font-medium">Descripción</label>
+                <textarea id="membership-description"
+                          class="w-full p-3 rounded-lg bg-gray-100 border border-gray-300 text-black mb-3" required></textarea>
+
+                <label class="block text-gray-700 font-medium">Costo</label>
+                <input type="number" id="membership-cost" min="0"
+                       class="w-full p-3 rounded-lg bg-gray-100 border border-gray-300 text-black mb-3" required>
+
+                <label class="block text-gray-700 font-medium">
+                    <input type="checkbox" id="status-checkbox" class="mr-2"> Activa
+                </label>
+
+                <button type="submit" class="w-full bg-green-600 text-white py-3 rounded-lg font-bold hover:bg-green-700">
+                    Guardar
+                </button>
+            </form>
+            <button id="close-membership-modal" class="block w-full text-center mt-3 text-gray-600 hover:text-gray-800">
+                Cerrar
+            </button>
+        </div>
+    </div>
 </section>
 
-<!-- Modal Editar Membresía -->
-<div id="membership-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-    <div class="p-6 rounded-lg shadow-lg bg-white w-full max-w-md mx-4">
-        <h2 class="text-center text-xl font-bold text-gray-800" id="modal-title">Editar Membresía</h2>
-        <form id="membership-form" class="mt-4">
-            <input type="text" id="membership-name" placeholder="Nombre de la membresía"
-                   class="w-full p-3 rounded-lg bg-gray-100 border border-gray-300 text-black mb-3" required>
-
-            <input type="number" id="membership-price" placeholder="Precio (ej: 19.99)"
-                   class="w-full p-3 rounded-lg bg-gray-100 border border-gray-300 text-black mb-3" required>
-
-            <label class="block text-gray-700 font-medium">Estado</label>
-            <select id="membership-status" class="w-full p-3 rounded-lg bg-gray-100 border border-gray-300 text-black mb-3" required>
-                <option value="Activa">Activa</option>
-                <option value="Inactiva">Inactiva</option>
-            </select>
-
-            <textarea id="membership-description" placeholder="Descripción"
-                      class="w-full p-3 rounded-lg bg-gray-100 border border-gray-300 text-black mb-3" required></textarea>
-
-            <button type="submit" class="w-full bg-green-600 text-white py-3 rounded-lg font-bold hover:bg-green-700">
-                Guardar Cambios
-            </button>
-        </form>
-        <button id="close-membership-modal" class="block w-full text-center mt-3 text-gray-600 hover:text-gray-800">
-            Cerrar
-        </button>
-    </div>
-</div>
-
 <script>
-    let memberships = [
-        { name: "Premium", price: 29.99, status: "Activa", description: "Acceso ilimitado a contenido exclusivo." },
-        { name: "Básica", price: 9.99, status: "Activa", description: "Acceso limitado a contenido estándar." },
-        { name: "Gratuita", price: 0.00, status: "Inactiva", description: "Acceso a funciones básicas sin costo." }
-    ];
-
-    const tableBody = document.getElementById("membership-table-body");
-    const membershipModal = document.getElementById("membership-modal");
-    let selectedMembershipIndex = null;
-
-    function renderMemberships() {
-        tableBody.innerHTML = "";
-        memberships.forEach((membership, index) => {
-            const row = document.createElement("tr");
-            row.className = "hover:bg-gray-100";
-            row.innerHTML = `
-                <td class="px-4 py-3 text-gray-700">${membership.name}</td>
-                <td class="px-4 py-3 text-gray-700">$${membership.price.toFixed(2)}</td>
-                <td class="px-4 py-3 text-center">${membership.status === "Activa" ? "🟢 Activa" : "🔴 Inactiva"}</td>
-                <td class="px-4 py-3 text-gray-700">${membership.description}</td>
-                <td class="px-4 py-3 text-center">
-                    <button class="text-blue-600 hover:text-blue-800 mr-2 md:mr-4" onclick="editMembership(${index})">✏</button>
-                </td>`;
-            tableBody.appendChild(row);
+    document.querySelectorAll(".text-blue-600").forEach(button => {
+        button.addEventListener("click", function () {
+            let id = this.getAttribute("onclick").match(/\d+/)[0];
+            obtenerMembresia(id);
         });
-    }
-
-    function editMembership(index) {
-        selectedMembershipIndex = index;
-        document.getElementById("membership-name").value = memberships[index].name;
-        document.getElementById("membership-price").value = memberships[index].price;
-        document.getElementById("membership-status").value = memberships[index].status;
-        document.getElementById("membership-description").value = memberships[index].description;
-        membershipModal.classList.remove("hidden");
-    }
-
-    document.getElementById("close-membership-modal").addEventListener("click", () => {
-        membershipModal.classList.add("hidden");
     });
 
-    document.getElementById("membership-form").addEventListener("submit", (e) => {
-        e.preventDefault();
+    document.getElementById("close-membership-modal").addEventListener("click", closeModal);
 
-        const name = document.getElementById("membership-name").value.trim();
-        const price = parseFloat(document.getElementById("membership-price").value);
-        const status = document.getElementById("membership-status").value;
-        const description = document.getElementById("membership-description").value.trim();
+    function editarMembresia(id) {
+        fetch(/Membresias/ObtenerMembresia?id=${id})
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("membership-id").value = data.id;
+                document.getElementById("membership-name").value = data.nombre;
+                document.getElementById("membership-description").value = data.descripcion;
+                document.getElementById("membership-cost").value = data.costo;
+                document.getElementById("status-checkbox").checked = data.estado === 1;
 
-        if (selectedMembershipIndex !== null) {
-            // Editar membresía existente
-            memberships[selectedMembershipIndex] = { name, price, status, description };
-        }
+                document.getElementById("membership-modal").classList.remove("hidden");
+            })
+            .catch(error => {
+                console.error("Error al obtener la membresía:", error);
+                alert("Error al obtener la membresía. Verifica la consola.");
+            });
+    }
 
-        renderMemberships();
-        membershipModal.classList.add("hidden");
+    function closeModal() {
+        document.getElementById("membership-modal").classList.add("hidden");
+    }
+
+    document.getElementById("membership-form").addEventListener("submit", function (event) {
+        event.preventDefault();
+
+        let id = document.getElementById("membership-id").value;
+        let nombre = document.getElementById("membership-name").value;
+        let descripcion = document.getElementById("membership-description").value;
+        let costo = document.getElementById("membership-cost").value;
+        let estado = document.getElementById("status-checkbox").checked ? 1 : 0;
+
+        let formData = new FormData();
+        formData.append("Id", id);
+        formData.append("Nombre", nombre);
+        formData.append("Descripcion", descripcion);
+        formData.append("Costo", costo);
+        formData.append("Estado", estado);
+
+        fetch("/Membresias/Editar", {
+            method: "POST",
+            body: formData
+        })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.mensaje);
+                location.reload();
+            })
+            .catch(error => console.error("Error:", error));
     });
-
-    renderMemberships();
 </script>
