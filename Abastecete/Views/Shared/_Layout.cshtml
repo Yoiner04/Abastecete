@@ -16,14 +16,14 @@
 </head>
 
 @Html.Partial("_SupportBubble")
+@Html.Partial("_ContactModal")
 
-<body class="bg-gray-100" style="color: black">
+<body class="bg-gray-100" style="color: black;">
 
     @{
         string permisos = HttpContextAccessor.HttpContext.Session.GetString("permisos");
     }
-
-    <header class="sticky top-0 shadow-md z-50" style="background-color: #F4F1E9;">
+    <header id="header" class="sticky top-0 shadow-md z-40" style="background-color: #F4F1E9;">
         <nav class="container mx-auto flex justify-between items-center py-2 px-6">
             <!-- Logo -->
             <a href="@Url.Action("Principal", "Home")" class="flex items-center">
@@ -37,39 +37,37 @@
 
             <!-- Contenedor del Menú de Navegación -->
             <div id="menu-container"
-            class="hidden md:flex flex-col md:flex-row absolute md:relative w-full md:w-auto top-16 left-0 md:top-0 md:left-auto z-50 bg-gray-100 md:bg-transparent">
+                 class="hidden md:flex items-center absolute left-1/2 transform -translate-x-1/2 w-auto z-50 bg-gray-100 md:bg-transparent">
                 <ul id="menu" class="md:flex md:space-x-6 text-base font-bold text-black md:flex-row flex-col">
                     <li>
-                        <a href="#" class="block px-4 py-2 md:px-0 md:py-0 hover:text-green-600 text-black">
+                        <a href="#" class="block px-4 py-2 hover:text-green-600 text-black">
                             <i class="fa fa-search mr-1"></i>Buscar
                         </a>
                     </li>
                     <li>
-                        <a href="#categories-container"
-                        class="block px-4 py-2 md:px-0 md:py-0 hover:text-green-600 text-black">
+                        <a href="#categories-container" class="block px-4 py-2 hover:text-green-600 text-black">
                             Categorías
                         </a>
                     </li>
                     <li>
-                        <a href="#ofertas-container"
-                        class="block px-4 py-2 md:px-0 md:py-0 hover:text-green-600 text-black">
+                        <a href="#ofertas-container" class="block px-4 py-2 hover:text-green-600 text-black">
                             Ofertas flash
                         </a>
                     </li>
                     <li>
-                        <a href="#promociones-container"
-                        class="block px-4 py-2 md:px-0 md:py-0 hover:text-green-600 text-black">
+                        <a href="#promociones-container" class="block px-4 py-2 hover:text-green-600 text-black">
                             Promociones
                         </a>
                     </li>
                     <li>
                         <a href="#" id="open-contact-modal"
-                        class="block px-4 py-2 md:px-0 md:py-0 hover:text-green-600 text-black">
+                           class="block px-4 py-2 md:px-0 md:py-0 hover:text-green-600 text-black">
                             Contacto
                         </a>
                     </li>
                 </ul>
             </div>
+
 
             <!-- Usuario -->
             <div class="flex items-center space-x-4">
@@ -122,7 +120,7 @@
                     @if (RolPermisos.TienePermiso("Publica tu negocio", permisos))
                     {
                         <li class="group">
-                            <a href="@Url.Action("Publicar", "Proveedores")" class="text-black group-hover:text-green-600">
+                            <a href="@Url.Action("Publicar", "Membresias")" class="text-black group-hover:text-green-600">
                                 Publica tu negocio
                             </a>
                         </li>
@@ -140,14 +138,6 @@
                         <li class="group">
                             <a href="@Url.Action("Consultar", "Categorias")" class="text-black group-hover:text-green-600">
                                 Gestionar Categorías
-                            </a>
-                        </li>
-                    }
-                    @if (RolPermisos.TienePermiso("Administrar Proveedores", permisos))
-                    {
-                        <li class="group">
-                            <a href="@Url.Action("Gestionar", "Proveedores")" class="text-black group-hover:text-green-600">
-                                Gestionar Proveedores
                             </a>
                         </li>
                     }
@@ -190,41 +180,6 @@
     <main role="main">
         @RenderBody()
     </main>
-
-    <!-- Modal de Contacto -->
-    <div id="contact-modal" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50">
-        <div class="p-6 rounded-lg shadow-lg w-full max-w-md" style="background-color: #F4F1E9;">
-            <div class="flex justify-center">
-                <img src="~/css/Images/LOGO FINAL.png" alt="Abastecete Logo" class="h-12">
-            </div>
-            <h2 class="text-center text-xl font-bold text-black mt-2">Contáctanos</h2>
-
-            <form id="contact-form" class="mt-4">
-                <input type="email" id="email" name="email" placeholder="Tu correo electrónico"
-                       class="w-full p-3 rounded-lg bg-gray-100 border border-gray-300 text-black mb-3" required>
-
-                <div class="flex items-center space-x-2 mb-3">
-                    <span class="bg-white border border-gray-300 px-4 py-3 rounded-lg flex items-center">
-                        +57
-                    </span>
-                    <input type="text" id="phone" name="phone" placeholder="Tu número"
-                           class="w-full p-3 rounded-lg bg-gray-100 border border-gray-300 text-black" required>
-                </div>
-
-                <textarea id="message" name="message" placeholder="Escribe un mensaje..."
-                          class="w-full p-3 rounded-lg bg-gray-100 border border-gray-300 text-black h-32 resize-none mb-3"
-                          required></textarea>
-
-                <button type="submit" class="w-full bg-black text-white py-3 rounded-lg font-bold hover:bg-gray-800">
-                    Enviar Mensaje
-                </button>
-            </form>
-
-            <button id="close-contact-modal" class="block w-full text-center mt-3 text-black font-medium">
-                Cerrar
-            </button>
-        </div>
-    </div>
 
     <script>
         const menuToggle = document.getElementById('menu-toggle');
@@ -278,29 +233,7 @@
             });
         }
 
-        const openModalBtn = document.getElementById("open-contact-modal");
-        const closeModalBtn = document.getElementById("close-contact-modal");
-        const modal = document.getElementById("contact-modal");
-
-        if (openModalBtn && closeModalBtn && modal) {
-            openModalBtn.addEventListener("click", (e) => {
-                e.preventDefault();
-                modal.classList.remove("hidden");
-                document.body.classList.add("overflow-hidden");
-            });
-
-            closeModalBtn.addEventListener("click", () => {
-                modal.classList.add("hidden");
-                document.body.classList.remove("overflow-hidden");
-            });
-
-            window.addEventListener("click", (e) => {
-                if (e.target === modal) {
-                    modal.classList.add("hidden");
-                    document.body.classList.remove("overflow-hidden");
-                }
-            });
-        }
+        
     </script>
 
     <script>

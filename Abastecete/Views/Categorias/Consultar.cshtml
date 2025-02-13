@@ -1,155 +1,173 @@
 ﻿@model List<BusinessLogic.Models.Categoria>
 
-<section class="mt-12 px-6 md:px-16 lg:px-36">
-    <div class="flex flex-col md:flex-row justify-between items-center mb-6 space-y-4 md:space-y-0">
-        <h2 class="text-lg font-bold text-gray-800 text-center md:text-left">Gestión de Categorías</h2>
-        <button id="open-add-modal"
-                class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700">
-            + Agregar Categoría
-        </button>
-    </div>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Abastecete</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/Abastecete.styles.css" asp-append-version="true" />
+    <link rel="icon" type="image/x-icon" href="~/css/Images/Logo A naranja.png" />
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link rel="stylesheet" href="~/css/styles.css" asp-append-version="true" />
+</head>
 
-    <div class="overflow-x-auto">
-        <table class="w-full bg-white rounded-lg shadow-md overflow-hidden">
-            <thead class="bg-gray-200">
-                <tr>
-                    <th class="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Nombre</th>
-                    <th class="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Imagen</th>
-                    <th class="px-4 md:px-6 py-3 text-center text-xs font-medium text-gray-700 uppercase">Estado</th>
-                    <th class="px-4 md:px-6 py-3 text-center text-xs font-medium text-gray-700 uppercase">Acciones</th>
-                </tr>
-            </thead>
-            <tbody id="category-table-body">
-                @foreach (var categoria in Model)
-                {
-                    <tr class="hover:bg-gray-100">
-                        <td class="px-4 py-3 text-gray-700">@categoria.Nombre</td>
-                        <td class="px-4 py-3">
-                            <img src="@categoria.Imagen" alt="@categoria.Nombre"
-                                 class="w-14 h-14 md:w-16 md:h-16 rounded-full object-cover border">
-                        </td>
-                        <td class="px-4 py-3 text-center">
-                            <button class="@(categoria.Estado == 1 ? "text-green-600" : "text-red-600")">
-                                @(categoria.Estado == 1 ? "🟢 Activo" : "🔴 Inactivo")
-                            </button>
-                        </td>
-                        <td class="px-4 py-3 text-center">
-                            <button class="text-blue-600 hover:text-blue-800" onclick="editarCategoria(@categoria.Id)">✏Editar</button>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    </div>
-</section>
-
-<!-- Modal Agregar/Editar Categoría -->
-<div id="category-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-    <div class="p-6 rounded-lg shadow-lg bg-white w-full max-w-md mx-4">
-        <h2 class="text-center text-xl font-bold text-gray-800" id="modal-title">Agregar Categoría</h2>
-        <form id="category-form" class="mt-4">
-            <input type="hidden" id="category-id">
-
-            <input type="text" id="category-name" placeholder="Nombre de la categoría"
-                   class="w-full p-3 rounded-lg bg-gray-100 border border-gray-300 text-black mb-3" required>
-
-            <label class="block text-gray-700 font-medium">Imagen</label>
-            <input type="file" id="category-image" accept="image/*"
-                   class="w-full p-2 border border-gray-300 rounded-lg mb-3">
-
-            <div class="flex justify-center mb-3">
-                <img id="image-preview" src="" alt="Vista previa"
-                     class="hidden w-24 h-24 rounded-lg object-cover border">
-            </div>
-
-            <label class="block text-gray-700 font-medium">
-                <input type="checkbox" id="status-checkbox" class="mr-2"> Activa
-            </label>
-
-            <button type="submit" class="w-full bg-green-600 text-white py-3 rounded-lg font-bold hover:bg-green-700">
-                Guardar
+<body>
+    <section class="mt-12 px-6 md:px-16 lg:px-36">
+        <div class="flex flex-col md:flex-row justify-between items-center mb-6 space-y-4 md:space-y-0">
+            <h2 class="text-lg font-bold text-gray-800 text-center md:text-left">Gestión de Categorías</h2>
+            <button id="open-add-modal"
+                    class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700">
+                + Agregar Categoría
             </button>
-        </form>
-        <button id="close-category-modal" class="block w-full text-center mt-3 text-gray-600 hover:text-gray-800">
-            Cerrar
-        </button>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full bg-white rounded-lg shadow-md overflow-hidden">
+                <thead class="bg-gray-200">
+                    <tr>
+                        <th class="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Nombre</th>
+                        <th class="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Imagen</th>
+                        <th class="px-4 md:px-6 py-3 text-center text-xs font-medium text-gray-700 uppercase">Estado</th>
+                        <th class="px-4 md:px-6 py-3 text-center text-xs font-medium text-gray-700 uppercase">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="category-table-body">
+                    @foreach (var categoria in Model)
+                    {
+                        <tr class="hover:bg-gray-100">
+                            <td class="px-4 py-3 text-gray-700">@categoria.Nombre</td>
+                            <td class="px-4 py-3">
+                                <img src="@categoria.Imagen" alt="@categoria.Nombre"
+                                     class="w-14 h-14 md:w-16 md:h-16 rounded-full object-cover border">
+                            </td>
+                            <td class="px-4 py-3 text-center">
+                                <button class="@(categoria.Estado == 1 ? "text-green-600" : "text-red-600")">
+                                    @(categoria.Estado == 1 ? "🟢 Activo" : "🔴 Inactivo")
+                                </button>
+                            </td>
+                            <td class="px-4 py-3 text-center">
+                                <button class="text-blue-600 hover:text-blue-800" onclick="editarCategoria(@categoria.Id)">✏Editar</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Modal Agregar/Editar Categoría -->
+    <div id="category-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="p-6 rounded-lg shadow-lg bg-white w-full max-w-md mx-4">
+            <h2 class="text-center text-xl font-bold text-gray-800" id="modal-title">Agregar Categoría</h2>
+            <form id="category-form" class="mt-4">
+                <input type="hidden" id="category-id">
+
+                <input type="text" id="category-name" placeholder="Nombre de la categoría"
+                       class="w-full p-3 rounded-lg bg-gray-100 border border-gray-300 text-black mb-3" required>
+
+                <label class="block text-gray-700 font-medium">Imagen</label>
+                <input type="file" id="category-image" accept="image/*"
+                       class="w-full p-2 border border-gray-300 rounded-lg mb-3">
+
+                <div class="flex justify-center mb-3">
+                    <img id="image-preview" src="" alt="Vista previa"
+                         class="hidden w-24 h-24 rounded-lg object-cover border">
+                </div>
+
+                <label class="block text-gray-700 font-medium">
+                    <input type="checkbox" id="status-checkbox" class="mr-2"> Activa
+                </label>
+
+                <button type="submit" class="w-full bg-green-600 text-white py-3 rounded-lg font-bold hover:bg-green-700">
+                    Guardar
+                </button>
+            </form>
+            <button id="close-category-modal" class="block w-full text-center mt-3 text-gray-600 hover:text-gray-800">
+                Cerrar
+            </button>
+        </div>
     </div>
-</div>
 
-<script>
-    document.getElementById("open-add-modal").addEventListener("click", openModal);
-    document.getElementById("close-category-modal").addEventListener("click", closeModal);
+    <script>
+        document.getElementById("open-add-modal").addEventListener("click", openModal);
+        document.getElementById("close-category-modal").addEventListener("click", closeModal);
 
-    function openModal() {
-        document.getElementById("category-id").value = "";
-        document.getElementById("category-name").value = "";
-        document.getElementById("category-image").value = "";
-        document.getElementById("image-preview").classList.add("hidden");
-        document.getElementById("status-checkbox").checked = false;
-        document.getElementById("modal-title").textContent = "Agregar Categoría";
-        document.getElementById("category-modal").classList.remove("hidden");
-    }
-
-    function closeModal() {
-        document.getElementById("category-modal").classList.add("hidden");
-    }
-
-    window.editarCategoria = function (id) {
-        fetch(/Categorias/ObtenerCategoria?id=${id})
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById("category-id").value = data.id;
-                document.getElementById("category-name").value = data.nombre || "Sin nombre";
-                document.getElementById("status-checkbox").checked = data.estado === 1;
-
-                if (data.imagen) {
-                    document.getElementById("image-preview").src = data.imagen;
-                    document.getElementById("image-preview").classList.remove("hidden");
-                } else {
-                    document.getElementById("image-preview").classList.add("hidden");
-                }
-
-                document.getElementById("modal-title").textContent = "Editar Categoría";
-                document.getElementById("category-modal").classList.remove("hidden");
-            })
-            .catch(error => {
-                console.error("Error al obtener la categoría:", error);
-                alert("Error al obtener la categoría. Verifica la consola.");
-            });
-    };
-
-    document.getElementById("category-form").addEventListener("submit", function (event) {
-        event.preventDefault();
-
-        let id = document.getElementById("category-id").value;
-        let nombre = document.getElementById("category-name").value;
-        let estado = document.getElementById("status-checkbox").checked ? 1 : 0;
-        let imagenInput = document.getElementById("category-image").files[0];
-
-        if (!nombre.trim()) {
-            alert("El nombre de la categoría es obligatorio.");
-            return;
+        function openModal() {
+            document.getElementById("category-id").value = "";
+            document.getElementById("category-name").value = "";
+            document.getElementById("category-image").value = "";
+            document.getElementById("image-preview").classList.add("hidden");
+            document.getElementById("status-checkbox").checked = false;
+            document.getElementById("modal-title").textContent = "Agregar Categoría";
+            document.getElementById("category-modal").classList.remove("hidden");
         }
 
-        let formData = new FormData();
-        formData.append("Id", id || 0);
-        formData.append("Nombre", nombre);
-        formData.append("Estado", estado);
-        if (imagenInput) {
-            formData.append("Imagen", imagenInput);
+        function closeModal() {
+            document.getElementById("category-modal").classList.add("hidden");
         }
 
-        let url = id ? "/Categorias/Editar" : "/Categorias/Crear";
+        document.addEventListener("DOMContentLoaded", function () {
+            window.editarCategoria = function (id) {
+                fetch(`/Categorias/ObtenerCategoria?id=${id}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        document.getElementById("category-id").value = data.id;
+                        document.getElementById("category-name").value = data.nombre || "Sin nombre";
+                        document.getElementById("status-checkbox").checked = data.estado === 1;
 
-        fetch(url, {
-            method: "POST",
-            body: formData
-        })
-            .then(response => response.json())
-            .then(data => {
-                alert(data.mensaje);
-                location.reload();
+                        if (data.imagen) {
+                            document.getElementById("image-preview").src = data.imagen;
+                            document.getElementById("image-preview").classList.remove("hidden");
+                        } else {
+                            document.getElementById("image-preview").classList.add("hidden");
+                        }
+
+                        document.getElementById("modal-title").textContent = "Editar Categoría";
+                        document.getElementById("category-modal").classList.remove("hidden");
+                    })
+                    .catch(error => {
+                        console.error("Error al obtener la categoría:", error);
+                        alert("Error al obtener la categoría. Verifica la consola.");
+                    });
+            };
+        });
+
+
+        document.getElementById("category-form").addEventListener("submit", function (event) {
+            event.preventDefault();
+
+            let id = document.getElementById("category-id").value;
+            let nombre = document.getElementById("category-name").value;
+            let estado = document.getElementById("status-checkbox").checked ? 1 : 0;
+            let imagenInput = document.getElementById("category-image").files[0];
+
+            if (!nombre.trim()) {
+                alert("El nombre de la categoría es obligatorio.");
+                return;
+            }
+
+            let formData = new FormData();
+            formData.append("Id", id || 0);
+            formData.append("Nombre", nombre);
+            formData.append("Estado", estado);
+            if (imagenInput) {
+                formData.append("Imagen", imagenInput);
+            }
+
+            let url = id ? "/Categorias/EditarCategoria" : "/Categorias/Crear";
+
+            fetch(url, {
+                method: "POST",
+                body: formData
             })
-            .catch(error => console.error("Error:", error));
-    });
-</script>
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.mensaje);
+                    location.reload();
+                })
+                .catch(error => console.error("Error:", error));
+        });
+    </script>
+</body>

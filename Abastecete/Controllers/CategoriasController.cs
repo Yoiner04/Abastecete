@@ -2,6 +2,7 @@
 using BusinessLogic.Models;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace Abastecete.Controllers
 {

@@ -20,6 +20,13 @@ namespace Abastecete.Controllers
             return View(membresias);
         }
 
+        [HttpGet]
+        public IActionResult Publicar()
+        {
+            List<Membresia> membresias = manejadorMembresias.ConsultarMembresias();
+            return View(membresias);
+        }
+
         [HttpPost]
         public IActionResult Editar(int Id, string Nombre, string Descripcion, decimal Costo, int Estado)
         {

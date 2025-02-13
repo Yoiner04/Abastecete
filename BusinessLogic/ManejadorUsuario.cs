@@ -121,7 +121,5 @@ namespace BusinessLogic
                 return 0;
             }
         }
-
-
     }
 }

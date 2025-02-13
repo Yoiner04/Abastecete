@@ -1,0 +1,39 @@
+﻿@model List<BusinessLogic.Models.Membresia>
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Abastecete</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/Abastecete.styles.css" asp-append-version="true" />
+    <link rel="icon" type="image/x-icon" href="~/css/Images/Logo A naranja.png" />
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link rel="stylesheet" href="~/css/styles.css" asp-append-version="true" />
+</head>
+
+<body class="bg-gray-100 py-10">
+    <br />
+    <div class="max-w-6xl mx-auto px-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            @foreach (var membresia in Model)
+            {
+                <div class="bg-white p-6 rounded-2xl shadow-md text-center">
+                    <h3 class="text-xl font-semibold">@membresia.Nombre</h3>
+                    <p class="text-gray-500 mt-2">$@membresia.Costo/mes</p>
+                    <ul class="mt-4 text-gray-600">
+                        @foreach (var line in membresia.Descripcion.Split(new[] { '\n', '*' }, StringSplitOptions.RemoveEmptyEntries))
+                        {
+                            <li><span class="text-green-600 mr-2">⭐</span> @line.Trim()</li>
+                        }
+                    </ul>
+                    <button class="mt-4 bg-[#F6580F] text-white py-2 px-4 rounded-lg hover:bg-[#15803D]">Seleccionar</button>
+                </div>
+            }
+        </div>
+    </div>
+</body>
+</html>

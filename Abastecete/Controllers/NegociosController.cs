@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Abastecete.Controllers
 {
-    public class ProveedoresController : Controller
+    public class NegociosController : Controller
     {
 
         public IActionResult Index()
@@ -17,12 +17,6 @@ namespace Abastecete.Controllers
         {
             //ViewBag.rol = LoginController.rol;
             //ViewBag.administrar = RolPermisos.TienePermiso("Administrar Proveedores", HttpContext.Session.GetString("permisos"));
-            return View();
-        }
-
-        [HttpGet]
-        public IActionResult Publicar()
-        {
             return View();
         }
 
