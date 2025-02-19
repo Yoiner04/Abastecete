@@ -1,146 +1,171 @@
-﻿
+﻿@model BusinessLogic.Models.Usuario;
+
+@{
+    Layout = null;
+}
 
 <html lang="es">
 <head>
-    
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Usuario</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
-<body>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/3.2.12/jquery.validate.unobtrusive.min.js"></script>
 
-    <section class="encabezado">
-        <div class="row mt-4">
-            <div class="col">
-                <h1>
-                    <svg style="align-self:auto" xmlns="http://www.w3.org/2000/svg" width="50" height="50" fill="currentColor" class="bi bi-person-circle" viewBox="0 0 16 16">
-                        <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z" />
-                        <path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z" />
-                    </svg>
-                    Usuario
-                </h1>
-            </div>
-            <div class="col">
-                <div class="d-grid gap-2 d-md-flex justify-content-md-end margen">
-                    <button type="button" class="btn btn-primary fw-bolder" data-bs-toggle="modal" data-bs-target="#exampleModal">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-lock-fill" viewBox="0 0 16 16">
-                            <path d="M8 1a2 2 0 0 1 2 2v4H6V3a2 2 0 0 1 2-2zm3 6V3a3 3 0 0 0-6 0v4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z" />
-                        </svg>
-                        Cambiar contraseña
-                    </button>
-                </div>
-                <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-                    <div class="modal-dialog">
-                        <div class="modal-content">
-                            <form class="needs-validation" novalidate>
-                                <div class="modal-header">
-                                    <h5 class="modal-title fw-bolder" id="exampleModalLabel">cambiar contraseña</h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                </div>
-                                <div class="modal-body">
-                                    <div class="container">
-                                        <label for="contraseña1" class="col-sm-11 col-form-label">Contraseña actual</label>
-                                        <div class="row mb-10">
-                                            <div class="col-sm-11">
-                                                <input type="password" class="form-control" id="contraseña1" required>
-                                                <div class="invalid-feedback">Necesita una contraseña</div>
-                                            </div>
-                                        </div>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+    <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-3xl">
+        <h2 class="text-2xl font-bold text-green-600 text-center mb-6">Crea tu cuenta</h2>
 
-                                        <label for="contraseña2" class="col-sm-11 col-form-label">Nueva contraseña </label>
-                                        <div class="row mb-10">
-                                            <div class="col-sm-11">
-                                                <input type="password" class="form-control" id="contraseña2" required>
-                                                <div class="invalid-feedback">Necesita una contraseña</div>
-                                            </div>
-                                        </div>
-
-                                        <label for="contraseña3" class="col-sm-11 col-form-label">Confirma contraseña</label>
-                                        <div class="row mb-10">
-                                            <div class="col-sm-11">
-                                                <input type="password" class="form-control" id="contraseña3" required>
-                                                <div class="invalid-feedback">Necesita una contraseña</div>
-                                            </div>
-                                        </div>
-
-                                    </div>
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="submit" class="btn btn-primary fw-bolder">Actualizar</button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section class="margen">
-        <form class="needs-validation" novalidate>
-            <div class="row">
-                <div class="col">
-                    <label for="idNombre1" class="col-sm-2 col-form-label  fw-bolder">Nombres</label>
-                    <input type="text" class="form-control" id="idNombre1" required>
-                    <div class="invalid-feedback">Necesita un nombre</div>
-                </div>
-                <div class="col">
-                    <label for="idapellido1" class="col-sm-2 col-form-label  fw-bolder">Apellidos</label>
-                    <input type="text" class="form-control" id="idapellido1" required>
-                    <div class="invalid-feedback">Necesita un apellido</div>
-                </div>
-            </div>
-            <br>
-            <div class="row">
-                <div class="col">
-                    <label for="numerodocumento1" class="col-sm-8 col-form-label  fw-bolder">Número de documento</label>
-                    <input type="text" class="form-control" id="numerodocumento1" required pattern="[0-9]+" required>
-                    <div class="invalid-feedback">Necesita un número de documento</div>
-                </div>
-                <div class="col">
-                    <label for="telefono1" class="col-sm-2 col-form-label  fw-bolder">Teléfono</label>
-                    <input type="text" class="form-control" id="telefono1" required pattern="[0-9]+" required>
-                    <div class="invalid-feedback">Necesita un teléfono</div>
-                </div>
-            </div>
-            <br>
-            <div class="row">
-                <div class="col-6">
-                    <label for="correo1" class="col-sm-8 col-form-label  fw-bolder">Correo electrónico</label>
-                    <input type="email" class="form-control" id="correo1" disabled>
-                    <div class="invalid-feedback">Necesita un correo</div>
-                </div>
-            </div>
-            <br>
-            <br>
-            <div class="d-grid gap-2 d-md-flex justify-content-md-center margen">
-                <button type="submit" class="btn btn-primary fw-bolder me-md-2 ">
-                    Actualizar datos
-                </button>
+        @using (Html.BeginForm("Registrar", "Usuarios", FormMethod.Post, new { id = "registroForm", @class = "grid grid-cols-1 md:grid-cols-2 gap-4" }))
+        {
+            <div class="md:col-span-2">
+                @Html.ValidationSummary(true, "", new { @class = "text-red-500 text-sm" })
             </div>
 
+            <div>
+                <label class="block font-medium">Nombre</label>
+                @Html.TextBoxFor(m => m.Persona.Nombre, new { @type = "text", @class = "w-full border p-2 rounded", @placeholder = "Ingresa tu nombre", @id = "nombre" })
+                <span id="nombreError" class="text-red-500 text-sm hidden">Por favor, ingresa tu nombre.</span>
+            </div>
+            <div>
+                <label class="block font-medium">Apellido</label>
+                @Html.TextBoxFor(m => m.Persona.Apellido, new { @type = "text", @class = "w-full border p-2 rounded", @placeholder = "Ingresa tu apellido", @id = "apellido" })
+                <span id="apellidoError" class="text-red-500 text-sm hidden">Por favor, ingresa tu apellido.</span>
+            </div>
+            <div>
+                <label class="block font-medium">Tipo de Documento</label>
+                @Html.TextBoxFor(m => m.Persona.TipoDeDocumento, new { @type = "text", @class = "w-full border p-2 rounded", @placeholder = "Ingresa tu tipo de documento", @id = "tipoDeDocumento" })
+                <span id="tipoDeDocumentoError" class="text-red-500 text-sm hidden">Por favor, ingresa el tipo de documento.</span>
+            </div>
+            <div>
+                <label class="block font-medium">Documento</label>
+                @Html.TextBoxFor(m => m.Persona.Documento, new { @type = "text", @class = "w-full border p-2 rounded", @placeholder = "Ingresa tu documento", @oninput = "this.value=this.value.replace(/[^0-9]/g,'');", @id = "documento" })
+                <span id="documentoError" class="text-red-500 text-sm hidden">El documento es obligatorio.</span>
+            </div>
+            <div>
+                <label class="block font-medium">Teléfono</label>
+                @Html.TextBoxFor(m => m.Persona.Telefono, new { @type = "text", @class = "w-full border p-2 rounded", @placeholder = "Ingresa tu teléfono", @oninput = "this.value=this.value.replace(/[^0-9]/g,'');", @id = "telefono" })
+                <span id="telefonoError" class="text-red-500 text-sm hidden">El teléfono debe comenzar con 3 y tener 10 dígitos.</span>
+            </div>
+            <div>
+                <label class="block font-medium">Correo Electrónico</label>
+                @Html.TextBoxFor(m => m.Correo, new { @type = "email", @class = "w-full border p-2 rounded", @placeholder = "Ingresa tu correo", @id = "correo" })
+                <span id="correoError" class="text-red-500 text-sm hidden">El correo es obligatorio.</span>
+            </div>
+            <div>
+                <label class="block font-medium">Contraseña</label>
+                @Html.TextBoxFor(m => m.Contrasenia, new { @type = "password", @class = "w-full border p-2 rounded", @id = "password", @placeholder = "Ingresa tu contraseña" })
+                <span id="contraseniaError" class="text-red-500 text-sm hidden">La contraseña es obligatoria.</span>
+            </div>
+            <div>
+                <label class="block font-medium">Confirmar Contraseña</label>
+                <input type="password" id="confirmPassword" class="w-full border p-2 rounded" placeholder="Confirma tu contraseña">
+                <span id="errorMessage" class="text-red-500 text-sm hidden">Las contraseñas no coinciden o son demasiado cortas.</span>
+            </div>
+            <div>
+                <label class="block font-medium">Código de Referido</label>
+                @Html.TextBoxFor(m => m.CodigoReferido, new { @type = "text", @class = "w-full border p-2 rounded", @placeholder = "Ingresa el código de referido (opcional)", @id = "codigoReferido" })
+            </div>
 
-        </form>
+            <div class="md:col-span-2">
+                <button class="w-full bg-orange-500 text-white font-bold py-2 rounded">Registrarse</button>
+            </div>
+        }
 
-    </section>
-
+        <p class="text-center text-sm mt-4">
+            ¿Ya tienes una cuenta? <a href="@Url.Action("Login", "Login")" class="text-green-600 font-bold">Inicia sesión</a>
+        </p>
+    </div>
 
     <script>
-        (function () {
-            'use strict'
-            var forms = document.querySelectorAll('.needs-validation')
+        document.addEventListener("DOMContentLoaded", function () {
+            const form = document.querySelector("form");
+            form.addEventListener("submit", function (event) {
+                let valid = true;
 
-            Array.prototype.slice.call(forms)
-                .forEach(function (form) {
-                    form.addEventListener('submit', function (event) {
-                        if (!form.checkValidity()) {
-                            event.preventDefault()
-                            event.stopPropagation()
-                        }
+                // Limpia los mensajes de error previos
+                const errorMessages = document.querySelectorAll(".text-red-500");
+                errorMessages.forEach(msg => msg.classList.add("hidden"));
+                const fields = {
+                    nombre: document.querySelector("[name='Persona.Nombre']"),
+                    apellido: document.querySelector("[name='Persona.Apellido']"),
+                    tipoDeDocumento: document.querySelector("[name='Persona.TipoDeDocumento']"),
+                    documento: document.querySelector("[name='Persona.Documento']"),
+                    telefono: document.querySelector("[name='Persona.Telefono']"),
+                    correo: document.querySelector("[name='Correo']"),
+                    contrasenia: document.querySelector("[name='Contrasenia']"),
+                    confirmPassword: document.querySelector("#confirmPassword")
+                };
 
-                        form.classList.add('was-validated')
-                    }, false)
-                })
-        })()
+                // Limpia los bordes rojos
+                for (const key in fields) {
+                    fields[key].classList.remove("border-red-500");
+                }
+
+                // Validaciones
+                if (!fields.nombre.value.trim()) {
+                    document.getElementById("nombreError").classList.remove("hidden");
+                    fields.nombre.classList.add("border-red-500");
+                    valid = false;
+                }
+                if (!fields.apellido.value.trim()) {
+                    document.getElementById("apellidoError").classList.remove("hidden");
+                    fields.apellido.classList.add("border-red-500");
+                    valid = false;
+                }
+                if (!fields.tipoDeDocumento.value.trim()) {
+                    document.getElementById("tipoDeDocumentoError").classList.remove("hidden");
+                    fields.tipoDeDocumento.classList.add("border-red-500");
+                    valid = false;
+                }
+                if (!/^\d{10,15}$/.test(fields.documento.value.trim())) {
+                    document.getElementById("documentoError").classList.remove("hidden");
+                    fields.documento.classList.add("border-red-500");
+                    valid = false;
+                }
+                if (!/^3\d{9}$/.test(fields.telefono.value.trim())) {
+                    document.getElementById("telefonoError").classList.remove("hidden");
+                    fields.telefono.classList.add("border-red-500");
+                    valid = false;
+                }
+                if (!fields.correo.value.trim()) {
+                    document.getElementById("correoError").classList.remove("hidden");
+                    fields.correo.classList.add("border-red-500");
+                    valid = false;
+                }
+                if (fields.contrasenia.value.trim().length < 8) {
+                    document.getElementById("contraseniaError").classList.remove("hidden");
+                    fields.contrasenia.classList.add("border-red-500");
+                    valid = false;
+                }
+
+                // Validación de que las contraseñas coinciden
+                if (fields.contrasenia.value.trim() !== fields.confirmPassword.value.trim()) {
+                    document.getElementById("errorMessage").classList.remove("hidden");
+                    fields.confirmPassword.classList.add("border-red-500");
+                    valid = false;
+                }
+
+                if (!valid) {
+                    event.preventDefault();
+                }
+            });
+        });
     </script>
+
+    <style>
+        .border-red-500 {
+            border: 0.5px solid red !important;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
 
 </body>
 </html>

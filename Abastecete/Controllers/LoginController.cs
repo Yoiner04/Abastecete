@@ -10,20 +10,24 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Google;
 using System.Security.Claims;
 using System.Text.RegularExpressions;
+using Abastecete.Models;
+using System.Net.Mail;
+using System.Net;
 
 namespace ConnectionProject.Controllers
 {
     public class LoginController : Controller
     {
+        private readonly ManejadorUsuario _manejadorUsuario;
         public static int rol = 0;
 
         public LoginController()
         {
+            _manejadorUsuario = new ManejadorUsuario();
         }
 
         public IActionResult Login()
         {
-            // Evitar que el usuario regrese con la flecha "Atrás" después de cerrar sesión
             Response.Headers["Cache-Control"] = "no-cache, no-store, must-revalidate";
             Response.Headers["Pragma"] = "no-cache";
             Response.Headers["Expires"] = "0";
@@ -41,7 +45,6 @@ namespace ConnectionProject.Controllers
             {
                 int idRol = Convert.ToInt32(data.Rows[0]["FK_ID_ROL"]);
 
-                // Evita contar intentos fallidos si el error ya está en la sesión
                 if (HttpContext.Session.GetString("LastLoginError") == usuario.Correo)
                 {
                     TempData["Error"] = "Contraseña incorrecta. Si fallas 5 veces, tu cuenta será bloqueada.";
@@ -58,16 +61,14 @@ namespace ConnectionProject.Controllers
                         return View(usuario);
                     case 99:
                         TempData["Error"] = "Contraseña incorrecta. Si fallas 5 veces, tu cuenta será bloqueada.";
-                        HttpContext.Session.SetString("LastLoginError", usuario.Correo); // Guarda el error en la sesión
+                        HttpContext.Session.SetString("LastLoginError", usuario.Correo);
                         return View(usuario);
                     case 0:
                         TempData["Error"] = "Tu cuenta ha sido bloqueada por demasiados intentos fallidos. Inténtalo en una hora.";
                         return View(usuario);
                     default:
-                        // Limpiar sesión de errores previos
                         HttpContext.Session.Remove("LastLoginError");
 
-                        // Guardar sesión y permisos
                         GuardarPermisosRol(idRol);
                         return Redirect("~/Home/Principal");
                 }
@@ -81,14 +82,11 @@ namespace ConnectionProject.Controllers
         {
             HttpContext.Session.Clear();
 
-            // Eliminar cookies de autenticación
             Response.Cookies.Delete(".AspNetCore.Session");
             Response.Cookies.Delete(".AspNetCore.Cookies");
 
-            // Cerrar sesión de autenticación en Google
             HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
 
-            // Evitar que el usuario pueda volver atrás en el navegador
             Response.Headers["Cache-Control"] = "no-cache, no-store, must-revalidate";
             Response.Headers["Pragma"] = "no-cache";
             Response.Headers["Expires"] = "0";
@@ -107,7 +105,6 @@ namespace ConnectionProject.Controllers
             HttpContext.Session.SetString("permisos", JsonConvert.SerializeObject(permisos));
         }
 
-        // Redirigir a Google para el login
         public IActionResult LoginWithGoogle()
         {
             HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
@@ -119,7 +116,6 @@ namespace ConnectionProject.Controllers
                 AllowRefresh = true
             };
 
-            // 🔹 Forzar que Google siempre pida la cuenta al iniciar sesión
             properties.Items["prompt"] = "select_account";
             return Challenge(properties, GoogleDefaults.AuthenticationScheme);
         }
@@ -128,7 +124,6 @@ namespace ConnectionProject.Controllers
             return Regex.IsMatch(correo, @"^[^@\s]+@[^@\s]+\.[^@\s]+$");
         }
 
-        // Manejar la respuesta de Google
         public async Task<IActionResult> GoogleResponse()
         {
             try
@@ -161,7 +156,6 @@ namespace ConnectionProject.Controllers
 
                 int rol = data.Rows.Count > 0 ? Convert.ToInt32(data.Rows[0]["FK_ID_ROL"]) : 0;
 
-                // Si el usuario NO está registrado (FK_ID_ROL = 0), se registra automáticamente
                 if (rol == 0)
                 {
                     int userId = manejador.RegistrarUsuarioGoogle(email, name);
@@ -171,7 +165,6 @@ namespace ConnectionProject.Controllers
                         return RedirectToAction("Login");
                     }
 
-                    // Volver a obtener el rol después del registro
                     data = manejador.LoginGoogle(email);
                     if (data.Rows.Count > 0)
                     {
@@ -179,12 +172,10 @@ namespace ConnectionProject.Controllers
                     }
                 }
 
-                // 🔹 Guardar en sesión los datos del usuario
                 HttpContext.Session.SetString("userEmail", email);
                 HttpContext.Session.SetString("userName", name);
                 HttpContext.Session.SetInt32("userRol", rol);
 
-                // 🔹 Configurar permisos
                 GuardarPermisosRol(rol);
 
                 return Redirect("~/Home/Principal");
@@ -201,9 +192,171 @@ namespace ConnectionProject.Controllers
             return View();
         }
 
-        public IActionResult IngresarNuevaContrasenia()
+        [HttpPost]
+        public IActionResult RecuperarContrasenia(string Correo)
         {
+            if (string.IsNullOrEmpty(Correo))
+            {
+                TempData["Error"] = "Por favor, ingresa un correo válido.";
+                return View();
+            }
+
+            DataTable data = _manejadorUsuario.ObtenerUsuarioPorCorreo(Correo);
+
+            if (data == null || data.Rows.Count == 0)
+            {
+                TempData["Error"] = "El correo no está registrado.";
+                return View();
+            }
+
+            int userId = Convert.ToInt32(data.Rows[0]["PK_ID_USUARIO"]);
+
+
+            _manejadorUsuario.GenerarTokenRecuperacion(userId);
+            string token = _manejadorUsuario.ObtenerTokenRecuperacion(userId);
+
+            if (string.IsNullOrEmpty(token))
+            {
+                TempData["Error"] = "Error al obtener el token de recuperación.";
+                return RedirectToAction("RecuperarContrasenia");
+            }
+
+            TempData["CorreoIngresado"] = Correo;
+            TempData["MostrarCodigo"] = true;
+
+            EnviarCorreoRecuperacion(Correo, token);
+
+            TempData["Success"] = "Se ha enviado un código a tu correo.";
+            return RedirectToAction("RecuperarContrasenia");
+        }
+
+        [HttpPost]
+        public IActionResult ValidarCodigoRecuperacion(string Codigo)
+        {
+            if (string.IsNullOrEmpty(Codigo))
+            {
+                TempData["Error"] = "Por favor, ingresa un código válido.";
+                TempData["MostrarCodigo"] = true;
+                return RedirectToAction("RecuperarContrasenia");
+            }
+
+            DataTable data = _manejadorUsuario.ValidarTokenRecuperacion(Codigo);
+
+            if (data == null || data.Rows.Count == 0)
+            {
+                TempData["Error"] = "El código ingresado es incorrecto o ha expirado.";
+                TempData["MostrarCodigo"] = true;
+                return RedirectToAction("RecuperarContrasenia");
+            }
+
+            return RedirectToAction("IngresarNuevaContrasenia", new { token = Codigo });
+        }
+
+
+
+
+        public IActionResult IngresarNuevaContrasenia(string token)
+        {
+            if (string.IsNullOrEmpty(token) || !_manejadorUsuario.ValidarToken(token, out int userId))
+            {
+                TempData["Error"] = "El código de recuperación es inválido o ha expirado.";
+                return RedirectToAction("RecuperarContrasenia");
+            }
+
+            ViewBag.UserId = userId;
+            ViewBag.Token = token;
             return View();
         }
+
+
+
+        [HttpPost]
+        public IActionResult IngresarNuevaContrasenia(int userId, string NuevaContrasenia, string ConfirmarContrasenia)
+        {
+            if (string.IsNullOrEmpty(NuevaContrasenia) || string.IsNullOrEmpty(ConfirmarContrasenia))
+            {
+                TempData["Error"] = "Todos los campos son obligatorios.";
+                return View();
+            }
+
+            if (NuevaContrasenia != ConfirmarContrasenia)
+            {
+                TempData["Error"] = "Las contraseñas no coinciden.";
+                return View();
+            }
+
+            bool resultado = _manejadorUsuario.CambiarContrasenia(userId, NuevaContrasenia);
+
+            if (!resultado)
+            {
+                TempData["Error"] = "Hubo un problema al cambiar la contraseña. Inténtalo de nuevo.";
+                return View();
+            }
+
+            ViewData["Success"] = "¡Tu contraseña ha sido restablecida exitosamente!";
+            TempData.Keep("Success");
+            return RedirectToAction("Login");
+        }
+
+
+
+        private void EnviarCorreoRecuperacion(string correo, string token)
+        {
+            try
+            {
+                string asunto = "Código de recuperación de contraseña";
+                string cuerpo = $"Tu código de recuperación es: {token}\n\n" +
+                                $"Este código expirará en 5 minutos.\n\n" +
+                                $"Ingresa este código en la página de recuperación de contraseña para continuar.";
+
+                MailMessage mail = new MailMessage
+                {
+                    From = new MailAddress("abastecetecol@gmail.com"),
+                    Subject = asunto,
+                    Body = cuerpo,
+                    IsBodyHtml = false
+                };
+                mail.To.Add(correo);
+
+                string dominio = correo.Split('@')[1].ToLower();
+                SmtpClient smtp = new SmtpClient();
+
+                switch (dominio)
+                {
+                    case "gmail.com":
+                        smtp.Host = "smtp.gmail.com";
+                        break;
+                    case "outlook.com":
+                    case "hotmail.com":
+                    case "live.com":
+                        smtp.Host = "smtp.office365.com";
+                        break;
+                    case "yahoo.com":
+                        smtp.Host = "smtp.mail.yahoo.com";
+                        break;
+                    case "zoho.com":
+                        smtp.Host = "smtp.zoho.com";
+                        break;
+                    case "icloud.com":
+                        smtp.Host = "smtp.mail.me.com";
+                        break;
+                    default:
+                        smtp.Host = "smtp.tudominio.com";
+                        break;
+                }
+
+                smtp.Port = 587;
+                smtp.EnableSsl = true;
+                smtp.Credentials = new NetworkCredential("abastecetecol@gmail.com", "mvijnlfiegwohmsm");
+
+                smtp.Send(mail);
+                Console.WriteLine($"✅ Correo enviado a {correo} con éxito.");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"⚠️ Error al enviar el correo a {correo}: {ex.Message}");
+            }
+        }
+
     }
 }

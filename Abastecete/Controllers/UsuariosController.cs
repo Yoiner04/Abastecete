@@ -9,15 +9,57 @@ namespace Abastecete.Controllers
     public class UsuariosController : Controller
     {
         ManejadorUsuario manejadorU = new ManejadorUsuario();
+        private readonly ManejadorUsuarios manejadorUsuarios;
+
+        public UsuariosController()
+        {
+            manejadorUsuarios = new ManejadorUsuarios();
+        }
+
         public IActionResult Consultar()
         {
             ViewBag.rol = LoginController.rol;
             ViewBag.administrar = RolPermisos.TienePermiso("Administrar Usuarios", HttpContext.Session.GetString("permisos"));
 
-            ViewBag.usuarios = manejadorU.ObtenerUsuarios(0);
+            List<Usuario> usuarios = manejadorUsuarios.ConsultarUsuarios();
+            return View(usuarios);
+        }
+
+        public class EditarEstadoRequest
+        {
+            public int IdUsuario { get; set; }
+            public int NuevoEstado { get; set; }
+        }
+
+        [HttpPost]
+        public IActionResult EditarEstado([FromBody] EditarEstadoRequest data)
+        {
+            try
+            {
+
+                bool resultado = manejadorUsuarios.EditarEstadoUsuario(data.IdUsuario, data.NuevoEstado);
+
+                if (resultado)
+                {
+                    return Json(new { mensaje = "Estado actualizado correctamente." });
+                }
+                else
+                {
+                    return Json(new { mensaje = "Error al actualizar el estado en la BD." });
+                }
+            }
+            catch (Exception ex)
+            {
+                return Json(new { mensaje = $"Error interno en el servidor: {ex.Message}" });
+            }
+        }
+
+        public IActionResult Registrar()
+        {
             return View();
         }
-        public IActionResult Registrar()
+
+        public IActionResult Actualizar()
         {
             return View();
         }
@@ -27,7 +69,6 @@ namespace Abastecete.Controllers
         {
             if (!ModelState.IsValid)
             {
-                // Si hay errores de validación, vuelve a mostrar la vista con los mensajes
                 return View(usuario);
             }
 
@@ -44,13 +85,5 @@ namespace Abastecete.Controllers
             }
         }
 
-
-
-        //[HttpPost]
-        //public IActionResult Registrar(Usuario usuario)
-        //{
-        //    bool result = manejadorU.RegistrarUsuario(usuario);
-        //    return RedirectToAction("Registrar");
-        //}
     }
 }

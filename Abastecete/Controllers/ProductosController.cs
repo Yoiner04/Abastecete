@@ -13,5 +13,10 @@ namespace Abastecete.Controllers
         {
             return View();
         }
+
+        public IActionResult ProductosNegocio()
+        {
+            return View();
+        }
     }
 }

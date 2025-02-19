@@ -9,10 +9,10 @@ namespace BusinessLogic.Utilidades
     {
         private readonly string _smtpHost = "smtp.gmail.com";
         private readonly int _smtpPort = 587;
-        private readonly string _smtpUser = "Websencol@gmail.com";
-        private readonly string _smtpPass = "qbtftduqebeakskz";
-        private readonly string _emailTo = "Websencol@gmail.com";
-        private readonly string _emailFrom = "Websencol@gmail.com";
+        private readonly string _smtpUser = "abastecetecol@gmail.com";
+        private readonly string _smtpPass = "mvijnlfiegwohmsm";
+        private readonly string _emailTo = "abastecetecol@gmail.com";
+        private readonly string _emailFrom = "abastecetecol@gmail.com";
 
         public async Task<bool> EnviarCorreoContacto(string email, string phone, string message)
         {

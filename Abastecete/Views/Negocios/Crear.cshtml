@@ -1,0 +1,103 @@
+﻿@model BusinessLogic.Models.Negocio;
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Abastecete</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link rel="icon" type="image/x-icon" href="~/css/Images/Logo A naranja.png" />
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link rel="stylesheet" href="~/css/styles.css" asp-append-version="true" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAPudyk3G3YG7GOEpId4xMK_WFIEenOSp8&libraries=places"></script>
+    <style>
+        #map {
+            height: 300px;
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100 font-sans">
+    <div class="max-w-4xl mx-auto mt-10 p-8 bg-white rounded-lg shadow-lg">
+        <h2 class="text-3xl font-bold text-[#F6580F] text-center mb-6">Registro de Negocio</h2>
+
+        @using (Html.BeginForm("Crear", "Negocios", FormMethod.Post, new { id = "registroForm", @class = "grid grid-cols-1 md:grid-cols-2 gap-6" }))
+        {
+            <div class="md:col-span-2">
+                @Html.ValidationSummary(true, "", new { @class = "text-red-500 text-sm" })
+            </div>
+
+            <div>
+                <label class="block font-medium">Nombre del negocio</label>
+                @Html.TextBoxFor(m => m.Nombre, new { @type = "text", @class = "w-full border p-2 rounded", @placeholder = "Ingresa el nombre de tu negocio", @id = "nombreNegocio" })
+                <span id="nombreError" class="text-red-500 text-sm hidden">Por favor, ingresa el nombre de tu negocio.</span>
+            </div>
+
+            <div>
+                <label class="block font-medium">Telefono del negocio</label>
+                @Html.TextBoxFor(m => m.Telefono, new { @type = "text", @class = "w-full border p-2 rounded", @placeholder = "Ingresa el telefono de tu negocio", @id = "telefonoNegocio" })
+                <span id="nombreError" class="text-red-500 text-sm hidden">Por favor, ingresa el telefono de tu negocio.</span>
+            </div>
+
+            <div>
+                <label class="block font-medium">Dirección del negocio</label>
+                @Html.TextBoxFor(m => m.Direccion, new { @type = "text", @class = "w-full border p-2 rounded focus:outline-none focus:ring-2 focus:ring-[#e65100]", @placeholder = "Ingresa la dirección de tu negocio", @id = "searchLocation" })
+                <span id="nombreError" class="text-red-500 text-sm hidden">Por favor, ingresa la dirección de tu negocio.</span>
+            </div>
+            
+            <div>
+                <label class="block font-medium">Logotipo</label>
+                @Html.TextBoxFor(m => m.Logotipo, new { @type = "file", @class = "w-full border p-2 rounded focus:outline-none focus:ring-2 focus:ring-[#e65100]" })
+            </div>
+
+            <div class="col-span-1 md:col-span-2">
+                <label class="block font-medium">Ubicación</label>
+                @Html.TextBoxFor(m => m.Ubicacion, new { @type = "text", @class = "w-full border p-2 rounded focus:outline-none focus:ring-2 focus:ring-[#e65100]", @id = "location" })
+                <div id="map" class="w-full rounded-md border mt-2"></div>
+            </div>
+
+            <div class="col-span-1 md:col-span-2 flex justify-center">
+                <a href="@Url.Action("Publicar", "Membresias")" class="w-full md:w-1/2 bg-[#008f39] text-white font-bold py-2 px-4 rounded-md hover:bg-[#006d2c] transition text-center">
+                    Registrar
+                </a>
+            </div>
+        }
+    </div>
+
+    <script>
+        function initMap() {
+            var map = new google.maps.Map(document.getElementById('map'), {
+                center: { lat: 2.9273, lng: -75.2819 },
+                zoom: 13
+            });
+
+            var marker = new google.maps.Marker({
+                position: { lat: 2.9273, lng: -75.2819 },
+                map: map,
+                draggable: true
+            });
+
+            var searchBox = new google.maps.places.SearchBox(document.getElementById('searchLocation'));
+
+            searchBox.addListener('places_changed', function() {
+                var places = searchBox.getPlaces();
+                if (places.length == 0) return;
+                var place = places[0];
+                map.setCenter(place.geometry.location);
+                marker.setPosition(place.geometry.location);
+                document.getElementById('location').value = place.geometry.location.lat() + ',' + place.geometry.location.lng();
+            });
+
+            marker.addListener('dragend', function() {
+                var position = marker.getPosition();
+                document.getElementById('location').value = position.lat() + ',' + position.lng();
+            });
+        }
+
+        window.onload = initMap;
+    </script>
+</body>
+</html>

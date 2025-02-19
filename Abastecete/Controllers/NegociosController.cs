@@ -20,5 +20,24 @@ namespace Abastecete.Controllers
             return View();
         }
 
+        [HttpGet]
+        public IActionResult Crear()
+        {
+            return View();
+        }
+
+        [HttpGet]
+        public IActionResult Redireccionar(string membresiaNombre)
+        {
+            if (membresiaNombre == "Plan Proveedor Básico" ||
+                membresiaNombre == "Plan Cultivador Básico" ||
+                membresiaNombre == "Plan Empresa Básico")
+            {
+                return RedirectToAction("Crear");
+            }
+
+            return RedirectToAction("Pendiente________"); 
+        }
+
     }
 }

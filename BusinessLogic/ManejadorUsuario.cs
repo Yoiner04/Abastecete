@@ -83,7 +83,6 @@ namespace BusinessLogic
             return conexion.EjecutarConsulta("login_usuario_google", parametros);
         }
 
-        // 🔹 Método optimizado para registrar usuarios autenticados con Google
         public int RegistrarUsuarioGoogle(string correo, string nombre)
         {
             try
@@ -96,7 +95,6 @@ namespace BusinessLogic
             new Parametro("p_fk_id_rol", 3)
         };
 
-                // 🔹 Intentar registrar al usuario
                 bool registroExitoso = conexion.EjecutarTransaccion("crear_usuario_google", parametros);
 
                 if (!registroExitoso)
@@ -104,7 +102,6 @@ namespace BusinessLogic
                     return 0;
                 }
 
-                // 🔹 Volver a consultar la BD para obtener el ID del usuario registrado
                 DataTable data = LoginGoogle(correo);
 
                 if (data.Rows.Count > 0)
@@ -121,5 +118,96 @@ namespace BusinessLogic
                 return 0;
             }
         }
+
+        public DataTable ObtenerUsuarioPorCorreo(string correo)
+        {
+            List<Parametro> parametros = new List<Parametro>()
+            {
+        new Parametro("p_correo", correo)
+            };
+
+            return conexion.EjecutarConsulta("obtener_usuario_por_correo", parametros);
+        }
+
+
+        public void GenerarTokenRecuperacion(int userId)
+        {
+            bool resultado = conexion.EjecutarTransaccion("generar_token_recuperacion", new List<Parametro>
+            {
+            new Parametro("p_fk_id_usuario", userId)
+            });
+        }
+
+
+
+
+        public string ObtenerTokenRecuperacion(int userId)
+        {
+            List<Parametro> parametros = new List<Parametro>
+            {
+        new Parametro("p_fk_id_usuario", userId)
+            };
+
+            DataTable data = conexion.EjecutarConsulta("obtener_token_recuperacion", parametros);
+
+            if (data == null || data.Rows.Count == 0 || string.IsNullOrEmpty(data.Rows[0]["TOKEN_RECUPERACION"].ToString()))
+            {
+                return null;
+            }
+
+            string token = data.Rows[0]["TOKEN_RECUPERACION"].ToString();
+            return token;
+        }
+
+        public DataTable ValidarTokenRecuperacion(string token)
+        {
+            List<Parametro> parametros = new List<Parametro>
+    {
+        new Parametro("p_token", token)
+    };
+
+            return conexion.EjecutarConsulta("validar_token_recuperacion", parametros);
+        }
+
+
+        public bool ValidarToken(string token, out int userId)
+        {
+            userId = 0;
+
+            List<Parametro> parametros = new List<Parametro>()
+    {
+        new Parametro("p_token", token)
+    };
+
+            DataTable data = conexion.EjecutarConsulta("validar_token_recuperacion", parametros);
+
+            if (data.Rows.Count > 0)
+            {
+                if (data.Columns.Contains("PK_ID_USUARIO"))
+                {
+                    userId = Convert.ToInt32(data.Rows[0]["PK_ID_USUARIO"]);
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+
+
+        public bool CambiarContrasenia(int userId, string nuevaContrasenia)
+        {
+            List<Parametro> parametros = new List<Parametro>
+    {
+        new Parametro("p_id_usuario", userId),
+        new Parametro("p_nueva_contrasenia", Seguridad.Encriptar(nuevaContrasenia))
+    };
+
+            return conexion.EjecutarTransaccion("recuperar_contrasenia", parametros);
+        }
+
+
+
+
     }
 }

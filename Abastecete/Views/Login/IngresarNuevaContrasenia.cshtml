@@ -2,40 +2,63 @@
     Layout = null;
 }
 
+<!DOCTYPE html>
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Restablecer Contraseña - Abastécete</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/alpinejs@3.10.2/dist/cdn.min.js" defer></script>
 </head>
 
 <body class="relative flex items-center justify-center min-h-screen">
 
-    <!-- Imagen de fondo -->
     <div class="absolute inset-0 bg-cover bg-center z-[-2]"
          style="background-image: url('/css/Images/señora2.jpg');"></div>
 
-    <!-- Capa de opacidad negra -->
     <div class="absolute inset-0 bg-black opacity-70 z-[-1]"></div>
 
     <div class="bg-white shadow-lg rounded-lg flex max-w-4xl w-full relative z-10">
-        <!-- Sección Izquierda -->
         <div class="w-1/2 bg-[#F8F1E6] p-8 flex flex-col justify-center items-center">
             <img src="~/css/Images/Logo 2.png" alt="Logo Abastécete">
             <h2 class="text-2xl font-bold text-[#23916A]">Recupera tu Contraseña</h2>
             <p class="text-gray-600 text-center mt-2">Ingresa tu nueva contraseña para acceder a tu cuenta.</p>
         </div>
 
-        <!-- Sección Derecha -->
         <div class="w-1/2 p-8 flex flex-col justify-center">
-            <form action="#" method="POST" class="space-y-4">
-                <label for="password" class="block font-medium text-gray-700">Nueva Contraseña</label>
-                <input type="password" id="password" name="password" placeholder="Ingresa tu nueva contraseña"
-                       class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E6581E]">
 
-                <label for="confirm_password" class="block font-medium text-gray-700">Confirmar Contraseña</label>
-                <input type="password" id="confirm_password" name="confirm_password" placeholder="Confirma tu nueva contraseña"
-                       class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E6581E]">
+            @if (TempData["Error"] != null)
+            {
+                <div class="alert alert-danger text-center bg-red-500 text-white p-3 rounded-md">
+                    @TempData["Error"]
+                </div>
+            }
+
+            @if (ViewData["Success"] != null)
+            {
+                <div x-data="{ open: true }" x-show="open" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+                    <div class="bg-white p-6 rounded-lg shadow-lg max-w-sm text-center">
+                        <h3 class="text-xl font-bold text-[#23916A]">¡Éxito!</h3>
+                        <p class="mt-2 text-gray-700">@ViewData["Success"]</p>
+                        <button x-on:click="open = false; window.location.href='@Url.Action("Login", "Login")'"
+                                class="mt-4 px-4 py-2 bg-[#1E7D46] text-white font-bold rounded-lg hover:bg-[#165B32] transition duration-300">
+                            Aceptar
+                        </button>
+                    </div>
+                </div>
+            }
+
+            <form asp-action="IngresarNuevaContrasenia" method="post">
+                <input type="hidden" name="userId" value="@ViewBag.UserId" />
+
+                <label for="NuevaContrasenia" class="block font-medium text-gray-700">Nueva Contraseña</label>
+                <input type="password" id="NuevaContrasenia" name="NuevaContrasenia" placeholder="Ingresa tu nueva contraseña"
+                       class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E6581E]" required>
+
+                <label for="ConfirmarContrasenia" class="block font-medium text-gray-700">Confirmar Contraseña</label>
+                <input type="password" id="ConfirmarContrasenia" name="ConfirmarContrasenia" placeholder="Confirma tu nueva contraseña"
+                       class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E6581E]" required>
 
                 <button type="submit"
                         class="w-full bg-[#1E7D46] text-white font-bold py-3 rounded-lg hover:bg-[#165B32] transition duration-300">
@@ -44,7 +67,7 @@
             </form>
 
             <div class="mt-4 text-center">
-                <a href="login.html" class="text-[#E6581E] font-semibold hover:underline">Volver al inicio de sesión</a>
+                <a href="@Url.Action("Login", "Login")" class="text-[#E6581E] font-semibold hover:underline">Volver al inicio de sesión</a>
             </div>
         </div>
     </div>

@@ -49,6 +49,9 @@
                             </td>
                             <td class="px-4 py-3 text-center">
                                 <button class="text-blue-600 hover:text-blue-800" onclick="editarCategoria(@categoria.Id)">✏Editar</button>
+                                <button class="text-blue-600 hover:text-blue-800" onclick="verSubCategorias(@categoria.Id)">
+                                    📂 Subcategorías
+                                </button>
                             </td>
                         </tr>
                     }
@@ -89,6 +92,56 @@
             </button>
         </div>
     </div>
+
+    <!-- Modal Listar/Agregar/Editar SubCategorias -->
+    <!-- Modal de Subcategorías -->
+    <div id="subcategorias-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+         onclick="cerrarSubCategorias(event)">
+        <div class="p-6 rounded-lg shadow-lg bg-white w-full max-w-md mx-4" onclick="event.stopPropagation();">
+            <h2 class="text-center text-xl font-bold text-gray-800">Subcategorías</h2>
+
+            <table id="tabla-subcategorias" class="w-full mt-4">
+                <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="tabla-subcategorias-body">
+                    <!-- Aquí se llenarán dinámicamente las subcategorías -->
+                </tbody>
+            </table>
+
+            <hr class="my-4">
+
+            <h3 id="subcategoria-form-title" class="text-lg font-bold text-gray-800">Agregar Subcategoría</h3>
+            <form id="subcategoria-form">
+                <input type="hidden" id="subcategoria-id">
+                <input type="hidden" id="subcategoria-idCategoria">
+
+                <label class="block text-gray-700 font-medium">Nombre</label>
+                <input type="text" id="subcategoria-nombre" placeholder="Nombre de la subcategoría"
+                       class="w-full p-3 rounded-lg bg-gray-100 border border-gray-300 text-black mb-3" required>
+
+                <label class="block text-gray-700 font-medium">Estado</label>
+                <select id="subcategoria-estado" class="w-full p-2 border border-gray-300 rounded-lg mb-3">
+                    <option value="1">Activo</option>
+                    <option value="0">Inactivo</option>
+                </select>
+
+                <button type="submit" class="w-full bg-green-600 text-white py-3 rounded-lg font-bold hover:bg-green-700">
+                    Guardar Subcategoría
+                </button>
+            </form>
+
+            <button onclick="cerrarSubCategorias()" class="block w-full text-center mt-3 text-gray-600 hover:text-gray-800">
+                Cerrar
+            </button>
+        </div>
+    </div>
+
+
 
     <script>
         document.getElementById("open-add-modal").addEventListener("click", openModal);
@@ -169,5 +222,105 @@
                 })
                 .catch(error => console.error("Error:", error));
         });
+
+        function verSubCategorias(idCategoria) {
+            document.getElementById("subcategoria-idCategoria").value = idCategoria;
+
+            fetch(`/SubCategorias/ObtenerSubCategorias?idCategoria=${idCategoria}`)
+                .then(res => res.json())
+                .then(subcategorias => {
+                    let tableBody = document.getElementById("tabla-subcategorias-body");
+
+                    if (!tableBody) {
+                        console.error("No se encontró el tbody con ID 'tabla-subcategorias-body'");
+                        return;
+                    }
+
+                    tableBody.innerHTML = "";
+
+                    subcategorias.forEach(sub => {
+                        let row = `<tr>
+                            <td>${sub.nombre}</td>
+                            <td>${sub.estado == 1 ? "🟢 Activo" : "🔴 Inactivo"}</td>
+                            <td>
+                                <button onclick="editarSubCategoria(${sub.id})">✏ Editar</button>
+                            </td>
+                        </tr>`;
+                        tableBody.innerHTML += row;
+                    });
+
+                    document.getElementById("subcategorias-modal").classList.remove("hidden");
+                })
+                .catch(error => console.error("Error al cargar subcategorías:", error));
+        }
+
+
+        function agregarSubCategoria() {
+            let idCategoria = document.getElementById("subcategoria-idCategoria").value;
+
+            document.getElementById("subcategoria-id").value = "";
+            document.getElementById("subcategoria-nombre").value = "";
+            document.getElementById("subcategoria-estado").value = "1";
+            document.getElementById("subcategoria-idCategoria").value = idCategoria;
+            document.getElementById("subcategoria-form-title").textContent = "Agregar Subcategoría";
+        }
+
+
+        function editarSubCategoria(id) {
+            fetch(`/SubCategorias/ObtenerSubCategorias?idCategoria=${document.getElementById("subcategoria-idCategoria").value}`)
+                .then(res => res.json())
+                .then(subcategorias => {
+                    let sub = subcategorias.find(s => s.id == id);
+                    if (!sub) {
+                        console.error("Subcategoría no encontrada");
+                        return;
+                    }
+
+                    document.getElementById("subcategoria-id").value = sub.id;
+                    document.getElementById("subcategoria-nombre").value = sub.nombre;
+                    document.getElementById("subcategoria-estado").value = sub.estado;
+                    document.getElementById("subcategoria-idCategoria").value = sub.idCategoria;
+                    document.getElementById("subcategoria-form-title").textContent = "Editar Subcategoría";
+                })
+                .catch(error => console.error("Error al obtener la subcategoría:", error));
+        }
+
+
+        document.getElementById("subcategoria-form").addEventListener("submit", function (event) {
+            event.preventDefault();
+
+            let id = document.getElementById("subcategoria-id").value;
+            let idCategoria = document.getElementById("subcategoria-idCategoria").value;
+            let nombre = document.getElementById("subcategoria-nombre").value;
+            let estado = document.getElementById("subcategoria-estado").value;
+
+            if (!nombre.trim()) {
+                alert("El nombre de la subcategoría es obligatorio.");
+                return;
+            }
+
+            let url = id ? "/SubCategorias/EditarSubCategoria" : "/SubCategorias/CrearSubCategoria";
+            let data = new URLSearchParams({ Id: id, IdCategoria: idCategoria, Nombre: nombre, Estado: estado });
+
+            fetch(url, {
+                method: "POST",
+                body: data,
+                headers: { "Content-Type": "application/x-www-form-urlencoded" }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.mensaje);
+                    location.reload();
+                })
+                .catch(error => console.error("Error:", error));
+        });
+
+        function cerrarSubCategorias(event) {
+            if (!event || event.target.id === "subcategorias-modal") {
+                document.getElementById("subcategorias-modal").classList.add("hidden");
+            }
+        }
+
+
     </script>
 </body>
