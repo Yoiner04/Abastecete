@@ -14,55 +14,65 @@
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAPudyk3G3YG7GOEpId4xMK_WFIEenOSp8&libraries=places"></script>
     <style>
         #map {
-            height: 300px;
+            height: 380px;
             width: 100%;
         }
     </style>
 </head>
 
 <body class="bg-gray-100 font-sans">
-    <div class="max-w-4xl mx-auto mt-10 p-8 bg-white rounded-lg shadow-lg">
+    <div class="max-w-6xl mx-auto mt-4 p-8 bg-white rounded-lg shadow-lg">
+
         <h2 class="text-3xl font-bold text-[#F6580F] text-center mb-6">Registro de Negocio</h2>
 
-        @using (Html.BeginForm("Crear", "Negocios", FormMethod.Post, new { id = "registroForm", @class = "grid grid-cols-1 md:grid-cols-2 gap-6" }))
+        @using (Html.BeginForm("GuardarDatosNegocio", "Negocios", FormMethod.Post, new { id = "registroForm", @class = "grid grid-cols-1 md:grid-cols-2 gap-8" }))
         {
             <div class="md:col-span-2">
                 @Html.ValidationSummary(true, "", new { @class = "text-red-500 text-sm" })
             </div>
 
-            <div>
-                <label class="block font-medium">Nombre del negocio</label>
-                @Html.TextBoxFor(m => m.Nombre, new { @type = "text", @class = "w-full border p-2 rounded", @placeholder = "Ingresa el nombre de tu negocio", @id = "nombreNegocio" })
-                <span id="nombreError" class="text-red-500 text-sm hidden">Por favor, ingresa el nombre de tu negocio.</span>
+            <!-- Lado Izquierdo -->
+            <div class="space-y-4">
+                <div>
+                    <label class="block font-medium">Nombre del negocio</label>
+                    @Html.TextBoxFor(m => m.Nombre, new { @type = "text", @class = "w-full border p-2 rounded", @placeholder = "Ingresa el nombre de tu negocio", @id = "nombreNegocio" })
+                    <span id="nombreError" class="text-red-500 text-sm hidden">Por favor, ingresa el nombre de tu negocio.</span>
+                </div>
+
+                <div>
+                    <label class="block font-medium">Teléfono del negocio</label>
+                    @Html.TextBoxFor(m => m.Telefono, new { @type = "text", @class = "w-full border p-2 rounded", @placeholder = "Ingresa el teléfono de tu negocio", @id = "telefonoNegocio" })
+                    <span id="telefonoError" class="text-red-500 text-sm hidden">Por favor, ingresa el teléfono de tu negocio.</span>
+                </div>
+
+                <div>
+                    <label class="block font-medium">Logotipo</label>
+                    @Html.TextBoxFor(m => m.Logotipo, new { @type = "file", name = "Logotipo", @class = "w-full border p-2 rounded focus:outline-none focus:ring-2 focus:ring-[#e65100]" })
+                </div>
+
+                <div>
+                    <label class="block font-medium">Dirección del negocio</label>
+                    @Html.TextBoxFor(m => m.Direccion, new { @type = "text", @class = "w-full border p-2 rounded focus:outline-none focus:ring-2 focus:ring-[#e65100]", @placeholder = "Ingresa la dirección de tu negocio", @id = "searchLocation" })
+                    <span id="direccionError" class="text-red-500 text-sm hidden">Por favor, ingresa la dirección de tu negocio.</span>
+                </div>
+
+                <div>
+                    <label class="block font-medium">Localización</label>
+                    @Html.TextBoxFor(m => m.Barrio, new { @type = "text", @class = "w-full border p-2 rounded focus:outline-none focus:ring-2 focus:ring-[#e65100]", @id = "location" })
+                    <span id="direccionError" class="text-red-500 text-sm hidden">Por favor, ingresa la dirección de tu negocio.</span>
+                </div>
             </div>
 
+            <!-- Lado Derecho: Ubicación y Mapa -->
             <div>
-                <label class="block font-medium">Telefono del negocio</label>
-                @Html.TextBoxFor(m => m.Telefono, new { @type = "text", @class = "w-full border p-2 rounded", @placeholder = "Ingresa el telefono de tu negocio", @id = "telefonoNegocio" })
-                <span id="nombreError" class="text-red-500 text-sm hidden">Por favor, ingresa el telefono de tu negocio.</span>
+                <div id="map" class="w-full h-64 rounded-md border mt-3"></div>
             </div>
 
-            <div>
-                <label class="block font-medium">Dirección del negocio</label>
-                @Html.TextBoxFor(m => m.Direccion, new { @type = "text", @class = "w-full border p-2 rounded focus:outline-none focus:ring-2 focus:ring-[#e65100]", @placeholder = "Ingresa la dirección de tu negocio", @id = "searchLocation" })
-                <span id="nombreError" class="text-red-500 text-sm hidden">Por favor, ingresa la dirección de tu negocio.</span>
-            </div>
-            
-            <div>
-                <label class="block font-medium">Logotipo</label>
-                @Html.TextBoxFor(m => m.Logotipo, new { @type = "file", @class = "w-full border p-2 rounded focus:outline-none focus:ring-2 focus:ring-[#e65100]" })
-            </div>
-
-            <div class="col-span-1 md:col-span-2">
-                <label class="block font-medium">Ubicación</label>
-                @Html.TextBoxFor(m => m.Ubicacion, new { @type = "text", @class = "w-full border p-2 rounded focus:outline-none focus:ring-2 focus:ring-[#e65100]", @id = "location" })
-                <div id="map" class="w-full rounded-md border mt-2"></div>
-            </div>
-
-            <div class="col-span-1 md:col-span-2 flex justify-center">
-                <a href="@Url.Action("Publicar", "Membresias")" class="w-full md:w-1/2 bg-[#008f39] text-white font-bold py-2 px-4 rounded-md hover:bg-[#006d2c] transition text-center">
-                    Registrar
-                </a>
+            <!-- Botón Siguiente -->
+            <div class="md:col-span-2 flex justify-center">
+                <button type="submit" class="w-full md:w-1/2 bg-[#008f39] text-white font-bold py-2 px-4 rounded-md hover:bg-[#006d2c] transition text-center">
+                    Siguiente
+                </button>
             </div>
         }
     </div>
@@ -100,4 +110,4 @@
         window.onload = initMap;
     </script>
 </body>
-</html>
+

@@ -1,0 +1,177 @@
+﻿@model List<BusinessLogic.Models.Producto>
+
+<head>
+    <title>Gestión de Productos</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/Abastecete.styles.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/styles.css" asp-append-version="true" />
+</head>
+
+<body class="bg-gray-100">
+    <section class="mt-12 px-6 md:px-16 lg:px-36 bg-white shadow-md rounded-lg p-6">
+        <h2 class="text-xl font-bold text-gray-800 mb-4">Gestión de Productos</h2>
+        <button class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700" onclick="abrirModal()">+ Agregar Producto</button>
+
+        <div class="overflow-x-auto mt-6">
+            <table class="w-full bg-white rounded-lg shadow-md overflow-hidden border">
+                <thead class="bg-gray-200 text-gray-700">
+                    <tr class="text-left">
+                        <th class="px-4 py-2">Nombre</th>
+                        <th class="px-4 py-2">Precio</th>
+                        <th class="px-4 py-2">Imagen</th>
+                        <th class="px-4 py-2">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="productos-table-body">
+                    @foreach (var producto in Model)
+                    {
+                        <tr class="border-t hover:bg-gray-50">
+                            <td class="px-4 py-2">@producto.Nombre</td>
+                            <td class="px-4 py-2">$@producto.Precio</td>
+                            <td class="px-4 py-2">
+                                <img src="@producto.ImagenUrl" class="w-12 h-12 rounded">
+                            </td>
+                            <td class="px-4 py-2">
+                                <button class="text-blue-600 hover:text-blue-800" onclick="editarProducto(@producto.Id)">✏ Editar</button>
+                                <button class="text-red-600 hover:text-red-800 ml-2" onclick="eliminarProducto(@producto.Id)">🗑 Eliminar</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Modal -->
+    <div id="producto-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 flex justify-center items-center">
+        <div class="bg-white p-6 rounded-lg shadow-lg w-96">
+            <h2 id="producto-modal-title" class="text-lg font-bold text-gray-800 mb-4">Agregar Producto</h2>
+
+            <form id="producto-form" enctype="multipart/form-data">
+                <input type="hidden" id="producto-id">
+
+                <label class="block text-gray-700 font-medium">Subcategoría</label>
+                <select id="producto-subcategoria" class="w-full p-2 border border-gray-300 rounded-lg mb-3" required>
+                    <option value="">Seleccione una subcategoría</option>
+                </select>
+
+                <label class="block text-gray-700 font-medium">Nombre</label>
+                <input type="text" id="producto-nombre" class="w-full p-3 rounded-lg bg-gray-100 border border-gray-300 text-black mb-3" required>
+
+                <label class="block text-gray-700 font-medium">Precio</label>
+                <input type="number" id="producto-precio" class="w-full p-3 rounded-lg bg-gray-100 border border-gray-300 text-black mb-3" required>
+
+                <label class="block text-gray-700 font-medium">Imagen</label>
+                <input type="file" id="producto-imagen" accept="image/*" class="w-full p-2 border border-gray-300 rounded-lg mb-3">
+
+                <div class="preview flex justify-center my-2">
+                    <img id="image-preview" src="" alt="Vista previa" class="hidden w-24 h-24 object-cover rounded-lg">
+                </div>
+
+                <button type="submit" class="w-full bg-green-600 text-white py-3 rounded-lg font-bold hover:bg-green-700">
+                    Guardar
+                </button>
+            </form>
+
+            <button onclick="cerrarModal()" class="block w-full text-center mt-3 text-gray-600 hover:text-gray-800">
+                Cerrar
+            </button>
+        </div>
+    </div>
+
+    <script>
+        function cargarSubCategorias() {
+            fetch("/Productos/ObtenerSubCategorias")
+                .then(res => res.json())
+                .then(subcategorias => {
+                    let select = document.getElementById("producto-subcategoria");
+                    select.innerHTML = '<option value="">Seleccione una subcategoría</option>';
+                    subcategorias.forEach(sub => {
+                        let option = document.createElement("option");
+                        option.value = sub.id;
+                        option.textContent = sub.nombre;
+                        select.appendChild(option);
+                    });
+                })
+                .catch(error => console.error("Error al cargar subcategorías:", error));
+        }
+
+        function abrirModal() {
+            cargarSubCategorias();
+            document.getElementById("producto-id").value = "";
+            document.getElementById("producto-nombre").value = "";
+            document.getElementById("producto-precio").value = "";
+            document.getElementById("producto-imagen").value = "";
+            document.getElementById("image-preview").classList.add("hidden");
+            document.getElementById("producto-modal-title").textContent = "Agregar Producto";
+            document.getElementById("producto-modal").classList.remove("hidden");
+        }
+
+        function cerrarModal() {
+            document.getElementById("producto-modal").classList.add("hidden");
+        }
+
+        function editarProducto(id) {
+            fetch(`/Productos/CRUDProductos`)
+                .then(res => res.json())
+                .then(productos => {
+                    let producto = productos.find(p => p.id === id);
+                    if (!producto) return;
+
+                    document.getElementById("producto-id").value = producto.id;
+                    document.getElementById("producto-nombre").value = producto.nombre;
+                    document.getElementById("producto-precio").value = producto.precio;
+                    document.getElementById("producto-subcategoria").value = producto.idSubCategoria;
+
+                    let preview = document.getElementById("image-preview");
+                    if (producto.imagenUrl) {
+                        preview.src = producto.imagenUrl;
+                        preview.classList.remove("hidden");
+                    } else {
+                        preview.classList.add("hidden");
+                    }
+
+                    document.getElementById("producto-modal-title").textContent = "Editar Producto";
+                    document.getElementById("producto-modal").classList.remove("hidden");
+                });
+        }
+
+        document.getElementById("producto-form").addEventListener("submit", function (event) {
+            event.preventDefault();
+
+            let id = document.getElementById("producto-id").value;
+            let idSubCategoria = document.getElementById("producto-subcategoria").value;
+            let nombre = document.getElementById("producto-nombre").value;
+            let precio = document.getElementById("producto-precio").value;
+            let imagenInput = document.getElementById("producto-imagen").files[0];
+
+            if (!nombre.trim() || !idSubCategoria) {
+                alert("El nombre y la subcategoría son obligatorios.");
+                return;
+            }
+
+            let formData = new FormData();
+            formData.append("Id", id || 0);
+            formData.append("IdSubCategoria", idSubCategoria);
+            formData.append("Nombre", nombre);
+            formData.append("Precio", precio);
+            if (imagenInput) {
+                formData.append("Imagen", imagenInput);
+            }
+
+            let url = id ? "/Productos/EditarProducto" : "/Productos/CrearProducto";
+
+            fetch(url, {
+                method: "POST",
+                body: formData
+            })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.mensaje);
+                    location.reload();
+                })
+                .catch(error => console.error("Error:", error));
+        });
+    </script>
+</body>

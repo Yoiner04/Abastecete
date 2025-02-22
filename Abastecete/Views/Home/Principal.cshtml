@@ -26,7 +26,7 @@
         <div class="flex flex-col sm:flex-row justify-between w-full gap-4 sm:gap-8">
             <!-- Carrusel -->
             <div class="flex-grow sm:flex-grow-[2] h-[200px] sm:h-[250px] lg:h-[400px] relative rounded-lg overflow-hidden">
-                <img id="carouselImage" src="~/css/Images/carrusel1.jpg" alt="Carrusel"
+                <img id="carouselImage" src="~/images/carrusel1.webp" alt="Carrusel"
                      class="w-full h-full object-cover rounded-lg transition-opacity duration-500">
                 <button id="prevBtn"
                         class="absolute left-2 sm:left-3 top-1/2 transform -translate-y-1/2 bg-white text-black rounded-full px-2 sm:px-3 py-1 sm:py-2 z-10">
@@ -40,17 +40,26 @@
 
             <div class="flex flex-col sm:flex-col gap-2 w-full sm:w-[200px] lg:w-[250px] h-[200px] sm:h-[250px] lg:h-[400px]">
                 <div class="flex-1 h-1/2">
-                    <img src="~/css/Images/1.jpg" alt="Imagen 1" class="w-full h-full object-cover rounded-lg">
+                    <img src="/images/lateral1.webp?t=@DateTime.Now.Ticks" alt="Imagen 1" class="w-full h-full object-cover rounded-lg">
                 </div>
                 <div class="flex-1 h-1/2">
-                    <img src="~/css/Images/2.jpg" alt="Imagen 2" class="w-full h-full object-cover rounded-lg">
+                    <img src="/images/lateral2.webp?t=@DateTime.Now.Ticks" alt="Imagen 2" class="w-full h-full object-cover rounded-lg">
                 </div>
             </div>
+
         </div>
+
+        @Html.Partial("BannerModal")
+        <a onclick="abrirBannerModal()" class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700
+                    sm:px-2 sm:py-1 sm:text-xs
+                    md:px-6 md:py-3 md:text-lg">
+            Editar Banners
+        </a>
+
     </section>
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            const images = ["/css/Images/carrusel1.jpg", "/css/Images/carrusel2.jpg", "/css/Images/carrusel3.jpg"];
+            const images = ["/images/carrusel1.webp", "/images/carrusel2.webp", "/images/carrusel3.webp"];
             let currentIndex = 0;
             const carouselImage = document.getElementById("carouselImage");
             const prevBtn = document.getElementById("prevBtn");
@@ -59,7 +68,7 @@
             function updateImage() {
                 carouselImage.classList.add("opacity-0");
                 setTimeout(() => {
-                    carouselImage.src = images[currentIndex];
+                    carouselImage.src = images[currentIndex] + "?t=" + new Date().getTime(); // Evita caché
                     carouselImage.classList.remove("opacity-0");
                 }, 300);
             }

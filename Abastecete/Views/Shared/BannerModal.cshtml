@@ -1,0 +1,81 @@
+﻿<div id="bannerModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+    <div class="bg-white p-5 rounded-lg w-2/3 max-h-[80vh] overflow-y-auto">
+        <h2 class="text-xl font-bold mb-4 text-center">Editar Banners</h2>
+
+        <!-- Carrusel -->
+        <h3 class="text-lg font-semibold mb-2">Carrusel</h3>
+        <form id="uploadBannerForm" enctype="multipart/form-data" class="grid grid-cols-1 gap-4">
+            <div class="flex items-center gap-4">
+                <input type="file" id="carouselImage1" name="carouselImage1" accept="image/*" class="w-full">
+                <img src="/images/carrusel1.webp?t=@DateTime.Now.Ticks" alt="Carrusel 1" class="w-24 h-24 object-cover rounded-lg">
+            </div>
+            <div class="flex items-center gap-4">
+                <input type="file" id="carouselImage2" name="carouselImage2" accept="image/*" class="w-full">
+                <img src="/images/carrusel2.webp?t=@DateTime.Now.Ticks" alt="Carrusel 2" class="w-24 h-24 object-cover rounded-lg">
+            </div>
+            <div class="flex items-center gap-4">
+                <input type="file" id="carouselImage3" name="carouselImage3" accept="image/*" class="w-full">
+                <img src="/images/carrusel3.webp?t=@DateTime.Now.Ticks" alt="Carrusel 3" class="w-24 h-24 object-cover rounded-lg">
+            </div>
+
+            <!-- Laterales -->
+            <h3 class="text-lg font-semibold mt-4 mb-2">Laterales</h3>
+            <div class="flex items-center gap-4">
+                <input type="file" id="sideImage1" name="sideImage1" accept="image/*" class="w-full">
+                <img src="/images/lateral1.webp?t=@DateTime.Now.Ticks" alt="Lateral 1" class="w-24 h-24 object-cover rounded-lg">
+            </div>
+            <div class="flex items-center gap-4">
+                <input type="file" id="sideImage2" name="sideImage2" accept="image/*" class="w-full">
+                <img src="/images/lateral2.webp?t=@DateTime.Now.Ticks" alt="Lateral 2" class="w-24 h-24 object-cover rounded-lg">
+            </div>
+
+            <!-- Botones -->
+            <div class="flex justify-center gap-4 mt-4">
+                <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">Subir Imágenes</button>
+                <button type="button" onclick="cerrarBannerModal()" class="bg-gray-500 text-white px-4 py-2 rounded">Cerrar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function abrirBannerModal() {
+        document.getElementById("bannerModal").classList.remove("hidden");
+    }
+
+    function cerrarBannerModal() {
+        document.getElementById("bannerModal").classList.add("hidden");
+    }
+
+    document.getElementById("uploadBannerForm").addEventListener("submit", function (event) {
+        event.preventDefault();
+        let formData = new FormData();
+        let inputs = ["carouselImage1", "carouselImage2", "carouselImage3", "sideImage1", "sideImage2"];
+        let hasFile = false;
+
+        inputs.forEach(id => {
+            let file = document.getElementById(id).files[0] || null;
+            if (file) {
+                formData.append(id, file);
+                hasFile = true;
+            }
+        });
+
+        if (!hasFile) {
+            alert("Selecciona al menos una imagen antes de subir.");
+            return;
+        }
+
+        fetch("/Banners/SubirImagenes", {
+            method: "POST",
+            body: formData
+        })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.mensaje);
+                cerrarBannerModal();
+                location.reload();
+            })
+            .catch(error => console.error("Error:", error));
+    });
+</script>

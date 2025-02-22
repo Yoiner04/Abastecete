@@ -3,30 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Abastécete - Productos</title>
+    <title>Abastecete</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link rel="icon" type="image/x-icon" href="~/css/Images/Logo A naranja.png" />
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link rel="stylesheet" href="~/css/styles.css" asp-append-version="true" />
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAPudyk3G3YG7GOEpId4xMK_WFIEenOSp8&libraries=places"></script>
 </head>
+
+
 <body class="bg-gray-100">
-    <div class="max-w-4xl mx-auto p-6 bg-white shadow-lg rounded-lg mt-10">
-        <h1 class="text-3xl font-bold text-green-600 mb-6">Agregar Producto</h1>
-        <form class="space-y-4">
-            <div>
-                <label class="block text-gray-700 font-medium" for="categoria">Categoría</label>
-                <input type="number" id="subcategoria" name="subcategoria" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
-            </div>
+    <header class="bg-[#FAF5EB] shadow-md p-4 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+            <img src="logo.png" alt="Abastécete Logo" class="w-12 h-12">
+            <h1 class="text-2xl font-bold text-[#E4572E]">Negocio X</h1>
+        </div>
+        <button class="bg-[#21A65F] text-white px-4 py-2 rounded-md">Agregar Producto</button>
+    </header>
 
-            <div>
-                <label class="block text-gray-700 font-medium" for="subcategoria">Subcategoría</label>
-                <input type="number" id="subcategoria" name="subcategoria" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+    <main class="container mx-auto mt-8">
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            <div class="bg-white p-4 shadow-md rounded-md">
+                <img src="producto1.jpg" alt="Producto" class="w-full h-40 object-cover rounded-md">
+                <h2 class="mt-2 text-lg font-semibold text-gray-700">Producto 1</h2>
             </div>
-
-            <div>
-                <label class="block text-gray-700 font-medium" for="nombre">Productos</label>
-                
+            <div class="bg-white p-4 shadow-md rounded-md">
+                <img src="producto2.jpg" alt="Producto" class="w-full h-40 object-cover rounded-md">
+                <h2 class="mt-2 text-lg font-semibold text-gray-700">Producto 2</h2>
             </div>
-
-            <button type="submit" class="w-full bg-green-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-700 transition">Agregar Producto</button>
-        </form>
-    </div>
+            <div class="bg-white p-4 shadow-md rounded-md">
+                <img src="producto3.jpg" alt="Producto" class="w-full h-40 object-cover rounded-md">
+                <h2 class="mt-2 text-lg font-semibold text-gray-700">Producto 3</h2>
+            </div>
+            <div class="bg-white p-4 shadow-md rounded-md">
+                <img src="producto4.jpg" alt="Producto" class="w-full h-40 object-cover rounded-md">
+                <h2 class="mt-2 text-lg font-semibold text-gray-700">Producto 4</h2>
+            </div>
+        </div>
+    </main>
 </body>
 </html>

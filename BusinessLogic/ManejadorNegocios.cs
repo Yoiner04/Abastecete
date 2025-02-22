@@ -19,16 +19,16 @@ namespace BusinessLogic
         {
             List<Parametro> parametros = new List<Parametro>
             {
-                new Parametro("p_fk_id_persona", negocio.Persona.Nombre),
-                new Parametro("p_fk_id_estado_local", negocio.Estado),
-                new Parametro("p_barrio_local", negocio.Nombre),
+                new Parametro("p_fk_id_persona", negocio.Persona.Id),
+                new Parametro("p_fk_id_estado_local", 1),
+                new Parametro("p_fk_id_tipomembresia", negocio.TipoMembresia),
+                new Parametro("p_barrio_local", negocio.Barrio),
                 new Parametro("p_nombre_local", negocio.Nombre),
                 new Parametro("p_direccion_local", negocio.Direccion),
                 new Parametro("p_telefono_local", negocio.Telefono),
-                new Parametro("p_fotos_local", negocio.Logotipo)
+                new Parametro("p_fotos_local", "/images/ec46cdab-e96a-4bb6-bacc-0c5b408dc97d_frutaverdura.webp")
             };
-
-            return conexion.EjecutarTransaccion("crear_persona", parametros);
+            return conexion.EjecutarTransaccion("crear_local", parametros);
         }
 
         public List<Negocio> ConsultarNegocios()

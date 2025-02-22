@@ -125,6 +125,14 @@
                             </a>
                         </li>
                     }
+                    @if (RolPermisos.TienePermiso("Mi negocio", permisos))
+                    {
+                        <li class="group">
+                            <a href="@Url.Action("ProductosNegocio", "Productos")" class="text-black group-hover:text-green-600">
+                                Mi negocio
+                            </a>
+                        </li>
+                    }
                     @if (RolPermisos.TienePermiso("Dejanos tu reseña", permisos))
                     {
                         <li class="group">
