@@ -9,11 +9,11 @@ namespace Abastecete.Controllers
     public class UsuariosController : Controller
     {
         ManejadorUsuario manejadorU = new ManejadorUsuario();
-        private readonly ManejadorUsuarios manejadorUsuarios;
+        ManejadorTipoDocumento TipoDocumento = new ManejadorTipoDocumento();
 
         public UsuariosController()
         {
-            manejadorUsuarios = new ManejadorUsuarios();
+            
         }
 
         public IActionResult Consultar()
@@ -21,7 +21,7 @@ namespace Abastecete.Controllers
             ViewBag.rol = LoginController.rol;
             ViewBag.administrar = RolPermisos.TienePermiso("Administrar Usuarios", HttpContext.Session.GetString("permisos"));
 
-            List<Usuario> usuarios = manejadorUsuarios.ConsultarUsuarios();
+            List<Usuario> usuarios = manejadorU.ConsultarUsuarios();
             return View(usuarios);
         }
 
@@ -37,7 +37,7 @@ namespace Abastecete.Controllers
             try
             {
 
-                bool resultado = manejadorUsuarios.EditarEstadoUsuario(data.IdUsuario, data.NuevoEstado);
+                bool resultado = manejadorU.EditarEstadoUsuario(data.IdUsuario, data.NuevoEstado);
 
                 if (resultado)
                 {
@@ -56,6 +56,8 @@ namespace Abastecete.Controllers
 
         public IActionResult Registrar()
         {
+            List<TipoDocumento> tiposDocumento = TipoDocumento.ObtenerTipoDocumentos();
+            ViewBag.TiposDocumento = tiposDocumento;
             return View();
         }
 
@@ -67,10 +69,10 @@ namespace Abastecete.Controllers
         [HttpPost]
         public IActionResult Registrar(Usuario usuario)
         {
-            if (!ModelState.IsValid)
-            {
-                return View(usuario);
-            }
+            //if (!ModelState.IsValid)
+            //{
+            //    return View(usuario);
+            //}
 
             bool result = manejadorU.RegistrarUsuario(usuario);
 
