@@ -15,7 +15,6 @@ namespace BusinessLogic
             conexion = new Connection();
         }
 
-        // Consultar todas las categorías
         public List<Categoria> ConsultarCategorias()
         {
             DataTable datos = conexion.EjecutarConsulta("consultar_categoria");

@@ -1,4 +1,5 @@
-﻿@model BusinessLogic.Models.Usuario;
+﻿@using BusinessLogic.Models
+@model BusinessLogic.Models.Usuario;
 
 @{
     Layout = null;
@@ -16,9 +17,9 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/3.2.12/jquery.validate.unobtrusive.min.js"></script>
 
-<body class="bg-gray-100 flex items-center justify-center min-h-screen">
-    <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-3xl">
-        <h2 class="text-2xl font-bold text-green-600 text-center mb-6">Crea tu cuenta</h2>
+<body class="flex min-h-screen items-center justify-center bg-gray-100">
+    <div class="w-full max-w-3xl rounded-lg bg-white p-8 shadow-lg">
+        <h2 class="mb-6 text-center text-2xl font-bold text-green-600">Crea tu cuenta</h2>
 
         @using (Html.BeginForm("Registrar", "Usuarios", FormMethod.Post, new { id = "registroForm", @class = "grid grid-cols-1 md:grid-cols-2 gap-4" }))
         {
@@ -29,42 +30,48 @@
             <div>
                 <label class="block font-medium">Nombre</label>
                 @Html.TextBoxFor(m => m.Persona.Nombre, new { @type = "text", @class = "w-full border p-2 rounded", @placeholder = "Ingresa tu nombre", @id = "nombre" })
-                <span id="nombreError" class="text-red-500 text-sm hidden">Por favor, ingresa tu nombre.</span>
+                <span id="nombreError" class="hidden text-sm text-red-500">Por favor, ingresa tu nombre.</span>
             </div>
             <div>
                 <label class="block font-medium">Apellido</label>
                 @Html.TextBoxFor(m => m.Persona.Apellido, new { @type = "text", @class = "w-full border p-2 rounded", @placeholder = "Ingresa tu apellido", @id = "apellido" })
-                <span id="apellidoError" class="text-red-500 text-sm hidden">Por favor, ingresa tu apellido.</span>
+                <span id="apellidoError" class="hidden text-sm text-red-500">Por favor, ingresa tu apellido.</span>
             </div>
             <div>
                 <label class="block font-medium">Tipo de Documento</label>
-                @Html.TextBoxFor(m => m.Persona.TipoDeDocumento, new { @type = "text", @class = "w-full border p-2 rounded", @placeholder = "Ingresa tu tipo de documento", @id = "tipoDeDocumento" })
-                <span id="tipoDeDocumentoError" class="text-red-500 text-sm hidden">Por favor, ingresa el tipo de documento.</span>
+                <select class="w-full rounded border p-2" id="tipoDeDocumento" name="Persona.TipoDeDocumento">
+                    <option value="">Seleccione</option>
+                    @foreach (TipoDocumento td in ViewBag.TiposDocumento)
+                    {
+                        <option value="@td.Id">@td.Nombre</option>
+                    }
+                </select>
+                <span id="tipoDeDocumentoError" class="hidden text-sm text-red-500">Por favor, ingresa el tipo de documento.</span>
             </div>
             <div>
                 <label class="block font-medium">Documento</label>
                 @Html.TextBoxFor(m => m.Persona.Documento, new { @type = "text", @class = "w-full border p-2 rounded", @placeholder = "Ingresa tu documento", @oninput = "this.value=this.value.replace(/[^0-9]/g,'');", @id = "documento" })
-                <span id="documentoError" class="text-red-500 text-sm hidden">El documento es obligatorio.</span>
+                <span id="documentoError" class="hidden text-sm text-red-500">El documento es obligatorio.</span>
             </div>
             <div>
                 <label class="block font-medium">Teléfono</label>
                 @Html.TextBoxFor(m => m.Persona.Telefono, new { @type = "text", @class = "w-full border p-2 rounded", @placeholder = "Ingresa tu teléfono", @oninput = "this.value=this.value.replace(/[^0-9]/g,'');", @id = "telefono" })
-                <span id="telefonoError" class="text-red-500 text-sm hidden">El teléfono debe comenzar con 3 y tener 10 dígitos.</span>
+                <span id="telefonoError" class="hidden text-sm text-red-500">El teléfono debe comenzar con 3 y tener 10 dígitos.</span>
             </div>
             <div>
                 <label class="block font-medium">Correo Electrónico</label>
                 @Html.TextBoxFor(m => m.Correo, new { @type = "email", @class = "w-full border p-2 rounded", @placeholder = "Ingresa tu correo", @id = "correo" })
-                <span id="correoError" class="text-red-500 text-sm hidden">El correo es obligatorio.</span>
+                <span id="correoError" class="hidden text-sm text-red-500">El correo es obligatorio.</span>
             </div>
             <div>
                 <label class="block font-medium">Contraseña</label>
                 @Html.TextBoxFor(m => m.Contrasenia, new { @type = "password", @class = "w-full border p-2 rounded", @id = "password", @placeholder = "Ingresa tu contraseña" })
-                <span id="contraseniaError" class="text-red-500 text-sm hidden">La contraseña es obligatoria.</span>
+                <span id="contraseniaError" class="hidden text-sm text-red-500">La contraseña es obligatoria.</span>
             </div>
             <div>
                 <label class="block font-medium">Confirmar Contraseña</label>
-                <input type="password" id="confirmPassword" class="w-full border p-2 rounded" placeholder="Confirma tu contraseña">
-                <span id="errorMessage" class="text-red-500 text-sm hidden">Las contraseñas no coinciden o son demasiado cortas.</span>
+                <input type="password" id="confirmPassword" class="w-full rounded border p-2" placeholder="Confirma tu contraseña">
+                <span id="errorMessage" class="hidden text-sm text-red-500">Las contraseñas no coinciden o son demasiado cortas.</span>
             </div>
             <div>
                 <label class="block font-medium">Código de Referido</label>
@@ -72,12 +79,12 @@
             </div>
 
             <div class="md:col-span-2">
-                <button class="w-full bg-orange-500 text-white font-bold py-2 rounded">Registrarse</button>
+                <button class="w-full rounded bg-orange-500 py-2 font-bold text-white">Registrarse</button>
             </div>
         }
 
-        <p class="text-center text-sm mt-4">
-            ¿Ya tienes una cuenta? <a href="@Url.Action("Login", "Login")" class="text-green-600 font-bold">Inicia sesión</a>
+        <p class="mt-4 text-center text-sm">
+            ¿Ya tienes una cuenta? <a href="@Url.Action("Login", "Login")" class="font-bold text-green-600">Inicia sesión</a>
         </p>
     </div>
 
