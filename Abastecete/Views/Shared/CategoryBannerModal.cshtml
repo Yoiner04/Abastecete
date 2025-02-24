@@ -1,0 +1,84 @@
+﻿<!-- CategoryBannerModal.cshtml -->
+<div id="categoryBannerModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
+    <div class="bg-white p-5 rounded-lg w-2/3">
+        <h2 class="text-xl font-bold mb-4 text-center">Actualizar Imágenes de Categoría</h2>
+        <form id="uploadCategoryBannerForm" enctype="multipart/form-data" class="flex flex-col gap-4">
+            <!-- Selector de categoría -->
+            <label for="categorySelect" class="text-sm font-medium">Seleccionar Categoría</label>
+            <select id="categorySelect" name="nombreCategoria" class="border p-2 rounded">
+                @foreach (var categoria in Model)
+                {
+                    <option value="@categoria.Nombre">@categoria.Nombre</option>
+                }
+            </select>
+
+            <!-- Inputs de imágenes con vista previa -->
+            <div class="grid grid-cols-2 gap-4">
+                <div class="flex flex-col items-center">
+                    <label class="text-sm font-medium">Imagen Ancha 1</label>
+                    <img id="previewBanner1" src="" alt="Banner 1" class="w-48 h-24 object-cover rounded-lg mb-2">
+                    <input type="file" id="bannerImage1" name="imagen1" accept="image/*" class="w-full">
+                </div>
+                <div class="flex flex-col items-center">
+                    <label class="text-sm font-medium">Imagen Ancha 2</label>
+                    <img id="previewBanner2" src="" alt="Banner 2" class="w-48 h-24 object-cover rounded-lg mb-2">
+                    <input type="file" id="bannerImage2" name="imagen2" accept="image/*" class="w-full">
+                </div>
+                <div class="flex flex-col items-center">
+                    <label class="text-sm font-medium">Imagen Cuadrada 1</label>
+                    <img id="previewBanner3" src="" alt="Banner 3" class="w-24 h-24 object-cover rounded-lg mb-2">
+                    <input type="file" id="bannerImage3" name="imagen3" accept="image/*" class="w-full">
+                </div>
+                <div class="flex flex-col items-center">
+                    <label class="text-sm font-medium">Imagen Cuadrada 2</label>
+                    <img id="previewBanner4" src="" alt="Banner 4" class="w-24 h-24 object-cover rounded-lg mb-2">
+                    <input type="file" id="bannerImage4" name="imagen4" accept="image/*" class="w-full">
+                </div>
+                <div class="flex flex-col items-center">
+                    <label class="text-sm font-medium">Imagen Cuadrada 3</label>
+                    <img id="previewBanner5" src="" alt="Banner 5" class="w-24 h-24 object-cover rounded-lg mb-2">
+                    <input type="file" id="bannerImage5" name="imagen5" accept="image/*" class="w-full">
+                </div>
+                <div class="flex flex-col items-center">
+                    <label class="text-sm font-medium">Imagen Cuadrada 4</label>
+                    <img id="previewBanner6" src="" alt="Banner 6" class="w-24 h-24 object-cover rounded-lg mb-2">
+                    <input type="file" id="bannerImage6" name="imagen6" accept="image/*" class="w-full">
+                </div>
+            </div>
+            <div class="text-center mt-4">
+                <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">Subir Imágenes</button>
+                <button type="button" onclick="cerrarCategoryBannerModal()" class="bg-gray-500 text-white px-4 py-2 rounded">Cerrar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function abrirCategoryBannerModal() {
+        document.getElementById("categoryBannerModal").classList.remove("hidden");
+    }
+
+    function cerrarCategoryBannerModal() {
+        document.getElementById("categoryBannerModal").classList.add("hidden");
+    }
+
+    document.getElementById("uploadCategoryBannerForm").addEventListener("submit", function (event) {
+        event.preventDefault();
+        let formData = new FormData(this);
+
+        let nombreCategoria = document.getElementById("categorySelect").value;
+        formData.set("nombreCategoria", nombreCategoria);
+
+        fetch("/Banners/SubirImagenesCategoria", {
+            method: "POST",
+            body: formData
+        })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.mensaje);
+                cerrarCategoryBannerModal();
+                location.reload();
+            })
+            .catch(error => console.error("Error:", error));
+    });
+</script>
