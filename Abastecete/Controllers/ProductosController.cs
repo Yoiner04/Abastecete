@@ -22,6 +22,12 @@ namespace Abastecete.Controllers
             return View();
         }
 
+        [HttpGet]
+        public IActionResult AgregarProductNegocio()
+        {
+            return View();
+        }
+
         private readonly ManejadorProductos manejadorProductos;
 
         public ProductosController()
