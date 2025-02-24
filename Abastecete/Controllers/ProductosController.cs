@@ -10,12 +10,14 @@ namespace Abastecete.Controllers
 
         private readonly ManejadorNegocios manejadorNegocios;
         private readonly ManejadorProductos manejadorProductos;
+        private readonly ManejadorCategorias manejadorCategorias;
 
         // Constructor para inicializar el manejador de negocios y productos
         public ProductosController()
         {
             manejadorNegocios = new ManejadorNegocios();
             manejadorProductos = new ManejadorProductos();
+            manejadorCategorias = new ManejadorCategorias();
         }
 
         public IActionResult ProductosNegocio()
@@ -35,8 +37,7 @@ namespace Abastecete.Controllers
         public IActionResult ListaNegocios()
         {
 
-            List<Categoria> categorias = manejadorCategorias.ConsultarCategorias();
-            ViewBag.categorias = categorias;
+            
             List<Negocio> negocios = manejadorNegocios.ConsultarTodosLosNegocios();
             return View(negocios);
 
@@ -46,6 +47,8 @@ namespace Abastecete.Controllers
         [HttpGet]
         public IActionResult AgregarProductNegocio()
         {
+            List<Categoria> categorias = manejadorCategorias.ConsultarCategorias();
+            ViewBag.categorias = categorias;
             return View();
         }
 
