@@ -7,36 +7,46 @@ namespace Abastecete.Controllers
 {
     public class ProductosController : Controller
     {
-        ManejadorCategorias manejadorCategorias = new ManejadorCategorias();
-        ManejadorSubCategorias manejadorSubCategorias = new ManejadorSubCategorias();
-        public IActionResult Consultar()
-        {
-            return View();
-        }
 
-        public IActionResult ConsultarIndividual()
+        private readonly ManejadorNegocios manejadorNegocios;
+        private readonly ManejadorProductos manejadorProductos;
+
+        // Constructor para inicializar el manejador de negocios y productos
+        public ProductosController()
         {
-            return View();
+            manejadorNegocios = new ManejadorNegocios();
+            manejadorProductos = new ManejadorProductos();
         }
 
         public IActionResult ProductosNegocio()
         {
-            return View();
+            var personaId = HttpContext.Session.GetInt32("PersonaId").Value;
+
+            Negocio negocio = manejadorNegocios.ConsultarNegocio(personaId);
+
+            if (negocio == null)
+            {
+                return View("ErrorNegocioNoEncontrado"); // Vista de error si no tiene negocio
+            }
+
+            return View(negocio);
         }
+
+        public IActionResult ListaNegocios()
+        {
+
+            List<Categoria> categorias = manejadorCategorias.ConsultarCategorias();
+            ViewBag.categorias = categorias;
+            List<Negocio> negocios = manejadorNegocios.ConsultarTodosLosNegocios();
+            return View(negocios);
+
+        }
+
 
         [HttpGet]
         public IActionResult AgregarProductNegocio()
         {
-            List<Categoria> categorias = manejadorCategorias.ConsultarCategorias();
-            ViewBag.categorias = categorias;
             return View();
-        }
-
-        private readonly ManejadorProductos manejadorProductos;
-
-        public ProductosController()
-        {
-            manejadorProductos = new ManejadorProductos();
         }
 
         public IActionResult CRUDProductos()
@@ -94,7 +104,6 @@ namespace Abastecete.Controllers
             }
             return "/images/default.png"; // Imagen por defecto si no se sube una
         }
-
 
         [HttpPost]
         public IActionResult EliminarProducto(int Id)

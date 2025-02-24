@@ -3,7 +3,6 @@
 @inject IHttpContextAccessor HttpContextAccessor
 @model List<BusinessLogic.Models.Categoria>
 
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -20,10 +19,27 @@
 </head>
 
 <body>
+    @{
+        string permisos = HttpContextAccessor.HttpContext.Session.GetString("permisos");
+    }
     <!-- IMAGENES CON CARRUSEL -->
-    <section class="hero-section flex flex-col items-center p-5 sm:p-10 gap-5">
+    <section class="hero-section flex flex-col items-center p-3 sm:p-5 gap-3">
+
+        @if (permisos != null && RolPermisos.TienePermiso("Administrar Banners", permisos))
+        {
+            <div class="w-full flex justify-start mb-3">
+                @Html.Partial("BannerModal")
+                <a onclick="abrirBannerModal()" class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700
+                    sm:px-2 sm:py-1 sm:text-xs
+                    md:px-6 md:py-3 md:text-lg">
+                    Editar Banners
+                </a>
+            </div>
+        }
+
+
         <!-- Carrusel y dos imágenes -->
-        <div class="flex flex-col sm:flex-row justify-between w-full gap-4 sm:gap-8">
+        <div class="flex flex-col sm:flex-row justify-between w-full gap-3 sm:gap-6">
             <!-- Carrusel -->
             <div class="flex-grow sm:flex-grow-[2] h-[200px] sm:h-[250px] lg:h-[400px] relative rounded-lg overflow-hidden">
                 <img id="carouselImage" src="~/images/carrusel1.webp" alt="Carrusel"
@@ -48,15 +64,8 @@
             </div>
 
         </div>
-
-        @Html.Partial("BannerModal")
-        <a onclick="abrirBannerModal()" class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700
-                    sm:px-2 sm:py-1 sm:text-xs
-                    md:px-6 md:py-3 md:text-lg">
-            Editar Banners
-        </a>
-
     </section>
+
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             const images = ["/images/carrusel1.webp", "/images/carrusel2.webp", "/images/carrusel3.webp"];
@@ -102,7 +111,10 @@
         </div>
 
         @{
-            int totalCategorias = Model.Count;
+            // Filtrar categorías activas (Estado != 0)
+            var categoriasActivas = Model.Where(c => c.Estado != 0).ToList();
+
+            int totalCategorias = categoriasActivas.Count;
             int mitad = totalCategorias / 2;
             int primeraFila = (totalCategorias % 2 == 0) ? mitad : mitad + 1;
         }
@@ -113,9 +125,9 @@
             {
                 <div class="flex flex-col items-center">
                     <div class="category rounded-full w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 lg:w-40 lg:h-40 bg-gray-300 overflow-hidden shadow-lg">
-                        <img src="@Model[i].Imagen" alt="@Model[i].Nombre" class="w-full h-full object-cover">
+                        <img src="@categoriasActivas[i].Imagen" alt="@categoriasActivas[i].Nombre" class="w-full h-full object-cover">
                     </div>
-                    <p class="text-center mt-2 text-xs sm:text-sm font-medium">@Model[i].Nombre</p>
+                    <p class="text-center mt-2 text-xs sm:text-sm font-medium">@categoriasActivas[i].Nombre</p>
                 </div>
             }
         </div>
@@ -126,9 +138,9 @@
             {
                 <div class="flex flex-col items-center">
                     <div class="category rounded-full w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 lg:w-40 lg:h-40 bg-gray-300 overflow-hidden shadow-lg">
-                        <img src="@Model[i].Imagen" alt="@Model[i].Nombre" class="w-full h-full object-cover">
+                        <img src="@categoriasActivas[i].Imagen" alt="@categoriasActivas[i].Nombre" class="w-full h-full object-cover">
                     </div>
-                    <p class="text-center mt-2 text-xs sm:text-sm font-medium">@Model[i].Nombre</p>
+                    <p class="text-center mt-2 text-xs sm:text-sm font-medium">@categoriasActivas[i].Nombre</p>
                 </div>
             }
         </div>
@@ -499,12 +511,28 @@
             <h2 class="text-5xl lg:text-8xl font-bold text-[#23916A]">IMPERDIBLES</h2>
         </div>
 
-        @for (int i = 0; i < Model.Count; i++)
+        @if (permisos != null && RolPermisos.TienePermiso("Administrar Banners", permisos))
         {
+            <div class="w-full flex justify-start mb-3">
+                @Html.Partial("CategoryBannerModal")
+                <a onclick="abrirCategoryBannerModal()" class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700
+                sm:px-2 sm:py-1 sm:text-xs
+                md:px-6 md:py-3 md:text-lg">
+                    Editar Banners
+                </a>
+            </div>
+        }
+
+        @for (int i = 0; i < categoriasActivas.Count; i++)
+        {
+            var categoriaNombre = categoriasActivas[i].Nombre;
+            var rutaBase = $"/images/{categoriaNombre}/";
+            var imagenPorDefecto = "/images/default.webp"; // Imagen por defecto
+
             <div class="mb-10 @(i % 2 == 0 ? "bg-white p-5" : "bg-[#A3D7C2] p-5")">
                 <div class="flex flex-col lg:flex-row justify-between items-center mb-4">
                     <h2 class="text-lg font-bold text-gray-800 text-center lg:text-left pl-0 lg:pl-10">
-                        @Model[i].Nombre
+                        @categoriaNombre
                     </h2>
                     <a href="#" class="text-sm font-medium text-gray-600 hover:text-gray-800 flex items-center pr-0 lg:pr-10 mt-2 lg:mt-0">
                         Ver más
@@ -517,27 +545,29 @@
                 <!-- Rejilla de imágenes -->
                 <div class="grid grid-cols-1 lg:grid-cols-5 gap-4">
                     <!-- Pantallas grandes -->
-                    <div class="hidden lg:block bg-gray-300 rounded-tl-3xl h-60 col-span-3"></div>
-                    <div class="hidden lg:block bg-gray-300 rounded-tl-3xl rounded-br-3xl h-60 col-span-1"></div>
-                    <div class="hidden lg:block bg-gray-300 rounded-tl-3xl rounded-br-3xl h-60 col-span-1"></div>
-                    <div class="hidden lg:block bg-gray-300 h-60 col-span-1"></div>
-                    <div class="hidden lg:block bg-gray-300 h-60 col-span-1"></div>
-                    <div class="hidden lg:block bg-gray-300 h-60 col-span-3"></div>
+                    <img src="@($"{rutaBase}banner1.webp")" onerror="this.src='@imagenPorDefecto'" class="hidden lg:block rounded-tl-3xl h-60 col-span-3">
+                    <img src="@($"{rutaBase}banner6.webp")" onerror="this.src='@imagenPorDefecto'" class="hidden lg:block rounded-tl-3xl rounded-br-3xl h-60 col-span-1">
+                    <img src="@($"{rutaBase}banner3.webp")" onerror="this.src='@imagenPorDefecto'" class="hidden lg:block rounded-tl-3xl rounded-br-3xl h-60 col-span-1">
+                    <img src="@($"{rutaBase}banner4.webp")" onerror="this.src='@imagenPorDefecto'" class="hidden lg:block h-60 col-span-1">
+                    <img src="@($"{rutaBase}banner5.webp")" onerror="this.src='@imagenPorDefecto'" class="hidden lg:block h-60 col-span-1">
+                    <img src="@($"{rutaBase}banner2.webp")" onerror="this.src='@imagenPorDefecto'" class="hidden lg:block h-60 col-span-3">
 
                     <!-- Pantallas pequeñas -->
-                    <div class="block lg:hidden bg-gray-300 h-60 rounded-tl-3xl"></div>
+                    <img src="@($"{rutaBase}banner1.webp")" onerror="this.src='@imagenPorDefecto'" class="block lg:hidden h-16 rounded-tl-3xl w-full object-cover">
                     <div class="block lg:hidden grid grid-cols-2 gap-4">
-                        <div class="bg-gray-300 h-40 rounded-tl-3xl"></div>
-                        <div class="bg-gray-300 h-40 rounded-br-3xl"></div>
+                        <img src="@($"{rutaBase}banner4.webp")" onerror="this.src='@imagenPorDefecto'" class="h-32 w-full object-cover rounded-tl-3xl">
+                        <img src="@($"{rutaBase}banner3.webp")" onerror="this.src='@imagenPorDefecto'" class="h-32 w-full object-cover rounded-br-3xl">
                     </div>
-                    <div class="block lg:hidden bg-gray-300 h-60 rounded-br-3xl"></div>
+                    <img src="@($"{rutaBase}banner2.webp")" onerror="this.src='@imagenPorDefecto'" class="block lg:hidden h-16 w-full object-cover rounded-br-3xl">
                     <div class="block lg:hidden grid grid-cols-2 gap-4">
-                        <div class="bg-gray-300 h-40 rounded-tl-3xl"></div>
-                        <div class="bg-gray-300 h-40 rounded-br-3xl"></div>
+                        <img src="@($"{rutaBase}banner5.webp")" onerror="this.src='@imagenPorDefecto'" class="h-32 w-full object-cover rounded-tl-3xl">
+                        <img src="@($"{rutaBase}banner6.webp")" onerror="this.src='@imagenPorDefecto'" class="h-32 w-full object-cover rounded-br-3xl">
                     </div>
                 </div>
             </div>
         }
     </section>
+
+
 </body>
 </html>

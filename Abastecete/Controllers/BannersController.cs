@@ -66,8 +66,41 @@ namespace Abastecete.Controllers
             return Json(new { mensaje });
         }
 
+        [HttpPost]
+        public async Task<IActionResult> SubirImagenesCategoria(string nombreCategoria, IFormFile imagen1, IFormFile imagen2, IFormFile imagen3, IFormFile imagen4, IFormFile imagen5, IFormFile imagen6)
+        {
+            Console.WriteLine($"Categoría recibida: {nombreCategoria}");
+
+            if (string.IsNullOrWhiteSpace(nombreCategoria))
+            {
+                return Json(new { mensaje = "Seleccione una categoría válida." });
+            }
+
+            string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images", nombreCategoria);
+
+            if (!Directory.Exists(uploadsFolder))
+            {
+                Directory.CreateDirectory(uploadsFolder);
+            }
+
+            await GuardarImagenComoWebP(imagen1, uploadsFolder, "banner1");
+            await GuardarImagenComoWebP(imagen2, uploadsFolder, "banner2");
+            await GuardarImagenComoWebP(imagen3, uploadsFolder, "banner3");
+            await GuardarImagenComoWebP(imagen4, uploadsFolder, "banner4");
+            await GuardarImagenComoWebP(imagen5, uploadsFolder, "banner5");
+            await GuardarImagenComoWebP(imagen6, uploadsFolder, "banner6");
+
+            return Json(new { mensaje = "Imágenes subidas correctamente" });
+        }
+
         private async Task GuardarImagenComoWebP(IFormFile file, string uploadsFolder, string fileName)
         {
+            if (file == null || file.Length == 0)
+            {
+                Console.WriteLine($"El archivo {fileName} es nulo o está vacío.");
+                return; // No intentar procesar un archivo vacío
+            }
+
             string filePath = Path.Combine(uploadsFolder, $"{fileName}.webp");
 
             using (var stream = file.OpenReadStream())
@@ -76,12 +109,13 @@ namespace Abastecete.Controllers
                 image.Mutate(x => x.Resize(new ResizeOptions
                 {
                     Mode = ResizeMode.Max,
-                    Size = new Size(1200, 800) // Ajusta según necesidad
+                    Size = new Size(1200, 800)
                 }));
 
                 await image.SaveAsync(filePath, new WebpEncoder { Quality = 90 });
             }
         }
+
 
     }
 }
