@@ -1,5 +1,5 @@
 ﻿<div id="bannerModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-    <div class="bg-white p-5 rounded-lg w-2/3 max-h-[80vh] overflow-y-auto">
+    <div id="bannerModalContent" class="bg-white p-5 rounded-lg w-2/3 max-h-[80vh] overflow-y-auto">
         <h2 class="text-xl font-bold mb-4 text-center">Editar Banners</h2>
 
         <!-- Carrusel -->
@@ -40,12 +40,23 @@
 
 <script>
     function abrirBannerModal() {
-        document.getElementById("bannerModal").classList.remove("hidden");
+        const modal = document.getElementById("bannerModal");
+        document.body.classList.add("overflow-hidden");do
+        modal.classList.remove("hidden");
     }
 
     function cerrarBannerModal() {
-        document.getElementById("bannerModal").classList.add("hidden");
+        const modal = document.getElementById("bannerModal");
+        document.body.classList.remove("overflow-hidden");
+        modal.classList.add("hidden");
     }
+
+    document.getElementById("bannerModal").addEventListener("click", function (event) {
+        const modalContent = document.getElementById("bannerModalContent");
+        if (!modalContent.contains(event.target)) {
+            cerrarBannerModal();
+        }
+    });
 
     document.getElementById("uploadBannerForm").addEventListener("submit", function (event) {
         event.preventDefault();
