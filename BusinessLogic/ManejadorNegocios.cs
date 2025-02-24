@@ -22,7 +22,7 @@ namespace BusinessLogic
                 new Parametro("p_fk_id_persona", negocio.Persona.Id),
                 new Parametro("p_fk_id_estado_local", 1),
                 new Parametro("p_fk_id_tipomembresia", negocio.TipoMembresia),
-                new Parametro("p_barrio_local", negocio.Barrio),
+                new Parametro("p_localizacion", negocio.Localizacion),
                 new Parametro("p_nombre_local", negocio.Nombre),
                 new Parametro("p_direccion_local", negocio.Direccion),
                 new Parametro("p_telefono_local", negocio.Telefono),
@@ -31,21 +31,61 @@ namespace BusinessLogic
             return conexion.EjecutarTransaccion("crear_local", parametros);
         }
 
-        public List<Negocio> ConsultarNegocios()
+        public Negocio ConsultarNegocio(int idPersona)
         {
-            DataTable datos = conexion.EjecutarConsulta("consultar_local");
+            //string consulta = $"consultar_local({idPersona})";
+
+            List<Parametro> parametros = new List<Parametro>
+            {
+                new Parametro("p_id_persona", idPersona)
+            };
+
+            DataTable datos = conexion.EjecutarConsulta("consultar_local", parametros);
+
+            DataRow row = datos.Rows[0]; // Tomamos la primera fila
+
+            return new Negocio
+            {
+                Id = Convert.ToInt32(row["PK_ID_LOCAL"]),
+                Nombre = row["NOMBRE_LOCAL"].ToString(),
+                Localizacion = row["LOCALIZACION"].ToString(),
+                Telefono = Convert.ToInt64(row["TELEFONO_LOCAL"]),
+                Logotipo = row["FOTOS_LOCAL"].ToString()
+            };
+
+            //foreach (DataRow row in datos.Rows)
+            //{
+            //    categorias.Add(new Categoria
+            //    {
+            //        Id = Convert.ToInt32(row["PK_ID_CATEGORIA"]),
+            //        Nombre = row["NOMBRE_CATEGORIA"].ToString(),
+            //        Estado = Convert.ToInt32(row["ESTADO_CATEGORIA"]),
+            //        Imagen = row["IMAGEN_CATEGORIA"].ToString()
+            //    });
+            //}
+            //return categorias;
+        }
+
+        public List<Negocio> ConsultarTodosLosNegocios()
+        {
+            string consulta = "consultar_local(0)"; // Enviamos 0 para traer todos los negocios
+
+            DataTable datos = conexion.EjecutarConsulta(consulta);
             List<Negocio> negocios = new List<Negocio>();
 
             foreach (DataRow row in datos.Rows)
             {
                 negocios.Add(new Negocio
                 {
-                    Id = Convert.ToInt32(row["PK_ID_LOCAL"].ToString()),
-                    Nombre = row["NOMBRE_LOCAL"].ToString()
+                    Id = Convert.ToInt32(row["PK_ID_LOCAL"]),
+                    Nombre = row["NOMBRE_LOCAL"].ToString(),
+                    Localizacion = row["LOCALIZACION"].ToString(),
+                    Telefono = Convert.ToInt32(row["TELEFONO_LOCAL"]),
+                    Logotipo = row["FOTOS_LOCAL"].ToString()
                 });
             }
+
             return negocios;
         }
-
     }
 }

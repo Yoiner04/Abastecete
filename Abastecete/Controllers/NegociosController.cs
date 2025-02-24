@@ -11,6 +11,7 @@ namespace Abastecete.Controllers
     {
         private readonly ManejadorNegocios _manejadorNegocios;
         private readonly ManejadorMembresias _manejadorMembresias;
+        
 
         public NegociosController()
         {
