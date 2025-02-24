@@ -1,4 +1,6 @@
-﻿<!DOCTYPE html>
+﻿@model BusinessLogic.Models.Negocio
+
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -14,35 +16,67 @@
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAPudyk3G3YG7GOEpId4xMK_WFIEenOSp8&libraries=places"></script>
 </head>
 
-
 <body class="bg-gray-100">
-    <header class="bg-[#FAF5EB] shadow-md p-4 flex items-center justify-between">
-        <div class="flex items-center gap-2">
-            <img src="logo.png" alt="Abastécete Logo" class="w-12 h-12">
-            <h1 class="text-2xl font-bold text-[#E4572E]">Negocio X</h1>
-        </div>
-        <button class="bg-[#21A65F] text-white px-4 py-2 rounded-md">Agregar Producto</button>
-    </header>
+    <div class="flex min-h-screen">
+        <!-- Sidebar -->
+        <aside class="w-1/4 bg-[#F5EFE4] p-6 flex flex-col items-center">
+            <!-- Contenedor del recuadro de la imagen -->
+            <div class="w-32 h-32 bg-white border border-gray-300 rounded-md mb-4 flex items-center justify-center overflow-hidden">
+                <img src="@Model.Logotipo" alt="Imagen del negocio" class="w-full h-full object-contain">
+            </div>
 
-    <main class="container mx-auto mt-8">
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            <div class="bg-white p-4 shadow-md rounded-md">
-                <img src="producto1.jpg" alt="Producto" class="w-full h-40 object-cover rounded-md">
-                <h2 class="mt-2 text-lg font-semibold text-gray-700">Producto 1</h2>
+            <h1 class="text-2xl font-bold text-black mb-2">@Model.Nombre</h1>
+            <p class="text-lg text-black mb-4">+57 @Model.Telefono</p>
+
+            <!-- Mapa con la ubicación del negocio -->
+            <div id="map" class="w-full h-60 rounded-md mb-4"></div>
+
+            <button class="w-full bg-green-600 text-white py-2 rounded-lg">Editar Negocio</button>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-6">
+            <div class="flex justify-between items-center">
+                <h2 class="text-xl font-semibold text-green-700">Todos los productos</h2>
+                <a href="@Url.Action("AgregarProductNegocio", "Productos")" class="bg-orange-500 text-white px-6 py-2 rounded-lg">Agregar Producto</a>
             </div>
-            <div class="bg-white p-4 shadow-md rounded-md">
-                <img src="producto2.jpg" alt="Producto" class="w-full h-40 object-cover rounded-md">
-                <h2 class="mt-2 text-lg font-semibold text-gray-700">Producto 2</h2>
+
+            <!-- Productos -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-6">
+                <!-- Producto -->
+                <div class="bg-white p-4 shadow-md rounded-lg relative flex flex-col items-center">
+                    <div class="w-full h-40 bg-gray-300 rounded-md"></div>
+                    <h3 class="mt-2 font-semibold">Producto</h3>
+                    <p class="text-sm text-gray-500">200 item sold</p>
+                    <p class="text-orange-500 font-bold">$100</p>
+                    <button class="mt-2 bg-[#23916A] text-white px-4 py-1 rounded-lg self-center">Ver</button>
+                </div>
             </div>
-            <div class="bg-white p-4 shadow-md rounded-md">
-                <img src="producto3.jpg" alt="Producto" class="w-full h-40 object-cover rounded-md">
-                <h2 class="mt-2 text-lg font-semibold text-gray-700">Producto 3</h2>
-            </div>
-            <div class="bg-white p-4 shadow-md rounded-md">
-                <img src="producto4.jpg" alt="Producto" class="w-full h-40 object-cover rounded-md">
-                <h2 class="mt-2 text-lg font-semibold text-gray-700">Producto 4</h2>
-            </div>
-        </div>
-    </main>
+        </main>
+    </div>
+
+    <script>
+        function initMap() {
+            // Extraer la ubicación desde el Modelo (latitud, longitud)
+            var localizacion = "@Model.Localizacion".replace("(", "").replace(")", "").split(",");
+            var latitud = parseFloat(localizacion[0]);
+            var longitud = parseFloat(localizacion[1]);
+
+            // Crear el mapa en la ubicación del negocio
+            var map = new google.maps.Map(document.getElementById('map'), {
+                center: { lat: latitud, lng: longitud },
+                zoom: 15
+            });
+
+            // Agregar un marcador en la ubicación del negocio
+            new google.maps.Marker({
+                position: { lat: latitud, lng: longitud },
+                map: map,
+                title: "@Model.Nombre"
+            });
+        }
+
+        window.onload = initMap;
+    </script>
 </body>
 </html>
