@@ -14,35 +14,88 @@
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAPudyk3G3YG7GOEpId4xMK_WFIEenOSp8&libraries=places"></script>
 </head>
 
-
 <body class="bg-gray-100">
-    <header class="bg-[#FAF5EB] shadow-md p-4 flex items-center justify-between">
-        <div class="flex items-center gap-2">
-            <img src="logo.png" alt="Abastécete Logo" class="w-12 h-12">
-            <h1 class="text-2xl font-bold text-[#E4572E]">Negocio X</h1>
-        </div>
-        <button class="bg-[#21A65F] text-white px-4 py-2 rounded-md">Agregar Producto</button>
-    </header>
+    <div class="flex min-h-screen">
+        <!-- Sidebar -->
+        <aside class="w-1/4 bg-[#F5EFE4] p-6 flex flex-col items-center">
+            <div class="w-24 h-24 bg-gray-300 rounded-md mb-4"></div>
+            @* <img src="~/css/Images/logotienda.jpg" alt="Imagen del negocio" class="w-30 h-35 rounded-md mb-"> *@
+            <h1 class="text-2xl font-bold text-black mb-4">Nombre negocio</h1>
+            <div id="map" class="w-full h-80 rounded-md mb-4"></div>
+            <button class="w-full bg-green-600 text-white py-2 rounded-lg">Editar Negocio</button>
+        </aside>
 
-    <main class="container mx-auto mt-8">
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            <div class="bg-white p-4 shadow-md rounded-md">
-                <img src="producto1.jpg" alt="Producto" class="w-full h-40 object-cover rounded-md">
-                <h2 class="mt-2 text-lg font-semibold text-gray-700">Producto 1</h2>
+        <!-- Main Content -->
+        <main class="flex-1 p-6">
+            <div class="flex justify-between items-center">
+                <h2 class="text-xl font-semibold text-green-700">Todos los productos</h2>
+                <a href="@Url.Action("AgregarProductNegocio", "Productos")" class="bg-orange-500 text-white px-6 py-2 rounded-lg">Agregar Producto</a>
             </div>
-            <div class="bg-white p-4 shadow-md rounded-md">
-                <img src="producto2.jpg" alt="Producto" class="w-full h-40 object-cover rounded-md">
-                <h2 class="mt-2 text-lg font-semibold text-gray-700">Producto 2</h2>
+
+            <!-- Productos -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-6">
+                <!-- Producto -->
+                <div class="bg-white p-4 shadow-md rounded-lg relative flex flex-col items-center">
+                    <div class="w-full h-40 bg-gray-300 rounded-md"></div>
+                    <h3 class="mt-2 font-semibold">Producto</h3>
+                    <p class="text-sm text-gray-500">200 item sold</p>
+                    <p class="text-orange-500 font-bold">$100</p>
+                    <button class="mt-2 bg-[#23916A] text-white px-4 py-1 rounded-lg self-center">Ver</button>
+                </div>
+                <div class="bg-white p-4 shadow-md rounded-lg relative flex flex-col items-center">
+                    <div class="w-full h-40 bg-gray-300 rounded-md"></div>
+                    <h3 class="mt-2 font-semibold">Producto</h3>
+                    <p class="text-sm text-gray-500">200 item sold</p>
+                    <p class="text-orange-500 font-bold">$100</p>
+                    <button class="mt-2 bg-[#23916A] text-white px-4 py-1 rounded-lg self-center">Ver</button>
+                </div>
+                <div class="bg-white p-4 shadow-md rounded-lg relative flex flex-col items-center">
+                    <div class="w-full h-40 bg-gray-300 rounded-md"></div>
+                    <h3 class="mt-2 font-semibold">Producto</h3>
+                    <p class="text-sm text-gray-500">200 item sold</p>
+                    <p class="text-orange-500 font-bold">$100</p>
+                    <button class="mt-2 bg-[#23916A] text-white px-4 py-1 rounded-lg self-center">Ver</button>
+                </div>
+                <div class="bg-white p-4 shadow-md rounded-lg relative flex flex-col items-center">
+                    <div class="w-full h-40 bg-gray-300 rounded-md"></div>
+                    <h3 class="mt-2 font-semibold">Producto</h3>
+                    <p class="text-sm text-gray-500">200 item sold</p>
+                    <p class="text-orange-500 font-bold">$100</p>
+                    <button class="mt-2 bg-[#23916A] text-white px-4 py-1 rounded-lg self-center">Ver</button>
+                </div>
             </div>
-            <div class="bg-white p-4 shadow-md rounded-md">
-                <img src="producto3.jpg" alt="Producto" class="w-full h-40 object-cover rounded-md">
-                <h2 class="mt-2 text-lg font-semibold text-gray-700">Producto 3</h2>
             </div>
-            <div class="bg-white p-4 shadow-md rounded-md">
-                <img src="producto4.jpg" alt="Producto" class="w-full h-40 object-cover rounded-md">
-                <h2 class="mt-2 text-lg font-semibold text-gray-700">Producto 4</h2>
-            </div>
-        </div>
-    </main>
+        </main>
+    </div>
+
+    <script>
+        function initMap() {
+            var map = new google.maps.Map(document.getElementById('map'), {
+                zoom: 12
+            });
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function (position) {
+                    var userLocation = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude
+                    };
+                    map.setCenter(userLocation);
+                    new google.maps.Marker({
+                        position: userLocation,
+                        map: map,
+                        title: "Tu ubicación"
+                    });
+                }, function () {
+                    handleLocationError(true, map.getCenter());
+                });
+            } else {
+                handleLocationError(false, map.getCenter());
+            }
+        }
+        function handleLocationError(browserHasGeolocation, pos) {
+            console.error(browserHasGeolocation ? "Error: El servicio de geolocalización falló." : "Error: Tu navegador no soporta geolocalización.");
+        }
+        window.onload = initMap;
+    </script>
 </body>
 </html>
