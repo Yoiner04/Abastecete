@@ -7,32 +7,41 @@ namespace Abastecete.Controllers
 {
     public class ProductosController : Controller
     {
-        public IActionResult Consultar()
-        {
-            return View();
-        }
+        private readonly ManejadorNegocios manejadorNegocios;
+        private readonly ManejadorProductos manejadorProductos;
 
-        public IActionResult ConsultarIndividual()
+        // Constructor para inicializar el manejador de negocios y productos
+        public ProductosController()
         {
-            return View();
+            manejadorNegocios = new ManejadorNegocios();
+            manejadorProductos = new ManejadorProductos();
         }
 
         public IActionResult ProductosNegocio()
         {
-            return View();
+            var personaId = HttpContext.Session.GetInt32("PersonaId").Value;
+
+            Negocio negocio = manejadorNegocios.ConsultarNegocio(personaId);
+
+            if (negocio == null)
+            {
+                return View("ErrorNegocioNoEncontrado"); // Vista de error si no tiene negocio
+            }
+
+            return View(negocio);
         }
+
+        public IActionResult ListaNegocios()
+        {
+            List<Negocio> negocios = manejadorNegocios.ConsultarTodosLosNegocios();
+            return View(negocios);
+        }
+
 
         [HttpGet]
         public IActionResult AgregarProductNegocio()
         {
             return View();
-        }
-
-        private readonly ManejadorProductos manejadorProductos;
-
-        public ProductosController()
-        {
-            manejadorProductos = new ManejadorProductos();
         }
 
         public IActionResult CRUDProductos()
@@ -90,7 +99,6 @@ namespace Abastecete.Controllers
             }
             return "/images/default.png"; // Imagen por defecto si no se sube una
         }
-
 
         [HttpPost]
         public IActionResult EliminarProducto(int Id)
