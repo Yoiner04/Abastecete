@@ -1,4 +1,5 @@
-﻿<!DOCTYPE html>
+﻿@using BusinessLogic.Models
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -15,50 +16,134 @@
 </head>
 
 <body class="bg-gray-100 p-6">
-    <div class="max-w-3xl mx-auto bg-white p-6 rounded-lg shadow-md">
-        <h2 class="text-xl font-semibold mb-4">Agregar Producto</h2>
 
-        <form id="productForm" class="space-y-4">
-            <select id="category" class="w-full p-2 border rounded">
-                <option value="">Seleccione una categoría</option>
-            </select>
+    <div class="flex flex-col lg:flex-row lg:justify-center lg:gap-10">
+        <!-- Sección de formulario -->
+        <div class="mt-5 w-full max-w-xl rounded-lg bg-white p-6 shadow-md">
+            <h2 class="mb-4 text-xl font-semibold">Agregar Producto</h2>
 
-            <select id="subcategory" class="w-full p-2 border rounded">
-                <option value="">Seleccione una subcategoría</option>
-            </select>
+            <form id="productForm" class="space-y-4">
+                <select id="category" class="w-full rounded border p-2" >
+                    <option value="">Seleccione una categoría</option  >
+                    @foreach (Categoria cate in ViewBag.categorias)
+                    {
+                        <option value="@cate.Id">@cate.Nombre</option>
+                    }
+                </select>
 
-            <select id="product" class="w-full p-2 border rounded">
-                <option value="">Seleccione un producto</option>
-            </select>
+                <select id="subcategory" class="w-full rounded border p-2" disabled>
+                    <option value="">Seleccione una subcategoría</option>
+                </select>
 
-            <select id="unit" class="w-full p-2 border rounded">
-                <option value="">Seleccione una unidad de medida</option>
-            </select>
+                <select id="product" class="w-full rounded border p-2" disabled>
+                    <option value="">Seleccione un producto</option>
+                </select>
 
-            <input type="number" id="price" class="w-full p-2 border rounded" placeholder="Ingrese el valor">
+                <select id="unit" class="w-full rounded border p-2" disabled>
+                    <option value="">Seleccione una unidad de medida</option>
+                </select>
 
-            <button type="button" onclick="addProduct()" class="w-full bg-[#23916A] text-white py-2 rounded-lg">Registrar</button>
-        </form>
+                <input type="number" id="price" class="w-full rounded border p-2" placeholder="Ingrese el valor">
+
+                <button type="button" onclick="addProduct()" class="w-full rounded-lg bg-[#23916A] py-2 text-white">
+                    Registrar
+                </button>
+            </form>
+        </div>
+
+        <div class="mt-5 w-full max-w-xl rounded-lg bg-white p-6 shadow-md">
+            <h2 class="mb-4 text-xl font-semibold">Productos Añadidos</h2>
+            <table class="w-full border-collapse border border-gray-300">
+                <thead>
+                    <tr class="bg-gray-200">
+                        <th class="border p-2">Categoría</th>
+                        <th class="border p-2">Subcategoría</th>
+                        <th class="border p-2">Producto</th>
+                        <th class="border p-2">Unidad</th>
+                        <th class="border p-2">Valor</th>
+                        <th class="border p-2">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="productTableBody"></tbody>
+            </table>
+
+            <button class="mt-4 w-full rounded-lg bg-orange-500 py-2 text-white">Finalizar Registro</button>
+        </div>
     </div>
 
-    <div class="max-w-3xl mx-auto bg-white p-6 rounded-lg shadow-md mt-6">
-        <h2 class="text-xl font-semibold mb-4">Productos Añadidos</h2>
-        <table class="w-full border-collapse border border-gray-300">
-            <thead>
-                <tr class="bg-gray-200">
-                    <th class="border p-2">Categoría</th>
-                    <th class="border p-2">Subcategoría</th>
-                    <th class="border p-2">Producto</th>
-                    <th class="border p-2">Unidad</th>
-                    <th class="border p-2">Valor</th>
-                    <th class="border p-2">Acciones</th>
-                </tr>
-            </thead>
-            <tbody id="productTableBody"></tbody>
-        </table>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $("#category").change(function () {
+                var idCategoria =  $(this).val();
+                if (idCategoria) {
+                    $("#subcategory").prop("disabled", false);
+                    $.ajax({
+                        url: "/SubCategorias/ObtenerSubCategorias",
+                        type: "GET",
+                        data: { idCategoria: idCategoria },
+                        dataType: "json",
+                        success: function (response) {
+                            $("#subcategory").empty(); 
+                            $("#subcategory").append('<option value="">Seleccione una subcategoría</option>');
 
-        <button class="w-full bg-orange-500 text-white py-2 rounded-lg mt-4">Finalizar Registro</button>
-    </div>
+                            $.each(response, function (index, item) {
+                                $("#subcategory").append(`<option value="${item.id}">${item.nombre}</option>`);
+                            });
+                        },
+                        error: function () {
+                            alert("Error al obtener subcategorías.");
+                        }
+                    });
+                } else {
+                    $("#subcategory").empty();
+                    $("#subcategory").append('<option value="">Seleccione una subcategoría</option>');
+                }
+            });
+
+            $("#subcategory").change(function(){
+                var subCategoriaId = $(this).val();
+                if(subCategoriaId){
+                    $("#product").prop("disabled", false);
+                    $.ajax({
+                        url:"/Productos/obtenerProductosSubcategoria",
+                        type:"GET",
+                        data:{subCategoriaId:subCategoriaId},
+                        dataType:"json",
+                        success:function(response){
+                            $("#product").empty();
+                            $("#product").append('<option value="">Seleccione un producto</option>');
+                            $.each(response,function(index,item){
+                                $("#product").append(`<option value="${item.id}">${item.nombre}</option>`);
+                            });
+                        },
+                    })
+                }
+                
+            });
+            $("#product").change(function(){
+                var subCategoriaId = $(this).val();
+                if(subCategoriaId){
+                    $("#unit").prop("disabled", false);
+                    $.ajax({
+                        url:"/Unidad/ConsultarUnidades",
+                        type:"GET",
+                        data:{subCategoriaId:subCategoriaId},
+                        dataType:"json",
+                        success:function(response){
+                            $("#unit").empty();
+                            $("#unit").append('<option value="">Seleccione un producto</option>');
+                            $.each(response,function(index,item){
+                                $("#unit").append(`<option value="${item.id}">${item.nombre}</option>`);
+                            });
+                        },
+                    })
+                }
+
+            });
+        });
+    </script>
+
 
     <script>
         function addProduct() {
@@ -82,7 +167,7 @@
                 <td class="border p-2">${unit}</td>
                 <td class="border p-2">${price}</td>
                 <td class="border p-2 text-center">
-                    <button onclick="removeProduct(this)" class="bg-red-500 text-white px-2 py-1 rounded">Eliminar</button>
+                    <button onclick="removeProduct(this)" class="rounded bg-red-500 px-2 py-1 text-white">Eliminar</button>
                 </td>
             `;
             tableBody.appendChild(row);

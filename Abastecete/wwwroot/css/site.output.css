@@ -173,6 +173,9 @@
 .max-h-\[80vh\] {
   max-height: 80vh;
 }
+.min-h-\[200px\] {
+  min-height: 200px;
+}
 .min-h-screen {
   min-height: 100vh;
 }
@@ -187,6 +190,9 @@
 }
 .w-2\/3 {
   width: calc(2/3 * 100%);
+}
+.w-2\/4 {
+  width: calc(2/4 * 100%);
 }
 .w-3\/4 {
   width: calc(3/4 * 100%);
@@ -394,9 +400,6 @@
 .bg-\[\#16A34A\] {
   background-color: #16A34A;
 }
-.bg-\[\#21A65F\] {
-  background-color: #21A65F;
-}
 .bg-\[\#23916A\] {
   background-color: #23916A;
 }
@@ -414,9 +417,6 @@
 }
 .bg-\[\#F6580F\] {
   background-color: #F6580F;
-}
-.bg-\[\#FAF5EB\] {
-  background-color: #FAF5EB;
 }
 .bg-transparent {
   background-color: transparent;
@@ -466,14 +466,8 @@
 .text-wrap {
   text-wrap: wrap;
 }
-.break-all {
-  word-break: break-all;
-}
 .text-\[\#23916A\] {
   color: #23916A;
-}
-.text-\[\#E4572E\] {
-  color: #E4572E;
 }
 .text-\[\#E6581E\] {
   color: #E6581E;
@@ -581,6 +575,99 @@
 .duration-500 {
   --tw-duration: 500ms;
   transition-duration: 500ms;
+}
+.\[c\:\/Users\/USER\/source\/repos\/Abastecete\/Abastecete\/Views\/Categorias\/Consultar\.cshtml\] {
+  c: /Users/USER/source/repos/Abastecete/Abastecete/Views/Categorias/Consultar.cshtml;
+}
+.\[c\:\/Users\/USER\/source\/repos\/Abastecete\/Abastecete\/Views\/Categorias\/Listar\.cshtml\] {
+  c: /Users/USER/source/repos/Abastecete/Abastecete/Views/Categorias/Listar.cshtml;
+}
+.\[c\:\/Users\/USER\/source\/repos\/Abastecete\/Abastecete\/Views\/Home\/Index\.cshtml\] {
+  c: /Users/USER/source/repos/Abastecete/Abastecete/Views/Home/Index.cshtml;
+}
+.\[c\:\/Users\/USER\/source\/repos\/Abastecete\/Abastecete\/Views\/Home\/Principal\.cshtml\] {
+  c: /Users/USER/source/repos/Abastecete/Abastecete/Views/Home/Principal.cshtml;
+}
+.\[c\:\/Users\/USER\/source\/repos\/Abastecete\/Abastecete\/Views\/Home\/Privacy\.cshtml\] {
+  c: /Users/USER/source/repos/Abastecete/Abastecete/Views/Home/Privacy.cshtml;
+}
+.\[c\:\/Users\/USER\/source\/repos\/Abastecete\/Abastecete\/Views\/Login\/IngresarNuevaContrasenia\.cshtml\] {
+  c: /Users/USER/source/repos/Abastecete/Abastecete/Views/Login/IngresarNuevaContrasenia.cshtml;
+}
+.\[c\:\/Users\/USER\/source\/repos\/Abastecete\/Abastecete\/Views\/Login\/Login\.cshtml\] {
+  c: /Users/USER/source/repos/Abastecete/Abastecete/Views/Login/Login.cshtml;
+}
+.\[c\:\/Users\/USER\/source\/repos\/Abastecete\/Abastecete\/Views\/Login\/RecuperarContrasenia\.cshtml\] {
+  c: /Users/USER/source/repos/Abastecete/Abastecete/Views/Login/RecuperarContrasenia.cshtml;
+}
+.\[c\:\/Users\/USER\/source\/repos\/Abastecete\/Abastecete\/Views\/Membresias\/Consultar\.cshtml\] {
+  c: /Users/USER/source/repos/Abastecete/Abastecete/Views/Membresias/Consultar.cshtml;
+}
+.\[c\:\/Users\/USER\/source\/repos\/Abastecete\/Abastecete\/Views\/Membresias\/Publicar\.cshtml\] {
+  c: /Users/USER/source/repos/Abastecete/Abastecete/Views/Membresias/Publicar.cshtml;
+}
+.\[c\:\/Users\/USER\/source\/repos\/Abastecete\/Abastecete\/Views\/Negocios\/Consultar\.cshtml\] {
+  c: /Users/USER/source/repos/Abastecete/Abastecete/Views/Negocios/Consultar.cshtml;
+}
+.\[c\:\/Users\/USER\/source\/repos\/Abastecete\/Abastecete\/Views\/Negocios\/Crear\.cshtml\] {
+  c: /Users/USER/source/repos/Abastecete/Abastecete/Views/Negocios/Crear.cshtml;
+}
+.\[c\:\/Users\/USER\/source\/repos\/Abastecete\/Abastecete\/Views\/Ofertas\/Listar\.cshtml\] {
+  c: /Users/USER/source/repos/Abastecete/Abastecete/Views/Ofertas/Listar.cshtml;
+}
+.\[c\:\/Users\/USER\/source\/repos\/Abastecete\/Abastecete\/Views\/Productos\/AgregarProductNegocio\.cshtml\] {
+  c: /Users/USER/source/repos/Abastecete/Abastecete/Views/Productos/AgregarProductNegocio.cshtml;
+}
+.\[c\:\/Users\/USER\/source\/repos\/Abastecete\/Abastecete\/Views\/Productos\/CRUDProductos\.cshtml\] {
+  c: /Users/USER/source/repos/Abastecete/Abastecete/Views/Productos/CRUDProductos.cshtml;
+}
+.\[c\:\/Users\/USER\/source\/repos\/Abastecete\/Abastecete\/Views\/Productos\/Consultar\.cshtml\] {
+  c: /Users/USER/source/repos/Abastecete/Abastecete/Views/Productos/Consultar.cshtml;
+}
+.\[c\:\/Users\/USER\/source\/repos\/Abastecete\/Abastecete\/Views\/Productos\/ConsultarIndividual\.cshtml\] {
+  c: /Users/USER/source/repos/Abastecete/Abastecete/Views/Productos/ConsultarIndividual.cshtml;
+}
+.\[c\:\/Users\/USER\/source\/repos\/Abastecete\/Abastecete\/Views\/Productos\/ProductosNegocio\.cshtml\] {
+  c: /Users/USER/source/repos/Abastecete/Abastecete/Views/Productos/ProductosNegocio.cshtml;
+}
+.\[c\:\/Users\/USER\/source\/repos\/Abastecete\/Abastecete\/Views\/Promociones\/Listar\.cshtml\] {
+  c: /Users/USER/source/repos/Abastecete/Abastecete/Views/Promociones/Listar.cshtml;
+}
+.\[c\:\/Users\/USER\/source\/repos\/Abastecete\/Abastecete\/Views\/Roles\/Consultar\.cshtml\] {
+  c: /Users/USER/source/repos/Abastecete/Abastecete/Views/Roles/Consultar.cshtml;
+}
+.\[c\:\/Users\/USER\/source\/repos\/Abastecete\/Abastecete\/Views\/Shared\/BannerModal\.cshtml\] {
+  c: /Users/USER/source/repos/Abastecete/Abastecete/Views/Shared/BannerModal.cshtml;
+}
+.\[c\:\/Users\/USER\/source\/repos\/Abastecete\/Abastecete\/Views\/Shared\/Error\.cshtml\] {
+  c: /Users/USER/source/repos/Abastecete/Abastecete/Views/Shared/Error.cshtml;
+}
+.\[c\:\/Users\/USER\/source\/repos\/Abastecete\/Abastecete\/Views\/Shared\/_ContactModal\.cshtml\] {
+  c: /Users/USER/source/repos/Abastecete/Abastecete/Views/Shared/ ContactModal.cshtml;
+}
+.\[c\:\/Users\/USER\/source\/repos\/Abastecete\/Abastecete\/Views\/Shared\/_Layout\.cshtml\] {
+  c: /Users/USER/source/repos/Abastecete/Abastecete/Views/Shared/ Layout.cshtml;
+}
+.\[c\:\/Users\/USER\/source\/repos\/Abastecete\/Abastecete\/Views\/Shared\/_SupportBubble\.cshtml\] {
+  c: /Users/USER/source/repos/Abastecete/Abastecete/Views/Shared/ SupportBubble.cshtml;
+}
+.\[c\:\/Users\/USER\/source\/repos\/Abastecete\/Abastecete\/Views\/Shared\/_ValidationScriptsPartial\.cshtml\] {
+  c: /Users/USER/source/repos/Abastecete/Abastecete/Views/Shared/ ValidationScriptsPartial.cshtml;
+}
+.\[c\:\/Users\/USER\/source\/repos\/Abastecete\/Abastecete\/Views\/Usuarios\/Actualizar\.cshtml\] {
+  c: /Users/USER/source/repos/Abastecete/Abastecete/Views/Usuarios/Actualizar.cshtml;
+}
+.\[c\:\/Users\/USER\/source\/repos\/Abastecete\/Abastecete\/Views\/Usuarios\/Consultar\.cshtml\] {
+  c: /Users/USER/source/repos/Abastecete/Abastecete/Views/Usuarios/Consultar.cshtml;
+}
+.\[c\:\/Users\/USER\/source\/repos\/Abastecete\/Abastecete\/Views\/Usuarios\/Registrar\.cshtml\] {
+  c: /Users/USER/source/repos/Abastecete/Abastecete/Views/Usuarios/Registrar.cshtml;
+}
+.\[c\:\/Users\/USER\/source\/repos\/Abastecete\/Abastecete\/Views\/_ViewImports\.cshtml\] {
+  c: /Users/USER/source/repos/Abastecete/Abastecete/Views/ ViewImports.cshtml;
+}
+.\[c\:\/Users\/USER\/source\/repos\/Abastecete\/Abastecete\/Views\/_ViewStart\.cshtml\] {
+  c: /Users/USER/source/repos/Abastecete/Abastecete/Views/ ViewStart.cshtml;
 }
 .hover\:scale-105 {
   &:hover {
