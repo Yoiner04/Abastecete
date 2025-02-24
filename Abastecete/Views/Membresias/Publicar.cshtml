@@ -17,26 +17,35 @@
 
 <body class="bg-gray-100 py-10">
     <br />
-    <div class="max-w-6xl mx-auto px-4">
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div class="mx-auto max-w-6xl px-4">
+        <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
             @foreach (var membresia in Model)
             {
-                <div class="bg-white p-6 rounded-2xl shadow-md text-center">
-                    <h3 class="text-xl font-semibold">@membresia.Nombre</h3>
-                    <p class="text-gray-500 mt-2">$@membresia.Costo/mes</p>
-                    <ul class="mt-4 text-gray-600">
-                        @foreach (var line in membresia.Descripcion.Split(new[] { '\n', '*' }, StringSplitOptions.RemoveEmptyEntries))
-                        {
-                            <li><span class="text-green-600 mr-2">⭐</span> @line.Trim()</li>
-                        }
-                    </ul>
+                <div class="flex flex-col justify-between rounded-2xl bg-white p-6 text-center shadow-md">
+                    <div>
+                        <h3 class="text-xl font-semibold">@membresia.Nombre</h3>
+                        <p class="mt-2 text-gray-500">$@membresia.Costo/mes</p>
+
+                        <!-- Lista con altura unificada -->
+                        <ul class="mt-4 min-h-[200px] text-left text-gray-600">
+                            @foreach (var line in membresia.Descripcion.Split(new[] { '\n', '*' }, StringSplitOptions.RemoveEmptyEntries))
+                            {
+                                <li class="flex items-start gap-2">
+                                    <span class="text-yellow-500">⭐</span>
+                                    <span class="flex-1">@line.Trim()</span>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+
                     <a href="@Url.Action("CompletarRegistro", "Negocios", new { tipoMembresiaId = membresia.Id })"
-                       class="mt-4 inline-block bg-[#F6580F] text-white py-2 px-4 rounded-lg hover:bg-[#15803D]">
+                       class="mx-auto mt-4 inline-block w-2/4 rounded-lg bg-[#F6580F] px-4 py-2 text-white hover:bg-[#15803D]">
                         Seleccionar
                     </a>
                 </div>
             }
         </div>
     </div>
+
 </body>
 </html>

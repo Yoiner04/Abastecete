@@ -7,6 +7,7 @@ namespace Abastecete.Controllers
 {
     public class ProductosController : Controller
     {
+
         private readonly ManejadorNegocios manejadorNegocios;
         private readonly ManejadorProductos manejadorProductos;
 
@@ -33,8 +34,12 @@ namespace Abastecete.Controllers
 
         public IActionResult ListaNegocios()
         {
+
+            List<Categoria> categorias = manejadorCategorias.ConsultarCategorias();
+            ViewBag.categorias = categorias;
             List<Negocio> negocios = manejadorNegocios.ConsultarTodosLosNegocios();
             return View(negocios);
+
         }
 
 
@@ -54,7 +59,7 @@ namespace Abastecete.Controllers
         public IActionResult ObtenerSubCategorias()
         {
             ManejadorSubCategorias manejadorSubCategorias = new ManejadorSubCategorias();
-            List<SubCategoria> subCategorias = manejadorSubCategorias.ConsultarSubCategorias(0); // 0 para obtener todas
+            List<SubCategoria> subCategorias = manejadorSubCategorias.ConsultarSubCategorias(0);
             return Json(subCategorias);
         }
 
@@ -105,6 +110,13 @@ namespace Abastecete.Controllers
         {
             bool resultado = manejadorProductos.EliminarProducto(Id);
             return Json(new { mensaje = resultado ? "Producto eliminado" : "Error al eliminar" });
+        }
+
+        [HttpGet]
+        public IActionResult obtenerProductosSubcategoria(int subCategoriaId)
+        {
+            List<Producto> productos = manejadorProductos.ObtenerProductosSubCategoria(subCategoriaId);
+            return Json(productos);
         }
     }
 }
