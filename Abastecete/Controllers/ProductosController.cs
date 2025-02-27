@@ -22,7 +22,7 @@ namespace Abastecete.Controllers
         public IActionResult Consultar()
         {
             return View();
-        }
+        } 
 
         public IActionResult ConsultarIndividual()
         {
