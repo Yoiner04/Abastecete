@@ -1,4 +1,4 @@
-/*! tailwindcss v4.0.8 | MIT License | https://tailwindcss.com */
+/*! tailwindcss v4.0.9 | MIT License | https://tailwindcss.com */
 .collapse {
   visibility: collapse;
 }
@@ -311,6 +311,9 @@
 .justify-center {
   justify-content: center;
 }
+.justify-start {
+  justify-content: flex-start;
+}
 .self-center {
   align-self: center;
 }
@@ -426,6 +429,9 @@
 }
 .bg-center {
   background-position: center;
+}
+.object-contain {
+  object-fit: contain;
 }
 .object-cover {
   object-fit: cover;
@@ -575,99 +581,6 @@
 .duration-500 {
   --tw-duration: 500ms;
   transition-duration: 500ms;
-}
-.\[c\:\/Users\/USER\/source\/repos\/Abastecete\/Abastecete\/Views\/Categorias\/Consultar\.cshtml\] {
-  c: /Users/USER/source/repos/Abastecete/Abastecete/Views/Categorias/Consultar.cshtml;
-}
-.\[c\:\/Users\/USER\/source\/repos\/Abastecete\/Abastecete\/Views\/Categorias\/Listar\.cshtml\] {
-  c: /Users/USER/source/repos/Abastecete/Abastecete/Views/Categorias/Listar.cshtml;
-}
-.\[c\:\/Users\/USER\/source\/repos\/Abastecete\/Abastecete\/Views\/Home\/Index\.cshtml\] {
-  c: /Users/USER/source/repos/Abastecete/Abastecete/Views/Home/Index.cshtml;
-}
-.\[c\:\/Users\/USER\/source\/repos\/Abastecete\/Abastecete\/Views\/Home\/Principal\.cshtml\] {
-  c: /Users/USER/source/repos/Abastecete/Abastecete/Views/Home/Principal.cshtml;
-}
-.\[c\:\/Users\/USER\/source\/repos\/Abastecete\/Abastecete\/Views\/Home\/Privacy\.cshtml\] {
-  c: /Users/USER/source/repos/Abastecete/Abastecete/Views/Home/Privacy.cshtml;
-}
-.\[c\:\/Users\/USER\/source\/repos\/Abastecete\/Abastecete\/Views\/Login\/IngresarNuevaContrasenia\.cshtml\] {
-  c: /Users/USER/source/repos/Abastecete/Abastecete/Views/Login/IngresarNuevaContrasenia.cshtml;
-}
-.\[c\:\/Users\/USER\/source\/repos\/Abastecete\/Abastecete\/Views\/Login\/Login\.cshtml\] {
-  c: /Users/USER/source/repos/Abastecete/Abastecete/Views/Login/Login.cshtml;
-}
-.\[c\:\/Users\/USER\/source\/repos\/Abastecete\/Abastecete\/Views\/Login\/RecuperarContrasenia\.cshtml\] {
-  c: /Users/USER/source/repos/Abastecete/Abastecete/Views/Login/RecuperarContrasenia.cshtml;
-}
-.\[c\:\/Users\/USER\/source\/repos\/Abastecete\/Abastecete\/Views\/Membresias\/Consultar\.cshtml\] {
-  c: /Users/USER/source/repos/Abastecete/Abastecete/Views/Membresias/Consultar.cshtml;
-}
-.\[c\:\/Users\/USER\/source\/repos\/Abastecete\/Abastecete\/Views\/Membresias\/Publicar\.cshtml\] {
-  c: /Users/USER/source/repos/Abastecete/Abastecete/Views/Membresias/Publicar.cshtml;
-}
-.\[c\:\/Users\/USER\/source\/repos\/Abastecete\/Abastecete\/Views\/Negocios\/Consultar\.cshtml\] {
-  c: /Users/USER/source/repos/Abastecete/Abastecete/Views/Negocios/Consultar.cshtml;
-}
-.\[c\:\/Users\/USER\/source\/repos\/Abastecete\/Abastecete\/Views\/Negocios\/Crear\.cshtml\] {
-  c: /Users/USER/source/repos/Abastecete/Abastecete/Views/Negocios/Crear.cshtml;
-}
-.\[c\:\/Users\/USER\/source\/repos\/Abastecete\/Abastecete\/Views\/Ofertas\/Listar\.cshtml\] {
-  c: /Users/USER/source/repos/Abastecete/Abastecete/Views/Ofertas/Listar.cshtml;
-}
-.\[c\:\/Users\/USER\/source\/repos\/Abastecete\/Abastecete\/Views\/Productos\/AgregarProductNegocio\.cshtml\] {
-  c: /Users/USER/source/repos/Abastecete/Abastecete/Views/Productos/AgregarProductNegocio.cshtml;
-}
-.\[c\:\/Users\/USER\/source\/repos\/Abastecete\/Abastecete\/Views\/Productos\/CRUDProductos\.cshtml\] {
-  c: /Users/USER/source/repos/Abastecete/Abastecete/Views/Productos/CRUDProductos.cshtml;
-}
-.\[c\:\/Users\/USER\/source\/repos\/Abastecete\/Abastecete\/Views\/Productos\/Consultar\.cshtml\] {
-  c: /Users/USER/source/repos/Abastecete/Abastecete/Views/Productos/Consultar.cshtml;
-}
-.\[c\:\/Users\/USER\/source\/repos\/Abastecete\/Abastecete\/Views\/Productos\/ConsultarIndividual\.cshtml\] {
-  c: /Users/USER/source/repos/Abastecete/Abastecete/Views/Productos/ConsultarIndividual.cshtml;
-}
-.\[c\:\/Users\/USER\/source\/repos\/Abastecete\/Abastecete\/Views\/Productos\/ProductosNegocio\.cshtml\] {
-  c: /Users/USER/source/repos/Abastecete/Abastecete/Views/Productos/ProductosNegocio.cshtml;
-}
-.\[c\:\/Users\/USER\/source\/repos\/Abastecete\/Abastecete\/Views\/Promociones\/Listar\.cshtml\] {
-  c: /Users/USER/source/repos/Abastecete/Abastecete/Views/Promociones/Listar.cshtml;
-}
-.\[c\:\/Users\/USER\/source\/repos\/Abastecete\/Abastecete\/Views\/Roles\/Consultar\.cshtml\] {
-  c: /Users/USER/source/repos/Abastecete/Abastecete/Views/Roles/Consultar.cshtml;
-}
-.\[c\:\/Users\/USER\/source\/repos\/Abastecete\/Abastecete\/Views\/Shared\/BannerModal\.cshtml\] {
-  c: /Users/USER/source/repos/Abastecete/Abastecete/Views/Shared/BannerModal.cshtml;
-}
-.\[c\:\/Users\/USER\/source\/repos\/Abastecete\/Abastecete\/Views\/Shared\/Error\.cshtml\] {
-  c: /Users/USER/source/repos/Abastecete/Abastecete/Views/Shared/Error.cshtml;
-}
-.\[c\:\/Users\/USER\/source\/repos\/Abastecete\/Abastecete\/Views\/Shared\/_ContactModal\.cshtml\] {
-  c: /Users/USER/source/repos/Abastecete/Abastecete/Views/Shared/ ContactModal.cshtml;
-}
-.\[c\:\/Users\/USER\/source\/repos\/Abastecete\/Abastecete\/Views\/Shared\/_Layout\.cshtml\] {
-  c: /Users/USER/source/repos/Abastecete/Abastecete/Views/Shared/ Layout.cshtml;
-}
-.\[c\:\/Users\/USER\/source\/repos\/Abastecete\/Abastecete\/Views\/Shared\/_SupportBubble\.cshtml\] {
-  c: /Users/USER/source/repos/Abastecete/Abastecete/Views/Shared/ SupportBubble.cshtml;
-}
-.\[c\:\/Users\/USER\/source\/repos\/Abastecete\/Abastecete\/Views\/Shared\/_ValidationScriptsPartial\.cshtml\] {
-  c: /Users/USER/source/repos/Abastecete/Abastecete/Views/Shared/ ValidationScriptsPartial.cshtml;
-}
-.\[c\:\/Users\/USER\/source\/repos\/Abastecete\/Abastecete\/Views\/Usuarios\/Actualizar\.cshtml\] {
-  c: /Users/USER/source/repos/Abastecete/Abastecete/Views/Usuarios/Actualizar.cshtml;
-}
-.\[c\:\/Users\/USER\/source\/repos\/Abastecete\/Abastecete\/Views\/Usuarios\/Consultar\.cshtml\] {
-  c: /Users/USER/source/repos/Abastecete/Abastecete/Views/Usuarios/Consultar.cshtml;
-}
-.\[c\:\/Users\/USER\/source\/repos\/Abastecete\/Abastecete\/Views\/Usuarios\/Registrar\.cshtml\] {
-  c: /Users/USER/source/repos/Abastecete/Abastecete/Views/Usuarios/Registrar.cshtml;
-}
-.\[c\:\/Users\/USER\/source\/repos\/Abastecete\/Abastecete\/Views\/_ViewImports\.cshtml\] {
-  c: /Users/USER/source/repos/Abastecete/Abastecete/Views/ ViewImports.cshtml;
-}
-.\[c\:\/Users\/USER\/source\/repos\/Abastecete\/Abastecete\/Views\/_ViewStart\.cshtml\] {
-  c: /Users/USER/source/repos/Abastecete/Abastecete/Views/ ViewStart.cshtml;
 }
 .hover\:scale-105 {
   &:hover {
