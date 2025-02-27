@@ -22,7 +22,7 @@ namespace BusinessLogic
                 new Parametro("p_nombre", usuario.Persona.Nombre),
                 new Parametro("p_apellido", usuario.Persona.Apellido),
                 new Parametro("p_documento", usuario.Persona.Documento),
-                new Parametro("p_fk_tipo_documento", usuario.Persona.TipoDeDocumento),
+                new Parametro("p_fk_tipo_documento", usuario.Persona.TipoDeDocumento.Id),
                 new Parametro("p_telefono", usuario.Persona.Telefono),
                 new Parametro("p_correo", usuario.Correo),
                 new Parametro("p_contrasenia", Seguridad.Encriptar(usuario.Contrasenia)),
@@ -43,41 +43,46 @@ namespace BusinessLogic
         }
 
 
-        /*Revisar por favor*/
-        public List<Usuario> ObtenerUsuarios(int id)
+        ///*Revisar por favor*/
+        //public List<Usuario> ObtenerUsuarios(int id)
+        //{
+        //    List<Parametro> parametros = new List<Parametro>()
+        //    {
+        //        new Parametro("p_id_persona", id)
+        //    };
+        //    DataTable data = conexion.EjecutarConsulta("consultar_usuario", parametros);
+        //    List<Usuario> usuarios = new List<Usuario>();
+        //    foreach (DataRow row in data.AsEnumerable())
+        //    {
+        //        usuarios.Add(new Usuario()
+        //        {
+        //            Id = Convert.ToInt32(row["PK_ID_USUARIO"].ToString()),
+        //            Correo = row["NOMBRE_USUARIO"].ToString(),
+        //            Rol = new Rol()
+        //            {
+        //                Nombre = row["NOMBRE_ROL"].ToString()
+        //            },
+        //            Persona = new Persona()
+        //            {
+        //                Id = Convert.ToInt32(row["PK_ID_PERSONA"].ToString()),
+        //                Nombre = row["NOMBRES"].ToString(),
+        //                Apellido = row["APELLIDOS"].ToString(),
+        //                Documento = Convert.ToInt32(row["DOCUMENTO_IDENTIDAD"].ToString()),
+        //                Telefono = row["TELEFONO"].ToString()
+        //            }
+        //        });
+        //    }
+        //    return usuarios;
+        //}
+
+        public List<Usuario> ConsultarUsuarios(int idUsuario)
         {
             List<Parametro> parametros = new List<Parametro>()
             {
-                new Parametro("p_id_persona", id)
+                new Parametro("id_usuario", idUsuario)
             };
-            DataTable data = conexion.EjecutarConsulta("consultar_usuario", parametros);
-            List<Usuario> usuarios = new List<Usuario>();
-            foreach (DataRow row in data.AsEnumerable())
-            {
-                usuarios.Add(new Usuario()
-                {
-                    Id = Convert.ToInt32(row["PK_ID_USUARIO"].ToString()),
-                    Correo = row["NOMBRE_USUARIO"].ToString(),
-                    Rol = new Rol()
-                    {
-                        Nombre = row["NOMBRE_ROL"].ToString()
-                    },
-                    Persona = new Persona()
-                    {
-                        Id = Convert.ToInt32(row["PK_ID_PERSONA"].ToString()),
-                        Nombre = row["NOMBRES"].ToString(),
-                        Apellido = row["APELLIDOS"].ToString(),
-                        Documento = Convert.ToInt32(row["DOCUMENTO_IDENTIDAD"].ToString()),
-                        Telefono = row["TELEFONO"].ToString()
-                    }
-                });
-            }
-            return usuarios;
-        }
 
-        public List<Usuario> ConsultarUsuarios()
-        {
-            DataTable datos = conexion.EjecutarConsulta("consultar_usuario");
+            DataTable datos = conexion.EjecutarConsulta("consultar_usuario", parametros);
             List<Usuario> usuarios = new List<Usuario>();
 
             foreach (DataRow row in datos.Rows)

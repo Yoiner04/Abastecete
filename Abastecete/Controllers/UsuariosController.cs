@@ -18,10 +18,19 @@ namespace Abastecete.Controllers
 
         public IActionResult Consultar()
         {
+            int? idUsuario = HttpContext.Session.GetInt32("idUsuario");
+
+            //if (idUsuario == null)
+            //{
+            //    return RedirectToAction("Login", "Login"); // Redirigir si no hay usuario autenticado
+            //}
+
             ViewBag.rol = LoginController.rol;
             ViewBag.administrar = RolPermisos.TienePermiso("Administrar Usuarios", HttpContext.Session.GetString("permisos"));
 
-            List<Usuario> usuarios = manejadorU.ConsultarUsuarios();
+            // Si el usuario es administrador, obtiene todos los usuarios, de lo contrario, solo el suyo
+            List<Usuario> usuarios = manejadorU.ConsultarUsuarios(ViewBag.rol == "Administrador" ? 0 : idUsuario.Value);
+
             return View(usuarios);
         }
 
@@ -63,17 +72,29 @@ namespace Abastecete.Controllers
 
         public IActionResult Actualizar()
         {
-            return View();
+            var idUsuario = HttpContext.Session.GetInt32("idUsuario");
+
+            if (idUsuario == null)
+            {
+                return RedirectToAction("Login", "Login"); // Redirigir al login si no hay usuario autenticado
+            }
+
+            Usuario usuario = manejadorU.ConsultarUsuarios(idUsuario.Value).FirstOrDefault();
+
+            //if (usuario == null)
+            //{
+            //    return RedirectToAction("Login", "Login"); // Redirigir si el usuario no existe
+            //}
+
+            List<TipoDocumento> tiposDocumento = TipoDocumento.ObtenerTipoDocumentos();
+            ViewBag.TiposDocumento = tiposDocumento;
+
+            return View(usuario);
         }
 
         [HttpPost]
         public IActionResult Registrar(Usuario usuario)
         {
-            //if (!ModelState.IsValid)
-            //{
-            //    return View(usuario);
-            //}
-
             bool result = manejadorU.RegistrarUsuario(usuario);
 
             if (result)
