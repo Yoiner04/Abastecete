@@ -19,11 +19,10 @@ namespace Abastecete.Controllers
             manejadorCategorias = new ManejadorCategorias();
         }
 
-
         public IActionResult Consultar()
         {
             return View();
-        }virtual 
+        } 
 
         public IActionResult ConsultarIndividual()
         {
