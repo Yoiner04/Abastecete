@@ -1,4 +1,5 @@
-﻿@model BusinessLogic.Models.Usuario;
+﻿@using BusinessLogic.Models
+@model BusinessLogic.Models.Usuario;
 
 @{
     Layout = null;
@@ -8,164 +9,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registro de Usuario</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/3.2.12/jquery.validate.unobtrusive.min.js"></script>
+<body class="flex min-h-screen items-center justify-center bg-gray-100">
+    
+    <!-- Contenedor del formulario -->
+    <div class="w-full max-w-3xl bg-white px-10 py-8 rounded-2xl shadow-2xl">
+        <h2 class="mb-6 text-center text-3xl font-bold text-green-600">Actualizar Información</h2>
 
-<body class="bg-gray-100 flex items-center justify-center min-h-screen">
-    <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-3xl">
-        <h2 class="text-2xl font-bold text-green-600 text-center mb-6">Crea tu cuenta</h2>
-
-        @using (Html.BeginForm("Registrar", "Usuarios", FormMethod.Post, new { id = "registroForm", @class = "grid grid-cols-1 md:grid-cols-2 gap-4" }))
+        @using (Html.BeginForm("Actualizar", "Usuarios", FormMethod.Post, new { id = "actualizarForm", @class = "grid grid-cols-1 md:grid-cols-2 gap-6" }))
         {
             <div class="md:col-span-2">
                 @Html.ValidationSummary(true, "", new { @class = "text-red-500 text-sm" })
             </div>
 
             <div>
-                <label class="block font-medium">Nombre</label>
-                @Html.TextBoxFor(m => m.Persona.Nombre, new { @type = "text", @class = "w-full border p-2 rounded", @placeholder = "Ingresa tu nombre", @id = "nombre" })
-                <span id="nombreError" class="text-red-500 text-sm hidden">Por favor, ingresa tu nombre.</span>
+                <label class="block font-medium text-gray-700">Nombre <span class="text-red-500">*</span></label>
+                @Html.TextBoxFor(m => m.Persona.Nombre, new { @class = "w-full border p-3 rounded-lg focus:ring-2 focus:ring-green-400 outline-none" })
             </div>
+
             <div>
-                <label class="block font-medium">Apellido</label>
-                @Html.TextBoxFor(m => m.Persona.Apellido, new { @type = "text", @class = "w-full border p-2 rounded", @placeholder = "Ingresa tu apellido", @id = "apellido" })
-                <span id="apellidoError" class="text-red-500 text-sm hidden">Por favor, ingresa tu apellido.</span>
+                <label class="block font-medium text-gray-700">Apellido <span class="text-red-500">*</span></label>
+                @Html.TextBoxFor(m => m.Persona.Apellido, new { @class = "w-full border p-3 rounded-lg focus:ring-2 focus:ring-green-400 outline-none" })
             </div>
+
             <div>
-                <label class="block font-medium">Tipo de Documento</label>
-                @Html.TextBoxFor(m => m.Persona.TipoDeDocumento, new { @type = "text", @class = "w-full border p-2 rounded", @placeholder = "Ingresa tu tipo de documento", @id = "tipoDeDocumento" })
-                <span id="tipoDeDocumentoError" class="text-red-500 text-sm hidden">Por favor, ingresa el tipo de documento.</span>
+                <label class="block font-medium text-gray-700">Tipo de Documento <span class="text-red-500">*</span></label>
+                <select class="w-full border p-3 rounded-lg focus:ring-2 focus:ring-green-400 outline-none" name="Persona.TipoDeDocumento.Id">
+                    <option value="">Seleccione</option>
+                    @foreach (TipoDocumento td in ViewBag.TiposDocumento)
+                    {
+                        if (Model.Persona.TipoDeDocumento != null && Model.Persona.TipoDeDocumento.Id == td.Id)
+                        {
+                            <option value="@td.Id" selected>@td.Nombre</option>
+                        }
+                        else
+                        {
+                            <option value="@td.Id">@td.Nombre</option>
+                        }
+                    }
+                </select>
             </div>
+
+
             <div>
-                <label class="block font-medium">Documento</label>
-                @Html.TextBoxFor(m => m.Persona.Documento, new { @type = "text", @class = "w-full border p-2 rounded", @placeholder = "Ingresa tu documento", @oninput = "this.value=this.value.replace(/[^0-9]/g,'');", @id = "documento" })
-                <span id="documentoError" class="text-red-500 text-sm hidden">El documento es obligatorio.</span>
+                <label class="block font-medium text-gray-700">Documento <span class="text-red-500">*</span></label>
+                @Html.TextBoxFor(m => m.Persona.Documento, new { @class = "w-full border p-3 rounded-lg focus:ring-2 focus:ring-green-400 outline-none", @oninput = "this.value=this.value.replace(/[^0-9]/g,'');" })
             </div>
+
             <div>
-                <label class="block font-medium">Teléfono</label>
-                @Html.TextBoxFor(m => m.Persona.Telefono, new { @type = "text", @class = "w-full border p-2 rounded", @placeholder = "Ingresa tu teléfono", @oninput = "this.value=this.value.replace(/[^0-9]/g,'');", @id = "telefono" })
-                <span id="telefonoError" class="text-red-500 text-sm hidden">El teléfono debe comenzar con 3 y tener 10 dígitos.</span>
+                <label class="block font-medium text-gray-700">Teléfono <span class="text-red-500">*</span></label>
+                @Html.TextBoxFor(m => m.Persona.Telefono, new { @class = "w-full border p-3 rounded-lg focus:ring-2 focus:ring-green-400 outline-none", @oninput = "this.value=this.value.replace(/[^0-9]/g,'');" })
             </div>
+
             <div>
-                <label class="block font-medium">Correo Electrónico</label>
-                @Html.TextBoxFor(m => m.Correo, new { @type = "email", @class = "w-full border p-2 rounded", @placeholder = "Ingresa tu correo", @id = "correo" })
-                <span id="correoError" class="text-red-500 text-sm hidden">El correo es obligatorio.</span>
-            </div>
-            <div>
-                <label class="block font-medium">Contraseña</label>
-                @Html.TextBoxFor(m => m.Contrasenia, new { @type = "password", @class = "w-full border p-2 rounded", @id = "password", @placeholder = "Ingresa tu contraseña" })
-                <span id="contraseniaError" class="text-red-500 text-sm hidden">La contraseña es obligatoria.</span>
-            </div>
-            <div>
-                <label class="block font-medium">Confirmar Contraseña</label>
-                <input type="password" id="confirmPassword" class="w-full border p-2 rounded" placeholder="Confirma tu contraseña">
-                <span id="errorMessage" class="text-red-500 text-sm hidden">Las contraseñas no coinciden o son demasiado cortas.</span>
-            </div>
-            <div>
-                <label class="block font-medium">Código de Referido</label>
-                @Html.TextBoxFor(m => m.CodigoReferido, new { @type = "text", @class = "w-full border p-2 rounded", @placeholder = "Ingresa el código de referido (opcional)", @id = "codigoReferido" })
+                <label class="block font-medium text-gray-700">Correo Electrónico <span class="text-red-500">*</span></label>
+                @Html.TextBoxFor(m => m.Correo, new { @class = "w-full border p-3 rounded-lg focus:ring-2 focus:ring-green-400 outline-none", @readonly = "readonly" })
             </div>
 
             <div class="md:col-span-2">
-                <button class="w-full bg-orange-500 text-white font-bold py-2 rounded">Registrarse</button>
+                <button type="submit" class="w-full rounded-lg bg-green-500 py-3 font-bold text-white text-lg transition-transform transform hover:scale-105">Actualizar Información</button>
             </div>
         }
-
-        <p class="text-center text-sm mt-4">
-            ¿Ya tienes una cuenta? <a href="@Url.Action("Login", "Login")" class="text-green-600 font-bold">Inicia sesión</a>
-        </p>
     </div>
-
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            const form = document.querySelector("form");
-            form.addEventListener("submit", function (event) {
-                let valid = true;
-
-                // Limpia los mensajes de error previos
-                const errorMessages = document.querySelectorAll(".text-red-500");
-                errorMessages.forEach(msg => msg.classList.add("hidden"));
-                const fields = {
-                    nombre: document.querySelector("[name='Persona.Nombre']"),
-                    apellido: document.querySelector("[name='Persona.Apellido']"),
-                    tipoDeDocumento: document.querySelector("[name='Persona.TipoDeDocumento']"),
-                    documento: document.querySelector("[name='Persona.Documento']"),
-                    telefono: document.querySelector("[name='Persona.Telefono']"),
-                    correo: document.querySelector("[name='Correo']"),
-                    contrasenia: document.querySelector("[name='Contrasenia']"),
-                    confirmPassword: document.querySelector("#confirmPassword")
-                };
-
-                // Limpia los bordes rojos
-                for (const key in fields) {
-                    fields[key].classList.remove("border-red-500");
-                }
-
-                // Validaciones
-                if (!fields.nombre.value.trim()) {
-                    document.getElementById("nombreError").classList.remove("hidden");
-                    fields.nombre.classList.add("border-red-500");
-                    valid = false;
-                }
-                if (!fields.apellido.value.trim()) {
-                    document.getElementById("apellidoError").classList.remove("hidden");
-                    fields.apellido.classList.add("border-red-500");
-                    valid = false;
-                }
-                if (!fields.tipoDeDocumento.value.trim()) {
-                    document.getElementById("tipoDeDocumentoError").classList.remove("hidden");
-                    fields.tipoDeDocumento.classList.add("border-red-500");
-                    valid = false;
-                }
-                if (!/^\d{10,15}$/.test(fields.documento.value.trim())) {
-                    document.getElementById("documentoError").classList.remove("hidden");
-                    fields.documento.classList.add("border-red-500");
-                    valid = false;
-                }
-                if (!/^3\d{9}$/.test(fields.telefono.value.trim())) {
-                    document.getElementById("telefonoError").classList.remove("hidden");
-                    fields.telefono.classList.add("border-red-500");
-                    valid = false;
-                }
-                if (!fields.correo.value.trim()) {
-                    document.getElementById("correoError").classList.remove("hidden");
-                    fields.correo.classList.add("border-red-500");
-                    valid = false;
-                }
-                if (fields.contrasenia.value.trim().length < 8) {
-                    document.getElementById("contraseniaError").classList.remove("hidden");
-                    fields.contrasenia.classList.add("border-red-500");
-                    valid = false;
-                }
-
-                // Validación de que las contraseñas coinciden
-                if (fields.contrasenia.value.trim() !== fields.confirmPassword.value.trim()) {
-                    document.getElementById("errorMessage").classList.remove("hidden");
-                    fields.confirmPassword.classList.add("border-red-500");
-                    valid = false;
-                }
-
-                if (!valid) {
-                    event.preventDefault();
-                }
-            });
-        });
-    </script>
-
-    <style>
-        .border-red-500 {
-            border: 0.5px solid red !important;
-        }
-
-        .hidden {
-            display: none;
-        }
-    </style>
 
 </body>
 </html>
