@@ -19,38 +19,40 @@
 <body class="bg-gray-100">
     <div class="flex min-h-screen">
         <!-- Sidebar -->
-        <aside class="w-1/4 bg-[#F5EFE4] p-6 flex flex-col items-center">
+        <aside class="flex w-1/4 flex-col items-center bg-[#F5EFE4] p-6">
             <!-- Contenedor del recuadro de la imagen -->
-            <div class="w-32 h-32 bg-white border border-gray-300 rounded-md mb-4 flex items-center justify-center overflow-hidden">
-                <img src="@Model.Logotipo" alt="Imagen del negocio" class="w-full h-full object-contain">
+            <div class="mb-4 flex h-32 w-32 items-center justify-center overflow-hidden rounded-md border border-gray-300 bg-white">
+                <img src="@Model.Logotipo" alt="Imagen del negocio" class="h-full w-full object-contain">
             </div>
 
-            <h1 class="text-2xl font-bold text-black mb-2">@Model.Nombre</h1>
-            <p class="text-lg text-black mb-4">+57 @Model.Telefono</p>
+            <h1 class="mb-2 text-2xl font-bold text-black">@Model.Nombre</h1>
+            <p class="mb-4 text-lg text-black">+57 @Model.Telefono</p>
 
             <!-- Mapa con la ubicación del negocio -->
-            <div id="map" class="w-full h-60 rounded-md mb-4"></div>
+            <div id="map" class="mb-4 h-60 w-full rounded-md"></div>
 
-            <button class="w-full bg-green-600 text-white py-2 rounded-lg">Editar Negocio</button>
+            <button class="w-full rounded-lg bg-green-600 py-2 text-white">Editar Negocio</button>
         </aside>
 
         <!-- Main Content -->
         <main class="flex-1 p-6">
-            <div class="flex justify-between items-center">
+            <div class="flex items-center justify-between">
                 <h2 class="text-xl font-semibold text-green-700">Todos los productos</h2>
-                <a href="@Url.Action("AgregarProductNegocio", "Productos")" class="bg-orange-500 text-white px-6 py-2 rounded-lg">Agregar Producto</a>
+                <a href="@Url.Action("AgregarProductNegocio", "Productos")" class="rounded-lg bg-orange-500 px-6 py-2 text-white">Agregar Producto</a>
             </div>
 
             <!-- Productos -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mt-6">
+            <div class="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
                 <!-- Producto -->
-                <div class="bg-white p-4 shadow-md rounded-lg relative flex flex-col items-center">
-                    <div class="w-full h-40 bg-gray-300 rounded-md"></div>
-                    <h3 class="mt-2 font-semibold">Producto</h3>
-                    <p class="text-sm text-gray-500">200 item sold</p>
-                    <p class="text-orange-500 font-bold">$100</p>
-                    <button class="mt-2 bg-[#23916A] text-white px-4 py-1 rounded-lg self-center">Ver</button>
-                </div>
+                @foreach (var producto in ViewBag.productos)
+                {
+                    <div class="relative flex flex-col items-center rounded-lg bg-white p-4 shadow-md">
+                        <div class="h-40 w-full rounded-md bg-gray-300"></div>
+                        <h3 class="mt-2 font-semibold">@producto.Nombre</h3>
+                        <p class="font-bold text-orange-500">$@producto.Precio</p>
+                        <button class="mt-2 self-center rounded-lg bg-[#23916A] px-4 py-1 text-white">Ver</button>
+                    </div>
+                }
             </div>
         </main>
     </div>
