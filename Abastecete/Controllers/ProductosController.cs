@@ -17,13 +17,13 @@ namespace Abastecete.Controllers
             manejadorNegocios = new ManejadorNegocios();
             manejadorProductos = new ManejadorProductos();
             manejadorCategorias = new ManejadorCategorias();
-
+        }
 
 
         public IActionResult Consultar()
         {
             return View();
-        }
+        }virtual 
 
         public IActionResult ConsultarIndividual()
         {
