@@ -48,7 +48,7 @@ namespace ConnectionProject.Controllers
                 int idUsuario = Convert.ToInt32(data.Rows[0]["PK_ID_USUARIO"]);
 
                 HttpContext.Session.SetInt32("PersonaId", idPersona);
-                HttpContext.Session.SetInt32("userId", idUsuario);
+                HttpContext.Session.SetInt32("idUsuario", idUsuario);
 
                 if (HttpContext.Session.GetString("LastLoginError") == usuario.Correo)
                 {

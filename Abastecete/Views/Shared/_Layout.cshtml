@@ -74,26 +74,29 @@
                 @if (permisos != null)
                 {
                     <div class="relative">
-                        <button id="user-btn" class="focus:outline-none flex items-center">
-                            <img src="~/css/Images/avatar.png" alt="Usuario" class="w-8 h-8 rounded-full">
+                        <button id="user-btn" class="focus:outline-none flex items-center gap-2 hover:bg-gray-100 rounded-full p-1 transition">
+                            <img src="~/css/Images/avatar.png" alt="Usuario" class="w-10 h-10 rounded-full border border-gray-300 shadow-sm">
                         </button>
-                        <ul id="user-menu"
-                        class="absolute right-0 mt-2 bg-white shadow-lg rounded-md min-w-[150px] md:min-w-[200px] text-sm hidden z-50 p-3 md:p-4">
 
-                            <li class="py-3 px-5 border-b hover:bg-gray-100">
-                                <a href="@Url.Action("Actualizar", "Usuarios")" class="block text-black">
-                                    Actualizar
-                                    Información
-                                </a>
+                        <ul id="user-menu"
+                            class="absolute right-0 mt-2 bg-white shadow-xl rounded-lg min-w-[180px] md:min-w-[220px] text-sm hidden z-50 overflow-hidden border border-gray-200">
+
+                            <li class="py-3 px-5 border-b hover:bg-gray-100 transition duration-200">
+                                <button id="open-edit-profile" class="block text-black font-medium w-full text-left">
+                                    ✏️ Editar perfil
+                                </button>
                             </li>
-                            <li class="py-3 px-5 hover:bg-gray-100">
-                                <a href="@Url.Action("Logout", "Login")" class="block text-red-600 font-semibold">
-                                    Cerrar
-                                    Sesión
+
+
+                            <li class="py-3 px-5 hover:bg-gray-100 transition duration-200">
+                                <a href="@Url.Action("Logout", "Login")" class="block text-black font-semibold">
+                                    🚪 Cerrar Sesión
                                 </a>
                             </li>
                         </ul>
                     </div>
+
+
                 }
                 else
                 {
@@ -189,6 +192,15 @@
         @RenderBody()
     </main>
 
+    <div id="edit-profile-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex justify-center items-center z-50">
+        <div class="bg-white p-6 rounded-lg shadow-lg w-auto max-w-6xl min-h-auto max-h-[80vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <button id="close-edit-profile" class="text-gray-600 hover:text-red-500 text-lg">✖</button>
+            </div>
+            <div id="edit-profile-content" class="overflow-auto"></div>
+        </div>
+    </div>
+
     <script>
         const menuToggle = document.getElementById('menu-toggle');
         const menuContainer = document.getElementById('menu-container');
@@ -275,6 +287,39 @@
         });
     </script>
 
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const editProfileBtn = document.getElementById("open-edit-profile");
+            const editProfileModal = document.getElementById("edit-profile-modal");
+            const editProfileContent = document.getElementById("edit-profile-content");
+            const closeEditProfileBtn = document.getElementById("close-edit-profile");
+
+            if (editProfileBtn && editProfileModal) {
+                editProfileBtn.addEventListener("click", function () {
+                    // Cargar la vista de edición de perfil con AJAX
+                    fetch("@Url.Action("Actualizar", "Usuarios")")
+                        .then(response => response.text())
+                        .then(html => {
+                            editProfileContent.innerHTML = html;
+                            editProfileModal.classList.remove("hidden");
+                        })
+                        .catch(error => console.error("Error al cargar la vista:", error));
+                });
+
+                closeEditProfileBtn.addEventListener("click", function () {
+                    editProfileModal.classList.add("hidden");
+                    editProfileContent.innerHTML = ""; // Limpiar contenido al cerrar
+                });
+
+                editProfileModal.addEventListener("click", function (event) {
+                    if (event.target === editProfileModal) {
+                        editProfileModal.classList.add("hidden");
+                        editProfileContent.innerHTML = "";
+                    }
+                });
+            }
+        });
+    </script>
 
 </body>
 

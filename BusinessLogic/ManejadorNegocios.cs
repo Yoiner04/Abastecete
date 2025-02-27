@@ -52,18 +52,6 @@ namespace BusinessLogic
                 Telefono = Convert.ToInt64(row["TELEFONO_LOCAL"]),
                 Logotipo = row["FOTOS_LOCAL"].ToString()
             };
-
-            //foreach (DataRow row in datos.Rows)
-            //{
-            //    categorias.Add(new Categoria
-            //    {
-            //        Id = Convert.ToInt32(row["PK_ID_CATEGORIA"]),
-            //        Nombre = row["NOMBRE_CATEGORIA"].ToString(),
-            //        Estado = Convert.ToInt32(row["ESTADO_CATEGORIA"]),
-            //        Imagen = row["IMAGEN_CATEGORIA"].ToString()
-            //    });
-            //}
-            //return categorias;
         }
 
         public List<Negocio> ConsultarTodosLosNegocios()

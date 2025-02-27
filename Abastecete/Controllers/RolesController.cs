@@ -15,7 +15,7 @@ namespace ConnectionProject.Controllers
         {
             ViewBag.idRol = idRol;
             ViewBag.administrar = RolPermisos.TienePermiso("Administrar Roles", HttpContext.Session.GetString("permisos"));
-            List<Usuario> usuarios = manejadorU.ObtenerUsuarios(0);
+            List<Usuario> usuarios = manejadorU.ConsultarUsuarios(0);
             List<Permiso> permisos = manejadorP.ObtenerPermisos(idRol);
             List<Rol> roles = manejadorR.ObtenerRoles();
             ViewBag.usuarios = usuarios;

@@ -11,7 +11,8 @@ namespace BusinessLogic.Models
         public int Id { get; set; }
         public int IdSubCategoria { get; set; }
         public string Nombre { get; set; }
-        public decimal Precio { get; set; }
+        public string Precio { get; set; }
+        public Unidad Unidad { get; set; }
         public string ImagenUrl { get; set; }
 
 

@@ -11,7 +11,7 @@ namespace Abastecete.Controllers
         private readonly ManejadorNegocios manejadorNegocios;
         private readonly ManejadorProductos manejadorProductos;
         private readonly ManejadorCategorias manejadorCategorias;
-        // Constructor para inicializar el manejador de negocios y productos
+
         public ProductosController()
         {
             manejadorNegocios = new ManejadorNegocios();
@@ -19,11 +19,24 @@ namespace Abastecete.Controllers
             manejadorCategorias = new ManejadorCategorias();
         }
 
+        public IActionResult Consultar()
+        {
+            return View();
+        } 
+
+        public IActionResult ConsultarIndividual()
+        {
+            return View();
+        }
+
         public IActionResult ProductosNegocio()
         {
             var personaId = HttpContext.Session.GetInt32("PersonaId").Value;
 
             Negocio negocio = manejadorNegocios.ConsultarNegocio(personaId);
+            List<Producto> productos = manejadorProductos.ConsultarProductosLocal(negocio.Id);
+
+            ViewBag.productos = productos;
 
             if (negocio == null)
             {
@@ -35,6 +48,7 @@ namespace Abastecete.Controllers
 
         public IActionResult ListaNegocios()
         {
+
             List<Negocio> negocios = manejadorNegocios.ConsultarTodosLosNegocios();
             return View(negocios);
         }
@@ -63,7 +77,7 @@ namespace Abastecete.Controllers
         }
 
         [HttpPost]
-        public IActionResult CrearProducto(IFormFile Imagen, int IdSubCategoria, string Nombre, decimal Precio)
+        public IActionResult CrearProducto(IFormFile Imagen, int IdSubCategoria, string Nombre, string Precio)
         {
             string imagenUrl = GuardarImagen(Imagen);
             var producto = new Producto { IdSubCategoria = IdSubCategoria, Nombre = Nombre, Precio = Precio, ImagenUrl = imagenUrl };
@@ -72,7 +86,7 @@ namespace Abastecete.Controllers
         }
 
         [HttpPost]
-        public IActionResult EditarProducto(int Id, IFormFile Imagen, int IdSubCategoria, string Nombre, decimal Precio)
+        public IActionResult EditarProducto(int Id, IFormFile Imagen, int IdSubCategoria, string Nombre, string Precio)
         {
             string imagenUrl = Imagen != null ? GuardarImagen(Imagen) : manejadorProductos.ConsultarProductos().FirstOrDefault(p => p.Id == Id)?.ImagenUrl;
 
