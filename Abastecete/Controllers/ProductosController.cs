@@ -27,7 +27,6 @@ namespace Abastecete.Controllers
         public IActionResult ConsultarIndividual()
         {
             return View();
-
         }
 
         public IActionResult ProductosNegocio()
@@ -52,7 +51,6 @@ namespace Abastecete.Controllers
 
             List<Negocio> negocios = manejadorNegocios.ConsultarTodosLosNegocios();
             return View(negocios);
-
         }
 
 
