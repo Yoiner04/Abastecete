@@ -18,7 +18,7 @@ namespace Abastecete.Controllers
             manejadorNegocios = new ManejadorNegocios();
             manejadorProductos = new ManejadorProductos();
             manejadorCategorias = new ManejadorCategorias();
-        }
+
 
         public IActionResult Consultar()
         {
@@ -28,6 +28,7 @@ namespace Abastecete.Controllers
         public IActionResult ConsultarIndividual()
         {
             return View();
+
         }
 
         public IActionResult ProductosNegocio()
