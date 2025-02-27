@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using Abastecete.Models;
 using BusinessLogic;
 using BusinessLogic.Models;
@@ -13,11 +13,13 @@ namespace Abastecete.Controllers
     {
         private readonly ILogger<HomeController> _logger;
         private readonly ManejadorCategorias manejadorCategorias;
+        private readonly ManejadorNegocios manejadorNegocios;
 
         public HomeController(ILogger<HomeController> logger)
         {
             _logger = logger;
             manejadorCategorias = new ManejadorCategorias();
+            manejadorNegocios = new ManejadorNegocios();
         }
 
         public IActionResult Index()
@@ -38,9 +40,15 @@ namespace Abastecete.Controllers
 
         public IActionResult Principal()
         {
+            
             List<Categoria> categorias = manejadorCategorias.ConsultarCategorias();
+            List<Negocio> negocios = manejadorNegocios.ConsultarTodosLosNegocios();
+
             ViewBag.rol = LoginController.rol;
+            ViewBag.Negocios = negocios;
+
             return View(categorias);
         }
+
     }
 }
