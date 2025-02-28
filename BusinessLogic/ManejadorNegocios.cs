@@ -115,10 +115,16 @@ namespace BusinessLogic
 
         public List<Negocio> ConsultarTodosLosNegocios()
         {
-            string consulta = "consultar_local(0)";
-
-            DataTable datos = conexion.EjecutarConsulta(consulta);
             List<Negocio> negocios = new List<Negocio>();
+
+            try
+            {
+                List<Parametro> p = new List<Parametro> {
+                new Parametro("p_id_persona",0)
+            };
+
+
+                DataTable datos = conexion.EjecutarConsulta("consultar_local", p);
 
             foreach (DataRow row in datos.Rows)
             {
@@ -126,13 +132,19 @@ namespace BusinessLogic
                 {
                     Id = Convert.ToInt32(row["PK_ID_LOCAL"]),
                     Nombre = row["NOMBRE_LOCAL"].ToString(),
-                    Localizacion = row["LOCALIZACION"].ToString(),
-                    Telefono = Convert.ToInt32(row["TELEFONO_LOCAL"]),
+                    Direccion = row["LOCALIZACION"].ToString(),
+                    Telefono = Convert.ToInt64(row["TELEFONO_LOCAL"]),
                     Logotipo = row["FOTOS_LOCAL"].ToString()
                 });
+            }
+        }
+            catch (Exception ex)
+            {
+                Console.WriteLine("❌ Error al consultar negocios: " + ex.Message);
             }
 
             return negocios;
         }
+
     }
 }

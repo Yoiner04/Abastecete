@@ -17,18 +17,16 @@ namespace Abastecete.Controllers
             manejadorNegocios = new ManejadorNegocios();
             manejadorProductos = new ManejadorProductos();
             manejadorCategorias = new ManejadorCategorias();
-
         }
 
         public IActionResult Consultar()
         {
             return View();
-        }
+        } 
 
         public IActionResult ConsultarIndividual()
         {
             return View();
-
         }
 
         public IActionResult ProductosNegocio()
@@ -53,7 +51,6 @@ namespace Abastecete.Controllers
 
             List<Negocio> negocios = manejadorNegocios.ConsultarTodosLosNegocios();
             return View(negocios);
-
         }
 
 
