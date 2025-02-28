@@ -5,81 +5,93 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Abastecete</title>
+    <title>@Model.Nombre</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <link rel="icon" type="image/x-icon" href="~/css/Images/Logo A naranja.png" />
-    <link rel="stylesheet" href="styles.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <link rel="stylesheet" href="~/css/styles.css" asp-append-version="true" />
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAPudyk3G3YG7GOEpId4xMK_WFIEenOSp8&libraries=places"></script>
-</head>
-
-<body class="bg-gray-100">
-    <div class="flex min-h-screen">
-        <!-- Sidebar -->
-        <aside class="flex w-1/4 flex-col items-center bg-[#F5EFE4] p-6">
-            <!-- Contenedor del recuadro de la imagen -->
-            <div class="mb-4 flex h-32 w-32 items-center justify-center overflow-hidden rounded-md border border-gray-300 bg-white">
-                <img src="@Model.Logotipo" alt="Imagen del negocio" class="h-full w-full object-contain">
-            </div>
-
-
-            <h1 class="text-2xl font-bold text-black mb-2">@Model.Nombre</h1>
-            <p class="text-lg text-black mb-4">🇨🇴 +57 @Model.Telefono</p>
-
-            <!-- Mapa con la ubicación del negocio -->
-            <div id="map" class="mb-4 h-60 w-full rounded-md"></div>
-
-            <button class="w-full rounded-lg bg-green-600 py-2 text-white">Editar Negocio</button>
-        </aside>
-
-        <!-- Main Content -->
-        <main class="flex-1 p-6">
-            <div class="flex items-center justify-between">
-                <h2 class="text-xl font-semibold text-green-700">Todos los productos</h2>
-                <a href="@Url.Action("AgregarProductNegocio", "Productos")" class="rounded-lg bg-orange-500 px-6 py-2 text-white">Agregar Producto</a>
-            </div>
-
-            <!-- Productos -->
-            <div class="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-                <!-- Producto -->
-                @foreach (var producto in ViewBag.productos)
-                {
-                    <div class="relative flex flex-col items-center rounded-lg bg-white p-4 shadow-md">
-                        <div class="h-40 w-full rounded-md bg-gray-300"></div>
-                        <h3 class="mt-2 font-semibold">@producto.Nombre</h3>
-                        <p class="font-bold text-orange-500">$@producto.Precio</p>
-                        <button class="mt-2 self-center rounded-lg bg-[#23916A] px-4 py-1 text-white">Ver</button>
-                    </div>
-                }
-            </div>
-        </main>
-    </div>
-
     <script>
-        function initMap() {
-            // Extraer la ubicación desde el Modelo (latitud, longitud)
-            var localizacion = "@Model.Localizacion".replace("(", "").replace(")", "").split(",");
-            var latitud = parseFloat(localizacion[0]);
-            var longitud = parseFloat(localizacion[1]);
+        function mostrarDetalle(nombre, precio, imagen) {
+            document.getElementById('detalleProducto').classList.remove('hidden');
+            document.getElementById('detalleNombre').textContent = nombre;
+            document.getElementById('detallePrecio').textContent = `$${precio}`;
+            document.getElementById('detalleImagen').src = imagen;
 
-            // Crear el mapa en la ubicación del negocio
-            var map = new google.maps.Map(document.getElementById('map'), {
-                center: { lat: latitud, lng: longitud },
-                zoom: 15
+            const productos = document.querySelectorAll('#productosContainer > div.producto');
+
+            productos.forEach((p, index) => {
+                p.classList.remove('lg:col-span-2');
+                p.classList.add('lg:w-auto');
+                if (index >= 3) {
+                    p.classList.add('hidden');
+                }
             });
 
-            // Agregar un marcador en la ubicación del negocio
-            new google.maps.Marker({
-                position: { lat: latitud, lng: longitud },
-                map: map,
-                title: "@Model.Nombre"
-            });
+            document.getElementById('detalleProducto').classList.add('lg:col-span-2');
         }
 
-        window.onload = initMap;
+        function ocultarDetalle() {
+            document.getElementById('detalleProducto').classList.add('hidden');
+
+            const productos = document.querySelectorAll('#productosContainer > div.producto');
+            productos.forEach(p => {
+                p.classList.remove('hidden'); 
+            });
+
+            document.getElementById('detalleProducto').classList.remove('lg:col-span-2');
+        }
     </script>
+</head>
+
+<body class="bg-white">
+    <header class="flex items-center justify-between bg-[#F5EFE4] p-3 shadow-md">
+        <div class="flex items-center gap-4">
+            <div class="flex h-12 w-12 items-center justify-center overflow-hidden rounded-md border border-gray-300 bg-white">
+                <img src="@Model.Logotipo" alt="Imagen del negocio" class="h-full w-full object-contain">
+            </div>
+            <h1 class="text-2xl font-bold text-black">@Model.Nombre</h1>
+        </div>
+        <div class="flex gap-2">
+            <a href="@Url.Action("AgregarProductNegocio", "Productos")" class="rounded-lg bg-orange-500 px-4 py-2 text-white">Agregar Producto</a>
+            <button class="rounded-lg bg-orange-500 px-4 py-2 text-white">Editar Negocio</button>
+        </div>
+    </header>
+
+    <main class="flex w-full p-6">
+        <div class="w-full transition-all">
+            <h2 class="text-lg font-semibold text-green-700">All Product</h2>
+            <div id="productosContainer" class="mt-4 grid w-full grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+                @foreach (var producto in ViewBag.productos)
+                {
+                    <div class="producto relative flex h-[400px] w-full flex-col rounded-lg bg-white p-6 shadow-md">
+                        <div class="h-48 w-full rounded-md bg-gray-300"></div>
+                        <h3 class="mt-4 text-lg font-semibold">@producto.Nombre</h3>
+                        <p class="text-sm text-gray-600">200 items sold</p>
+                        <p class="text-xl font-bold text-orange-500">$@producto.Precio</p>
+                        <button onclick="mostrarDetalle('@producto.Nombre', '@producto.Precio', '')" class="mt-4 self-center rounded-lg bg-[#1A2D3D] px-6 py-2 text-white">Ver</button>
+                    </div>
+                }
+
+                <div id="detalleProducto" class="hidden w-full bg-gray-100 p-6 lg:col-span-2">
+                    <button onclick="ocultarDetalle()" class="font-bold text-red-500">Cerrar</button>
+                    <div class="flex h-64 w-full items-center justify-center rounded-md bg-gray-300">
+                        <img id="detalleImagen" class="h-full w-full object-contain" src="" alt="Imagen del producto" />
+                    </div>
+                    <h3 id="detalleNombre" class="mt-4 text-2xl font-bold"></h3>
+                    <p id="detallePrecio" class="text-xl font-bold text-green-600"></p>
+                    <p class="text-gray-500 line-through">$150.000</p>
+                    <p class="text-sm text-gray-600"><strong>Categoría:</strong> Lácteos, Bebidas</p>
+                    <p class="text-sm text-gray-600"><strong>Subcategoría:</strong> Leche, Yogurt, Alpina...</p>
+                    <div class="mt-4 flex gap-2">
+                        <button class="rounded-full bg-white p-2 shadow"><i class="far fa-heart"></i></button>
+                        <button class="rounded-full bg-white p-2 shadow"><i class="fas fa-share"></i></button>
+                        <button class="rounded-lg bg-green-600 px-6 py-2 text-white">Contactanos</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
 </body>
 </html>

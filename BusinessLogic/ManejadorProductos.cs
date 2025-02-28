@@ -113,7 +113,8 @@ namespace BusinessLogic
                         {
                             Nombre = row["UNIDADES"].ToString()
                         },
-                        ImagenUrl = row["IMAGEN_URL"].ToString()
+                        ImagenUrl = row["IMAGEN_URL"].ToString(),
+                        IdSubCategoria = Convert.ToInt32(row["FK_ID_SUB_CATEGORIA"])
                     });
                 
       
