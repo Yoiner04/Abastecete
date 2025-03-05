@@ -47,24 +47,33 @@ namespace Abastecete.Controllers
 
 
         [HttpPost]
-        public IActionResult Crear(OfertaFlash oferta)
+        public async Task<IActionResult> Crear(OfertaFlash oferta)
         {
-            int? idLocal = ObtenerIdLocalUsuario();
-            if (idLocal == null)
+            var personaId = HttpContext.Session.GetInt32("PersonaId");
+            if (personaId == null)
             {
                 TempData["ErrorMessage"] = "No tienes un negocio registrado para publicar ofertas.";
                 return RedirectToAction("Crear");
             }
 
-            oferta.IdLocal = idLocal.Value;
+            Negocio negocio = _manejadorNegocios.ConsultarNegocio(personaId.Value);
+            if (negocio == null)
+            {
+                TempData["ErrorMessage"] = "No se encontró un negocio asociado a tu cuenta.";
+                return RedirectToAction("Crear");
+            }
 
-                bool resultado = _manejadorOfertas.CrearOfertaFlash(oferta);
-                if (resultado)
-                {
-                    TempData["SuccessMessage"] = "La oferta se ha creado con Éxito. ✅";
-                    return RedirectToAction("Crear");
-                }
-                TempData["ErrorMessage"] = "❌ Error al crear la oferta. Inténtalo nuevamente.";
+            oferta.IdLocal = negocio.Id;
+            oferta.NombreLocal = negocio.Nombre;
+
+            bool resultado = await _manejadorOfertas.CrearOfertaFlash(oferta);
+            if (resultado)
+            {
+                TempData["SuccessMessage"] = "✅ La oferta se ha creado con éxito. Será evaluada por el personal de Abastecete para su aprobación o rechazo.";
+                return RedirectToAction("Crear");
+            }
+            TempData["ErrorMessage"] = "❌ Error al crear la oferta. Inténtalo nuevamente.";
+
             return View(oferta);
         }
 

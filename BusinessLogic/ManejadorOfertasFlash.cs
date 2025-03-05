@@ -3,35 +3,46 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using BusinessLogic.Models;
+using BusinessLogic.Utilidades;
 
 namespace BusinessLogic
 {
     public class ManejadorOfertasFlash
     {
         private Connection conexion;
+        private readonly EmailService _emailService;
 
         public ManejadorOfertasFlash()
         {
             conexion = new Connection();
+            _emailService = new EmailService();
         }
 
         // Crear nueva oferta flash
-        public bool CrearOfertaFlash(OfertaFlash oferta)
+        public async Task<bool> CrearOfertaFlash(OfertaFlash oferta)
         {
             try
             {
                 List<Parametro> parametros = new List<Parametro>
-        {
-            new Parametro("p_titulo_oferta", oferta.Titulo),
-            new Parametro("p_descripcion_oferta", oferta.Descripcion),
-            new Parametro("p_id_local", oferta.IdLocal)
-        };
+                {
+                    new Parametro("p_titulo_oferta", oferta.Titulo),
+                    new Parametro("p_descripcion_oferta", oferta.Descripcion),
+                    new Parametro("p_id_local", oferta.IdLocal)
+                };
 
                 bool resultado = conexion.EjecutarTransaccion("crear_oferta_flash", parametros);
                 if (!resultado)
                 {
                     throw new Exception("La transacción falló en la base de datos.");
                 }
+
+                string asunto = "Nueva Oferta Flash Creada";
+                string mensaje = $"El negocio **{oferta.NombreLocal}** ha creado una nueva Oferta Flash.\n\n" +
+                                 $"📌 **Título:** {oferta.Titulo}\n" +
+                                 $"📝 **Descripción:** {oferta.Descripcion}\n\n" +
+                                 $"Por favor, revisa y aprueba o rechaza la oferta.";
+
+                await _emailService.EnviarCorreoAviso(asunto, mensaje);
 
                 return resultado;
             }
@@ -76,9 +87,9 @@ namespace BusinessLogic
             try
             {
                 List<Parametro> parametros = new List<Parametro>
-        {
-            new Parametro("p_id_oferta", idOferta)
-        };
+                {
+                    new Parametro("p_id_oferta", idOferta)
+                };
 
                 return conexion.EjecutarTransaccion("aprobar_ofertas_flash", parametros);
             }
@@ -88,7 +99,5 @@ namespace BusinessLogic
                 return false;
             }
         }
-
-
     }
 }

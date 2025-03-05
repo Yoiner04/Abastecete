@@ -140,51 +140,45 @@
                 <h2 class="text-lg font-bold text-gray-800">Ofertas Flash: Por tiempo limitado</h2>
             </div>
         </div>
-
         @{
-            var ofertasAprobadas = ViewBag.OfertasFlash?.Where(o => o.Estado == 1).ToList();
+            var ofertas = ViewBag.OfertasFlash as IEnumerable<dynamic>;
         }
-
-        @if (ofertasAprobadas != null && ofertasAprobadas.Count > 0)
+        @if (ofertas != null && ofertas.Any(o => o.Estado == 1))
         {
             <div id="offers-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                @foreach (var oferta in ofertasAprobadas)
+                @foreach (var oferta in ofertas)
                 {
-                    <div class="bg-white p-4 rounded-lg shadow-md flex flex-col relative">
-
-                        <!-- Imagen de la oferta -->
-                        <div class="relative w-full h-48 overflow-hidden rounded-md bg-gray-300">
-                            <img src="@oferta.FotoLocal" alt="Oferta" class="absolute inset-0 w-full h-full object-cover">
-                        </div>
-
-                        <!-- Información de la oferta -->
-                        <div class="text-center mt-4">
-                            <h3 class="text-lg font-bold text-gray-800">@oferta.Titulo</h3>
-                            <p class="text-gray-600">@oferta.Descripcion</p>
-                            <p class="text-sm text-gray-500 font-medium">📍 @oferta.NombreLocal</p>
-
-                            <!-- Temporizador -->
-                            <div class="mt-4">
-                                <span class="text-red-500 font-semibold">
-                                    ⏳ Expira en <span class="countdown-timer" data-expiration="@oferta.TiempoOferta?.ToString("yyyy-MM-ddTHH:mm:ss")"></span>
-                                </span>
+                    @if (oferta.Estado == 1) // ✅ Solo muestra ofertas aprobadas
+                    {
+                        <div class="bg-white p-4 rounded-lg shadow-md flex flex-col relative">
+                            <!-- Imagen de la oferta -->
+                            <div class="relative w-full h-48 overflow-hidden rounded-md bg-gray-300">
+                                <img src="@oferta.FotoLocal" alt="Oferta" class="absolute inset-0 w-full h-full object-cover">
+                            </div>
+                            <!-- Información de la oferta -->
+                            <div class="text-center mt-4">
+                                <h3 class="text-lg font-bold text-gray-800">@oferta.Titulo</h3>
+                                <p class="text-gray-600">@oferta.Descripcion</p>
+                                <p class="text-sm text-gray-500 font-medium">📍 @oferta.NombreLocal</p>
+                                <!-- Temporizador -->
+                                <div class="mt-4">
+                                    <span class="text-red-500 font-semibold">
+                                        ⏳ Expira en <span class="countdown-timer" data-expiration="@oferta.TiempoOferta?.ToString("yyyy-MM-ddTHH:mm:ss")"></span>
+                                    </span>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    }
                 }
             </div>
         }
         else
         {
-            <!-- Mensaje cuando no hay ofertas -->
-            <div class="text-center p-6 bg-gray-100 rounded-lg shadow-md">
-                <h3 class="text-lg font-bold text-gray-700">😞 No hay ofertas disponibles en este momento</h3>
-                <p class="text-gray-600 mt-2">En el momento no hay locales con ofertas disponibles. ¡Anímate a publicar la tuya!</p>
+            <div class="text-center text-gray-600 mt-6">
+                <p class="text-lg font-medium">En el momento no hay locales con ofertas disponibles. ¡Anímate a publicar la tuya!</p>
             </div>
         }
     </section>
-
-
     <script>
         function actualizarContadores() {
             document.querySelectorAll(".countdown-timer").forEach(timer => {
