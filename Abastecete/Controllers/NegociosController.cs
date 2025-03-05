@@ -45,6 +45,13 @@ namespace Abastecete.Controllers
             return View(negocios);
         }
 
+        [HttpPost]
+        public IActionResult ConsultarNegocios(int idCategoria)
+        {
+            List<Negocio> negocios = _manejadorNegocios.ConsultarNegocioCategoria(idCategoria);
+            return Json(negocios);
+        }
+
         [HttpGet]
         public IActionResult ConsultarProductos(int idLocal)
         {
@@ -104,7 +111,7 @@ namespace Abastecete.Controllers
             // Limpiar la sesión después de completar el registro
             HttpContext.Session.Remove("NegocioTemporal");
 
-            var usuarioId = HttpContext.Session.GetInt32("userId");
+            var usuarioId = HttpContext.Session.GetInt32("idUsuario");
 
             if (registrado)
             {
