@@ -44,7 +44,7 @@ namespace BusinessLogic
                 Id = Convert.ToInt32(row["PK_ID_LOCAL"]),
                 Nombre = row["NOMBRE_LOCAL"].ToString(),
                 Localizacion = row["LOCALIZACION"].ToString(),
-                Telefono = Convert.ToInt32(row["TELEFONO_LOCAL"]),
+                Telefono = Convert.ToInt64(row["TELEFONO_LOCAL"]),
                 Logotipo = row["FOTOS_LOCAL"].ToString()
             };
         }
@@ -106,7 +106,7 @@ namespace BusinessLogic
                     Id = Convert.ToInt32(row["PK_ID_LOCAL"]),
                     Nombre = row["NOMBRE_LOCAL"].ToString(),
                     Localizacion = row["LOCALIZACION"].ToString(),
-                    Telefono = Convert.ToInt32(row["TELEFONO_LOCAL"]),
+                    Telefono = Convert.ToInt64(row["TELEFONO_LOCAL"]),
                     Logotipo = row["FOTOS_LOCAL"].ToString()
                 });
             }
