@@ -23,45 +23,45 @@
     @{
         string permisos = HttpContextAccessor.HttpContext.Session.GetString("permisos");
     }
-    <header id="header" class="sticky top-0 shadow-md z-40" style="background-color: #F4F1E9;">
-        <nav class="container mx-auto flex justify-between items-center py-2 px-6">
+    <header id="header" class="sticky top-0 z-40 shadow-md" style="background-color: #F4F1E9;">
+        <nav class="container mx-auto flex items-center justify-between px-6 py-2">
             <!-- Logo -->
             <a href="@Url.Action("Principal", "Home")" class="flex items-center">
                 <img src="~/css/Images/LOGO FINAL.png" alt="Abastecete Logo" class="h-14">
             </a>
 
             <!-- Botón Menú Móvil -->
-            <button id="menu-toggle" class="md:hidden text-black focus:outline-none">
+            <button id="menu-toggle" class="text-black focus:outline-none md:hidden">
                 <i class="fas fa-bars text-2xl"></i>
             </button>
 
             <!-- Contenedor del Menú de Navegación -->
             <div id="menu-container"
-                 class="hidden md:flex items-center absolute left-1/2 transform -translate-x-1/2 w-auto z-50 bg-gray-100 md:bg-transparent">
-                <ul id="menu" class="md:flex md:space-x-6 text-base font-bold text-black md:flex-row flex-col">
+                 class="absolute left-1/2 z-50 hidden w-auto -translate-x-1/2 transform items-center bg-gray-100 md:flex md:bg-transparent">
+                <ul id="menu" class="flex-col text-base font-bold text-black md:flex md:space-x-6 md:flex-row">
                     <li>
-                        <a href="#" class="block px-4 py-2 hover:text-green-600 text-black">
+                        <a href="#" class="block px-4 py-2 text-black hover:text-green-600">
                             <i class="fa fa-search mr-1"></i>Buscar
                         </a>
                     </li>
                     <li>
-                        <a href="#categories-container" class="block px-4 py-2 hover:text-green-600 text-black">
+                        <a href="@Url.Action("Listar","Categorias")" class="block px-4 py-2 text-black hover:text-green-600">
                             Categorías
                         </a>
                     </li>
                     <li>
-                        <a href="#ofertas-container" class="block px-4 py-2 hover:text-green-600 text-black">
+                        <a href="#ofertas-container" class="block px-4 py-2 text-black hover:text-green-600">
                             Ofertas flash
                         </a>
                     </li>
                     <li>
-                        <a href="#promociones-container" class="block px-4 py-2 hover:text-green-600 text-black">
+                        <a href="#promociones-container" class="block px-4 py-2 text-black hover:text-green-600">
                             Promociones
                         </a>
                     </li>
                     <li>
                         <a href="#" id="open-contact-modal"
-                           class="block px-4 py-2 md:px-0 md:py-0 hover:text-green-600 text-black">
+                           class="block px-4 py-2 text-black hover:text-green-600 md:px-0 md:py-0">
                             Contacto
                         </a>
                     </li>
@@ -74,22 +74,22 @@
                 @if (permisos != null)
                 {
                     <div class="relative">
-                        <button id="user-btn" class="focus:outline-none flex items-center gap-2 hover:bg-gray-100 rounded-full p-1 transition">
-                            <img src="~/css/Images/avatar.png" alt="Usuario" class="w-10 h-10 rounded-full border border-gray-300 shadow-sm">
+                        <button id="user-btn" class="flex items-center gap-2 rounded-full p-1 transition hover:bg-gray-100 focus:outline-none">
+                            <img src="~/css/Images/avatar.png" alt="Usuario" class="h-10 w-10 rounded-full border border-gray-300 shadow-sm">
                         </button>
 
                         <ul id="user-menu"
-                            class="absolute right-0 mt-2 bg-white shadow-xl rounded-lg min-w-[180px] md:min-w-[220px] text-sm hidden z-50 overflow-hidden border border-gray-200">
+                            class="absolute right-0 z-50 mt-2 hidden min-w-[180px] overflow-hidden rounded-lg border border-gray-200 bg-white text-sm shadow-xl md:min-w-[220px]">
 
-                            <li class="py-3 px-5 border-b hover:bg-gray-100 transition duration-200">
-                                <button id="open-edit-profile" class="block text-black font-medium w-full text-left">
+                            <li class="border-b px-5 py-3 transition duration-200 hover:bg-gray-100">
+                                <button id="open-edit-profile" class="block w-full text-left font-medium text-black">
                                     ✏️ Editar perfil
                                 </button>
                             </li>
 
 
-                            <li class="py-3 px-5 hover:bg-gray-100 transition duration-200">
-                                <a href="@Url.Action("Logout", "Login")" class="block text-black font-semibold">
+                            <li class="px-5 py-3 transition duration-200 hover:bg-gray-100">
+                                <a href="@Url.Action("Logout", "Login")" class="block font-semibold text-black">
                                     🚪 Cerrar Sesión
                                 </a>
                             </li>
@@ -100,9 +100,7 @@
                 }
                 else
                 {
-                    <a href="@Url.Action("Login", "Login")" class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700
-                        sm:px-2 sm:py-1 sm:text-xs
-                        md:px-6 md:py-3 md:text-lg">
+                    <a href="@Url.Action("Login", "Login")" class="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 sm:px-2 sm:py-1 sm:text-xs md:px-6 md:py-3 md:text-lg">
                         Únete a nosotros
                     </a>
                 }
@@ -110,13 +108,13 @@
         </nav>
 
         <!-- Botón para mostrar las opciones en móviles -->
-        <button id="admin-menu-toggle" class="block md:hidden w-full text-center py-2 bg-gray-300 text-black font-bold">
+        <button id="admin-menu-toggle" class="block w-full bg-gray-300 py-2 text-center font-bold text-black md:hidden">
             Menú de Administración ⬇
         </button>
 
         <!-- Contenedor con alineación corregida -->
-        <div id="admin-menu" class="hidden md:flex justify-center bg-gray-200 py-2">
-            <ul class="flex flex-col md:flex-row md:space-x-6 text-sm text-center md:text-left">
+        <div id="admin-menu" class="hidden justify-center bg-gray-200 py-2 md:flex">
+            <ul class="flex flex-col text-center text-sm md:flex-row md:space-x-6 md:text-left">
 
                 @if (permisos != null)
                 {
@@ -216,10 +214,10 @@
         @RenderBody()
     </main>
 
-    <div id="edit-profile-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex justify-center items-center z-50">
-        <div class="bg-white p-6 rounded-lg shadow-lg w-auto max-w-6xl min-h-auto max-h-[80vh] overflow-y-auto">
-            <div class="flex justify-between items-center mb-4">
-                <button id="close-edit-profile" class="text-gray-600 hover:text-red-500 text-lg">✖</button>
+    <div id="edit-profile-modal" class="bg-opacity-50 fixed inset-0 z-50 flex hidden items-center justify-center bg-black">
+        <div class="min-h-auto max-h-[80vh] w-auto max-w-6xl overflow-y-auto rounded-lg bg-white p-6 shadow-lg">
+            <div class="mb-4 flex items-center justify-between">
+                <button id="close-edit-profile" class="text-lg text-gray-600 hover:text-red-500">✖</button>
             </div>
             <div id="edit-profile-content" class="overflow-auto"></div>
         </div>

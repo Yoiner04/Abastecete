@@ -18,23 +18,37 @@
             document.getElementById('detalleNombre').textContent = nombre;
             document.getElementById('detallePrecio').textContent = `$${precio}`;
             document.getElementById('detalleImagen').src = imagen;
-            document.getElementById('productosContainer').classList.add('lg:grid-cols-3');
-            document.getElementById('productosContainer').classList.remove('lg:grid-cols-5');
+
+            const productos = document.querySelectorAll('#productosContainer > div.producto');
+
+            productos.forEach((p, index) => {
+                p.classList.remove('lg:col-span-2');
+                p.classList.add('lg:w-auto');
+                if (index >= 3) {
+                    p.classList.add('hidden');
+                }
+            });
+
             document.getElementById('detalleProducto').classList.add('lg:col-span-2');
         }
 
         function ocultarDetalle() {
             document.getElementById('detalleProducto').classList.add('hidden');
-            document.getElementById('productosContainer').classList.remove('lg:grid-cols-3');
-            document.getElementById('productosContainer').classList.add('lg:grid-cols-5');
+
+            const productos = document.querySelectorAll('#productosContainer > div.producto');
+            productos.forEach(p => {
+                p.classList.remove('hidden'); 
+            });
+
             document.getElementById('detalleProducto').classList.remove('lg:col-span-2');
         }
     </script>
 </head>
 
 <body class="bg-white">
-    <header class="flex items-center justify-between bg-[#F5EFE4] p-4 shadow-md">
+    <header class="flex items-center justify-between bg-[#F5EFE4] p-3 shadow-md">
         <div class="flex items-center gap-4">
+
             <div class="h-12 w-12 rounded-md bg-white border border-gray-300 flex items-center justify-center overflow-hidden">
                 <img src="@Model.Logotipo" alt="Imagen del negocio" class="h-full w-full object-contain">
             </div>
@@ -46,13 +60,14 @@
         </div>
     </header>
 
+
     <main class="p-6 flex w-full">
         <div class="w-full transition-all">
             <h2 class="text-lg font-semibold text-green-700">All Product</h2>
             <div id="productosContainer" class="mt-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 w-full">
                 @foreach (var producto in ViewBag.productos)
                 {
-                    <div class="relative flex flex-col p-6 bg-white rounded-lg shadow-md w-full">
+                    <div class="producto relative flex flex-col p-6 bg-white rounded-lg shadow-md w-full h-[400px]">
                         <div class="h-48 w-full rounded-md bg-gray-300"></div>
                         <h3 class="mt-4 text-lg font-semibold">@producto.Nombre</h3>
                         <p class="text-sm text-gray-600">200 items sold</p>
@@ -60,23 +75,25 @@
                         <button onclick="mostrarDetalle('@producto.Nombre', '@producto.Precio', '')" class="mt-4 self-center rounded-lg bg-[#1A2D3D] px-6 py-2 text-white">Ver</button>
                     </div>
                 }
-            </div>
-        </div>
 
-        <div id="detalleProducto" class="w-full lg:w-auto lg:col-span-2 p-6 bg-gray-100 hidden">
-            <button onclick="ocultarDetalle()" class="text-red-500 font-bold">Cerrar</button>
-            <div class="w-full h-64 bg-gray-300 rounded-md flex items-center justify-center">
-                <img id="detalleImagen" class="h-full w-full object-contain" src="" alt="Imagen del producto" />
-            </div>
-            <h3 id="detalleNombre" class="mt-4 text-2xl font-bold"></h3>
-            <p id="detallePrecio" class="text-xl font-bold text-green-600"></p>
-            <p class="text-gray-500 line-through">$150.000</p>
-            <p class="text-sm text-gray-600"><strong>Categoría:</strong> Lácteos, Bebidas</p>
-            <p class="text-sm text-gray-600"><strong>Subcategoría:</strong> Leche, Yogurt, Alpina...</p>
-            <div class="mt-4 flex gap-2">
-                <button class="rounded-full p-2 bg-white shadow"><i class="far fa-heart"></i></button>
-                <button class="rounded-full p-2 bg-white shadow"><i class="fas fa-share"></i></button>
-                <button class="rounded-lg bg-green-600 px-6 py-2 text-white">Contactanos</button>
+
+                <div id="detalleProducto" class="w-full lg:col-span-2 p-6 bg-gray-100 hidden">
+                    <button onclick="ocultarDetalle()" class="text-red-500 font-bold">Cerrar</button>
+                    <div class="w-full h-64 bg-gray-300 rounded-md flex items-center justify-center">
+                        <img id="detalleImagen" class="h-full w-full object-contain" src="" alt="Imagen del producto" />
+                    </div>
+                    <h3 id="detalleNombre" class="mt-4 text-2xl font-bold"></h3>
+                    <p id="detallePrecio" class="text-xl font-bold text-green-600"></p>
+                    <p class="text-gray-500 line-through">$150.000</p>
+                    <p class="text-sm text-gray-600"><strong>Categoría:</strong> Lácteos, Bebidas</p>
+                    <p class="text-sm text-gray-600"><strong>Subcategoría:</strong> Leche, Yogurt, Alpina...</p>
+                    <div class="mt-4 flex gap-2">
+
+                        <button class="rounded-full p-2 bg-white shadow"><i class="far fa-heart"></i></button>
+                        <button class="rounded-full p-2 bg-white shadow"><i class="fas fa-share"></i></button>
+                        <button class="rounded-lg bg-green-600 px-6 py-2 text-white">Contactanos</button>
+                    </div>
+                </div>
             </div>
         </div>
     </main>
