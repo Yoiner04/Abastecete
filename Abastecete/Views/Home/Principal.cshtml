@@ -24,19 +24,6 @@
     }
     <!-- IMAGENES CON CARRUSEL -->
     <section class="hero-section flex flex-col items-center p-3 sm:p-5 gap-3">
-
-        @if (permisos != null && RolPermisos.TienePermiso("Administrar Banners", permisos))
-        {
-            <div class="w-full flex justify-start mb-3">
-                @Html.Partial("BannerModal")
-                <a onclick="abrirBannerModal()" class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700
-                    sm:px-2 sm:py-1 sm:text-xs
-                    md:px-6 md:py-3 md:text-lg">
-                    Editar Banners
-                </a>
-            </div>
-        }
-
         <!-- Carrusel y dos imágenes -->
         <div class="flex flex-col sm:flex-row justify-between w-full gap-3 sm:gap-6">
             <!-- Carrusel -->
@@ -149,68 +136,68 @@
     <!-- OFERTAS FLASH -->
     <section class="off-section p-6 lg:p-10" id="ofertas-container">
         <div class="flex flex-col lg:flex-row justify-between items-center mb-4">
-            <!-- Título y Temporizador -->
             <div class="flex items-center gap-3 pl-0 lg:pl-10 mb-4 lg:mb-0">
-                <h2 class="text-lg font-bold text-gray-800">Ofertas Flash</h2>
-                <span class="bg-green-600 text-white px-3 py-1 rounded-full text-xs lg:text-sm font-medium">
-                    05 : 02 : 00
-                </span>
+                <h2 class="text-lg font-bold text-gray-800">Ofertas Flash: Por tiempo limitado</h2>
             </div>
-
-            <!-- Enlace Ver Todo -->
-            <a href="#" class="text-sm pr-0 lg:pr-10 font-medium text-gray-600 hover:text-gray-800 flex items-center">
-                Ver todo <span class="ml-1">&gt;</span>
-            </a>
         </div>
-
-        <div id="offers-container" class="grid grid-cols-1 lg:grid-cols-3 gap-6"></div>
-    </section>
-
-    <script>
-        const offers = [
-            { name: "PAPA PASTUSA 50 KG", oldPrice: "$60", newPrice: "$50", available: 30, sold: 30, progress: 30, bgColor: "bg-green-100", image: "/css/Images/papa.jpg" },
-            { name: "Cerveza X 6 LATA DORADA", oldPrice: "$1500", newPrice: "$1400", available: 99, sold: 1, progress: 1, bgColor: "bg-orange-200", image: "/css/Images/lata.jpg" },
-            { name: "TOMATE UVALINA 500 gr", oldPrice: "$300", newPrice: "$200", available: 100, sold: 199, progress: 199, bgColor: "bg-green-100", image: "/css/Images/tomate.jpg" },
-            { name: "YOGURT NATURAL 1L", oldPrice: "$250", newPrice: "$200", available: 80, sold: 50, progress: 62, bgColor: "bg-orange-200", image: "/css/Images/yogurt.jpeg" },
-            { name: "CAFÉ PREMIUM 500g", oldPrice: "$400", newPrice: "$350", available: 20, sold: 15, progress: 75, bgColor: "bg-green-100", image: "/css/Images/cafe.jpeg" },
-            { name: "ARROZ EXTRA 25KG", oldPrice: "$100", newPrice: "$90", available: 50, sold: 10, progress: 20, bgColor: "bg-orange-200", image: "/css/Images/arroz.jpg" }
-        ];
-
-        const offersContainer = document.getElementById("offers-container");
-
-        const renderOffers = () => {
-            offersContainer.innerHTML = ""; // Limpiar contenedor antes de renderizar
-
-            const maxOffers = window.innerWidth < 768 ? 4 : offers.length;
-
-            offers.slice(0, maxOffers).forEach((offer) => {
-                const card = document.createElement("div");
-                card.className = `${offer.bgColor} p-4 rounded-lg shadow-md flex flex-col lg:flex-row items-center lg:items-start`;
-
-                card.innerHTML = `
-                    <div class="relative w-35 h-42 lg:w-32 lg:h-48 flex-shrink-0 overflow-hidden rounded-md bg-gray-300">
-                        <img src="${offer.image}" alt="${offer.name}" class="absolute inset-0 w-full h-full object-cover">
-                    </div>
-                    <div class="text-center lg:text-left lg:ml-4">
-                        <h3 class="text-sm lg:text-lg font-bold text-gray-800 mb-1">${offer.name}</h3>
-                        <p class="text-xs lg:text-sm text-gray-500 line-through">${offer.oldPrice}</p>
-                        <p class="text-sm lg:text-lg text-green-600 font-bold mb-2">${offer.newPrice}</p>
-                        <div class="flex flex-col lg:flex-row items-center lg:justify-between gap-2 mt-4">
-                            <button class="bg-orange-500 text-white px-4 py-2 rounded-full text-xs lg:text-sm hover:bg-orange-600">
-                                Ver Ahora
-                            </button>
-                            <button class="text-gray-500 hover:text-gray-800"❤️</button>
+        @{
+            var ofertas = ViewBag.OfertasFlash as IEnumerable<dynamic>;
+        }
+        @if (ofertas != null && ofertas.Any(o => o.Estado == 1))
+        {
+            <div id="offers-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                @foreach (var oferta in ofertas)
+                {
+                    @if (oferta.Estado == 1) // ✅ Solo muestra ofertas aprobadas
+                    {
+                        <div class="bg-white p-4 rounded-lg shadow-md flex flex-col relative">
+                            <!-- Imagen de la oferta -->
+                            <div class="relative w-full h-48 overflow-hidden rounded-md bg-gray-300">
+                                <img src="@oferta.FotoLocal" alt="Oferta" class="absolute inset-0 w-full h-full object-cover">
+                            </div>
+                            <!-- Información de la oferta -->
+                            <div class="text-center mt-4">
+                                <h3 class="text-lg font-bold text-gray-800">@oferta.Titulo</h3>
+                                <p class="text-gray-600">@oferta.Descripcion</p>
+                                <p class="text-sm text-gray-500 font-medium">📍 @oferta.NombreLocal</p>
+                                <!-- Temporizador -->
+                                <div class="mt-4">
+                                    <span class="text-red-500 font-semibold">
+                                        ⏳ Expira en <span class="countdown-timer" data-expiration="@oferta.TiempoOferta?.ToString("yyyy-MM-ddTHH:mm:ss")"></span>
+                                    </span>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                `;
+                    }
+                }
+            </div>
+        }
+        else
+        {
+            <div class="text-center text-gray-600 mt-6">
+                <p class="text-lg font-medium">En el momento no hay locales con ofertas disponibles. ¡Anímate a publicar la tuya!</p>
+            </div>
+        }
+    </section>
+    <script>
+        function actualizarContadores() {
+            document.querySelectorAll(".countdown-timer").forEach(timer => {
+                const expirationTime = new Date(timer.dataset.expiration).getTime();
+                const now = new Date().getTime();
+                const timeLeft = expirationTime - now;
 
-                offersContainer.appendChild(card);
+                if (timeLeft > 0) {
+                    const hours = Math.floor(timeLeft / (1000 * 60 * 60));
+                    const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+                    timer.innerText = `${hours}h ${minutes}m ${seconds}s`;
+                } else {
+                    timer.innerText = "Expirado";
+                }
             });
-        };
-
-        // Renderizar ofertas al cargar la página y ajustar dinámicamente en `resize`
-        renderOffers();
-        window.addEventListener("resize", renderOffers);
+        }
+        setInterval(actualizarContadores, 1000);
+        actualizarContadores();
     </script>
 
     <!-- PROVEEDORES -->
@@ -456,18 +443,6 @@
             <h2 class="text-5xl lg:text-8xl font-bold text-[#23916A]">IMPERDIBLES</h2>
         </div>
 
-        @if (permisos != null && RolPermisos.TienePermiso("Administrar Banners", permisos))
-        {
-            <div class="w-full flex justify-start mb-3">
-                @Html.Partial("CategoryBannerModal")
-                <a onclick="abrirCategoryBannerModal()" class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700
-                sm:px-2 sm:py-1 sm:text-xs
-                md:px-6 md:py-3 md:text-lg">
-                    Editar Banners
-                </a>
-            </div>
-        }
-
         @for (int i = 0; i < categoriasActivas.Count; i++)
         {
             var categoriaNombre = categoriasActivas[i].Nombre;
@@ -490,12 +465,12 @@
                 <!-- Rejilla de imágenes -->
                 <div class="grid grid-cols-1 lg:grid-cols-5 gap-4">
                     <!-- Pantallas grandes -->
-                    <img src="@($"{rutaBase}banner1.webp")" onerror="this.src='@imagenPorDefecto'" class="hidden lg:block rounded-tl-3xl h-60 col-span-3">
-                    <img src="@($"{rutaBase}banner6.webp")" onerror="this.src='@imagenPorDefecto'" class="hidden lg:block rounded-tl-3xl rounded-br-3xl h-60 col-span-1">
-                    <img src="@($"{rutaBase}banner3.webp")" onerror="this.src='@imagenPorDefecto'" class="hidden lg:block rounded-tl-3xl rounded-br-3xl h-60 col-span-1">
-                    <img src="@($"{rutaBase}banner4.webp")" onerror="this.src='@imagenPorDefecto'" class="hidden lg:block h-60 col-span-1">
-                    <img src="@($"{rutaBase}banner5.webp")" onerror="this.src='@imagenPorDefecto'" class="hidden lg:block h-60 col-span-1">
-                    <img src="@($"{rutaBase}banner2.webp")" onerror="this.src='@imagenPorDefecto'" class="hidden lg:block h-60 col-span-3">
+                    <img src="@($"{rutaBase}banner1.webp")" onerror="this.src='@imagenPorDefecto'" class="hidden lg:block rounded-tl-3xl h-60 w-full object-cover col-span-3">
+                    <img src="@($"{rutaBase}banner6.webp")" onerror="this.src='@imagenPorDefecto'" class="hidden lg:block rounded-tl-3xl rounded-br-3xl h-60 w-full object-cover col-span-1">
+                    <img src="@($"{rutaBase}banner3.webp")" onerror="this.src='@imagenPorDefecto'" class="hidden lg:block rounded-tl-3xl rounded-br-3xl h-60 w-full object-cover col-span-1">
+                    <img src="@($"{rutaBase}banner4.webp")" onerror="this.src='@imagenPorDefecto'" class="hidden lg:block h-60 w-full object-cover col-span-1">
+                    <img src="@($"{rutaBase}banner5.webp")" onerror="this.src='@imagenPorDefecto'" class="hidden lg:block h-60 w-full object-cover col-span-1">
+                    <img src="@($"{rutaBase}banner2.webp")" onerror="this.src='@imagenPorDefecto'" class="hidden lg:block h-60 w-full object-cover col-span-3">
 
                     <!-- Pantallas pequeñas -->
                     <img src="@($"{rutaBase}banner1.webp")" onerror="this.src='@imagenPorDefecto'" class="block lg:hidden h-16 rounded-tl-3xl w-full object-cover">

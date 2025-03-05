@@ -9,6 +9,8 @@ using System.IO;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.WebUtilities;
 using static System.Net.Mime.MediaTypeNames;
+using BusinessLogic.Models;
+using BusinessLogic;
 
 namespace Abastecete.Controllers
 {
@@ -19,6 +21,14 @@ namespace Abastecete.Controllers
         public BannersController(IWebHostEnvironment webHostEnvironment)
         {
             _webHostEnvironment = webHostEnvironment;
+        }
+
+        public IActionResult Editar()
+        {
+            ManejadorCategorias manejadorCategorias = new ManejadorCategorias();
+            List<Categoria> categorias = manejadorCategorias.ConsultarCategorias();
+
+            return View(categorias);
         }
 
         [HttpPost]
