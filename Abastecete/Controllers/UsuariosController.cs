@@ -18,18 +18,13 @@ namespace Abastecete.Controllers
 
         public IActionResult Consultar()
         {
-            int? idUsuario = HttpContext.Session.GetInt32("idUsuario");
-
-            //if (idUsuario == null)
-            //{
-            //    return RedirectToAction("Login", "Login"); // Redirigir si no hay usuario autenticado
-            //}
+            var idUsuario = HttpContext.Session.GetInt32("idUsuario");
 
             ViewBag.rol = LoginController.rol;
             ViewBag.administrar = RolPermisos.TienePermiso("Administrar Usuarios", HttpContext.Session.GetString("permisos"));
 
             // Si el usuario es administrador, obtiene todos los usuarios, de lo contrario, solo el suyo
-            List<Usuario> usuarios = manejadorU.ConsultarUsuarios(ViewBag.rol == "Administrador" ? 0 : idUsuario.Value);
+            List<Usuario> usuarios = manejadorU.ConsultarUsuarios(idUsuario == 2 ? 0 : idUsuario.Value);
 
             return View(usuarios);
         }

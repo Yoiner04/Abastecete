@@ -41,6 +41,7 @@ namespace BusinessLogic
                     Id = Convert.ToInt32(row["PK_ID_PERSONA"].ToString()),
                     Nombre = row["NOMBRES"].ToString(),
                     Apellido = row["APELLIDOS"].ToString(),
+                    Correo = row["CORREO"].ToString(),
                     Telefono = row["TELEFONO"].ToString(),
                     Documento = Convert.ToInt32(row["DOCUMENTO_IDENTIDAD"].ToString()),
                     Estado = row["ESTADO"].ToString()
