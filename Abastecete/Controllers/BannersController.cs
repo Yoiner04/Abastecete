@@ -103,6 +103,27 @@ namespace Abastecete.Controllers
             return Json(new { mensaje = "Imágenes subidas correctamente" });
         }
 
+        [HttpPost]
+        public async Task<IActionResult> SubirImagenProveedor(IFormFile proveedoresImage)
+        {
+            if (proveedoresImage == null)
+            {
+                return Json(new { mensaje = "No se seleccionó ninguna imagen" });
+            }
+
+            string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images");
+
+            if (!Directory.Exists(uploadsFolder))
+            {
+                Directory.CreateDirectory(uploadsFolder);
+            }
+
+            await GuardarImagenComoWebP(proveedoresImage, uploadsFolder, "banner_proveedores");
+
+            return Json(new { mensaje = "Imagen del Banner de Proveedores actualizada correctamente" });
+        }
+
+
         private async Task GuardarImagenComoWebP(IFormFile file, string uploadsFolder, string fileName)
         {
             if (file == null || file.Length == 0)
@@ -125,7 +146,5 @@ namespace Abastecete.Controllers
                 await image.SaveAsync(filePath, new WebpEncoder { Quality = 90 });
             }
         }
-
-
     }
 }

@@ -174,9 +174,10 @@
         }
         else
         {
-            <div class="text-center text-gray-600 mt-6">
-                <p class="text-lg font-medium">En el momento no hay locales con ofertas disponibles. ¡Anímate a publicar la tuya!</p>
+            <div class="flex justify-center mt-6">
+                <img src="~/images/sinofertas.jpg" alt="Sin Ofertas" class="w-full max-w-5xl h-auto rounded-lg shadow-md">
             </div>
+
         }
     </section>
     <script>
@@ -211,77 +212,68 @@
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6" id="providers-grid"></div>
     </section>
+
     <script>
-        const providers = [
-            { name: "MERCA FRUVER", category: "FRUTAS Y VERDURAS", image: "/images/aa.jpg", buttonColor: "#23916A" },
-            { name: "LICORERIA MANOLO", category: "BEBIDAS", image: "/images/provider2.jpg", buttonColor: "#F66623" },
-            { name: "CATCH BIG", category: "DESPENSA", image: "/images/provider3.jpg", buttonColor: "#F66623" },
-            { name: "RAPICUNDI", category: "MERCADO", image: "/images/provider4.jpg", buttonColor: "#23916A" },
-            { name: "SUPER CARNES", category: "CARNES", image: "/images/provider5.jpg", buttonColor: "#23916A" },
-            { name: "LACTEOMANIA", category: "LÁCTEOS", image: "/images/provider6.jpg", buttonColor: "#F66623" }
-        ];
+        document.addEventListener("DOMContentLoaded", function () {
 
-        const providersGrid = document.getElementById("providers-grid");
+            const providers = JSON.parse('@Html.Raw(ViewBag.LocalesAleatoriosJson)');
 
-        const isSmallScreen = window.innerWidth < 1024;
+            const providersGrid = document.getElementById("providers-grid");
 
-        providers.forEach((provider, index) => {
-            const card = document.createElement("div");
+            const defaultImage = "/images/Logo2.jpg";
+            const defaultText = "Acá podría estar tu local";
+            const isSmallScreen = window.innerWidth < 1024;
 
-            if (index === 2) {
-                const highlightedSection = document.createElement("div");
-                highlightedSection.className = "rounded-xl flex flex-col lg:flex-row items-center py-6 px-6 lg:row-span-2 lg:col-span-1";
-                highlightedSection.style.backgroundColor = "#23916A";
+            for (let i = 0; i < 7; i++) {
+                const provider = providers[i] || { Nombre: defaultText, Logotipo: defaultImage };
 
-                highlightedSection.innerHTML = `
-                    <img src="/images/a.png" alt="Imagen de mujer" class="w-40 lg:w-72 h-40 lg:h-72">
-                    <div class="mt-4 lg:mt-0 lg:ml-6 text-center lg:text-left">
-                        <h3 class="text-white text-base lg:text-xl font-bold mb-2">Encuentra mejores proveedores</h3>
-                        <p class="text-white text-lg lg:text-3xl font-bold mb-4 leading-tight">ABASTECE TU NEGOCIO YA</p>
-                        <button class="text-white text-sm lg:text-base px-4 lg:px-5 py-2 mt-3 rounded-full" style="background-color: #F66623">
-                            Ver más
-                        </button>
-                    </div>
-                `;
-                providersGrid.appendChild(highlightedSection);
-            }
+                const card = document.createElement("div");
 
-            if (isSmallScreen && index > 1 && index > 3) return;
+                if (i === 2) {
+                    const highlightedSection = document.createElement("div");
+                    highlightedSection.className = "rounded-xl flex flex-col lg:flex-row items-center py-6 px-6 lg:row-span-2 lg:col-span-1";
+                    highlightedSection.style.backgroundColor = "#23916A";
 
-            card.className = "bg-white rounded-xl shadow-md p-4 lg:p-6 flex items-center gap-4 col-span-1";
+                    highlightedSection.innerHTML = `
+                            <img src="/images/mujer.png" alt="Imagen de mujer" class="w-40 lg:w-64 h-40 lg:h-72">
+                            <div class="mt-4 lg:mt-0 lg:ml-6 text-center lg:text-left">
+                                <h3 class="text-white text-base lg:text-xl font-bold mb-2">Encuentra mejores proveedores</h3>
+                                <p class="text-white text-lg lg:text-3xl font-bold mb-4 leading-tight">ABASTECE TU NEGOCIO YA</p>
+                                <button class="text-white text-sm lg:text-base px-4 lg:px-5 py-2 mt-3 rounded-full" style="background-color: #F66623">
+                                    Ver más
+                                </button>
+                            </div>
+                        `;
+                    providersGrid.appendChild(highlightedSection);
+                }
 
-            card.innerHTML = `
-                <img src="${provider.image}" alt="${provider.name}" class="w-16 lg:w-20 h-16 lg:h-20 rounded-xl">
-                <div>
-                    <h3 class="text-sm lg:text-lg font-bold text-gray-600">${provider.name}</h3>
-                    <p class="text-base lg:text-xl text-black">${provider.category}</p>
-                    <button class="text-white text-xs lg:text-sm px-3 lg:px-4 py-1 mt-3 rounded-full" style="background-color: ${provider.buttonColor}">
-                        Ver Ahora &rarr;
-                    </button>
-                </div>
-            `;
+                if (isSmallScreen && i > 1 && i > 3) return;
 
-            providersGrid.appendChild(card);
+                const isPlaceholder = provider.Nombre === defaultText;
+                const buttonText = isPlaceholder ? "Registrarme" : "Ver Ahora";
+                const buttonArrow = isPlaceholder ? "" : " &rarr;";
 
-            if (!isSmallScreen && index === 5) {
-                const additionalProvider = document.createElement("div");
-                additionalProvider.className = "bg-white rounded-xl shadow-md p-4 lg:p-6 flex items-center gap-4 col-span-1";
+                card.className = "bg-white rounded-xl shadow-md p-4 lg:p-6 flex items-center gap-4 col-span-1";
 
-                additionalProvider.innerHTML = `
-                    <img src="/images/provider7.jpg" alt="NEW PROVIDER" class="w-16 lg:w-20 h-16 lg:h-20 rounded-xl">
-                    <div>
-                        <h3 class="text-sm lg:text-lg font-bold text-gray-600">NEW PROVIDER</h3>
-                        <p class="text-base lg:text-xl text-black">NUEVO</p>
-                        <button class="text-white text-xs lg:text-sm px-3 lg:px-4 py-1 mt-3 rounded-full" style="background-color: #23916A">
-                            Ver Ahora &rarr;
-                        </button>
-                    </div>
-                `;
+                card.innerHTML = `
+                        <img src="${provider.Logotipo || defaultImage}" alt="${provider.Nombre}" class="w-16 lg:w-20 h-16 lg:h-20 rounded-xl">
+                        <div>
+                            <h3 class="text-sm lg:text-lg font-bold text-gray-600">${provider.Nombre || defaultText}</h3>
+                            <p class="text-base lg:text-xl text-black">${isPlaceholder ? "¡Anímate a unirte!" : "PROVEEDOR VERIFICADO"}</p>
+                            <button class="text-white text-xs lg:text-sm px-3 lg:px-4 py-1 mt-3 rounded-full"
+                                style="background-color: ${i % 2 === 0 ? "#23916A" : "#F66623"}">
+                                ${buttonText}${buttonArrow}
+                            </button>
+                        </div>
+                    `;
 
-                providersGrid.appendChild(additionalProvider);
+                providersGrid.appendChild(card);
             }
         });
     </script>
+
+
+
 
     <!-- CARRUSEL DE LOCALES -->
     <section class="p-10 bg-[#23916A] relative">

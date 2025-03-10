@@ -86,5 +86,40 @@ namespace Abastecete.Controllers
             Negocio negocio = _manejadorNegocios.ConsultarNegocio(personaId.Value);
             return negocio?.Id;
         }
+
+        [HttpPost]
+        public IActionResult EditarOferta(int id, string titulo, string descripcion)
+        {
+            bool resultado = _manejadorOfertas.EditarOfertaFlash(id, titulo, descripcion);
+
+            if (resultado)
+            {
+                TempData["SuccessMessage"] = "✅ La oferta ha sido actualizada con éxito.";
+            }
+            else
+            {
+                TempData["ErrorMessage"] = "❌ No se pudo actualizar la oferta.";
+            }
+
+            return RedirectToAction("Gestionar");
+        }
+
+        [HttpPost]
+        public IActionResult EliminarOferta(int id)
+        {
+            bool resultado = _manejadorOfertas.EliminarOfertaFlash(id);
+
+            if (resultado)
+            {
+                TempData["SuccessMessage"] = "✅ La oferta ha sido eliminada con éxito.";
+            }
+            else
+            {
+                TempData["ErrorMessage"] = "❌ No se pudo eliminar la oferta.";
+            }
+
+            return RedirectToAction("Gestionar");
+        }
+
     }
 }

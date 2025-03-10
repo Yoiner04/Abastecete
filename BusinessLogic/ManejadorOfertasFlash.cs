@@ -99,5 +99,44 @@ namespace BusinessLogic
                 return false;
             }
         }
+
+        public bool EditarOfertaFlash(int idOferta, string nuevoTitulo, string nuevaDescripcion)
+        {
+            try
+            {
+                List<Parametro> parametros = new List<Parametro>
+        {
+            new Parametro("p_id_oferta", idOferta),
+            new Parametro("p_titulo_oferta", nuevoTitulo),
+            new Parametro("p_descripcion_oferta", nuevaDescripcion)
+        };
+
+                return conexion.EjecutarTransaccion("editar_oferta_flash", parametros);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error en EditarOfertaFlash: {ex.Message}");
+                return false;
+            }
+        }
+
+        public bool EliminarOfertaFlash(int idOferta)
+        {
+            try
+            {
+                List<Parametro> parametros = new List<Parametro>
+        {
+            new Parametro("p_id_oferta", idOferta)
+        };
+
+                return conexion.EjecutarTransaccion("eliminar_oferta_flash", parametros);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error en EliminarOfertaFlash: {ex.Message}");
+                return false;
+            }
+        }
+
     }
 }

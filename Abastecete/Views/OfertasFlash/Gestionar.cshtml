@@ -52,7 +52,7 @@
                             <span class="text-red-600 font-semibold">Pendiente</span>
                         }
                     </td>
-                    <td class="px-6 py-4">
+                    <td class="px-6 py-4 flex gap-2">
                         @if (oferta.Estado == 0)
                         {
                             <form asp-action="AprobarOferta" method="post">
@@ -66,9 +66,57 @@
                         {
                             <span class="text-gray-500">✔ Aprobada</span>
                         }
+
+                        <!-- Botón Editar -->
+                        <button onclick="openEditModal('@oferta.Id', '@oferta.Titulo', '@oferta.Descripcion')"
+                                class="text-white px-4 py-2 rounded-md">
+                            ✏
+                        </button>
+
+                        <!-- Botón Eliminar -->
+                        <form asp-action="EliminarOferta" method="post" onsubmit="return confirm('¿Estás seguro de que deseas eliminar esta oferta?')">
+                            <input type="hidden" name="id" value="@oferta.Id">
+                            <button type="submit" class="text-white px-4 py-2 rounded-md">
+                                ❌
+                            </button>
+                        </form>
                     </td>
                 </tr>
             }
         </tbody>
     </table>
 </div>
+
+<!-- Modal para editar oferta -->
+<div id="editModal" class="hidden fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center z-50">
+    <div class="bg-white p-6 rounded-lg shadow-lg w-96">
+        <h2 class="text-lg font-bold mb-4">Editar Oferta Flash</h2>
+        <form id="editForm" method="post" asp-action="EditarOferta">
+            <input type="hidden" name="id" id="editId">
+
+            <label class="block text-gray-600">Título</label>
+            <input type="text" name="titulo" id="editTitulo" class="w-full p-2 border rounded-md mb-3">
+
+            <label class="block text-gray-600">Descripción</label>
+            <textarea name="descripcion" id="editDescripcion" class="w-full p-2 border rounded-md mb-3"></textarea>
+
+            <div class="flex justify-end">
+                <button type="button" onclick="closeEditModal()" class="bg-gray-400 px-4 py-2 rounded-md mr-2">Cancelar</button>
+                <button type="submit" class="bg-green-500 text-white px-4 py-2 rounded-md">Guardar Cambios</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openEditModal(id, titulo, descripcion) {
+        document.getElementById("editId").value = id;
+        document.getElementById("editTitulo").value = titulo;
+        document.getElementById("editDescripcion").value = descripcion;
+        document.getElementById("editModal").classList.remove("hidden");
+    }
+
+    function closeEditModal() {
+        document.getElementById("editModal").classList.add("hidden");
+    }
+</script>

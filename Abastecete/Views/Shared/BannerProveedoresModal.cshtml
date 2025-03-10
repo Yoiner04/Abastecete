@@ -1,0 +1,61 @@
+﻿<div id="bannerProveedoresModal" class="bg-opacity-50 fixed inset-0 z-50 flex hidden items-center justify-center bg-black">
+    <div id="bannerProveedoresModalContent" class="max-h-[80vh] w-2/3 overflow-y-auto rounded-lg bg-white p-5">
+        <h2 class="mb-4 text-center text-xl font-bold">Editar Banner de Proveedores</h2>
+
+        <form id="uploadBannerProveedoresForm" enctype="multipart/form-data" class="grid grid-cols-1 gap-4">
+            <div class="flex items-center gap-4">
+                <input type="file" id="proveedoresImage" name="proveedoresImage" accept="image/*" class="w-full">
+                <img src="/images/banner_proveedores.webp?t=@DateTime.Now.Ticks" alt="Banner Proveedores" class="h-24 w-auto rounded-lg object-cover">
+            </div>
+
+            <div class="mt-4 flex justify-center gap-4">
+                <button type="submit" class="rounded bg-blue-500 px-4 py-2 text-white">Subir Imagen</button>
+                <button type="button" onclick="cerrarBannerProveedoresModal()" class="rounded bg-gray-500 px-4 py-2 text-white">Cerrar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function abrirBannerProveedoresModal() {
+        document.getElementById("bannerProveedoresModal").classList.remove("hidden");
+        document.body.classList.add("overflow-hidden");
+    }
+
+    function cerrarBannerProveedoresModal() {
+        document.getElementById("bannerProveedoresModal").classList.add("hidden");
+        document.body.classList.remove("overflow-hidden");
+    }
+
+    document.getElementById("bannerProveedoresModal").addEventListener("click", function (event) {
+        const modalContent = document.getElementById("bannerProveedoresModalContent");
+        if (!modalContent.contains(event.target)) {
+            cerrarBannerProveedoresModal();
+        }
+    });
+
+    document.getElementById("uploadBannerProveedoresForm").addEventListener("submit", function (event) {
+        event.preventDefault();
+        let formData = new FormData();
+        let file = document.getElementById("proveedoresImage").files[0];
+
+        if (!file) {
+            alert("Selecciona una imagen antes de subir.");
+            return;
+        }
+
+        formData.append("proveedoresImage", file);
+
+        fetch("/Banners/SubirImagenProveedor", {
+            method: "POST",
+            body: formData
+        })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.mensaje);
+                cerrarBannerProveedoresModal();
+                location.reload();
+            })
+            .catch(error => console.error("Error:", error));
+    });
+</script>
