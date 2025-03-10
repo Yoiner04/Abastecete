@@ -27,5 +27,6 @@ namespace BusinessLogic.Models
         public string Telefono { get; set; }
 
         public string Estado { get; set; }
+        public string Correo { get; set; }
     }
 }

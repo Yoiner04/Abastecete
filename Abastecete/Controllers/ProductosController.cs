@@ -11,12 +11,14 @@ namespace Abastecete.Controllers
         private readonly ManejadorNegocios manejadorNegocios;
         private readonly ManejadorProductos manejadorProductos;
         private readonly ManejadorCategorias manejadorCategorias;
+        private readonly ManejadorPersonas manejadorPersonas;
 
         public ProductosController()
         {
             manejadorNegocios = new ManejadorNegocios();
             manejadorProductos = new ManejadorProductos();
             manejadorCategorias = new ManejadorCategorias();
+            manejadorPersonas = new ManejadorPersonas();
         }
 
         public IActionResult Consultar()
@@ -29,22 +31,47 @@ namespace Abastecete.Controllers
             return View();
         }
 
+        //public IActionResult ProductosNegocio()
+        //{
+        //    var personaId = HttpContext.Session.GetInt32("PersonaId").Value;
+
+        //    Negocio negocio = manejadorNegocios.ConsultarNegocio(personaId);
+        //    List<Producto> productos = manejadorProductos.ConsultarProductosLocal(negocio.Id);
+
+        //    ViewBag.productos = productos;
+
+        //    if (negocio == null)
+        //    {
+        //        return View("ErrorNegocioNoEncontrado"); // Vista de error si no tiene negocio
+        //    }
+
+        //    return View(negocio);
+        //}
+
         public IActionResult ProductosNegocio()
         {
             var personaId = HttpContext.Session.GetInt32("PersonaId").Value;
 
             Negocio negocio = manejadorNegocios.ConsultarNegocio(personaId);
-            List<Producto> productos = manejadorProductos.ConsultarProductosLocal(negocio.Id);
-
-            ViewBag.productos = productos;
-
             if (negocio == null)
             {
                 return View("ErrorNegocioNoEncontrado"); // Vista de error si no tiene negocio
             }
 
-            return View(negocio);
+            List<Persona> persona = manejadorPersonas.ObtenerPersonas(personaId); // Suponiendo que tienes este método
+            List<Producto> productos = manejadorProductos.ConsultarProductosLocal(negocio.Id);
+
+            ViewBag.productos = productos;
+
+            var negocioPersona = new NegocioPersona
+            {
+                Negocio = negocio,
+                Persona = persona.First()
+            };
+
+            return View(negocioPersona);
         }
+
 
         public IActionResult ListaNegocios()
         {
