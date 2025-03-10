@@ -1,48 +1,17 @@
-﻿@model BusinessLogic.Models.Negocio
+﻿@model BusinessLogic.Models.NegocioPersona
 
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@Model.Nombre</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <link rel="icon" type="image/x-icon" href="~/css/Images/Logo A naranja.png" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <link rel="stylesheet" href="~/css/styles.css" asp-append-version="true" />
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        function mostrarDetalle(nombre, precio, imagen) {
-            document.getElementById('detalleProducto').classList.remove('hidden');
-            document.getElementById('detalleNombre').textContent = nombre;
-            document.getElementById('detallePrecio').textContent = `$${precio}`;
-            document.getElementById('detalleImagen').src = imagen;
 
-            const productos = document.querySelectorAll('#productosContainer > div.producto');
-
-            productos.forEach((p, index) => {
-                p.classList.remove('lg:col-span-2');
-                p.classList.add('lg:w-auto');
-                if (index >= 3) {
-                    p.classList.add('hidden');
-                }
-            });
-
-            document.getElementById('detalleProducto').classList.add('lg:col-span-2');
-        }
-
-        function ocultarDetalle() {
-            document.getElementById('detalleProducto').classList.add('hidden');
-
-            const productos = document.querySelectorAll('#productosContainer > div.producto');
-            productos.forEach(p => {
-                p.classList.remove('hidden'); 
-            });
-
-            document.getElementById('detalleProducto').classList.remove('lg:col-span-2');
-        }
-    </script>
 </head>
 
 <body class="bg-white">
@@ -50,15 +19,52 @@
         <div class="flex items-center gap-4">
 
             <div class="h-12 w-12 rounded-md bg-white border border-gray-300 flex items-center justify-center overflow-hidden">
-                <img src="@Model.Logotipo" alt="Imagen del negocio" class="h-full w-full object-contain">
+                <img src="@Model.Negocio.Logotipo" alt="Imagen del negocio" class="h-full w-full object-contain">
             </div>
-            <h1 class="text-2xl font-bold text-black">@Model.Nombre</h1>
+            <h1 class="text-2xl font-bold text-black">@Model.Negocio.Nombre</h1>
         </div>
         <div class="flex gap-2">
-            <a href="@Url.Action("AgregarProductNegocio", "Productos")" class="rounded-lg bg-orange-500 px-4 py-2 text-white">Agregar Producto</a>
-            <button class="rounded-lg bg-orange-500 px-4 py-2 text-white">Editar Negocio</button>
+            <a href="#" onclick="openMensajeModal()" class="rounded-lg px-2 py-2 text-white flex items-center gap-2">
+                <img src="~/css/Images/msg.png" alt="Mensaje" class="h-10 w-10">
+            </a>
+            <a href="@Url.Action("AgregarProductNegocio", "Productos")" class="rounded-lg bg-orange-500 px-4 py-3 text-white">Agregar Producto</a>
+            <a class="rounded-lg bg-orange-500 px-4 py-3 text-white">Editar Negocio</a>
         </div>
     </header>
+
+    <div id="mensaje-modal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <div class="p-6 rounded-lg shadow-lg w-full max-w-md" style="background-color: #F4F1E9;">
+            <div class="flex justify-center">
+                <img src="~/css/Images/LOGO FINAL.png" alt="Abastecete Logo" class="h-12">
+            </div>
+            <h2 class="text-center text-xl font-bold text-[#23916A] mt-2">Solicitud</h2>
+
+            <form id="mensaje-form" class="mt-4">
+                <input type="email" id="email" name="email" value="@Model.Persona.Correo"
+                       class="w-full p-3 rounded-lg bg-gray-100 border border-gray-300 text-black mb-3" required>
+
+                <div class="flex items-center space-x-2 mb-3">
+                    <span class="bg-white border border-gray-300 px-4 py-3 rounded-lg flex items-center">
+                        +57
+                    </span>
+                    <input type="text" id="phone" name="phone" value="@Model.Negocio.Telefono"
+                           class="w-full p-3 rounded-lg bg-gray-100 border border-gray-300 text-black" required>
+                </div>
+
+                <textarea id="message" name="message" placeholder="Escribe tu solicitud..."
+                          class="w-full p-3 rounded-lg bg-gray-100 border border-gray-300 text-black h-32 resize-none mb-3"
+                          required></textarea>
+
+                <button type="submit" class="w-full bg-[#23916A] text-white py-3 rounded-lg font-bold hover:bg-[#1E7B57]">
+                    Enviar solicitud
+                </button>
+            </form>
+
+            <button id="close-mensaje-modal" class="block w-full text-center mt-3 text-black font-medium">
+                Cerrar
+            </button>
+        </div>
+    </div>
 
 
     <main class="p-6 flex w-full">
@@ -75,7 +81,6 @@
                         <button onclick="mostrarDetalle('@producto.Nombre', '@producto.Precio', '')" class="mt-4 self-center rounded-lg bg-[#1A2D3D] px-6 py-2 text-white">Ver</button>
                     </div>
                 }
-
 
                 <div id="detalleProducto" class="w-full lg:col-span-2 p-6 bg-gray-100 hidden">
                     <button onclick="ocultarDetalle()" class="text-red-500 font-bold">Cerrar</button>
@@ -97,5 +102,73 @@
             </div>
         </div>
     </main>
+
+    <script>
+        // Definir la función en el ámbito global
+        function openMensajeModal() {
+            const mensajeModal = document.getElementById("mensaje-modal");
+            if (mensajeModal) {
+                mensajeModal.classList.remove("hidden");
+                document.body.classList.add("overflow-hidden");
+            }
+        }
+
+        function closeMensajeModal() {
+            const mensajeModal = document.getElementById("mensaje-modal");
+            if (mensajeModal) {
+                mensajeModal.classList.add("hidden");
+                document.body.classList.remove("overflow-hidden");
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const mensajeModal = document.getElementById("mensaje-modal");
+            const closeModalBtn = document.getElementById("close-mensaje-modal");
+            const mensajeForm = document.getElementById("mensaje-form");
+
+            // Manejo del botón de cierre
+            if (closeModalBtn) {
+                closeModalBtn.addEventListener("click", closeMensajeModal);
+            }
+
+            // Cerrar modal al hacer clic fuera de ella
+            window.addEventListener("click", function (e) {
+                if (e.target === mensajeModal) {
+                    closeMensajeModal();
+                }
+            });
+
+            // Manejo del envío del formulario
+            if (mensajeForm) {
+                mensajeForm.addEventListener("submit", async function (e) {
+                    e.preventDefault();
+
+                    const formData = new FormData(mensajeForm);
+
+                    try {
+                        const response = await fetch("/api/contact/send", { // Usa la misma ruta
+                            method: "POST",
+                            body: formData
+                        });
+
+                        const result = await response.json();
+
+                        if (result.success) {
+                            alert("Mensaje enviado correctamente.");
+                            mensajeForm.reset();
+                            closeMensajeModal();
+                        } else {
+                            alert("Error al enviar el mensaje.");
+                        }
+                    } catch (error) {
+                        console.error("Error enviando el mensaje:", error);
+                        alert("Hubo un problema al enviar el mensaje.");
+                    }
+                });
+            }
+        });
+    </script>
+
+
 </body>
 </html>
