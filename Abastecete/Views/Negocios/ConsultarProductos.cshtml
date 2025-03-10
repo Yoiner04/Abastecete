@@ -1,0 +1,281 @@
+﻿@model List<BusinessLogic.Models.Producto>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewBag.negocio.Nombre</title>
+    <link rel="stylesheet" href="https://cdn.tailwindcss.com">
+    <script>
+        let productoSeleccionado = null;
+        let detalleAbierto = false;
+
+        function mostrarDetalle(nombre, precio, imagen, id) {
+            const detalleProducto = document.getElementById('detalleProducto');
+            const productosWrapper = document.getElementById('productosWrapper');
+            const productosContainer = document.getElementById('productosContainer');
+
+            detalleProducto.classList.remove('hidden', 'translate-x-full');
+            detalleProducto.classList.add('w-1/5', 'translate-x-0');
+
+            productosWrapper.classList.remove('w-4/5');
+            productosWrapper.classList.add('w-3/5');
+
+            productosContainer.classList.remove('lg:grid-cols-4');
+            productosContainer.classList.add('lg:grid-cols-3');
+
+            document.getElementById('detalleNombre').textContent = nombre;
+            document.getElementById('detallePrecio').textContent = `$${precio}`;
+            document.getElementById('detalleImagen').src = imagen;
+
+            if (productoSeleccionado) {
+                productoSeleccionado.classList.remove('hidden');
+            }
+
+            productoSeleccionado = document.getElementById(`producto-${id}`);
+            productoSeleccionado.classList.add('hidden');
+
+            detalleAbierto = true;
+        }
+
+        function ocultarDetalle() {
+            const detalleProducto = document.getElementById('detalleProducto');
+            const productosWrapper = document.getElementById('productosWrapper');
+            const productosContainer = document.getElementById('productosContainer');
+
+            detalleProducto.classList.add('hidden', 'translate-x-full');
+            detalleProducto.classList.remove('w-1/5', 'translate-x-0');
+
+            productosWrapper.classList.remove('w-3/5');
+            productosWrapper.classList.add('w-4/5');
+
+            productosContainer.classList.remove('lg:grid-cols-3');
+            productosContainer.classList.add('lg:grid-cols-4');
+
+            if (productoSeleccionado) {
+                productoSeleccionado.classList.remove('hidden');
+                productoSeleccionado = null;
+            }
+
+            detalleAbierto = false;
+        }
+    </script>
+</head>
+
+<body class="bg-gray-100">
+    <header id="banner" class="flex items-center justify-between bg-[#F5EFE4] p-3 shadow-md">
+        <div class="flex items-center gap-4">
+            <div class="flex h-12 w-12 items-center justify-center overflow-hidden rounded-md border border-gray-300 bg-white">
+                <img src="@ViewBag.negocio.Logotipo" alt="Imagen del negocio" class="h-full w-full object-contain">
+            </div>
+            <h1 class="text-2xl font-bold text-black">@ViewBag.negocio.Nombre</h1>
+        </div>
+    </header>
+
+    <main class="flex w-full gap-6 p-6">
+        <aside id="filtros" class="w-1/5 overflow-y-auto p-4 text-center">
+            <h2 class="mb-4 text-xl font-bold text-green-600">Filtros</h2>
+
+            <div class="mb-4 hidden rounded-lg bg-white p-4 shadow-md md:block">
+                <h3 class="text-lg font-semibold text-orange-600">Categorías</h3>
+                <select id="category" class="mt-2 block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:ring-blue-500 focus:border-blue-500">
+                    <option selected>Selecciona una categoría</option>
+                    @foreach (var categoria in ViewBag.categorias)
+                    {
+                        <option value="@categoria.Id">@categoria.Nombre</option>
+                    }
+                </select>
+            </div>
+
+            <div class="mb-4 hidden rounded-lg bg-white p-4 shadow-md md:block">
+                <h3 class="text-lg font-semibold text-orange-600">Sub Categorias</h3>
+                <select id="subcategory" class="mt-2 block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:ring-blue-500 focus:border-blue-500">
+                    <option selected>Selecciona una subcategoria</option>
+
+                </select>
+            </div>
+
+            <div class="mb-4 rounded-lg bg-white p-4 shadow-md">
+                <h3 class="mb-6 text-lg font-semibold text-orange-600">Filtrar por Precio</h3>
+
+                <div class="relative mb-6 px-2">
+                    <div class="slider-container relative h-5">
+                        <input id="minPriceRange" type="range" class="range-slider absolute left-0 h-2 w-full appearance-none rounded-lg bg-gray-300">
+                        <input id="maxPriceRange" type="range" class="range-slider absolute left-0 h-2 w-full appearance-none rounded-lg bg-gray-300">
+                        <div id="rangeBar" class="absolute top-0 left-0 h-2 rounded-lg bg-green-500"></div>
+                    </div>
+
+                    <div class="mt-2 flex justify-between text-sm text-gray-500">
+                        <span id="minPriceValue"></span>
+                        <span id="maxPriceValue"></span>
+                    </div>
+                </div>
+            </div>
+
+            <button type="button" id="filter" class="me-2 mb-2 rounded-full bg-green-700 px-5 py-2.5 text-center text-sm font-medium text-white hover:bg-green-800 focus:outline-none focus:ring-4 focus:ring-green-300 dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800">Restablecer filtros</button>
+
+        </aside>
+
+        <div id="productosWrapper" class="w-4/5 transition-all duration-300">
+            <h2 class="text-lg font-semibold text-green-600">Todos los productos</h2>
+            <div id="productosContainer" class="mt-4 grid w-full grid-cols-1 gap-6 pr-8 transition-all duration-300 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                @foreach (var producto in Model)
+                {
+                    <div id="producto-@producto.Id" class="producto relative flex h-[400px] w-full flex-col rounded-lg bg-white p-6 shadow-md" data-categoria-id="@producto.IdSubCategoria" data-precio="@producto.Precio">
+                        <div class="h-48 w-full rounded-md bg-gray-300"></div>
+                        <h3 class="mt-4 text-lg font-semibold">@producto.Nombre</h3>
+                        <p class="text-sm text-gray-600">200 items sold</p>
+                        <p class="text-xl font-bold text-orange-500">$@producto.Precio</p>
+                        <button onclick="mostrarDetalle('@producto.Nombre', '@producto.Precio', '', '@producto.Id')" class="mt-4 self-center rounded-lg bg-[#1A2D3D] px-6 py-2 text-white">Ver</button>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div id="detalleProducto" class="fixed right-0 hidden translate-x-full transform rounded-tl-2xl bg-white p-6 shadow-lg transition-all duration-300"
+             style="top: calc(100px + 4rem); height: calc(100vh - 100px - 4rem);">
+
+            <button onclick="ocultarDetalle()" class="absolute top-4 right-4 text-gray-700 transition duration-200 hover:text-red-500">
+                <i class="fas fa-times-circle text-2xl"></i>
+            </button>
+
+            <div class="flex h-64 w-full items-center justify-center rounded-md bg-gray-300">
+                <img id="detalleImagen" class="h-full w-full object-contain" src="" alt="Imagen del producto" />
+            </div>
+            <h3 id="detalleNombre" class="mt-4 text-2xl font-bold"></h3>
+            <p id="detallePrecio" class="text-xl font-bold text-green-600"></p>
+            <p class="text-gray-500 line-through">$150.000</p>
+            <p class="text-sm text-gray-600"><strong>Categoría:</strong> Lácteos, Bebidas</p>
+            <p class="text-sm text-gray-600"><strong>Subcategoría:</strong> Leche, Yogurt, Alpina...</p>
+            <div class="mt-4 flex gap-2">
+                <button class="rounded-full bg-white p-2 shadow"><i class="far fa-heart"></i></button>
+                <button class="rounded-full bg-white p-2 shadow"><i class="fas fa-share"></i></button>
+                <button class="rounded-lg bg-green-600 px-6 py-2 text-white">Contactanos</button>
+            </div>
+        </div>
+    </main>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="./assets/vendor/nouislider/dist/nouislider.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            $("#category").change(function () {
+                var idCategoria =  $(this).val();
+                if (idCategoria) {
+                    $("#subcategory").prop("disabled", false);
+                    $.ajax({
+                        url: "/SubCategorias/ObtenerSubCategorias",
+                        type: "GET",
+                        data: { idCategoria: idCategoria },
+                        dataType: "json",
+                        success: function (response) {
+                            $("#subcategory").empty();
+                            $("#subcategory").append('<option value="">Seleccione una subcategoría</option>');
+
+                            $.each(response, function (index, item) {
+                                $("#subcategory").append(`<option value="${item.id}">${item.nombre}</option>`);
+                            });
+                        },
+                        error: function () {
+                            alert("Error al obtener subcategorías.");
+                        }
+                    });
+                } else {
+                    $("#subcategory").empty();
+                    $("#subcategory").append('<option value="">Seleccione una subcategoría</option>');
+                }
+            });
+        });
+
+                $("#subcategory").change(function () {
+            var idSubcategoriaSeleccionada = $(this).val();
+            console.log("Subcategoría seleccionada:", idSubcategoriaSeleccionada);
+
+            $(".producto").each(function () {
+                var idSubcategoriaProducto = $(this).attr("data-categoria-id");
+                console.log("Producto:", $(this).attr("id"), "Subcategoría:", idSubcategoriaProducto); 
+
+                if (!idSubcategoriaSeleccionada || idSubcategoriaSeleccionada == idSubcategoriaProducto) {
+                    $(this).removeClass("hidden");
+                } else {
+                    $(this).addClass("hidden");
+                }
+            });
+        });
+
+
+                $(document).ready(function () {
+            let precios = $(".producto").map(function () {
+                return parseFloat($(this).attr("data-precio"));
+            }).get();
+
+            let precioMin = Math.min(...precios);
+            let precioMax = Math.max(...precios);
+
+            $("#minPriceRange").attr({ "min": precioMin, "max": precioMax, "value": precioMin });
+            $("#maxPriceRange").attr({ "min": precioMin, "max": precioMax, "value": precioMax });
+
+            $("#minPriceValue").text(`$${precioMin}`);
+            $("#maxPriceValue").text(`$${precioMax}`);
+
+            function actualizarFiltro() {
+                let minVal = parseFloat($("#minPriceRange").val());
+                let maxVal = parseFloat($("#maxPriceRange").val());
+
+                if (minVal > maxVal - 10) {
+                    minVal = maxVal - 10;
+                    $("#minPriceRange").val(minVal);
+                }
+
+                $("#minPriceValue").text(`$${minVal}`);
+                $("#maxPriceValue").text(`$${maxVal}`);
+
+                let percentMin = ((minVal - precioMin) / (precioMax - precioMin)) * 100;
+                let percentMax = ((maxVal - precioMin) / (precioMax - precioMin)) * 100;
+
+                $("#rangeBar").css({
+                    "left": `${percentMin}%`,
+                    "width": `${percentMax - percentMin}%`
+                });
+
+                $(".producto").each(function () {
+                    let precioProducto = parseFloat($(this).attr("data-precio"));
+                    if (precioProducto >= minVal && precioProducto <= maxVal) {
+                        $(this).removeClass("hidden");
+                    } else {
+                        $(this).addClass("hidden");
+                    }
+                });
+            }
+
+            $("#minPriceRange, #maxPriceRange").on("input", actualizarFiltro);
+        });
+
+                $("#filter").click(function () {
+            $("#category").val("Selecciona una categoría").trigger("change");
+
+            $("#subcategory").empty().append('<option selected>Selecciona una subcategoria</option>').prop("disabled", true);
+
+            let precioMin = Math.min(...$(".producto").map(function () { return parseFloat($(this).attr("data-precio")); }).get());
+            let precioMax = Math.max(...$(".producto").map(function () { return parseFloat($(this).attr("data-precio")); }).get());
+
+            $("#minPriceRange").val(precioMin);
+            $("#maxPriceRange").val(precioMax);
+            $("#minPriceValue").text(`$${precioMin}`);
+            $("#maxPriceValue").text(`$${precioMax}`);
+
+            let percentMin = 0;
+            let percentMax = 100;
+
+            $("#rangeBar").css({
+                "left": `${percentMin}%`,
+                "width": `${percentMax - percentMin}%`
+            });
+
+            $(".producto").removeClass("hidden");
+        });
+
+    </script>
+</body>
+</html>

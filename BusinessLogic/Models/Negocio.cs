@@ -16,6 +16,7 @@ namespace BusinessLogic.Models
         public string Localizacion { get; set; }
         public string Direccion { get; set; }
         public long Telefono { get; set; }
+        public float Puntuacion { get; set; } = 5;
         public string Logotipo { get; set; }
     }
 }

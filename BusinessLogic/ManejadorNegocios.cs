@@ -31,6 +31,43 @@ namespace BusinessLogic
             return conexion.EjecutarTransaccion("crear_local", parametros);
         }
 
+        public Negocio ConsultarNegocioPoId(int idLocal)
+        {
+            List<Parametro> parametros = new List<Parametro>
+            {
+                new Parametro("idlocal", idLocal)
+            };
+            DataTable datos = conexion.EjecutarConsulta("consultar_local_por_id", parametros);
+            DataRow row = datos.Rows[0];
+            return new Negocio
+            {
+                Id = Convert.ToInt32(row["PK_ID_LOCAL"]),
+                Nombre = row["NOMBRE_LOCAL"].ToString(),
+                Localizacion = row["LOCALIZACION"].ToString(),
+                Telefono = Convert.ToInt32(row["TELEFONO_LOCAL"]),
+                Logotipo = row["FOTOS_LOCAL"].ToString()
+            };
+        }
+
+        public List<Categoria> ConsultarCategoriasLocal(int idLocal)
+        {
+            List<Parametro> parametros = new List<Parametro>
+            {
+                new Parametro("idlocal",idLocal)
+            };
+            DataTable datos = conexion.EjecutarConsulta("consultar_local_por_categorias", parametros);
+            List<Categoria> categorias = new List<Categoria>();
+            foreach (DataRow row in datos.Rows)
+            {
+                categorias.Add(new Categoria
+                {
+                    Id = Convert.ToInt32(row["PK_ID_CATEGORIA"]),
+                    Nombre = row["NOMBRE_CATEGORIA"].ToString()
+                });
+            }
+            return categorias;
+        }
+
         public Negocio ConsultarNegocio(int idPersona)
         {
             //string consulta = $"consultar_local({idPersona})";
@@ -52,6 +89,28 @@ namespace BusinessLogic
                 Telefono = Convert.ToInt64(row["TELEFONO_LOCAL"]),
                 Logotipo = row["FOTOS_LOCAL"].ToString()
             };
+        }
+
+        public List<Negocio> ConsultarNegocioCategoria(int idCategoria)
+        {
+            List<Parametro> parametros = new List<Parametro>
+            {
+                new Parametro("idcategoria", idCategoria)
+            };
+            DataTable datos = conexion.EjecutarConsulta("consultar_local_categoria", parametros);
+            List<Negocio> negocios = new List<Negocio>();
+            foreach (DataRow row in datos.Rows)
+            {
+                negocios.Add(new Negocio
+                {
+                    Id = Convert.ToInt32(row["PK_ID_LOCAL"]),
+                    Nombre = row["NOMBRE_LOCAL"].ToString(),
+                    Localizacion = row["LOCALIZACION"].ToString(),
+                    Telefono = Convert.ToInt32(row["TELEFONO_LOCAL"]),
+                    Logotipo = row["FOTOS_LOCAL"].ToString()
+                });
+            }
+            return negocios;
         }
 
         public List<Negocio> ConsultarTodosLosNegocios()
