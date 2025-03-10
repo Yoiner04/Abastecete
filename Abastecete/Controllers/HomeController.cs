@@ -14,12 +14,14 @@ namespace Abastecete.Controllers
         private readonly ILogger<HomeController> _logger;
         private readonly ManejadorCategorias manejadorCategorias;
         private readonly ManejadorNegocios manejadorNegocios;
+        private readonly ManejadorOfertasFlash manejadorOfertasFlash;
 
         public HomeController(ILogger<HomeController> logger)
         {
             _logger = logger;
             manejadorCategorias = new ManejadorCategorias();
             manejadorNegocios = new ManejadorNegocios();
+            manejadorOfertasFlash = new ManejadorOfertasFlash();
         }
 
         public IActionResult Index()
@@ -43,9 +45,11 @@ namespace Abastecete.Controllers
             
             List<Categoria> categorias = manejadorCategorias.ConsultarCategorias();
             List<Negocio> negocios = manejadorNegocios.ConsultarTodosLosNegocios();
+            List<OfertaFlash> ofertasFlash = manejadorOfertasFlash.ConsultarOfertasFlash();
 
             ViewBag.rol = LoginController.rol;
             ViewBag.Negocios = negocios;
+            ViewBag.OfertasFlash = ofertasFlash;
 
             return View(categorias);
         }

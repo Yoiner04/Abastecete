@@ -46,7 +46,7 @@
                     </li>
                     <li>
                         <a href="@Url.Action("Listar","Categorias")" class="block px-4 py-2 text-black hover:text-green-600">
-                            Categorías
+                            Proveedores
                         </a>
                     </li>
                     <li>
@@ -134,6 +134,14 @@
                             </a>
                         </li>
                     }
+                    @if (RolPermisos.TienePermiso("Mi negocio", permisos))
+                    {
+                        <li class="group">
+                            <a href="@Url.Action("Crear", "OfertasFlash")" class="text-black group-hover:text-green-600">
+                                Publicar oferta flash
+                            </a>
+                        </li>
+                    }
                     @if (RolPermisos.TienePermiso("Dejanos tu reseña", permisos))
                     {
                         <li class="group">
@@ -171,6 +179,22 @@
                         <li class="group">
                             <a href="@Url.Action("Consultar", "Roles")" class="text-black group-hover:text-green-600">
                                 Gestionar Roles y permisos
+                            </a>
+                        </li>
+                    }
+                    @if (RolPermisos.TienePermiso("Administrar Banners", permisos))
+                    {
+                        <li class="group">
+                            <a href="@Url.Action("Editar", "Banners")" class="text-black group-hover:text-green-600">
+                                Gestionar Banners
+                            </a>
+                        </li>
+                    }
+                    @if (RolPermisos.TienePermiso("Administrar Banners", permisos))
+                    {
+                        <li class="group">
+                            <a href="@Url.Action("Gestionar", "OfertasFlash")" class="text-black group-hover:text-green-600">
+                                Gestionar Ofertas
                             </a>
                         </li>
                     }

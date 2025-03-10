@@ -17,12 +17,12 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/3.2.12/jquery.validate.unobtrusive.min.js"></script>
 
-<body class="flex min-h-screen items-center justify-center bg-gray-100 relative" style="background-image: url('/css/Images/fondo_registroUsuario.jpg'); background-size: cover; background-position: center;">
+<body class="relative flex min-h-screen items-center justify-center bg-gray-100" style="background-image: url('/css/Images/fondo_registroUsuario.jpg'); background-size: cover; background-position: center;">
     <!-- Fondo con desenfoque -->
-    <div class="absolute inset-0 bg-black bg-opacity-70"></div>
+    <div class="bg-opacity-70 absolute inset-0 bg-black"></div>
 
     <!-- Contenedor del formulario -->
-    <div class="relative w-full max-w-3xl bg-white py-4 px-10 rounded-2xl shadow-2xl">
+    <div class="relative w-full max-w-3xl rounded-2xl bg-white px-10 py-4 shadow-2xl">
         <h2 class="mb-6 text-center text-3xl font-bold text-green-600">Crea tu cuenta</h2>
 
         @using (Html.BeginForm("Registrar", "Usuarios", FormMethod.Post, new { id = "registroForm", @class = "grid grid-cols-1 md:grid-cols-2 gap-6" }))
@@ -43,7 +43,7 @@
 
             <div>
                 <label class="block font-medium text-gray-700">Tipo de Documento <span class="text-red-500">*</span></label>
-                <select class="w-full border p-3 rounded-lg focus:ring-2 focus:ring-green-400 outline-none" id="tipoDeDocumento" name="Persona.TipoDeDocumento">
+                <select class="w-full rounded-lg border p-3 outline-none focus:ring-2 focus:ring-green-400" id="tipoDeDocumento" name="Persona.TipoDeDocumento">
                     <option value="">Seleccione</option>
                     @foreach (TipoDocumento td in ViewBag.TiposDocumento)
                     {
@@ -74,7 +74,7 @@
 
             <div>
                 <label class="block font-medium text-gray-700">Confirmar Contraseña <span class="text-red-500">*</span></label>
-                <input type="password" id="confirmPassword" class="w-full border p-3 rounded-lg focus:ring-2 focus:ring-green-400 outline-none" placeholder="Confirma tu contraseña">
+                <input type="password" id="confirmPassword" class="w-full rounded-lg border p-3 outline-none focus:ring-2 focus:ring-green-400" placeholder="Confirma tu contraseña">
             </div>
 
             <div class="md:col-span-2">
@@ -83,7 +83,7 @@
             </div>
 
             <div class="md:col-span-2">
-                <button class="w-full rounded-lg bg-orange-500 py-3 font-bold text-white text-lg transition-transform transform hover:scale-105">Registrarse</button>
+                <button class="w-full transform rounded-lg bg-orange-500 py-3 text-lg font-bold text-white transition-transform hover:scale-105">Registrarse</button>
             </div>
         }
 
