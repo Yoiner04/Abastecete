@@ -43,7 +43,7 @@
 
             <div>
                 <label class="block font-medium text-gray-700">Tipo de Documento <span class="text-red-500">*</span></label>
-                <select class="w-full rounded-lg border p-3 outline-none focus:ring-2 focus:ring-green-400" id="tipoDeDocumento" name="Persona.TipoDeDocumento">
+                <select class="w-full rounded-lg border p-3 outline-none focus:ring-2 focus:ring-green-400" id="tipoDeDocumento" name="Persona.TipoDeDocumento.Id">
                     <option value="">Seleccione</option>
                     @foreach (TipoDocumento td in ViewBag.TiposDocumento)
                     {
@@ -104,7 +104,7 @@
                 const fields = {
                     nombre: document.querySelector("[name='Persona.Nombre']"),
                     apellido: document.querySelector("[name='Persona.Apellido']"),
-                    tipoDeDocumento: document.querySelector("[name='Persona.TipoDeDocumento']"),
+                    tipoDeDocumento: document.querySelector("[name='Persona.TipoDeDocumento.Id']"),
                     documento: document.querySelector("[name='Persona.Documento']"),
                     telefono: document.querySelector("[name='Persona.Telefono']"),
                     correo: document.querySelector("[name='Correo']"),
