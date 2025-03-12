@@ -138,5 +138,28 @@ namespace BusinessLogic
             }
         }
 
+        public int ObtenerDuracionOferta(int idLocal)
+        {
+            try
+            {
+                List<Parametro> parametros = new List<Parametro>
+        {
+            new Parametro("p_id_local", idLocal)
+        };
+
+                DataTable datos = conexion.EjecutarConsulta("Duracion_oferta_flash", parametros);
+
+                if (datos.Rows.Count > 0)
+                {
+                    return Convert.ToInt32(datos.Rows[0]["DURACION_OFERTA"]);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error en ObtenerDuracionOferta: {ex.Message}");
+            }
+
+            return 24; // Valor por defecto (24 horas) si hay un error
+        }
     }
 }

@@ -19,6 +19,17 @@ namespace Abastecete.Controllers
 
         public IActionResult Crear()
         {
+            int? idLocal = ObtenerIdLocalUsuario();
+            if (idLocal != null)
+            {
+                int duracionOferta = _manejadorOfertas.ObtenerDuracionOferta(idLocal.Value);
+                ViewBag.DuracionOferta = duracionOferta;
+            }
+            else
+            {
+                ViewBag.DuracionOferta = 24; // Valor por defecto
+            }
+
             return View();
         }
 
