@@ -3,6 +3,7 @@ using BusinessLogic.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
 using System;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace Abastecete.Controllers
 {
@@ -24,6 +25,23 @@ namespace Abastecete.Controllers
             {
                 int duracionOferta = _manejadorOfertas.ObtenerDuracionOferta(idLocal.Value);
                 ViewBag.DuracionOferta = duracionOferta;
+
+                // Obtener los productos desde el manejador
+                var productos = _manejadorOfertas.ObtenerProductosPorLocal(idLocal.Value);
+
+                List<SelectListItem> listaProductos = new List<SelectListItem>();
+                foreach (var producto in productos)
+                {
+                    listaProductos.Add(new SelectListItem
+                    {
+                        Value = producto.IdProducto.ToString(),
+                        Text = producto.NombreProducto,
+                    });
+                }
+
+                ViewBag.Productos = listaProductos;
+                ViewBag.ImagenesProductos = productos.ToDictionary(p => p.IdProducto.ToString(), p => p.ImagenProducto);
+
             }
             else
             {
@@ -58,7 +76,7 @@ namespace Abastecete.Controllers
 
 
         [HttpPost]
-        public async Task<IActionResult> Crear(OfertaFlash oferta)
+        public async Task<IActionResult> Crear(OfertaFlash oferta, int productoSeleccionado)
         {
             var personaId = HttpContext.Session.GetInt32("PersonaId");
             if (personaId == null)
@@ -74,19 +92,36 @@ namespace Abastecete.Controllers
                 return RedirectToAction("Crear");
             }
 
+            // Obtener datos del producto seleccionado desde el manejador
+            var productos = _manejadorOfertas.ObtenerProductosPorLocal(negocio.Id);
+            var productoSeleccionadoData = productos.FirstOrDefault(p => p.IdProducto == productoSeleccionado);
+
+            // Verificar si la tupla contiene datos válidos
+            if (!productoSeleccionadoData.Equals(default((int, string, string))))
+            {
+                oferta.ProductoOfertaFlash = productoSeleccionadoData.NombreProducto;
+                oferta.ImagenProductoOfertaFlash = productoSeleccionadoData.ImagenProducto;
+            }
+            else
+            {
+                TempData["ErrorMessage"] = "No se encontró el producto seleccionado.";
+                return RedirectToAction("Crear");
+            }
+
             oferta.IdLocal = negocio.Id;
             oferta.NombreLocal = negocio.Nombre;
 
             bool resultado = await _manejadorOfertas.CrearOfertaFlash(oferta);
             if (resultado)
             {
-                TempData["SuccessMessage"] = "✅ La oferta se ha creado con éxito. Será evaluada por el personal de Abastecete para su aprobación o rechazo.";
+                TempData["SuccessMessage"] = "✅ La oferta se ha creado con éxito.";
                 return RedirectToAction("Crear");
             }
-            TempData["ErrorMessage"] = "❌ Error al crear la oferta. Inténtalo nuevamente.";
 
+            TempData["ErrorMessage"] = "❌ Error al crear la oferta. Inténtalo nuevamente.";
             return View(oferta);
         }
+
 
         // Obtener el ID del local del usuario autenticado
         private int? ObtenerIdLocalUsuario()

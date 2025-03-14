@@ -24,11 +24,13 @@ namespace BusinessLogic
             try
             {
                 List<Parametro> parametros = new List<Parametro>
-                {
-                    new Parametro("p_titulo_oferta", oferta.Titulo),
-                    new Parametro("p_descripcion_oferta", oferta.Descripcion),
-                    new Parametro("p_id_local", oferta.IdLocal)
-                };
+        {
+            new Parametro("p_titulo_oferta", oferta.Titulo),
+            new Parametro("p_descripcion_oferta", oferta.Descripcion),
+            new Parametro("p_id_local", oferta.IdLocal),
+            new Parametro("p_producto", oferta.ProductoOfertaFlash),
+            new Parametro("p_imagen", oferta.ImagenProductoOfertaFlash)
+        };
 
                 bool resultado = conexion.EjecutarTransaccion("crear_oferta_flash", parametros);
                 if (!resultado)
@@ -39,7 +41,8 @@ namespace BusinessLogic
                 string asunto = "Nueva Oferta Flash Creada";
                 string mensaje = $"El negocio **{oferta.NombreLocal}** ha creado una nueva Oferta Flash.\n\n" +
                                  $"📌 **Título:** {oferta.Titulo}\n" +
-                                 $"📝 **Descripción:** {oferta.Descripcion}\n\n" +
+                                 $"📝 **Descripción:** {oferta.Descripcion}\n" +
+                                 $"🛒 **Producto:** {oferta.ProductoOfertaFlash}\n\n" +
                                  $"Por favor, revisa y aprueba o rechaza la oferta.";
 
                 await _emailService.EnviarCorreoAviso(asunto, mensaje);
@@ -52,6 +55,7 @@ namespace BusinessLogic
                 return false;
             }
         }
+
 
         public List<OfertaFlash> ConsultarOfertasFlash()
         {
@@ -70,7 +74,9 @@ namespace BusinessLogic
                         Estado = Convert.ToInt32(row["ESTADO_OFERTA_FLASH"]),
                         TiempoOferta = Convert.ToDateTime(row["TIEMPO_OFERTA_FLASH"]),
                         NombreLocal = row["NOMBRE_LOCAL"].ToString(),
-                        FotoLocal = row["FOTOS_LOCAL"].ToString()
+                        FotoLocal = row["FOTOS_LOCAL"].ToString(),
+                        ProductoOfertaFlash = row["PRODUCTO_OFERTA_FLASH"].ToString(),
+                        ImagenProductoOfertaFlash = row["IMAGEN_PRODUCTO_OFERTA_FLASH"].ToString()
                     });
                 }
             }
@@ -161,5 +167,36 @@ namespace BusinessLogic
 
             return 24; // Valor por defecto (24 horas) si hay un error
         }
+
+        public List<(int IdProducto, string NombreProducto, string ImagenProducto)> ObtenerProductosPorLocal(int idLocal)
+        {
+            List<(int, string, string)> productos = new List<(int, string, string)>();
+
+            try
+            {
+                List<Parametro> parametros = new List<Parametro>
+        {
+            new Parametro("localid", idLocal)
+        };
+
+                DataTable datos = conexion.EjecutarConsulta("productos_local", parametros);
+
+                foreach (DataRow row in datos.Rows)
+                {
+                    productos.Add((
+                        Convert.ToInt32(row["PK_ID_PRODUCTO"]),
+                        row["NOMBRE_PRODUCTO"].ToString(),
+                        row["IMAGEN_URL"].ToString()
+                    ));
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error en ObtenerProductosPorLocal: {ex.Message}");
+            }
+
+            return productos;
+        }
+
     }
 }
