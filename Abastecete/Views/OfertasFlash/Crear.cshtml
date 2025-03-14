@@ -22,9 +22,26 @@
                 <span asp-validation-for="Descripcion" class="text-red-500 text-sm"></span>
             </div>
 
+            <div class="flex gap-4 items-center">
+                <div class="w-1/2">
+                    <label class="block font-semibold">Seleccionar Producto</label>
+                    <select id="productoSeleccionado" name="productoSeleccionado" class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400" required>
+                        <option value="">Seleccione un producto</option>
+                        @foreach (var producto in ViewBag.Productos)
+                        {
+                            <option value="@producto.Value" data-imagen="@ViewBag.ImagenesProductos[producto.Value]">@producto.Text</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="w-1/2 flex justify-center">
+                    <img id="imagenProducto" src="" alt="Imagen del producto" class="h-32 w-32 object-contain border border-gray-300 rounded-md">
+                </div>
+            </div>
+
             <div>
                 <label class="block font-semibold">Duración de la Oferta</label>
-                <input type="text" class="w-full p-2 border border-gray-300 rounded-md bg-gray-100" value="24 horas (Automático)" disabled>
+                <input type="text" class="w-full p-2 border border-gray-300 rounded-md bg-gray-100" value="@ViewBag.DuracionOferta horas (Automático por membresía)" disabled>
             </div>
 
             <div class="flex gap-4">
@@ -34,7 +51,7 @@
                 </div>
                 <div class="w-1/2">
                     <label class="block font-semibold">Fecha de Expiración</label>
-                    <input type="text" class="w-full p-2 border border-gray-300 rounded-md bg-gray-100" value="24 horas al ser aprobada" disabled>
+                    <input type="text" class="w-full p-2 border border-gray-300 rounded-md bg-gray-100" value="@ViewBag.DuracionOferta horas al ser aprobada" disabled>
                 </div>
             </div>
 
@@ -56,5 +73,21 @@
         if (errorMessage && errorMessage !== "null") {
             alert(errorMessage);
         }
+    });
+
+    document.addEventListener("DOMContentLoaded", function () {
+        var selectProducto = document.getElementById("productoSeleccionado");
+        var imagenProducto = document.getElementById("imagenProducto");
+
+        selectProducto.addEventListener("change", function () {
+            var selectedOption = selectProducto.options[selectProducto.selectedIndex];
+            var imageUrl = selectedOption.getAttribute("data-imagen");
+
+            if (imageUrl) {
+                imagenProducto.src = imageUrl;
+            } else {
+                imagenProducto.src = "";
+            }
+        });
     });
 </script>

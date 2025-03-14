@@ -46,7 +46,7 @@ namespace Abastecete.Controllers
             
             List<Categoria> categorias = manejadorCategorias.ConsultarCategorias();
             List<Negocio> negocios = manejadorNegocios.ConsultarTodosLosNegocios();
-            List<Negocio> localesAleatorios = manejadorNegocios.ObtenerLocalesAleatorios(); // Agrega los aleatorios
+            List<Negocio> localesAleatorios = manejadorNegocios.ObtenerLocalesAleatorios();
             List<OfertaFlash> ofertasFlash = manejadorOfertasFlash.ConsultarOfertasFlash();
 
             ViewBag.rol = LoginController.rol;

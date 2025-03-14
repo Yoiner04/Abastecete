@@ -151,15 +151,22 @@
                     @if (oferta.Estado == 1) // ✅ Solo muestra ofertas aprobadas
                     {
                         <div class="bg-white p-4 rounded-lg shadow-md flex flex-col relative">
-                            <!-- Imagen de la oferta -->
                             <div class="relative w-full h-48 overflow-hidden rounded-md bg-gray-300">
-                                <img src="@oferta.FotoLocal" alt="Oferta" class="absolute inset-0 w-full h-full object-cover">
+                                <img src="@oferta.ImagenProductoOfertaFlash" alt="Imagen del Producto" class="absolute inset-0 w-full h-full object-cover">
                             </div>
+
+                            <div class="absolute top-4 left-4 w-20 h-20 rounded-full overflow-hidden border-2 border-white shadow-md">
+                                <img src="@oferta.FotoLocal" alt="Local" class="w-full h-full object-cover">
+                            </div>
+
                             <!-- Información de la oferta -->
                             <div class="text-center mt-4">
-                                <h3 class="text-lg font-bold text-gray-800">@oferta.Titulo</h3>
+                                <h3 class="text-lg font-bold text-gray-800">
+                                    @oferta.Titulo <span class="text-gray-500">(@oferta.ProductoOfertaFlash)</span>
+                                </h3>
                                 <p class="text-gray-600">@oferta.Descripcion</p>
                                 <p class="text-sm text-gray-500 font-medium">📍 @oferta.NombreLocal</p>
+
                                 <!-- Temporizador -->
                                 <div class="mt-4">
                                     <span class="text-red-500 font-semibold">
@@ -171,6 +178,7 @@
                     }
                 }
             </div>
+
         }
         else
         {
@@ -212,7 +220,6 @@
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6" id="providers-grid"></div>
     </section>
-
     <script>
         document.addEventListener("DOMContentLoaded", function () {
 
@@ -271,9 +278,6 @@
             }
         });
     </script>
-
-
-
 
     <!-- CARRUSEL DE LOCALES -->
     <section class="p-10 bg-[#23916A] relative">
