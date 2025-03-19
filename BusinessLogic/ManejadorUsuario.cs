@@ -103,17 +103,19 @@ namespace BusinessLogic
                     },
                     Correo = row["NOMBRE_USUARIO"].ToString(),
                     CodigoReferido = 0,
+                    Membresia = row["PK_ID_TIPO_MEMBRESIA"].ToString(),
                 });
             }
             return usuarios;
         }
 
+
         public DataTable LoginGoogle(string correo)
         {
             List<Parametro> parametros = new List<Parametro>()
-    {
-        new Parametro("p_correo", correo)
-    };
+            {
+                new Parametro("p_correo", correo)
+            };
 
             return conexion.EjecutarConsulta("login_usuario_google", parametros);
         }
@@ -158,7 +160,7 @@ namespace BusinessLogic
         {
             List<Parametro> parametros = new List<Parametro>()
             {
-        new Parametro("p_correo", correo)
+                new Parametro("p_correo", correo)
             };
 
             return conexion.EjecutarConsulta("obtener_usuario_por_correo", parametros);
@@ -169,7 +171,7 @@ namespace BusinessLogic
         {
             bool resultado = conexion.EjecutarTransaccion("generar_token_recuperacion", new List<Parametro>
             {
-            new Parametro("p_fk_id_usuario", userId)
+                new Parametro("p_fk_id_usuario", userId)
             });
         }
 
@@ -180,7 +182,7 @@ namespace BusinessLogic
         {
             List<Parametro> parametros = new List<Parametro>
             {
-        new Parametro("p_fk_id_usuario", userId)
+                new Parametro("p_fk_id_usuario", userId)
             };
 
             DataTable data = conexion.EjecutarConsulta("obtener_token_recuperacion", parametros);
@@ -197,9 +199,9 @@ namespace BusinessLogic
         public DataTable ValidarTokenRecuperacion(string token)
         {
             List<Parametro> parametros = new List<Parametro>
-    {
-        new Parametro("p_token", token)
-    };
+            {
+                new Parametro("p_token", token)
+            };
 
             return conexion.EjecutarConsulta("validar_token_recuperacion", parametros);
         }
@@ -210,9 +212,9 @@ namespace BusinessLogic
             userId = 0;
 
             List<Parametro> parametros = new List<Parametro>()
-    {
-        new Parametro("p_token", token)
-    };
+            {
+                new Parametro("p_token", token)
+            };
 
             DataTable data = conexion.EjecutarConsulta("validar_token_recuperacion", parametros);
 
