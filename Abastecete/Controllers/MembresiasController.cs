@@ -8,27 +8,39 @@ namespace Abastecete.Controllers
     public class MembresiasController : Controller
     {
         private readonly ManejadorMembresias manejadorMembresias;
+        private readonly IConfiguration _configuration;
 
-        public MembresiasController()
+        public MembresiasController(IConfiguration configuration)
         {
+            _configuration = configuration;
             manejadorMembresias = new ManejadorMembresias();
         }
 
         public IActionResult Consultar()
         {
-            List<Membresia> membresias = manejadorMembresias.ConsultarMembresias();
+            List<Membresia> membresias = manejadorMembresias.ConsultarMembresias("");
+            return View(membresias);
+        }
+
+
+        [HttpGet]
+        public IActionResult Tipos()
+        {
+            List<Membresia> membresias = manejadorMembresias.consultarTiposMembresia();
             return View(membresias);
         }
 
         [HttpGet]
-        public IActionResult Publicar()
+        public IActionResult Publicar(string nombre)
         {
-            List<Membresia> membresias = manejadorMembresias.ConsultarMembresias();
+            string epaycoPublicKey = _configuration["Epayco:PublicKey"];
+            List<Membresia> membresias = manejadorMembresias.ConsultarMembresias(nombre);
+            ViewBag.apikey = epaycoPublicKey;
             return View(membresias);
         }
 
         [HttpPost]
-        public IActionResult Editar(int Id, string Nombre, string Descripcion, decimal Costo, int Estado)
+        public IActionResult Editar(int Id, string Nombre, string Descripcion, float Costo, int Estado)
         {
             var membresia = new Membresia { Id = Id, Nombre = Nombre, Descripcion = Descripcion, Costo = Costo, Estado = Estado };
             string mensaje = manejadorMembresias.EditarMembresia(membresia);

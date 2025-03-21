@@ -88,7 +88,7 @@ namespace Abastecete.Controllers
             HttpContext.Session.SetString("NegocioTemporal", JsonConvert.SerializeObject(negocio));
 
             // Redirigir a la vista de selección de membresía
-            return RedirectToAction("Publicar", "Membresias");
+            return RedirectToAction("Tipos", "Membresias");
         }
 
         [HttpGet]
