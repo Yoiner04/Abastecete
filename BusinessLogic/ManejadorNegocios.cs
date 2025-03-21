@@ -91,6 +91,19 @@ namespace BusinessLogic
             };
         }
 
+        public bool AgregarProductosLocal(productoLocal producto)
+        {
+            List<Parametro> parametros = new List<Parametro>
+            {
+                new Parametro("producto_id", producto.producto),
+                new Parametro("medida", producto.medida),
+                new Parametro("valor", producto.valor),
+                new Parametro("local_id", producto.local)
+            };
+
+            return conexion.EjecutarTransaccion("agregar_productos_local", parametros);
+        }
+
         public List<Negocio> ConsultarNegocioCategoria(int idCategoria)
         {
             List<Parametro> parametros = new List<Parametro>
@@ -126,18 +139,18 @@ namespace BusinessLogic
 
                 DataTable datos = conexion.EjecutarConsulta("consultar_local", p);
 
-            foreach (DataRow row in datos.Rows)
-            {
-                negocios.Add(new Negocio
+                foreach (DataRow row in datos.Rows)
                 {
-                    Id = Convert.ToInt32(row["PK_ID_LOCAL"]),
-                    Nombre = row["NOMBRE_LOCAL"].ToString(),
-                    Direccion = row["LOCALIZACION"].ToString(),
-                    Telefono = Convert.ToInt64(row["TELEFONO_LOCAL"]),
-                    Logotipo = row["FOTOS_LOCAL"].ToString()
-                });
+                    negocios.Add(new Negocio
+                    {
+                        Id = Convert.ToInt32(row["PK_ID_LOCAL"]),
+                        Nombre = row["NOMBRE_LOCAL"].ToString(),
+                        Direccion = row["LOCALIZACION"].ToString(),
+                        Telefono = Convert.ToInt64(row["TELEFONO_LOCAL"]),
+                        Logotipo = row["FOTOS_LOCAL"].ToString()
+                    });
+                }
             }
-        }
             catch (Exception ex)
             {
                 Console.WriteLine("❌ Error al consultar negocios: " + ex.Message);
