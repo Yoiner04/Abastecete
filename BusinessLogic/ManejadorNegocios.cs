@@ -159,5 +159,23 @@ namespace BusinessLogic
             return negocios;
         }
 
+        public List<Negocio> ObtenerLocalesAleatorios()
+        {
+            List<Negocio> negocios = new List<Negocio>();
+            DataTable datos = conexion.EjecutarConsulta("ObtenerLocalesAleatorios", new List<Parametro>());
+
+            foreach (DataRow row in datos.Rows)
+            {
+                negocios.Add(new Negocio
+                {
+                    Id = Convert.ToInt32(row["PK_ID_LOCAL"]),
+                    Nombre = row["NOMBRE_LOCAL"].ToString(),
+                    Logotipo = row["FOTOS_LOCAL"].ToString()
+                });
+            }
+
+            return negocios;
+        }
+
     }
 }

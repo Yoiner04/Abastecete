@@ -11,7 +11,8 @@ namespace DataAccess
         public bool Conectar()
         {
 
-            string cadenaConnection = "server=localhost; database=abastecete; user=root; password=0518; port=3306";
+
+            string cadenaConnection = "server=localhost; database=abastecete; user=root; password=root; port=3306";
 
             connection = new MySqlConnection(cadenaConnection);
             try

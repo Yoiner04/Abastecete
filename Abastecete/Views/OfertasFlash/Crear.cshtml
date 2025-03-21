@@ -2,59 +2,95 @@
 
 @{
     ViewData["Title"] = "Crear Oferta Flash";
+    bool puedeCrearOferta = ViewBag.PuedeCrearOferta;
 }
 
-<div class="flex justify-center items-center min-h-screen bg-gray-100">
+<div class="flex justify-center items-center mt-12 bg-gray-100">
     <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-lg">
         <h2 class="text-2xl font-bold text-center text-[#23916A]">Crear Nueva Oferta Flash</h2>
-        <p class="text-center text-gray-600 mb-4">Las ofertas flash tienen una duración de <strong>24 horas</strong>. Asegúrate de completar la información correctamente.</p>
 
-        <form asp-action="Crear" method="post" class="space-y-4">
-            <div>
-                <label asp-for="Titulo" class="block font-semibold">Título de la Oferta</label>
-                <input asp-for="Titulo" class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400" placeholder="Ej: Descuento del 50%" required>
-                <span asp-validation-for="Titulo" class="text-red-500 text-sm"></span>
-            </div>
+        @if (!puedeCrearOferta)
+        {
+            <p class="text-center text-red-600 font-semibold">
+                ¡Has alcanzado el límite de ofertas simultáneas para tu membresía!
+            </p>
+        }
+        else
+        {
+            <p class="text-center text-gray-600 mb-4">
+                Las ofertas flash tienen una duración de <strong>@ViewBag.DuracionOferta horas</strong>. Asegúrate de completar la información correctamente.
+            </p>
 
-            <div>
-                <label asp-for="Descripcion" class="block font-semibold">Descripción</label>
-                <textarea asp-for="Descripcion" class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400" rows="4" placeholder="Describe los detalles de la oferta..." required></textarea>
-                <span asp-validation-for="Descripcion" class="text-red-500 text-sm"></span>
-            </div>
+            <form asp-action="Crear" method="post" class="space-y-4">
+                <fieldset @(puedeCrearOferta ? "" : "disabled")>
+                    <div>
+                        <label asp-for="Titulo" class="block font-semibold">Título de la Oferta</label>
+                        <input asp-for="Titulo" class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400" placeholder="Ej: Descuento del 50%" required>
+                        <span asp-validation-for="Titulo" class="text-red-500 text-sm"></span>
+                    </div>
 
-            <div>
-                <label class="block font-semibold">Duración de la Oferta</label>
-                <input type="text" class="w-full p-2 border border-gray-300 rounded-md bg-gray-100" value="24 horas (Automático)" disabled>
-            </div>
+                    <div>
+                        <label asp-for="Descripcion" class="block font-semibold">Descripción</label>
+                        <textarea asp-for="Descripcion" class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400" rows="4" placeholder="Describe los detalles de la oferta..." required></textarea>
+                        <span asp-validation-for="Descripcion" class="text-red-500 text-sm"></span>
+                    </div>
 
-            <div class="flex gap-4">
-                <div class="w-1/2">
-                    <label class="block font-semibold">Fecha de Inicio</label>
-                    <input type="text" class="w-full p-2 border border-gray-300 rounded-md bg-gray-100" value="Según aprobación" disabled>
-                </div>
-                <div class="w-1/2">
-                    <label class="block font-semibold">Fecha de Expiración</label>
-                    <input type="text" class="w-full p-2 border border-gray-300 rounded-md bg-gray-100" value="24 horas al ser aprobada" disabled>
-                </div>
-            </div>
+                    <div class="flex gap-4 items-center">
+                        <div class="w-1/2">
+                            <label class="block font-semibold">Seleccionar Producto</label>
+                            <select id="productoSeleccionado" name="productoSeleccionado" class="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400" required>
+                                <option value="">Seleccione un producto</option>
+                                @foreach (var producto in ViewBag.Productos)
+                                {
+                                    <option value="@producto.Value" data-imagen="@ViewBag.ImagenesProductos[producto.Value]">@producto.Text</option>
+                                }
+                            </select>
+                        </div>
 
-            <button type="submit" class="w-full bg-[#23916A] hover:bg-[#1E7E5A] text-white font-semibold py-2 rounded-md transition duration-200">
-                Publicar Oferta Flash
-            </button>
-        </form>
+                        <div class="w-1/2 flex justify-center">
+                            <img id="imagenProducto" src="" alt="Imagen del producto" class="h-32 w-32 object-contain border border-gray-300 rounded-md">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block font-semibold">Duración de la Oferta</label>
+                        <input type="text" class="w-full p-2 border border-gray-300 rounded-md bg-gray-100" value="@ViewBag.DuracionOferta horas (Automático por membresía)" disabled>
+                    </div>
+
+                    <div class="flex gap-4">
+                        <div class="w-1/2">
+                            <label class="block font-semibold">Fecha de Inicio</label>
+                            <input type="text" class="w-full p-2 border border-gray-300 rounded-md bg-gray-100" value="Según aprobación" disabled>
+                        </div>
+                        <div class="w-1/2">
+                            <label class="block font-semibold">Fecha de Expiración</label>
+                            <input type="text" class="w-full p-2 border border-gray-300 rounded-md bg-gray-100" value="@ViewBag.DuracionOferta horas al ser aprobada" disabled>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full bg-[#23916A] hover:bg-[#1E7E5A] text-white font-semibold py-2 rounded-md transition duration-200">
+                        Publicar Oferta Flash
+                    </button>
+                </fieldset>
+            </form>
+        }
     </div>
 </div>
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
-        var successMessage = @Html.Raw(Json.Serialize(TempData["SuccessMessage"]));
-        var errorMessage = @Html.Raw(Json.Serialize(TempData["ErrorMessage"]));
+        var selectProducto = document.getElementById("productoSeleccionado");
+        var imagenProducto = document.getElementById("imagenProducto");
 
-        if (successMessage && successMessage !== "null") {
-            alert(successMessage);
-        }
-        if (errorMessage && errorMessage !== "null") {
-            alert(errorMessage);
-        }
+        selectProducto.addEventListener("change", function () {
+            var selectedOption = selectProducto.options[selectProducto.selectedIndex];
+            var imageUrl = selectedOption.getAttribute("data-imagen");
+
+            if (imageUrl) {
+                imagenProducto.src = imageUrl;
+            } else {
+                imagenProducto.src = "";
+            }
+        });
     });
 </script>
