@@ -41,7 +41,13 @@ namespace ConnectionProject.Controllers
             ManejadorUsuario manejador = new ManejadorUsuario();
             DataTable data = manejador.Login(usuario.Correo, usuario.Contrasenia);
 
-            if (data.Rows.Count > 0)
+            if (data.Rows.Count == 0)
+            {
+                TempData["Error"] = "Credenciales incorrectas. Por favor, verifica tu usuario y contraseña.";
+                return View(usuario);
+            }
+
+            try
             {
                 int idRol = Convert.ToInt32(data.Rows[0]["FK_ID_ROL"]);
                 int idPersona = Convert.ToInt32(data.Rows[0]["FK_ID_PERSONA"]);
@@ -78,9 +84,12 @@ namespace ConnectionProject.Controllers
                         return Redirect("~/Home/Principal");
                 }
             }
-
-            TempData["Error"] = "Credenciales incorrectas.";
-            return View(usuario);
+            catch (Exception ex)
+            {
+                TempData["Error"] = "Error al procesar la solicitud. Por favor registrate e intenta de nuevo.";
+                Console.WriteLine($"Error en Login: {ex.Message}");
+                return View(usuario);
+            }
         }
 
         public IActionResult Logout()
