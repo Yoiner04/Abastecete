@@ -18,38 +18,53 @@ namespace Abastecete.Controllers
             _manejadorNegocios = new ManejadorNegocios();
         }
 
+        public IActionResult ConsultarTodo()
+        {
+            List<OfertaFlash> ofertas = _manejadorOfertas.ConsultarOfertasFlash();
+            return View(ofertas);
+        }
+
         public IActionResult Crear()
         {
             int? idLocal = ObtenerIdLocalUsuario();
             if (idLocal != null)
             {
                 int duracionOferta = _manejadorOfertas.ObtenerDuracionOferta(idLocal.Value);
+                int cantidadOfertas = _manejadorOfertas.CantidadOfertas(idLocal.Value);
+
                 ViewBag.DuracionOferta = duracionOferta;
+                ViewBag.CantidadOfertas = cantidadOfertas;
 
-                // Obtener los productos desde el manejador
-                var productos = _manejadorOfertas.ObtenerProductosPorLocal(idLocal.Value);
+                bool puedeCrearOferta = (duracionOferta == 12 && cantidadOfertas <= 3) || (duracionOferta == 24 && cantidadOfertas <= 5);
+                ViewBag.PuedeCrearOferta = puedeCrearOferta;
 
-                List<SelectListItem> listaProductos = new List<SelectListItem>();
-                foreach (var producto in productos)
+                if (puedeCrearOferta)
                 {
-                    listaProductos.Add(new SelectListItem
+                    var productos = _manejadorOfertas.ObtenerProductosPorLocal(idLocal.Value);
+                    List<SelectListItem> listaProductos = new List<SelectListItem>();
+
+                    foreach (var producto in productos)
                     {
-                        Value = producto.IdProducto.ToString(),
-                        Text = producto.NombreProducto,
-                    });
+                        listaProductos.Add(new SelectListItem
+                        {
+                            Value = producto.IdProducto.ToString(),
+                            Text = producto.NombreProducto,
+                        });
+                    }
+
+                    ViewBag.Productos = listaProductos;
+                    ViewBag.ImagenesProductos = productos.ToDictionary(p => p.IdProducto.ToString(), p => p.ImagenProducto);
                 }
-
-                ViewBag.Productos = listaProductos;
-                ViewBag.ImagenesProductos = productos.ToDictionary(p => p.IdProducto.ToString(), p => p.ImagenProducto);
-
             }
             else
             {
-                ViewBag.DuracionOferta = 24; // Valor por defecto
+                ViewBag.DuracionOferta = 24;
+                ViewBag.PuedeCrearOferta = false;
             }
 
             return View();
         }
+
 
         public IActionResult Gestionar()
         {
@@ -73,7 +88,6 @@ namespace Abastecete.Controllers
 
             return RedirectToAction("Gestionar");
         }
-
 
         [HttpPost]
         public async Task<IActionResult> Crear(OfertaFlash oferta, int productoSeleccionado)
@@ -111,6 +125,20 @@ namespace Abastecete.Controllers
             oferta.IdLocal = negocio.Id;
             oferta.NombreLocal = negocio.Nombre;
 
+            int? idLocal = ObtenerIdLocalUsuario();
+            int duracionOferta = _manejadorOfertas.ObtenerDuracionOferta(idLocal.Value);
+            if(duracionOferta == 12)
+            {
+                oferta.Prioridad = 1;
+            }else if(duracionOferta == 24)
+            {
+                oferta.Prioridad = 2;
+            }
+            else
+            {
+                oferta.Prioridad= 0;
+            }
+
             bool resultado = await _manejadorOfertas.CrearOfertaFlash(oferta);
             if (resultado)
             {
@@ -121,7 +149,6 @@ namespace Abastecete.Controllers
             TempData["ErrorMessage"] = "❌ Error al crear la oferta. Inténtalo nuevamente.";
             return View(oferta);
         }
-
 
         // Obtener el ID del local del usuario autenticado
         private int? ObtenerIdLocalUsuario()
@@ -166,6 +193,5 @@ namespace Abastecete.Controllers
 
             return RedirectToAction("Gestionar");
         }
-
     }
 }

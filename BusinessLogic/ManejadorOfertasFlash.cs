@@ -29,7 +29,8 @@ namespace BusinessLogic
             new Parametro("p_descripcion_oferta", oferta.Descripcion),
             new Parametro("p_id_local", oferta.IdLocal),
             new Parametro("p_producto", oferta.ProductoOfertaFlash),
-            new Parametro("p_imagen", oferta.ImagenProductoOfertaFlash)
+            new Parametro("p_imagen", oferta.ImagenProductoOfertaFlash),
+            new Parametro("p_prioridad", oferta.Prioridad)
         };
 
                 bool resultado = conexion.EjecutarTransaccion("crear_oferta_flash", parametros);
@@ -149,9 +150,9 @@ namespace BusinessLogic
             try
             {
                 List<Parametro> parametros = new List<Parametro>
-        {
-            new Parametro("p_id_local", idLocal)
-        };
+                {
+                    new Parametro("p_id_local", idLocal)
+                };
 
                 DataTable datos = conexion.EjecutarConsulta("Duracion_oferta_flash", parametros);
 
@@ -197,6 +198,31 @@ namespace BusinessLogic
 
             return productos;
         }
+
+        public int CantidadOfertas(int idLocal)
+        {
+            try
+            {
+                List<Parametro> parametros = new List<Parametro>
+                {
+                    new Parametro("p_id_local", idLocal)
+                };
+
+                DataTable datos = conexion.EjecutarConsulta("ofertas_actuales", parametros);
+
+                if (datos.Rows.Count > 0)
+                {
+                    return Convert.ToInt32(datos.Rows[0][0]); // Retorna el número de ofertas activas
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error en CantidadOfertas: {ex.Message}");
+            }
+
+            return 0; // Si hay error o no hay ofertas, retorna 0
+        }
+
 
     }
 }
