@@ -39,21 +39,23 @@
             </button>
 
             <!-- Contenedor del Menú de Navegación -->
-            <div id="menu-container"
-                 class="absolute left-1/2 z-50 hidden w-auto -translate-x-1/2 transform items-center bg-gray-100 md:flex md:bg-transparent">
+            <div id="menu-container" class="absolute left-1/2 z-50 hidden w-auto -translate-x-1/2 transform items-center bg-gray-100 md:flex md:bg-transparent">
                 <ul id="menu" class="flex-col text-base font-bold text-black md:flex md:space-x-6 md:flex-row">
                     <li>
-                        <a href="#" class="block px-4 py-2 text-black hover:text-green-600">
-                            <i class="fa fa-search mr-1"></i>Buscar
-                        </a>
+                        <form id="search-form" action="@Url.Action("Buscar", "Busqueda")" method="GET" class="flex items-center border rounded-lg px-2">
+                            <input type="text" id="search-input" name="query" class="px-2 py-1 outline-none" placeholder="Buscar...">
+                            <button type="submit" class="ml-2 text-black hover:text-green-600">
+                                <i class="fa fa-search"></i>
+                            </button>
+                        </form>
                     </li>
                     <li>
-                        <a href="@Url.Action("Listar","Categorias")" class="block px-4 py-2 text-black hover:text-green-600">
+                        <a href="@Url.Action("Listar","Categorias")" class="block px-4 py-2 text-black hover:text-green-600 whitespace-nowrap">
                             Proveedores
                         </a>
                     </li>
                     <li>
-                        <a href="#ofertas-container" class="block px-4 py-2 text-black hover:text-green-600">
+                        <a href="#ofertas-container" class="block px-4 py-2 text-black hover:text-green-600 whitespace-nowrap">
                             Ofertas flash
                         </a>
                     </li>
@@ -217,6 +219,8 @@
         @RenderBody()
     </main>
 
+    @await Html.PartialAsync("_Footer")
+
     <div id="edit-profile-modal" class="bg-opacity-50 fixed inset-0 z-50 flex hidden items-center justify-center bg-black">
         <div class="min-h-auto max-h-[80vh] w-auto max-w-6xl overflow-y-auto rounded-lg bg-white p-6 shadow-lg">
             <div class="mb-4 flex justify-end">
@@ -227,6 +231,52 @@
             <div id="edit-profile-content" class="overflow-auto"></div>
         </div>
     </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const searchForm = document.getElementById("search-form");
+            const searchInput = document.getElementById("search-input");
+
+            searchForm.addEventListener("submit", async function (e) {
+                e.preventDefault();
+                const query = searchInput.value.trim();
+                if (!query) return;
+
+                try {
+                    const response = await fetch(`/api/Busqueda/buscar?query=${encodeURIComponent(query)}`);
+                    const results = await response.json();
+
+                    if (results.length > 0) {
+                        let resultsHtml = `<ul class="bg-white border shadow-lg rounded-lg p-3">`;
+                        results.forEach(item => {
+                            resultsHtml += `<li class="p-2 hover:bg-gray-200 cursor-pointer">
+                                                <a href="${item.Url}" class="block text-black">${item.Tipo}: ${item.Nombre}</a>
+                                            </li>`;
+                        });
+                        resultsHtml += `</ul>`;
+
+                        showSearchResults(resultsHtml);
+                    } else {
+                        showSearchResults("<p class='text-gray-600'>No se encontraron resultados.</p>");
+                    }
+                } catch (error) {
+                    console.error("Error en la búsqueda:", error);
+                }
+            });
+
+            function showSearchResults(html) {
+                let resultsContainer = document.getElementById("search-results");
+                if (!resultsContainer) {
+                    resultsContainer = document.createElement("div");
+                    resultsContainer.id = "search-results";
+                    resultsContainer.classList.add("absolute", "top-14", "right-0", "w-64");
+                    document.body.appendChild(resultsContainer);
+                }
+                resultsContainer.innerHTML = html;
+            }
+        });
+    </script>
+
 
     <script>
         const menuToggle = document.getElementById('menu-toggle');

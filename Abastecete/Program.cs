@@ -2,9 +2,7 @@ using BusinessLogic.Utilidades;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
 using BusinessLogic.Interfaces;
-using BusinessLogic.Utilidades;
-
-
+using BusinessLogic.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -61,7 +59,5 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Principal}");
 
 app.Run();
-
-
 
 
