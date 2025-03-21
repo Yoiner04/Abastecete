@@ -27,6 +27,7 @@
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase">Imagen</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase">Título</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase">Descripción</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase">Producto</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase">Negocio</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase">Estado</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase">Acciones</th>
@@ -37,10 +38,11 @@
             {
                 <tr class="border-b">
                     <td class="px-6 py-4">
-                        <img src="@oferta.FotoLocal" alt="Local" class="w-16 h-16 rounded-md shadow-md">
+                        <img src="@oferta.ImagenProductoOfertaFlash" alt="Local" class="w-16 h-16 rounded-md shadow-md">
                     </td>
                     <td class="px-6 py-4">@oferta.Titulo</td>
                     <td class="px-6 py-4">@oferta.Descripcion</td>
+                    <td class="px-6 py-4">@oferta.ProductoOfertaFlash</td>
                     <td class="px-6 py-4">@oferta.NombreLocal</td>
                     <td class="px-6 py-4">
                         @if (oferta.Estado == 1)

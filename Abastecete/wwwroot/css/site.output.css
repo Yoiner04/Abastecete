@@ -1,4 +1,4 @@
-/*! tailwindcss v4.0.12 | MIT License | https://tailwindcss.com */
+/*! tailwindcss v4.0.15 | MIT License | https://tailwindcss.com */
 .collapse {
   visibility: collapse;
 }
@@ -7,6 +7,17 @@
 }
 .visible {
   visibility: visible;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
 }
 .absolute {
   position: absolute;
@@ -212,6 +223,9 @@
 .h-\[500px\] {
   height: 500px;
 }
+.h-\[calc\(100\%-1rem\)\] {
+  height: calc(100% - 1rem);
+}
 .h-auto {
   height: auto;
 }
@@ -220,6 +234,9 @@
 }
 .max-h-\[80vh\] {
   max-height: 80vh;
+}
+.max-h-full {
+  max-height: 100%;
 }
 .min-h-\[200px\] {
   min-height: 200px;
@@ -256,6 +273,12 @@
 }
 .w-4\/5 {
   width: calc(4/5 * 100%);
+}
+.w-5\/5 {
+  width: calc(5/5 * 100%);
+}
+.w-6\/5 {
+  width: calc(6/5 * 100%);
 }
 .w-auto {
   width: auto;
@@ -383,6 +406,9 @@
 .justify-center {
   justify-content: center;
 }
+.justify-end {
+  justify-content: flex-end;
+}
 .self-center {
   align-self: center;
 }
@@ -405,6 +431,9 @@
 }
 .overflow-x-auto {
   overflow-x: auto;
+}
+.overflow-x-hidden {
+  overflow-x: hidden;
 }
 .overflow-y-auto {
   overflow-y: auto;

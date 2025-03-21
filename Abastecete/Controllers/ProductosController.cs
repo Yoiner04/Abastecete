@@ -1,6 +1,7 @@
 ﻿using BusinessLogic;
 using BusinessLogic.Models;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 using System.Collections.Generic;
 
 namespace Abastecete.Controllers
@@ -24,7 +25,7 @@ namespace Abastecete.Controllers
         public IActionResult Consultar()
         {
             return View();
-        } 
+        }
 
         public IActionResult ConsultarIndividual()
         {
@@ -73,6 +74,7 @@ namespace Abastecete.Controllers
         }
 
 
+
         public IActionResult ListaNegocios()
         {
 
@@ -102,6 +104,29 @@ namespace Abastecete.Controllers
             List<SubCategoria> subCategorias = manejadorSubCategorias.ConsultarSubCategorias(0);
             return Json(subCategorias);
         }
+
+        [HttpPost]
+        public IActionResult FinalizarRegistroProductos(string productosJson)
+        {
+            try
+            {
+                var productos = JsonConvert.DeserializeObject<List<productoLocal>>(productosJson);
+                var localId = manejadorNegocios.ConsultarNegocio(HttpContext.Session.GetInt32("idUsuario").Value);
+                foreach (var producto in productos)
+                {
+                    producto.local = localId.Id;
+                    manejadorNegocios.AgregarProductosLocal(producto);
+                }
+
+                return Json(new { mensaje = "Productos registrados con éxito." });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { mensaje = "Error al registrar productos: " + ex.Message });
+            }
+        }
+
+
 
         [HttpPost]
         public IActionResult CrearProducto(IFormFile Imagen, int IdSubCategoria, string Nombre, string Precio)

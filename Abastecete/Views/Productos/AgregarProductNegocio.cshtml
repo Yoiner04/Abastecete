@@ -27,7 +27,7 @@
                     <option value="">Seleccione una categoría</option  >
                     @foreach (Categoria cate in ViewBag.categorias)
                     {
-                        <option value="@cate.Id">@cate.Nombre</option>
+                        <option data-nombre="@cate.Nombre" value="@cate.Id" >@cate.Nombre</option>
                     }
                 </select>
 
@@ -67,7 +67,11 @@
                 <tbody id="productTableBody"></tbody>
             </table>
 
-            <button class="mt-4 w-full rounded-lg bg-orange-500 py-2 text-white">Finalizar Registro</button>
+            <form id="finalizarForm" method="post">
+                <input type="hidden" name="productosJson" id="productosJson">
+                <button type="button" onclick="finalizarRegistro()" class="mt-4 w-full rounded-lg bg-orange-500 py-2 text-white">Finalizar Registro</button>
+            </form>
+
         </div>
     </div>
 
@@ -88,7 +92,7 @@
                             $("#subcategory").append('<option value="">Seleccione una subcategoría</option>');
 
                             $.each(response, function (index, item) {
-                                $("#subcategory").append(`<option value="${item.id}">${item.nombre}</option>`);
+                                $("#subcategory").append(`<option data-nombre="${item.nombre}" value="${item.id}">${item.nombre}</option>`);
                             });
                         },
                         error: function () {
@@ -114,7 +118,7 @@
                             $("#product").empty();
                             $("#product").append('<option value="">Seleccione un producto</option>');
                             $.each(response,function(index,item){
-                                $("#product").append(`<option value="${item.id}">${item.nombre}</option>`);
+                                $("#product").append(`<option data-nombre=${item.nombre} value="${item.id}">${item.nombre}</option>`);
                             });
                         },
                     })
@@ -134,7 +138,7 @@
                             $("#unit").empty();
                             $("#unit").append('<option value="">Seleccione un producto</option>');
                             $.each(response,function(index,item){
-                                $("#unit").append(`<option value="${item.id}">${item.nombre}</option>`);
+                                $("#unit").append(`<option data-nombre=${item.nombre} value="${item.id}">${item.nombre}</option>`);
                             });
                         },
                     })
@@ -145,30 +149,71 @@
     </script>
 
     <script>
+
+        function finalizarRegistro() {
+            let filas = $("#productTableBody tr");
+            let productos = [];
+
+            filas.each(function () {
+                let celdas = $(this).find("td");
+                productos.push({
+                    producto: celdas.eq(2).data('idproducto'),
+                    medida: celdas.eq(3).data('idunidad'),
+                    valor: parseFloat(celdas.eq(4).data('idprecio'))
+                });
+            });
+
+            $("#productosJson").val(JSON.stringify(productos));
+            console.log(productos);
+
+            $.ajax({
+                url: '@Url.Action("FinalizarRegistroProductos", "Productos")',
+                type: 'POST',
+                data: { productosJson: JSON.stringify(productos) },
+                success: function (response) {
+                    alert(response.mensaje);
+                    window.location.reload();
+                },
+                error: function () {
+                    alert("Hubo un error al registrar los productos.");
+                }
+            });
+        }
+
+
         function addProduct() {
-            let category = document.getElementById("category").value;
-            let subcategory = document.getElementById("subcategory").value;
-            let product = document.getElementById("product").value;
-            let unit = document.getElementById("unit").value;
+
+            let categoryid = document.getElementById("category").value;
+            let subcategoryid = document.getElementById("subcategory").value;
+            let productid = document.getElementById("product").value;
+            let unitid = document.getElementById("unit").value;
+            let priceid = document.getElementById("price").value;
+
+
+            let category = document.getElementById("category").selectedOptions[0].getAttribute("data-nombre");
+            let subcategory = document.getElementById("subcategory").selectedOptions[0].getAttribute("data-nombre");
+            let product = document.getElementById("product").selectedOptions[0].getAttribute("data-nombre");
+            let unit = document.getElementById("unit").selectedOptions[0].getAttribute("data-nombre");
             let price = document.getElementById("price").value;
 
             if (!category || !subcategory || !product || !unit || !price) {
+                console.log(category,subcategory,product,unit,price);
                 alert("Por favor, complete todos los campos.");
                 return;
             }
 
             let tableBody = document.getElementById("productTableBody");
             let row = document.createElement("tr");
-            row.innerHTML = `
-                <td class="border p-2">${category}</td>
-                <td class="border p-2">${subcategory}</td>
-                <td class="border p-2">${product}</td>
-                <td class="border p-2">${unit}</td>
-                <td class="border p-2">${price}</td>
-                <td class="border p-2 text-center">
-                    <button onclick="removeProduct(this)" class="rounded bg-red-500 px-2 py-1 text-white">Eliminar</button>
-                </td>
-            `;
+                row.innerHTML = `
+            <td class="border p-2" data-idcategoria="${categoryid}">${category}</td>
+            <td class="border p-2" data-idsubcategoria="${subcategoryid}">${subcategory}</td>
+            <td class="border p-2" data-idproducto="${productid}">${product}</td>
+            <td class="border p-2" data-idunidad="${unitid}">${unit}</td>
+            <td class="border p-2" data-idprecio="${priceid}">${price}</td>
+            <td class="border p-2 text-center">
+                <button onclick="removeProduct(this)" class="rounded bg-red-500 px-2 py-1 text-white">Eliminar</button>
+            </td>
+        `;
             tableBody.appendChild(row);
         }
 

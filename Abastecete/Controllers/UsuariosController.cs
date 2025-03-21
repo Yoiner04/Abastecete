@@ -20,6 +20,12 @@ namespace Abastecete.Controllers
         {
             var idUsuario = HttpContext.Session.GetInt32("idUsuario");
 
+            var usuario = manejadorU.ConsultarUsuarios(idUsuario.Value).FirstOrDefault();
+            if (usuario != null)
+            {
+                HttpContext.Session.SetString("membresia", usuario.Membresia); // Guarda la membresía en la sesión
+            }
+
             ViewBag.rol = LoginController.rol;
             ViewBag.administrar = RolPermisos.TienePermiso("Administrar Usuarios", HttpContext.Session.GetString("permisos"));
 

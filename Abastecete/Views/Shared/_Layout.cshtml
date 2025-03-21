@@ -22,6 +22,9 @@
 
     @{
         string permisos = HttpContextAccessor.HttpContext.Session.GetString("permisos");
+        string membresia = HttpContextAccessor.HttpContext.Session.GetString("membresia") ?? "0"; // Asegurar que no sea null
+        Console.WriteLine($"Valor de membresia en sesión: {membresia}"); // Depuración
+        bool ocultarPublicarOferta = (membresia == "11" || membresia == "12" || membresia == "13");
     }
     <header id="header" class="sticky top-0 z-40 shadow-md" style="background-color: #F4F1E9;">
         <nav class="container mx-auto flex items-center justify-between px-6 py-2">
@@ -136,7 +139,7 @@
                             </a>
                         </li>
                     }
-                    @if (RolPermisos.TienePermiso("Mi negocio", permisos))
+                    @if (RolPermisos.TienePermiso("Mi negocio", permisos) && !ocultarPublicarOferta)
                     {
                         <li class="group">
                             <a href="@Url.Action("Crear", "OfertasFlash")" class="text-black group-hover:text-green-600">

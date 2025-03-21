@@ -17,6 +17,9 @@ namespace BusinessLogic.Models
         public int IdLocal { get; set; }
         public string NombreLocal { get; set; }
         public string FotoLocal { get; set; }
+        public string ProductoOfertaFlash { get; set; }
+        public string ImagenProductoOfertaFlash { get; set; }
+        public int Prioridad { get; set; }
     }
 }
 
