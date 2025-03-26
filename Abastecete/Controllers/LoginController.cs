@@ -52,11 +52,20 @@ namespace ConnectionProject.Controllers
                 int idRol = Convert.ToInt32(data.Rows[0]["FK_ID_ROL"]);
                 int idPersona = Convert.ToInt32(data.Rows[0]["FK_ID_PERSONA"]);
                 int idUsuario = Convert.ToInt32(data.Rows[0]["PK_ID_USUARIO"]);
-                int idTipoMembresia = Convert.ToInt32(data.Rows[0]["FK_ID_TIPOMEMBRESIA"]); // ✅ Ahora sí existe la columna
+
+                // Obtener correctamente la membresía mediante consultar_usuario
+                var detallesUsuario = _manejadorUsuario.ConsultarUsuarios(idUsuario).FirstOrDefault();
+                if (detallesUsuario != null)
+                {
+                    HttpContext.Session.SetString("membresia", detallesUsuario.Membresia);
+                }
+                else
+                {
+                    HttpContext.Session.SetString("membresia", "0");
+                }
 
                 HttpContext.Session.SetInt32("PersonaId", idPersona);
                 HttpContext.Session.SetInt32("idUsuario", idUsuario);
-                HttpContext.Session.SetString("membresia", idTipoMembresia.ToString());
 
                 if (HttpContext.Session.GetString("LastLoginError") == usuario.Correo)
                 {
