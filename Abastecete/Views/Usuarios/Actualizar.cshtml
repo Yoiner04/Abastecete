@@ -14,8 +14,7 @@
 
 <body class="flex min-h-screen items-center justify-center bg-gray-100">
     
-    <!-- Contenedor del formulario -->
-    <div class="w-full max-w-3xl bg-white px-10 py-8 rounded-2xl shadow-2xl">
+    <div class="w-full max-w-3xl rounded-2xl bg-white px-10 py-8 shadow-2xl">
         <h2 class="mb-6 text-center text-3xl font-bold text-green-600">Actualizar Información</h2>
 
         @using (Html.BeginForm("Actualizar", "Usuarios", FormMethod.Post, new { id = "actualizarForm", @class = "grid grid-cols-1 md:grid-cols-2 gap-6" }))
@@ -36,7 +35,7 @@
 
             <div>
                 <label class="block font-medium text-gray-700">Tipo de Documento <span class="text-red-500">*</span></label>
-                <select class="w-full border p-3 rounded-lg focus:ring-2 focus:ring-green-400 outline-none" name="Persona.TipoDeDocumento.Id">
+                <select class="w-full rounded-lg border p-3 outline-none focus:ring-2 focus:ring-green-400" name="Persona.TipoDeDocumento.Id">
                     <option value="">Seleccione</option>
                     @foreach (TipoDocumento td in ViewBag.TiposDocumento)
                     {
@@ -69,7 +68,7 @@
             </div>
 
             <div class="md:col-span-2">
-                <button type="submit" class="w-full rounded-lg bg-green-500 py-3 font-bold text-white text-lg transition-transform transform hover:scale-105">Actualizar Información</button>
+                <button type="submit" class="w-full transform rounded-lg bg-green-500 py-3 text-lg font-bold text-white transition-transform hover:scale-105">Actualizar Información</button>
             </div>
         }
     </div>
