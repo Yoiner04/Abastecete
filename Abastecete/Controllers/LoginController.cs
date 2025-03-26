@@ -52,11 +52,16 @@ namespace ConnectionProject.Controllers
                 int idRol = Convert.ToInt32(data.Rows[0]["FK_ID_ROL"]);
                 int idPersona = Convert.ToInt32(data.Rows[0]["FK_ID_PERSONA"]);
                 int idUsuario = Convert.ToInt32(data.Rows[0]["PK_ID_USUARIO"]);
-                int idTipoMembresia = Convert.ToInt32(data.Rows[0]["FK_ID_TIPOMEMBRESIA"]); // ✅ Ahora sí existe la columna
+                int idTipoMembresia = 0;
+                if (data.Rows[0]["FK_ID_TIPOMEMBRESIA"] == "")
+                {
+                    idTipoMembresia = Convert.ToInt32(data.Rows[0]["FK_ID_TIPOMEMBRESIA"]);
+
+                }
 
                 HttpContext.Session.SetInt32("PersonaId", idPersona);
                 HttpContext.Session.SetInt32("idUsuario", idUsuario);
-                HttpContext.Session.SetString("membresia", idTipoMembresia.ToString());
+                HttpContext.Session.SetString("membresia", ((data.Rows[0]["FK_ID_TIPOMEMBRESIA"] == "") ? "sin membresia" : idTipoMembresia.ToString()));
 
                 if (HttpContext.Session.GetString("LastLoginError") == usuario.Correo)
                 {

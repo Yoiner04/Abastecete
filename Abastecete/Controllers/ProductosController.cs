@@ -115,7 +115,11 @@ namespace Abastecete.Controllers
                 foreach (var producto in productos)
                 {
                     producto.local = localId.Id;
-                    manejadorNegocios.AgregarProductosLocal(producto);
+                    bool resultado = manejadorNegocios.AgregarProductosLocal(producto);
+                    if (!resultado)
+                    {
+                        Console.WriteLine($"Error al agregar el producto {producto.producto} al local {producto.local}");
+                    }
                 }
 
                 return Json(new { mensaje = "Productos registrados con éxito." });

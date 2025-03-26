@@ -42,7 +42,7 @@
             <div id="menu-container" class="absolute left-1/2 z-50 hidden w-auto -translate-x-1/2 transform items-center bg-gray-100 md:flex md:bg-transparent">
                 <ul id="menu" class="flex-col text-base font-bold text-black md:flex md:space-x-6 md:flex-row">
                     <li>
-                        <form id="search-form" action="@Url.Action("Buscar", "Busqueda")" method="GET" class="flex items-center border rounded-lg px-2">
+                        <form id="search-form" action="@Url.Action("Buscar", "Busqueda")" method="GET" class="flex items-center rounded-lg border px-2">
                             <input type="text" id="search-input" name="query" class="px-2 py-1 outline-none" placeholder="Buscar...">
                             <button type="submit" class="ml-2 text-black hover:text-green-600">
                                 <i class="fa fa-search"></i>
@@ -50,12 +50,12 @@
                         </form>
                     </li>
                     <li>
-                        <a href="@Url.Action("Listar","Categorias")" class="block px-4 py-2 text-black hover:text-green-600 whitespace-nowrap">
+                        <a href="@Url.Action("Listar","Categorias")" class="block px-4 py-2 whitespace-nowrap text-black hover:text-green-600">
                             Proveedores
                         </a>
                     </li>
                     <li>
-                        <a href="#ofertas-container" class="block px-4 py-2 text-black hover:text-green-600 whitespace-nowrap">
+                        <a href="#ofertas-container" class="block px-4 py-2 whitespace-nowrap text-black hover:text-green-600">
                             Ofertas flash
                         </a>
                     </li>
@@ -91,8 +91,6 @@
                                     ✏️ Editar perfil
                                 </button>
                             </li>
-
-
                             <li class="px-5 py-3 transition duration-200 hover:bg-gray-100">
                                 <a href="@Url.Action("Logout", "Login")" class="block font-semibold text-black">
                                     🚪 Cerrar Sesión
@@ -247,9 +245,9 @@
                     const results = await response.json();
 
                     if (results.length > 0) {
-                        let resultsHtml = `<ul class="bg-white border shadow-lg rounded-lg p-3">`;
+                        let resultsHtml = `<ul class="rounded-lg border bg-white p-3 shadow-lg">`;
                         results.forEach(item => {
-                            resultsHtml += `<li class="p-2 hover:bg-gray-200 cursor-pointer">
+                            resultsHtml += `<li class="cursor-pointer p-2 hover:bg-gray-200">
                                                 <a href="${item.Url}" class="block text-black">${item.Tipo}: ${item.Nombre}</a>
                                             </li>`;
                         });
@@ -401,3 +399,23 @@
 </body>
 
 </html>
+<style>
+    html, body {
+        height: 100%;
+        margin: 0;
+    }
+
+    body {
+        display: flex;
+        flex-direction: column;
+    }
+
+    main {
+        flex: 1;
+    }
+
+    footer {
+        margin-top: auto;
+    }
+
+</style>
