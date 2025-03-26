@@ -31,11 +31,22 @@ namespace Abastecete.Controllers
             {
                 int duracionOferta = _manejadorOfertas.ObtenerDuracionOferta(idLocal.Value);
                 int cantidadOfertas = _manejadorOfertas.CantidadOfertas(idLocal.Value);
+                int totalCreadas = _manejadorOfertas.TotalOfertasCreadasVigentesPorMembresia(idLocal.Value);
+                int limiteTotal = (duracionOferta == 12) ? 10 : 20;
 
                 ViewBag.DuracionOferta = duracionOferta;
                 ViewBag.CantidadOfertas = cantidadOfertas;
 
-                bool puedeCrearOferta = (duracionOferta == 12 && cantidadOfertas <= 3) || (duracionOferta == 24 && cantidadOfertas <= 5);
+                bool excedeSimultaneas = (duracionOferta == 12 && cantidadOfertas > 3) ||
+                         (duracionOferta == 24 && cantidadOfertas > 5);
+
+                bool excedeTotal = totalCreadas >= limiteTotal;
+
+                bool puedeCrearOferta = !excedeSimultaneas && !excedeTotal;
+
+                ViewBag.DuracionOferta = duracionOferta;
+                ViewBag.ExcedeSimultaneas = excedeSimultaneas;
+                ViewBag.ExcedeTotal = excedeTotal;
                 ViewBag.PuedeCrearOferta = puedeCrearOferta;
 
                 if (puedeCrearOferta)
@@ -64,7 +75,6 @@ namespace Abastecete.Controllers
 
             return View();
         }
-
 
         public IActionResult Gestionar()
         {
