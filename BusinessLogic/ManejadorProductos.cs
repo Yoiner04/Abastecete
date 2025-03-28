@@ -116,8 +116,6 @@ namespace BusinessLogic
                         ImagenUrl = row["IMAGEN_URL"].ToString(),
                         IdSubCategoria = Convert.ToInt32(row["FK_ID_SUB_CATEGORIA"])
                     });
-                
-      
             }
             return productos;
         }

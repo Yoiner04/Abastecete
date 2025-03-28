@@ -107,47 +107,58 @@
         }
 
         <!-- Primera Fila -->
-        <div class="mb-6 flex flex-wrap justify-center gap-4 sm:space-x-6">
+        <div class="mb-6 flex flex-wrap justify-center gap-4">
             @for (int i = 0; i < primeraFila; i++)
             {
-                <div class="flex flex-col items-center">
-                    <div class="category w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 lg:w-40 lg:h-40 bg-gray-200 shadow-lg">
+                <div class="flex flex-col items-center
+                    w-[28%] sm:w-[22%] md:w-[12%] lg:w-[12%]">
+                    <div class="category aspect-square w-full bg-gray-200 shadow-lg">
                         <img src="@categoriasActivas[i].Imagen" alt="@categoriasActivas[i].Nombre" class="w-full h-full object-cover">
-
                     </div>
-                    <p class="mt-2 text-center text-xs font-medium sm:text-sm">@categoriasActivas[i].Nombre</p>
+                    <p class="mt-2 text-center text-xs font-medium sm:text-sm">
+                        @categoriasActivas[i].Nombre
+                    </p>
                 </div>
             }
         </div>
 
         <!-- Segunda Fila -->
-        <div class="flex flex-wrap justify-center gap-4 sm:space-x-6">
+        <div class="flex flex-wrap justify-center gap-4">
             @for (int i = primeraFila; i < totalCategorias; i++)
             {
-                <div class="flex flex-col items-center">
-
-                    <div class="category w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 lg:w-40 lg:h-40 bg-gray-200 shadow-lg">
+                <div class="flex flex-col items-center
+                    w-[28%] sm:w-[22%] md:w-[12%] lg:w-[12%]">
+                    <div class="category aspect-square w-full bg-gray-200 shadow-lg">
                         <img src="@categoriasActivas[i].Imagen" alt="@categoriasActivas[i].Nombre" class="w-full h-full object-cover">
-
                     </div>
-                    <p class="mt-2 text-center text-xs font-medium sm:text-sm">@categoriasActivas[i].Nombre</p>
+                    <p class="mt-2 text-center text-xs font-medium sm:text-sm">
+                        @categoriasActivas[i].Nombre
+                    </p>
                 </div>
             }
         </div>
+
     </section>
 
     <!-- OFERTAS FLASH -->
     <section class="off-section p-6 lg:p-10" id="ofertas-container">
-        <!-- Encabezado -->
-        <div class="mb-4 flex items-center justify-between">
-            <h2 class="pl-10 text-lg font-bold text-gray-800">Ofertas flash: Por tiempo limitado</h2>
-            <a href="@Url.Action("ConsultarTodo", "OfertasFlash")" class="flex items-center pr-10 text-sm font-medium text-gray-600 hover:text-gray-800">
-                Ver todo <span class="ml-1">&gt;</span>
-            </a>
-        </div>
+        
         @{
             var ofertas = (ViewBag.OfertasFlash as IEnumerable<dynamic>)?.Where(o => o.Estado == 1).Take(6);
         }
+
+        <!-- Encabezado -->
+        <div class="mb-4 flex items-center justify-between">
+            <h2 class="pl-10 text-lg font-bold text-gray-800">Ofertas flash: Por tiempo limitado</h2>
+            @if (ofertas != null && ofertas.Any())
+            {
+                <a href="@Url.Action("ConsultarTodo", "OfertasFlash")" class="flex items-center pr-10 text-sm font-medium text-gray-600 hover:text-gray-800">
+                    Ver todo <span class="ml-1">&gt;</span>
+                </a>
+            }
+        </div>
+
+        
         @if (ofertas != null && ofertas.Any())
         {
 

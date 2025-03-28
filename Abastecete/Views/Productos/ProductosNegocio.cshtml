@@ -75,12 +75,13 @@
                     @foreach (var producto in ViewBag.productos)
                     {
                         <div id="producto-@producto.Id" class="producto relative flex h-[400px] w-full flex-col rounded-lg bg-white p-6 shadow-md" data-categoria-id="@producto.IdSubCategoria" data-precio="@producto.Precio">
-                            <div class="h-48 w-full rounded-md bg-gray-300"></div>
+                            <img src="@producto.ImagenUrl" alt="@producto.Nombre" class="h-full w-full object-contain" />
                             <h3 class="mt-4 text-lg font-semibold">@producto.Nombre</h3>
                             <p class="text-xl font-bold text-orange-500">$@producto.Precio</p>
                             <button onclick="mostrarDetalle('@producto.Nombre', '@producto.Precio', '@producto.ImagenUrl', '@producto.Id')" class="mt-4 self-center rounded-lg bg-[#1A2D3D] px-6 py-2 text-white">Ver</button>
                         </div>
                     }
+
                 </div>
             </div>
         </div>
