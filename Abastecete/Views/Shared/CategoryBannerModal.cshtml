@@ -1,6 +1,6 @@
 ﻿<!-- CategoryBannerModal.cshtml -->
-<div id="categoryBannerModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center overflow-hidden mt-24">
-    <div class="bg-white p-6 rounded-lg w-4/5 max-w-3xl relative shadow-lg">
+<div id="categoryBannerModal" class="hidden fixed inset-0 z-50 bg-black bg-opacity-50 flex justify-center items-center px-4 py-8">
+    <div class="bg-white p-6 rounded-lg w-full max-w-5xl shadow-lg max-h-[90vh] overflow-y-auto md:overflow-visible md:max-h-full">
         <h2 class="text-xl font-bold mb-4 text-center text-gray-800">Actualizar Banners de Categoría</h2>
         <form id="uploadCategoryBannerForm" enctype="multipart/form-data" class="flex flex-col gap-4">
             <!-- Selector de categoría -->
@@ -17,25 +17,28 @@
                 @for (int i = 1; i <= 6; i++)
                 {
                     var tipo = i <= 2 ? "Ancha" : "Cuadrada";
-                    var rutaBase = $"/images/default.webp";
+                    var rutaBase = "/images/default.webp";
 
                     <div class="flex flex-col items-center border p-3 rounded-lg shadow-md">
-                        <label class="text-sm font-medium">Imagen @tipo @((i <= 2) ? i : i - 2)</label>
-                        <img id="previewBanner@(i)" src="@rutaBase" alt="Banner @i" class="w-48 h-24 object-cover rounded-lg mb-2">
-                        <input type="file" id="bannerImage@(i)" name="imagen@(i)" accept="image/*" class="w-full">
+                        <label class="text-sm font-medium mb-2">Imagen @tipo @((i <= 2) ? i : i - 2)</label>
+                        <img id="previewBanner@(i)" src="@rutaBase" alt="Banner @i" class="w-full h-28 object-cover rounded-lg mb-2">
+                        <input type="file" id="bannerImage@(i)" name="imagen@(i)" accept="image/*" class="text-xs w-full">
                     </div>
                 }
             </div>
 
-            <div class="text-center mt-4">
+            <!-- Botones -->
+            <div class="mt-4 flex flex-col sm:flex-row justify-center gap-4">
                 <button type="submit"
                         class="bg-green-600 text-white font-medium rounded-lg shadow-md transition-all duration-300 ease-in-out
                         hover:bg-green-700 focus:ring focus:ring-green-300
-                        px-3 py-2 text-sm sm:px-4 sm:py-2 sm:text-xs md:px-8 md:py-4 md:text-lg">
+                        px-6 py-3">
                     Subir Imágenes
                 </button>
 
-                <button type="button" onclick="cerrarCategoryBannerModal()" class="bg-gray-500 text-white px-6 py-2 rounded-lg shadow-md hover:bg-gray-600">Cerrar</button>
+                <button type="button" onclick="cerrarCategoryBannerModal()" class="bg-gray-500 text-white px-6 py-3 rounded-lg shadow-md hover:bg-gray-600">
+                    Cerrar
+                </button>
             </div>
         </form>
     </div>
@@ -64,8 +67,6 @@
     function actualizarPrevisualizaciones() {
         let categoria = document.getElementById("categorySelect").value;
         for (let i = 1; i <= 6; i++) {
-            let tipo = i <= 2 ? "Ancha" : "Cuadrada";
-            let index = (i <= 2) ? i : i - 2;
             let imgElement = document.getElementById("previewBanner" + i);
             imgElement.src = `/images/${categoria}/banner${i}.webp`;
             imgElement.onerror = function () {
