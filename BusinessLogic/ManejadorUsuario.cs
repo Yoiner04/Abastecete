@@ -82,7 +82,7 @@ namespace BusinessLogic
                 new Parametro("id_usuario", idUsuario)
             };
 
-            DataTable datos = conexion.EjecutarConsulta("consultar_usuario", parametros);
+            DataTable datos = conexion.EjecutarConsulta("consultar_usuarios", parametros);
             List<Usuario> usuarios = new List<Usuario>();
 
             foreach (DataRow row in datos.Rows)
@@ -95,19 +95,21 @@ namespace BusinessLogic
                         Nombre = row["NOMBRES"].ToString(),
                         Apellido = row["APELLIDOS"].ToString(),
                         Telefono = row["TELEFONO"].ToString(),
-                        Estado = Convert.ToInt32(row["ESTADO"]) == 1 ? "Activo" : "Inactivo"
+                        Estado = Convert.ToInt32(row["ESTADO"]) == 1 ? "Activo" : "Inactivo",
+                        Correo = row["CORREO"].ToString()
                     },
                     Rol = new Rol
                     {
                         Nombre = row["NOMBRE_ROL"].ToString()
                     },
-                    Correo = row["NOMBRE_USUARIO"].ToString(),
+                    Correo = row["CORREO"].ToString(),
                     CodigoReferido = 0,
-                    Membresia = row["FK_ID_TIPOMEMBRESIA"].ToString(),
+                    Membresia = row["NOMBRE"].ToString() // Aquí va el nombre de la membresía directamente
                 });
             }
             return usuarios;
         }
+
 
 
         public DataTable LoginGoogle(string correo)

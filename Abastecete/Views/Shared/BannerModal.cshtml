@@ -1,59 +1,76 @@
-﻿<div id="bannerModal" class="bg-opacity-50 fixed inset-0 z-50 flex hidden items-center justify-center bg-black">
-    <div id="bannerModalContent" class="max-h-[80vh] w-2/3 overflow-y-auto rounded-lg bg-white p-5">
+﻿<div id="bannerModal" class="fixed inset-0 z-50 flex hidden items-center justify-center bg-black bg-opacity-50">
+    <div id="bannerModalContent" class="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-lg bg-white p-4 md:p-6">
         <h2 class="mb-4 text-center text-xl font-bold">Editar Banners</h2>
 
-        <!-- Carrusel -->
-        <h3 class="mb-2 text-lg font-semibold">Carrusel</h3>
-        <form id="uploadBannerForm" enctype="multipart/form-data" class="grid grid-cols-1 gap-4">
-            <div class="flex items-center gap-4">
-                <input type="file" id="carouselImage1" name="carouselImage1" accept="image/*" class="w-full">
-                <img src="/images/carrusel1.webp?t=@DateTime.Now.Ticks" alt="Carrusel 1" class="h-24 w-24 rounded-lg object-cover">
-            </div>
-            <div class="flex items-center gap-4">
-                <input type="file" id="carouselImage2" name="carouselImage2" accept="image/*" class="w-full">
-                <img src="/images/carrusel2.webp?t=@DateTime.Now.Ticks" alt="Carrusel 2" class="h-24 w-24 rounded-lg object-cover">
-            </div>
-            <div class="flex items-center gap-4">
-                <input type="file" id="carouselImage3" name="carouselImage3" accept="image/*" class="w-full">
-                <img src="/images/carrusel3.webp?t=@DateTime.Now.Ticks" alt="Carrusel 3" class="h-24 w-24 rounded-lg object-cover">
+        <form id="uploadBannerForm" enctype="multipart/form-data" class="space-y-6">
+            <!-- Carrusel -->
+            <div>
+                <h3 class="mb-2 text-lg font-semibold">Carrusel</h3>
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                    <div class="flex flex-col gap-2">
+                        <img src="/images/carrusel1.webp?t=@DateTime.Now.Ticks" alt="Carrusel 1"
+                             class="h-32 w-full rounded-lg object-cover shadow">
+                        <input type="file" id="carouselImage1" name="carouselImage1" accept="image/*" class="text-xs">
+                    </div>
+                    <div class="flex flex-col gap-2">
+                        <img src="/images/carrusel2.webp?t=@DateTime.Now.Ticks" alt="Carrusel 2"
+                             class="h-32 w-full rounded-lg object-cover shadow">
+                        <input type="file" id="carouselImage2" name="carouselImage2" accept="image/*" class="text-xs">
+                    </div>
+                    <div class="flex flex-col gap-2">
+                        <img src="/images/carrusel3.webp?t=@DateTime.Now.Ticks" alt="Carrusel 3"
+                             class="h-32 w-full rounded-lg object-cover shadow">
+                        <input type="file" id="carouselImage3" name="carouselImage3" accept="image/*" class="text-xs">
+                    </div>
+                </div>
             </div>
 
             <!-- Laterales -->
-            <h3 class="mt-4 mb-2 text-lg font-semibold">Laterales</h3>
-            <div class="flex items-center gap-4">
-                <input type="file" id="sideImage1" name="sideImage1" accept="image/*" class="w-full">
-                <img src="/images/lateral1.webp?t=@DateTime.Now.Ticks" alt="Lateral 1" class="h-24 w-24 rounded-lg object-cover">
-            </div>
-            <div class="flex items-center gap-4">
-                <input type="file" id="sideImage2" name="sideImage2" accept="image/*" class="w-full">
-                <img src="/images/lateral2.webp?t=@DateTime.Now.Ticks" alt="Lateral 2" class="h-24 w-24 rounded-lg object-cover">
+            <div>
+                <h3 class="mb-2 text-lg font-semibold">Laterales</h3>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="flex flex-col gap-2">
+                        <img src="/images/lateral1.webp?t=@DateTime.Now.Ticks" alt="Lateral 1"
+                             class="h-32 w-full rounded-lg object-cover shadow">
+                        <input type="file" id="sideImage1" name="sideImage1" accept="image/*" class="text-xs">
+                    </div>
+                    <div class="flex flex-col gap-2">
+                        <img src="/images/lateral2.webp?t=@DateTime.Now.Ticks" alt="Lateral 2"
+                             class="h-32 w-full rounded-lg object-cover shadow">
+                        <input type="file" id="sideImage2" name="sideImage2" accept="image/*" class="text-xs">
+                    </div>
+                </div>
             </div>
 
             <!-- Botones -->
-            <div class="mt-4 flex justify-center gap-4">
-                <button type="submit" class="rounded bg-blue-500 px-4 py-2 text-white">Subir Imágenes</button>
-                <button type="button" onclick="cerrarBannerModal()" class="rounded bg-gray-500 px-4 py-2 text-white">Cerrar</button>
+            <div class="flex flex-col sm:flex-row justify-center gap-4">
+                <button type="submit"
+                        class="rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600 transition">
+                    Subir Imágenes
+                </button>
+                <button type="button" onclick="cerrarBannerModal()"
+                        class="rounded bg-gray-500 px-4 py-2 text-white hover:bg-gray-600 transition">
+                    Cerrar
+                </button>
             </div>
         </form>
     </div>
 </div>
 
+
 <script>
     function abrirBannerModal() {
-        const modal = document.getElementById("bannerModal");
         document.body.classList.add("overflow-hidden");
-        modal.classList.remove("hidden");
+        document.getElementById("bannerModal").classList.remove("hidden");
     }
 
     function cerrarBannerModal() {
-        const modal = document.getElementById("bannerModal");
         document.body.classList.remove("overflow-hidden");
-        modal.classList.add("hidden");
+        document.getElementById("bannerModal").classList.add("hidden");
     }
 
     document.getElementById("bannerModal").addEventListener("click", function (event) {
-        const modalContent = document.getElementById("bannerModalContent");
-        if (!modalContent.contains(event.target)) {
+        if (!document.getElementById("bannerModalContent").contains(event.target)) {
             cerrarBannerModal();
         }
     });
@@ -65,7 +82,7 @@
         let hasFile = false;
 
         inputs.forEach(id => {
-            let file = document.getElementById(id).files[0] || null;
+            let file = document.getElementById(id).files[0];
             if (file) {
                 formData.append(id, file);
                 hasFile = true;
