@@ -39,15 +39,26 @@
             </button>
 
             <!-- Contenedor del Menú de Navegación -->
-            <div id="menu-container" class="absolute left-1/2 z-50 hidden w-auto -translate-x-1/2 transform items-center bg-gray-100 md:flex md:bg-transparent">
-                <ul id="menu" class="flex-col text-base font-bold text-black md:flex md:space-x-6 md:flex-row">
+            <div id="menu-container" class="z-50 flex w-full flex-wrap items-center justify-center gap-4 bg-gray-100 px-4 py-2 md:absolute md:left-1/2 md:-translate-x-1/2 md:transform md:w-auto md:gap-6 md:bg-transparent">
+                <ul id="menu" class="flex flex-col items-center gap-2 text-base font-bold text-black md:flex-row md:gap-6">
                     <li>
-                        <form id="search-form" action="@Url.Action("Buscar", "Busqueda")" method="GET" class="flex items-center rounded-lg border px-2">
-                            <input type="text" id="search-input" name="query" class="px-2 py-1 outline-none" placeholder="Buscar...">
-                            <button type="submit" class="ml-2 text-black hover:text-green-600">
-                                <i class="fa fa-search"></i>
-                            </button>
+                        <form id="search-form" action="@Url.Action("Index", "Buscador")" method="get" class="w-full max-w-xs">
+                            <div class="relative">
+                                <div class="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-2">
+                                    <i class="fa fa-search text-sm text-gray-500 dark:text-gray-400"></i>
+                                </div>
+                                <input type="text" id="search-input" name="query"
+                                       value="@Context.Request.Query["query"]"
+                                       class="block w-full rounded-md border border-gray-300 bg-gray-50 py-2 ps-8 pe-24 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500"
+                                       placeholder="Buscar..." required />
+
+                                <button type="submit"
+                                        class="absolute end-1 top-1 bottom-1 my-auto rounded-md bg-[#F66623] px-3 py-1.5 text-sm font-semibold text-white hover:bg-[#e75b1f] focus:outline-none focus:ring-2 focus:ring-blue-300">
+                                    Buscar
+                                </button>
+                            </div>
                         </form>
+
                     </li>
                     <li>
                         <a href="@Url.Action("Listar","Categorias")" class="block px-4 py-2 whitespace-nowrap text-black hover:text-green-600">
@@ -72,6 +83,7 @@
                     </li>
                 </ul>
             </div>
+
 
 
             <!-- Usuario -->
@@ -229,51 +241,6 @@
             <div id="edit-profile-content" class="overflow-auto"></div>
         </div>
     </div>
-
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            const searchForm = document.getElementById("search-form");
-            const searchInput = document.getElementById("search-input");
-
-            searchForm.addEventListener("submit", async function (e) {
-                e.preventDefault();
-                const query = searchInput.value.trim();
-                if (!query) return;
-
-                try {
-                    const response = await fetch(`/api/Busqueda/buscar?query=${encodeURIComponent(query)}`);
-                    const results = await response.json();
-
-                    if (results.length > 0) {
-                        let resultsHtml = `<ul class="rounded-lg border bg-white p-3 shadow-lg">`;
-                        results.forEach(item => {
-                            resultsHtml += `<li class="cursor-pointer p-2 hover:bg-gray-200">
-                                                <a href="${item.Url}" class="block text-black">${item.Tipo}: ${item.Nombre}</a>
-                                            </li>`;
-                        });
-                        resultsHtml += `</ul>`;
-
-                        showSearchResults(resultsHtml);
-                    } else {
-                        showSearchResults("<p class='text-gray-600'>No se encontraron resultados.</p>");
-                    }
-                } catch (error) {
-                    console.error("Error en la búsqueda:", error);
-                }
-            });
-
-            function showSearchResults(html) {
-                let resultsContainer = document.getElementById("search-results");
-                if (!resultsContainer) {
-                    resultsContainer = document.createElement("div");
-                    resultsContainer.id = "search-results";
-                    resultsContainer.classList.add("absolute", "top-14", "right-0", "w-64");
-                    document.body.appendChild(resultsContainer);
-                }
-                resultsContainer.innerHTML = html;
-            }
-        });
-    </script>
 
 
     <script>
