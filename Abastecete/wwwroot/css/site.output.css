@@ -1,4 +1,7 @@
 /*! tailwindcss v4.0.17 | MIT License | https://tailwindcss.com */
+.pointer-events-none {
+  pointer-events: none;
+}
 .collapse {
   visibility: collapse;
 }
@@ -522,6 +525,9 @@
 .bg-\[\#F6580F\] {
   background-color: #F6580F;
 }
+.bg-\[\#F66623\] {
+  background-color: #F66623;
+}
 .bg-transparent {
   background-color: transparent;
 }
@@ -734,6 +740,20 @@
   &:hover {
     @media (hover: hover) {
       background-color: #15803D;
+    }
+  }
+}
+.hover\:bg-\[\#F66629\] {
+  &:hover {
+    @media (hover: hover) {
+      background-color: #F66629;
+    }
+  }
+}
+.hover\:bg-\[\#e75b1f\] {
+  &:hover {
+    @media (hover: hover) {
+      background-color: #e75b1f;
     }
   }
 }

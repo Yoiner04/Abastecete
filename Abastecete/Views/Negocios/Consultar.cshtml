@@ -20,7 +20,7 @@
 
 <body class="bg-[#F4F1E9] text-gray-800">
     <section class="my-4 flex h-40 w-full items-center justify-center rounded-lg bg-gray-200">
-        <img src="/images/banner_proveedores.webp?t=@DateTime.Now.Ticks" alt="Banner Proveedores" class="h-full w-full object-cover rounded-lg">
+        <img src="/images/banner_proveedores.webp?t=@DateTime.Now.Ticks" alt="Banner Proveedores" class="h-full w-full rounded-lg object-cover">
     </section>
     <div class="flex flex-wrap items-center justify-between bg-white p-4 shadow-md">
         <div class="flex items-center gap-4">
@@ -282,7 +282,8 @@
                 type: "POST",
                 data: { idCategoria: idCategoria },
                 success: function (response) {
-                    negocios = response;
+                    negocios = response
+                    obtenerUbicacionUsuario()
                     actualizarListaNegocios(negocios);
                     cargarNegocios(negocios);
                 },

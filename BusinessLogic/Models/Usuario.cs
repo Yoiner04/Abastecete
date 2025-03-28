@@ -9,7 +9,7 @@
 
         public string Contrasenia { get; set; }
 
-        public int CodigoReferido { get; set; }
+        public int? CodigoReferido { get; set; }
 
         public Rol Rol { get; set; }
 

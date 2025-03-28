@@ -43,8 +43,7 @@
                     }
                     @if (membresia.Costo == 0)
                     {
-                        <a href="@Url.Action("CompletarRegistro", "Negocios", new { tipoMembresiaId = membresia.Id })"
-                        class="mx-auto mt-4 inline-block w-2/4 rounded-lg bg-[#F6580F] px-4 py-2 text-white hover:bg-[#15803D]">
+                        <a href="@Url.Action("CompletarRegistro", "Negocios", new { tipoMembresiaId = membresia.Id })" class="mx-auto mt-4 inline-block w-2/4 rounded-lg bg-[#F6580F] px-4 py-2 text-white hover:bg-[#15803D]">
                             Escoger
                         </a>
                     }
@@ -62,6 +61,7 @@
                            data-modal-toggle="default-modal">
                             Seleccionar
                         </a>
+                       
 
 
                     }
@@ -110,7 +110,7 @@
 
     <script>
 
-                document.addEventListener("DOMContentLoaded", function () {
+        document.addEventListener("DOMContentLoaded", function () {
             const buttons = document.querySelectorAll(".open-modal");
             const selectPlanes = document.getElementById("planes");
             const epaycoContainer = document.getElementById("epayco-button-container");
@@ -119,7 +119,7 @@
             let nombreMembresia = "";
             let descripcionMembresia = "";
 
-            function crearBotonEpayco(precio) {
+            function crearBotonEpayco(precio,idMembresia) {
                 epaycoContainer.innerHTML = "";
 
                 const precioTotal = Math.round(precio); // Asegurar entero
@@ -138,17 +138,21 @@
                 epaycoScript.src = "https://checkout.epayco.co/checkout.js";
                 epaycoScript.classList.add("epayco-button");
                 epaycoScript.setAttribute("data-epayco-key", "@ViewBag.apikey");
-        epaycoScript.setAttribute("data-epayco-amount", precioTotal.toString());
-        epaycoScript.setAttribute("data-epayco-tax", impuesto.toString());
-        epaycoScript.setAttribute("data-epayco-tax-base", precioBase.toString());
-        epaycoScript.setAttribute("data-epayco-name", nombreMembresia || "Sin Nombre");
-        epaycoScript.setAttribute("data-epayco-description", descripcionMembresia || "Sin Descripción");
+                epaycoScript.setAttribute("data-epayco-amount", precioTotal.toString());
+                epaycoScript.setAttribute("data-epayco-tax", impuesto.toString());
+                epaycoScript.setAttribute("data-epayco-tax-base", precioBase.toString());
+                epaycoScript.setAttribute("data-epayco-name", nombreMembresia || "Sin Nombre");
+                epaycoScript.setAttribute("data-epayco-description", descripcionMembresia || "Sin Descripción");
 
                 epaycoScript.setAttribute("data-epayco-currency", "cop");
                 epaycoScript.setAttribute("data-epayco-country", "co");
-                epaycoScript.setAttribute("data-epayco-test", "false");
                 epaycoScript.setAttribute("data-epayco-external", "false");
                 epaycoScript.setAttribute("data-epayco-button", "https://multimedia.epayco.co/dashboard/btns/btn5.png");
+
+                epaycoScript.setAttribute("data-epayco-response", `https://localhost:7076/Negocios/CompletarRegistro?tipoMembresiaId=${idMembresia}`);
+                epaycoScript.setAttribute("data-epayco-test", "true");
+
+                console.log(`/Negocios/CompletarRegistro?tipoMembresiaId=${idMembresia}`);
 
                 epaycoContainer.appendChild(epaycoScript);
             }
@@ -164,6 +168,7 @@
             // Evento para capturar la membresía seleccionada
             buttons.forEach(button => {
                 button.addEventListener("click", function () {
+                    idMembresia = this.getAttribute("data-id");
                     nombreMembresia = this.getAttribute("data-nombre") || "Sin Nombre";
                     descripcionMembresia = this.getAttribute("data-descripcion") || "Sin Descripción";
                     precios.mensual = Math.round(parseFloat(this.getAttribute("data-costomensual")) || 0);
@@ -177,7 +182,7 @@
 
                     // Por defecto, establecer el plan mensual si existe
                     if (precios.mensual > 0) {
-                        crearBotonEpayco(precios.mensual);
+                        crearBotonEpayco(precios.mensual,idMembresia);
                     } else {
                         console.warn("⚠ El precio mensual es 0 o no está definido.");
                     }

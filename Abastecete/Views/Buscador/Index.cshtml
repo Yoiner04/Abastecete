@@ -1,0 +1,101 @@
+﻿@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+}
+<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <h2 class="mt-10 mb-6 border-b border-gray-300 pb-2 text-center text-2xl font-bold text-gray-800">
+        🟠 Ofertas encontradas
+    </h2>
+
+    <div id="offers-container" class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        @foreach (var oferta in ViewBag.Ofertas)
+        {
+            <div class="relative flex flex-col rounded-lg bg-white p-4 shadow-md">
+                <div class="relative h-48 w-full overflow-hidden rounded-md bg-gray-300">
+                    <img src="@oferta.ImagenProductoOfertaFlash" alt="Imagen del Producto" class="absolute inset-0 h-full w-full object-cover">
+                </div>
+
+                <div class="border-2 absolute top-4 left-4 h-20 w-20 overflow-hidden rounded-full border-white shadow-md">
+                    <img src="@oferta.FotoLocal" alt="Local" class="h-full w-full object-cover">
+                </div>
+
+                <!-- Información de la oferta -->
+                <div class="mt-4 text-center">
+                    <h3 class="text-lg font-bold text-gray-800">
+                        @oferta.Titulo <span class="text-gray-500">(@oferta.ProductoOfertaFlash)</span>
+                    </h3>
+                    <p class="text-gray-600">@oferta.Descripcion</p>
+                    <p class="text-sm font-medium text-gray-500">📍 @oferta.NombreLocal</p>
+
+                    <!-- Temporizador -->
+                    <div class="mt-4">
+                        <span class="font-semibold text-red-500">
+                            ⏳ Expira en <span class="countdown-timer" data-expiration="@oferta.TiempoOferta?.ToString("yyyy-MM-ddTHH:mm:ss")"></span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <h2 class="mt-10 mb-6 border-b border-gray-300 pb-2 text-center text-2xl font-bold text-gray-800">
+        🛒 Productos encontrados
+    </h2>
+
+    <div id="products-container" class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        @foreach (var producto in ViewBag.Productos)
+        {
+            <div class="relative flex flex-col rounded-lg bg-white p-4 shadow-md">
+                <!-- Imagen del producto -->
+                <div class="relative h-48 w-full overflow-hidden rounded-md bg-gray-300">
+                    <img src="@producto.ImagenUrl" alt="Imagen del Producto" class="absolute inset-0 h-full w-full object-cover">
+                </div>
+
+                <!-- Información del producto -->
+                <div class="mt-4 text-center">
+                    <h3 class="text-lg font-bold text-gray-800">@producto.Nombre</h3>
+                    <p class="font-semibold text-green-700">$@producto.Precio</p>
+                </div>
+
+                <!-- Información del local (parte inferior) -->
+
+                <a href="@Url.Action("ConsultarProductos", "Negocios", new { idLocal = producto.IdLocal })">
+                    <div class="mt-4 flex items-center gap-3 border-t pt-3">
+                        <div class="border-2 h-14 w-14 overflow-hidden rounded-full border-white shadow-md">
+                            <img src="@producto.FotoLocal" alt="Foto del Local" class="h-full w-full object-cover">
+                        </div>
+                        <div class="text-left">
+                            <p class="text-sm font-semibold text-gray-800">@producto.NombreLocal</p>
+                            <p class="text-xs text-gray-500">@producto.DireccionLocal</p>
+                        </div>
+                    </div>
+                </a>
+
+            </div>
+        }
+    </div>
+
+
+</div>
+
+    <script>
+        function actualizarContadores() {
+            document.querySelectorAll(".countdown-timer").forEach(timer => {
+                const expirationTime = new Date(timer.dataset.expiration).getTime();
+                const now = new Date().getTime();
+                const timeLeft = expirationTime - now;
+
+                if (timeLeft > 0) {
+                    const hours = Math.floor(timeLeft / (1000 * 60 * 60));
+                    const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+                    timer.innerText = `${hours}h ${minutes}m ${seconds}s`;
+                } else {
+                    timer.innerText = "Expirado";
+                }
+            });
+        }
+        setInterval(actualizarContadores, 1000);
+        actualizarContadores();
+    </script>

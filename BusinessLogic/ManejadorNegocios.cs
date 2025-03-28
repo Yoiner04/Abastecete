@@ -26,7 +26,7 @@ namespace BusinessLogic
                 new Parametro("p_nombre_local", negocio.Nombre),
                 new Parametro("p_direccion_local", negocio.Direccion),
                 new Parametro("p_telefono_local", negocio.Telefono),
-                new Parametro("p_fotos_local", "/images/ec46cdab-e96a-4bb6-bacc-0c5b408dc97d_frutaverdura.webp")
+                new Parametro("p_fotos_local", negocio.Logotipo)
             };
             return conexion.EjecutarTransaccion("crear_local", parametros);
         }
