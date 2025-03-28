@@ -223,6 +223,29 @@ namespace BusinessLogic
             return 0; // Si hay error o no hay ofertas, retorna 0
         }
 
+        public int TotalOfertasCreadasVigentesPorMembresia(int idLocal)
+        {
+            try
+            {
+                List<Parametro> parametros = new List<Parametro>
+                {
+                    new Parametro("p_id_local", idLocal)
+                };
+
+                DataTable datos = conexion.EjecutarConsulta("total_ofertas_flash_local", parametros);
+
+                if (datos.Rows.Count > 0)
+                {
+                    return Convert.ToInt32(datos.Rows[0][0]);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error en TotalOfertasCreadasVigentesPorMembresia: {ex.Message}");
+            }
+
+            return 0;
+        }
 
     }
 }

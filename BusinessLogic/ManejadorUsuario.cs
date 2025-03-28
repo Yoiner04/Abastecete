@@ -103,7 +103,7 @@ namespace BusinessLogic
                     },
                     Correo = row["NOMBRE_USUARIO"].ToString(),
                     CodigoReferido = 0,
-                    Membresia = row["PK_ID_TIPO_MEMBRESIA"].ToString(),
+                    Membresia = row["FK_ID_TIPOMEMBRESIA"].ToString(),
                 });
             }
             return usuarios;

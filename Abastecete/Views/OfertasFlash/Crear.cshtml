@@ -9,12 +9,22 @@
     <div class="w-full max-w-lg rounded-lg bg-white p-8 shadow-lg">
         <h2 class="text-center text-2xl font-bold text-[#23916A]">Crear Nueva Oferta Flash</h2>
 
-        @if (!puedeCrearOferta)
+        @if (!ViewBag.PuedeCrearOferta)
         {
-            <p class="text-center font-semibold text-red-600">
-                ¡Has alcanzado el límite de ofertas simultáneas para tu membresía!
-            </p>
+
+            <div class="text-center text-red-600 font-semibold space-y-2">
+                @if ((bool)ViewBag.ExcedeSimultaneas)
+                {
+                    <p>¡Has alcanzado el límite de ofertas simultáneas para tu membresía!</p>
+                }
+
+                @if ((bool)ViewBag.ExcedeTotal)
+                {
+                    <p>¡Has alcanzado el límite total de ofertas permitidas por tu membresía!</p>
+                }
+            </div>
         }
+
         else
         {
             <p class="mb-4 text-center text-gray-600">

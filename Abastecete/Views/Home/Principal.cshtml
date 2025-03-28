@@ -111,8 +111,9 @@
             @for (int i = 0; i < primeraFila; i++)
             {
                 <div class="flex flex-col items-center">
-                    <div class="category h-20 w-20 overflow-hidden rounded-full bg-gray-300 shadow-lg sm:w-24 sm:h-24 md:w-32 md:h-32 lg:w-40 lg:h-40">
-                        <img src="@categoriasActivas[i].Imagen" alt="@categoriasActivas[i].Nombre" class="h-full w-full object-cover">
+                    <div class="category w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 lg:w-40 lg:h-40 bg-gray-200 shadow-lg">
+                        <img src="@categoriasActivas[i].Imagen" alt="@categoriasActivas[i].Nombre" class="w-full h-full object-cover">
+
                     </div>
                     <p class="mt-2 text-center text-xs font-medium sm:text-sm">@categoriasActivas[i].Nombre</p>
                 </div>
@@ -124,8 +125,10 @@
             @for (int i = primeraFila; i < totalCategorias; i++)
             {
                 <div class="flex flex-col items-center">
-                    <div class="category h-20 w-20 overflow-hidden rounded-full bg-gray-300 shadow-lg sm:w-24 sm:h-24 md:w-32 md:h-32 lg:w-40 lg:h-40">
-                        <img src="@categoriasActivas[i].Imagen" alt="@categoriasActivas[i].Nombre" class="h-full w-full object-cover">
+
+                    <div class="category w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 lg:w-40 lg:h-40 bg-gray-200 shadow-lg">
+                        <img src="@categoriasActivas[i].Imagen" alt="@categoriasActivas[i].Nombre" class="w-full h-full object-cover">
+
                     </div>
                     <p class="mt-2 text-center text-xs font-medium sm:text-sm">@categoriasActivas[i].Nombre</p>
                 </div>
@@ -147,16 +150,18 @@
         }
         @if (ofertas != null && ofertas.Any())
         {
-            <div id="offers-container" class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+
+            <div id="offers-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
                 @foreach (var oferta in ofertas)
                 {
-                    <div class="relative flex flex-col rounded-lg bg-white p-4 shadow-md">
-                        <div class="relative h-48 w-full overflow-hidden rounded-md bg-gray-300">
-                            <img src="@oferta.ImagenProductoOfertaFlash" alt="Imagen del Producto" class="absolute inset-0 h-full w-full object-cover">
+                    <div class="bg-white p-4 rounded-lg shadow-md flex flex-col relative">
+                        <div class="relative aspect-square overflow-hidden rounded-md bg-gray-300">
+                            <img src="@oferta.ImagenProductoOfertaFlash" alt="Imagen del Producto" class="absolute inset-0 w-full h-full object-cover">
                         </div>
 
-                        <div class="border-2 absolute top-4 left-4 h-20 w-20 overflow-hidden rounded-full border-white shadow-md">
-                            <img src="@oferta.FotoLocal" alt="Local" class="h-full w-full object-cover">
+                        <div class="absolute top-4 left-4 w-28 h-28 rounded-full overflow-hidden border-2 border-white shadow-md">
+                            <img src="@oferta.FotoLocal" alt="Local" class="w-full h-full object-cover">
+
                         </div>
 
                         <!-- Información de la oferta -->
@@ -236,21 +241,26 @@
 
                 if (i === 2) {
                     const highlightedSection = document.createElement("div");
-                    highlightedSection.className = "rounded-xl flex flex-col lg:flex-row items-center py-6 px-6 lg:row-span-2 lg:col-span-1";
+                    highlightedSection.className = "rounded-xl flex flex-col lg:flex-row px-0 py-6 lg:col-span-1 lg:row-span-2 overflow-hidden";
                     highlightedSection.style.backgroundColor = "#23916A";
 
                     highlightedSection.innerHTML = `
-                            <img src="/images/mujer.png" alt="Imagen de mujer" class="h-40 w-40 lg:w-64 lg:h-72">
-                            <div class="mt-4 text-center lg:mt-0 lg:ml-6 lg:text-left">
-                                <h3 class="mb-2 text-base font-bold text-white lg:text-xl">Encuentra mejores proveedores</h3>
-                                <p class="mb-4 text-lg leading-tight font-bold text-white lg:text-3xl">ABASTECE TU NEGOCIO YA</p>
-                                <button class="mt-3 rounded-full px-4 py-2 text-sm text-white lg:text-base lg:px-5" style="background-color: #F66623">
-                                    Ver más
-                                </button>
-                            </div>
-                        `;
+
+            <div class="w-full lg:w-1/2 h-full flex items-end justify-center">
+                        <img src="/images/mujer.png" alt="Imagen de mujer" class="w-full h-auto object-contain">
+            </div>
+            <div class="w-full lg:w-1/2 px-6 text-center lg:text-start flex flex-col justify-center mt-4 lg:mt-0">
+                <h3 class="text-white text-base lg:text-xl font-bold mb-2">Encuentra mejores proveedores</h3>
+                <p class="text-white text-lg lg:text-3xl font-bold mb-4 leading-tight">ABASTECE TU<br>NEGOCIO YA</p>
+                <button class="text-white text-sm lg:text-base px-4 lg:px-5 py-2 mt-3 rounded-full mx-auto lg:mx-0" style="background-color: #F66623">
+                    Ver más
+                </button>
+            </div>
+        `;
+
                     providersGrid.appendChild(highlightedSection);
                 }
+
 
                 if (isSmallScreen && i > 1 && i > 3) return;
 
