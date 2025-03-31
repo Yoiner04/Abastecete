@@ -1,0 +1,40 @@
+﻿@model List<BusinessLogic.Models.Membresia>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Abastecete</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/Abastecete.styles.css" asp-append-version="true" />
+    <link rel="icon" type="image/x-icon" href="~/css/Images/Logo A naranja.png" />
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link rel="stylesheet" href="~/css/styles.css" asp-append-version="true" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/1.6.3/flowbite.min.js"></script>
+
+</head>
+
+<body class="bg-gray-100 py-10">
+    <br />
+    <div class="mx-auto max-w-6xl px-4">
+        <div class="mt-10 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+            @foreach (var membresia in Model)
+            {
+                <div class="flex flex-col justify-between rounded-2xl bg-white p-6 text-center shadow-md">
+                    <div>
+                        <h3 class="text-xl font-semibold">@membresia.Nombre</h3>
+                        <a href="@Url.Action("Publicar", "Membresias", new { nombre = membresia.Nombre })" class="mx-auto mt-4 inline-block w-2/4 rounded-lg bg-[#F6580F] px-4 py-2 text-white hover:bg-[#15803D]" data-modal-target="default-modal" data-modal-toggle="default-modal">
+                            Seleccionar
+                        </a>
+                    </div>
+                    
+                </div>
+            }
+        </div>
+    </div>
+    
+
+</body>
+</html>

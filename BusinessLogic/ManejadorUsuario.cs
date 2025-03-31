@@ -22,7 +22,7 @@ namespace BusinessLogic
                 new Parametro("p_nombre", usuario.Persona.Nombre),
                 new Parametro("p_apellido", usuario.Persona.Apellido),
                 new Parametro("p_documento", usuario.Persona.Documento),
-                new Parametro("p_fk_tipo_documento", usuario.Persona.TipoDeDocumento),
+                new Parametro("p_fk_tipo_documento", usuario.Persona.TipoDeDocumento.Id),
                 new Parametro("p_telefono", usuario.Persona.Telefono),
                 new Parametro("p_correo", usuario.Correo),
                 new Parametro("p_contrasenia", Seguridad.Encriptar(usuario.Contrasenia)),
@@ -42,43 +42,82 @@ namespace BusinessLogic
             return conexion.EjecutarConsulta("login_usuario", parametros);
         }
 
-        public List<Usuario> ObtenerUsuarios(int id)
+
+        ///*Revisar por favor*/
+        //public List<Usuario> ObtenerUsuarios(int id)
+        //{
+        //    List<Parametro> parametros = new List<Parametro>()
+        //    {
+        //        new Parametro("p_id_persona", id)
+        //    };
+        //    DataTable data = conexion.EjecutarConsulta("consultar_usuario", parametros);
+        //    List<Usuario> usuarios = new List<Usuario>();
+        //    foreach (DataRow row in data.AsEnumerable())
+        //    {
+        //        usuarios.Add(new Usuario()
+        //        {
+        //            Id = Convert.ToInt32(row["PK_ID_USUARIO"].ToString()),
+        //            Correo = row["NOMBRE_USUARIO"].ToString(),
+        //            Rol = new Rol()
+        //            {
+        //                Nombre = row["NOMBRE_ROL"].ToString()
+        //            },
+        //            Persona = new Persona()
+        //            {
+        //                Id = Convert.ToInt32(row["PK_ID_PERSONA"].ToString()),
+        //                Nombre = row["NOMBRES"].ToString(),
+        //                Apellido = row["APELLIDOS"].ToString(),
+        //                Documento = Convert.ToInt32(row["DOCUMENTO_IDENTIDAD"].ToString()),
+        //                Telefono = row["TELEFONO"].ToString()
+        //            }
+        //        });
+        //    }
+        //    return usuarios;
+        //}
+
+        public List<Usuario> ConsultarUsuarios(int idUsuario)
         {
             List<Parametro> parametros = new List<Parametro>()
             {
-                new Parametro("p_id_persona", id)
+                new Parametro("id_usuario", idUsuario)
             };
-            DataTable data = conexion.EjecutarConsulta("consultar_usuario", parametros);
+
+            DataTable datos = conexion.EjecutarConsulta("consultar_usuarios", parametros);
             List<Usuario> usuarios = new List<Usuario>();
-            foreach (DataRow row in data.AsEnumerable())
+
+            foreach (DataRow row in datos.Rows)
             {
-                usuarios.Add(new Usuario()
+                usuarios.Add(new Usuario
                 {
-                    Id = Convert.ToInt32(row["PK_ID_USUARIO"].ToString()),
-                    Correo = row["NOMBRE_USUARIO"].ToString(),
-                    Rol = new Rol()
+                    Id = Convert.ToInt32(row["PK_ID_USUARIO"]),
+                    Persona = new Persona
+                    {
+                        Nombre = row["NOMBRES"].ToString(),
+                        Apellido = row["APELLIDOS"].ToString(),
+                        Telefono = row["TELEFONO"].ToString(),
+                        Estado = Convert.ToInt32(row["ESTADO"]) == 1 ? "Activo" : "Inactivo",
+                        Correo = row["CORREO"].ToString()
+                    },
+                    Rol = new Rol
                     {
                         Nombre = row["NOMBRE_ROL"].ToString()
                     },
-                    Persona = new Persona()
-                    {
-                        Id = Convert.ToInt32(row["PK_ID_PERSONA"].ToString()),
-                        Nombre = row["NOMBRES"].ToString(),
-                        Apellido = row["APELLIDOS"].ToString(),
-                        Documento = Convert.ToInt32(row["DOCUMENTO_IDENTIDAD"].ToString()),
-                        Telefono = row["TELEFONO"].ToString()
-                    }
+                    Correo = row["CORREO"].ToString(),
+                    CodigoReferido = 0,
+                    Membresia = row["NOMBRE"].ToString() // Aquí va el nombre de la membresía directamente
                 });
             }
             return usuarios;
         }
 
+
+
         public DataTable LoginGoogle(string correo)
         {
             List<Parametro> parametros = new List<Parametro>()
-    {
-        new Parametro("p_correo", correo)
-    };
+            {
+                new Parametro("p_correo", correo)
+            };
 
             return conexion.EjecutarConsulta("login_usuario_google", parametros);
         }
@@ -123,7 +162,7 @@ namespace BusinessLogic
         {
             List<Parametro> parametros = new List<Parametro>()
             {
-        new Parametro("p_correo", correo)
+                new Parametro("p_correo", correo)
             };
 
             return conexion.EjecutarConsulta("obtener_usuario_por_correo", parametros);
@@ -134,7 +173,7 @@ namespace BusinessLogic
         {
             bool resultado = conexion.EjecutarTransaccion("generar_token_recuperacion", new List<Parametro>
             {
-            new Parametro("p_fk_id_usuario", userId)
+                new Parametro("p_fk_id_usuario", userId)
             });
         }
 
@@ -145,7 +184,7 @@ namespace BusinessLogic
         {
             List<Parametro> parametros = new List<Parametro>
             {
-        new Parametro("p_fk_id_usuario", userId)
+                new Parametro("p_fk_id_usuario", userId)
             };
 
             DataTable data = conexion.EjecutarConsulta("obtener_token_recuperacion", parametros);
@@ -162,9 +201,9 @@ namespace BusinessLogic
         public DataTable ValidarTokenRecuperacion(string token)
         {
             List<Parametro> parametros = new List<Parametro>
-    {
-        new Parametro("p_token", token)
-    };
+            {
+                new Parametro("p_token", token)
+            };
 
             return conexion.EjecutarConsulta("validar_token_recuperacion", parametros);
         }
@@ -175,9 +214,9 @@ namespace BusinessLogic
             userId = 0;
 
             List<Parametro> parametros = new List<Parametro>()
-    {
-        new Parametro("p_token", token)
-    };
+            {
+                new Parametro("p_token", token)
+            };
 
             DataTable data = conexion.EjecutarConsulta("validar_token_recuperacion", parametros);
 
@@ -198,16 +237,35 @@ namespace BusinessLogic
         public bool CambiarContrasenia(int userId, string nuevaContrasenia)
         {
             List<Parametro> parametros = new List<Parametro>
-    {
-        new Parametro("p_id_usuario", userId),
-        new Parametro("p_nueva_contrasenia", Seguridad.Encriptar(nuevaContrasenia))
-    };
+            {
+                new Parametro("p_id_usuario", userId),
+                new Parametro("p_nueva_contrasenia", Seguridad.Encriptar(nuevaContrasenia))
+            };
 
             return conexion.EjecutarTransaccion("recuperar_contrasenia", parametros);
         }
 
 
 
+
+        public bool EditarEstadoUsuario(int idUsuario, int nuevoEstado)
+        {
+            List<Parametro> parametros = new List<Parametro>
+            {
+                new Parametro("p_id_usuario", idUsuario),
+                new Parametro("p_estado", nuevoEstado)
+            };
+
+            try
+            {
+                bool resultado = conexion.EjecutarTransaccion("editar_estado_usuario", parametros);
+                return resultado;
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+        }
 
     }
 }

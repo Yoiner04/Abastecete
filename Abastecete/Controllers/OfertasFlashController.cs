@@ -1,0 +1,207 @@
+﻿using BusinessLogic;
+using BusinessLogic.Models;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
+using System;
+using Microsoft.AspNetCore.Mvc.Rendering;
+
+namespace Abastecete.Controllers
+{
+    public class OfertasFlashController : Controller
+    {
+        private readonly ManejadorOfertasFlash _manejadorOfertas;
+        private readonly ManejadorNegocios _manejadorNegocios;
+
+        public OfertasFlashController()
+        {
+            _manejadorOfertas = new ManejadorOfertasFlash();
+            _manejadorNegocios = new ManejadorNegocios();
+        }
+
+        public IActionResult ConsultarTodo()
+        {
+            List<OfertaFlash> ofertas = _manejadorOfertas.ConsultarOfertasFlash();
+            return View(ofertas);
+        }
+
+        public IActionResult Crear()
+        {
+            int? idLocal = ObtenerIdLocalUsuario();
+            if (idLocal != null)
+            {
+                int duracionOferta = _manejadorOfertas.ObtenerDuracionOferta(idLocal.Value);
+                int cantidadOfertas = _manejadorOfertas.CantidadOfertas(idLocal.Value);
+                int totalCreadas = _manejadorOfertas.TotalOfertasCreadasVigentesPorMembresia(idLocal.Value);
+                int limiteTotal = (duracionOferta == 12) ? 10 : 20;
+
+                ViewBag.DuracionOferta = duracionOferta;
+                ViewBag.CantidadOfertas = cantidadOfertas;
+
+                bool excedeSimultaneas = (duracionOferta == 12 && cantidadOfertas > 3) ||
+                         (duracionOferta == 24 && cantidadOfertas > 5);
+
+                bool excedeTotal = totalCreadas >= limiteTotal;
+
+                bool puedeCrearOferta = !excedeSimultaneas && !excedeTotal;
+
+                ViewBag.DuracionOferta = duracionOferta;
+                ViewBag.ExcedeSimultaneas = excedeSimultaneas;
+                ViewBag.ExcedeTotal = excedeTotal;
+                ViewBag.PuedeCrearOferta = puedeCrearOferta;
+
+                if (puedeCrearOferta)
+                {
+                    var productos = _manejadorOfertas.ObtenerProductosPorLocal(idLocal.Value);
+                    List<SelectListItem> listaProductos = new List<SelectListItem>();
+
+                    foreach (var producto in productos)
+                    {
+                        listaProductos.Add(new SelectListItem
+                        {
+                            Value = producto.IdProducto.ToString(),
+                            Text = producto.NombreProducto,
+                        });
+                    }
+
+                    ViewBag.Productos = listaProductos;
+                    ViewBag.ImagenesProductos = productos.ToDictionary(p => p.IdProducto.ToString(), p => p.ImagenProducto);
+                }
+            }
+            else
+            {
+                ViewBag.DuracionOferta = 24;
+                ViewBag.PuedeCrearOferta = false;
+            }
+
+            return View();
+        }
+
+        public IActionResult Gestionar()
+        {
+            List<OfertaFlash> ofertas = _manejadorOfertas.ConsultarOfertasFlash();
+            return View(ofertas);
+        }
+
+        [HttpPost]
+        public IActionResult AprobarOferta(int id)
+        {
+            bool resultado = _manejadorOfertas.AprobarOfertaFlash(id);
+
+            if (resultado)
+            {
+                TempData["SuccessMessage"] = "✅ La oferta ha sido aprobada con éxito.";
+            }
+            else
+            {
+                TempData["ErrorMessage"] = "❌ No se pudo aprobar la oferta.";
+            }
+
+            return RedirectToAction("Gestionar");
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Crear(OfertaFlash oferta, int productoSeleccionado)
+        {
+            var personaId = HttpContext.Session.GetInt32("PersonaId");
+            if (personaId == null)
+            {
+                TempData["ErrorMessage"] = "No tienes un negocio registrado para publicar ofertas.";
+                return RedirectToAction("Crear");
+            }
+
+            Negocio negocio = _manejadorNegocios.ConsultarNegocio(personaId.Value);
+            if (negocio == null)
+            {
+                TempData["ErrorMessage"] = "No se encontró un negocio asociado a tu cuenta.";
+                return RedirectToAction("Crear");
+            }
+
+            // Obtener datos del producto seleccionado desde el manejador
+            var productos = _manejadorOfertas.ObtenerProductosPorLocal(negocio.Id);
+            var productoSeleccionadoData = productos.FirstOrDefault(p => p.IdProducto == productoSeleccionado);
+
+            // Verificar si la tupla contiene datos válidos
+            if (!productoSeleccionadoData.Equals(default((int, string, string))))
+            {
+                oferta.ProductoOfertaFlash = productoSeleccionadoData.NombreProducto;
+                oferta.ImagenProductoOfertaFlash = productoSeleccionadoData.ImagenProducto;
+            }
+            else
+            {
+                TempData["ErrorMessage"] = "No se encontró el producto seleccionado.";
+                return RedirectToAction("Crear");
+            }
+
+            oferta.IdLocal = negocio.Id;
+            oferta.NombreLocal = negocio.Nombre;
+
+            int? idLocal = ObtenerIdLocalUsuario();
+            int duracionOferta = _manejadorOfertas.ObtenerDuracionOferta(idLocal.Value);
+            if(duracionOferta == 12)
+            {
+                oferta.Prioridad = 1;
+            }else if(duracionOferta == 24)
+            {
+                oferta.Prioridad = 2;
+            }
+            else
+            {
+                oferta.Prioridad= 0;
+            }
+
+            bool resultado = await _manejadorOfertas.CrearOfertaFlash(oferta);
+            if (resultado)
+            {
+                TempData["SuccessMessage"] = "✅ La oferta se ha creado con éxito.";
+                return RedirectToAction("Crear");
+            }
+
+            TempData["ErrorMessage"] = "❌ Error al crear la oferta. Inténtalo nuevamente.";
+            return View(oferta);
+        }
+
+        // Obtener el ID del local del usuario autenticado
+        private int? ObtenerIdLocalUsuario()
+        {
+            var personaId = HttpContext.Session.GetInt32("PersonaId");
+            if (personaId == null) return null;
+
+            Negocio negocio = _manejadorNegocios.ConsultarNegocio(personaId.Value);
+            return negocio?.Id;
+        }
+
+        [HttpPost]
+        public IActionResult EditarOferta(int id, string titulo, string descripcion)
+        {
+            bool resultado = _manejadorOfertas.EditarOfertaFlash(id, titulo, descripcion);
+
+            if (resultado)
+            {
+                TempData["SuccessMessage"] = "✅ La oferta ha sido actualizada con éxito.";
+            }
+            else
+            {
+                TempData["ErrorMessage"] = "❌ No se pudo actualizar la oferta.";
+            }
+
+            return RedirectToAction("Gestionar");
+        }
+
+        [HttpPost]
+        public IActionResult EliminarOferta(int id)
+        {
+            bool resultado = _manejadorOfertas.EliminarOfertaFlash(id);
+
+            if (resultado)
+            {
+                TempData["SuccessMessage"] = "✅ La oferta ha sido eliminada con éxito.";
+            }
+            else
+            {
+                TempData["ErrorMessage"] = "❌ No se pudo eliminar la oferta.";
+            }
+
+            return RedirectToAction("Gestionar");
+        }
+    }
+}

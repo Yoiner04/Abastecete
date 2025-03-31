@@ -2,44 +2,45 @@
 
 <!DOCTYPE html>
 <html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Abastecete</title>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/Abastecete.styles.css" asp-append-version="true" />
-    <link rel="icon" type="image/x-icon" href="~/css/Images/Logo A naranja.png" />
-    <link rel="stylesheet" href="styles.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
-    <link rel="stylesheet" href="~/css/styles.css" asp-append-version="true" />
-</head>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Abastecete</title>
+        <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+        <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+        <link rel="stylesheet" href="~/Abastecete.styles.css" asp-append-version="true" />
+        <link rel="icon" type="image/x-icon" href="~/css/Images/Logo A naranja.png" />
+        <link rel="stylesheet" href="styles.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+        <link rel="stylesheet" href="~/css/styles.css" asp-append-version="true" />
+    </head>
 
-<body class="bg-gray-100 p-10">
-    <br />
+<body class="mt-10 bg-gray-100 p-4 md:p-10">
+    <div class="mx-auto max-w-5xl rounded-xl bg-white p-4 shadow-lg md:p-8">
 
-    <div class="max-w-5xl mx-auto bg-white shadow-lg rounded-xl p-8">
         @using (Html.BeginForm("AsignarRol", "Roles", FormMethod.Post))
         {
-            <div class="grid grid-cols-3 gap-6">
-                <!-- Sección de roles -->
-                <div class="col-span-1">
-                    <h2 class="text-xl font-semibold text-gray-700 mb-2">Roles</h2>
+            <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
+                <!-- Roles -->
+                <div>
+                    <h2 class="mb-2 text-xl font-semibold text-gray-700">Roles</h2>
                     <select asp-for="Rol.Id"
-                            class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                            class="w-full rounded-lg border border-gray-300 p-3 focus:ring-2 focus:ring-green-500"
                             onchange="window.location.href = '@Url.Action("Consultar", "Roles")' + '?idRol=' + this.value">
                         <option value="">Seleccionar rol</option>
                         @foreach (var tipo in ViewBag.roles)
                         {
-                            <option value="@tipo.Id" selected="@(ViewBag.idRol == tipo.Id ? "selected" : null)">@tipo.Nombre</option>
+                            <option value="@tipo.Id" selected="@(ViewBag.idRol == tipo.Id ? "selected" : null)">
+                                @tipo.Nombre
+                            </option>
                         }
                     </select>
                 </div>
 
-                <!-- Sección de usuarios -->
-                <div class="col-span-1">
-                    <h2 class="text-xl font-semibold text-gray-700 mb-2">Usuarios</h2>
-                    <select class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500" asp-for="Usuario.Id">
+                <!-- Usuarios -->
+                <div>
+                    <h2 class="mb-2 text-xl font-semibold text-gray-700">Usuarios</h2>
+                    <select class="w-full rounded-lg border border-gray-300 p-3 focus:ring-2 focus:ring-green-500" asp-for="Usuario.Id">
                         <option>Seleccionar usuario</option>
                         @foreach (var usuario in ViewBag.usuarios)
                         {
@@ -48,9 +49,11 @@
                     </select>
                 </div>
 
-                <!-- Botón asignar rol -->
-                <div class="col-span-1 flex items-end">
-                    <button class="bg-[#16A34A] text-white font-bold px-6 py-3 w-full rounded-lg hover:bg-[#15803D]">Asignar rol</button>
+                <!-- Botón -->
+                <div class="flex items-end">
+                    <button class="w-full rounded-lg bg-green-600 px-6 py-3 font-bold text-white hover:bg-green-700">
+                        Asignar rol
+                    </button>
                 </div>
             </div>
         }
@@ -59,22 +62,28 @@
         <div class="mt-8 border-t pt-6">
             @using (Html.BeginForm("CrearRol", "Roles", FormMethod.Post))
             {
-                <h2 class="text-xl font-semibold text-gray-700 mb-2">Crear nuevo rol</h2>
-                <div class="flex gap-4">
-                    @Html.TextBoxFor(m => m.Rol.Nombre, new { @type = "text", @class = "w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500", @placeholder = "Nombre del rol" })
-                    <div class="invalid-feedback">
-                        @Html.ValidationMessageFor(m => m.Rol.Nombre)
-                    </div>
-                    @* <input type="text" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500" placeholder="Nombre del rol"> *@
-                    <button class="bg-[#16A34A] text-white font-bold px-6 py-3 rounded-lg hover:bg-[#15803D]">Crear</button>
+                <h2 class="mb-4 text-xl font-semibold text-gray-700">Crear nuevo rol</h2>
+                <div class="flex flex-col gap-4 md:flex-row">
+                    @Html.TextBoxFor(m => m.Rol.Nombre, new
+                        {
+                            @type = "text",
+                            @class = "w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500",
+                            @placeholder = "Nombre del rol"
+                        })
+                    <button class="rounded-lg bg-green-600 px-6 py-3 font-bold text-white hover:bg-green-700">
+                        Crear
+                    </button>
+                </div>
+                <div class="mt-2 text-sm text-red-500">
+                    @Html.ValidationMessageFor(m => m.Rol.Nombre)
                 </div>
             }
         </div>
 
-        <!-- Permisos -->
+        <!-- Permisos asignados -->
         <div class="mt-8 border-t pt-6">
-            <h2 class="text-xl font-semibold text-gray-700 mb-2">Permisos asignados</h2>
-            <div class="grid grid-cols-3 gap-4 bg-gray-50 p-4 rounded-lg">
+            <h2 class="mb-4 text-xl font-semibold text-gray-700">Permisos asignados</h2>
+            <div class="grid grid-cols-1 gap-4 rounded-lg bg-gray-50 p-4 sm:grid-cols-2 md:grid-cols-3">
                 @foreach (var permiso in ViewBag.permisos)
                 {
                     <label class="flex items-center">
@@ -86,41 +95,9 @@
                     </label>
                 }
             </div>
-            @* @foreach (var permiso in ViewBag.permisos)
-            {
-                <div class="form-check form-check-inline" id="check">
-
-                    @if (permiso.Estado)
-                    {
-                        <input class="form-check-input" checked type="checkbox" id="inlineCheckbox1" value="option1" onclick="window.location.href = '@Url.Action("AsignarPermisoRol", "Roles")' + '?idRol=' + @ViewBag.idRol + '&idPermiso=' + @permiso.Id">
-                    }
-                    else
-                    {
-                        <input class="form-check-input" type="checkbox" id="inlineCheckbox1" value="option1" onclick="window.location.href = '@Url.Action("AsignarPermisoRol", "Roles")' + '?idRol=' + @ViewBag.idRol + '&idPermiso=' + @permiso.Id">
-                    }
-                    <label class="form-check-label" for="inlineCheckbox1">@permiso.Nombre</label>
-                </div>
-            }
-
-            
-
-
-            <div class="grid grid-cols-3 gap-4 bg-gray-50 p-4 rounded-lg">
-                <label class="flex items-center"><input type="checkbox" class="mr-2"> Administrar Sedes</label>
-                <label class="flex items-center"><input type="checkbox" class="mr-2"> Consultar Sedes</label>
-                <label class="flex items-center"><input type="checkbox" class="mr-2"> Consultar Inventario</label>
-                <label class="flex items-center"><input type="checkbox" class="mr-2"> Administrar Usuarios</label>
-                <label class="flex items-center"><input type="checkbox" class="mr-2"> Consultar Usuarios</label>
-                <label class="flex items-center"><input type="checkbox" class="mr-2"> Administrar Roles</label>
-                <label class="flex items-center"><input type="checkbox" class="mr-2"> Administrar Reportes</label>
-                <label class="flex items-center"><input type="checkbox" class="mr-2"> Administrar Eventos</label>
-                <label class="flex items-center"><input type="checkbox" class="mr-2"> Consultar Eventos</label>
-                <label class="flex items-center"><input type="checkbox" class="mr-2"> Consultar Productos</label>
-                <label class="flex items-center"><input type="checkbox" class="mr-2"> Administrar Registro</label>
-                <label class="flex items-center"><input type="checkbox" class="mr-2"> Administrar Ubicaciones</label>
-                <label class="flex items-center"><input type="checkbox" class="mr-2"> Consultar Ubicaciones</label>
-            </div> *@
         </div>
     </div>
 </body>
+
+
 </html>

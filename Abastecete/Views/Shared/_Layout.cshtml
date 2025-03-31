@@ -22,46 +22,62 @@
 
     @{
         string permisos = HttpContextAccessor.HttpContext.Session.GetString("permisos");
+        string membresia = HttpContextAccessor.HttpContext.Session.GetString("membresia") ?? "0"; // Asegurar que no sea null
+        Console.WriteLine($"Valor de membresia en sesión: {membresia}"); // Depuración
+        bool ocultarPublicarOferta = (membresia == "11" || membresia == "12" || membresia == "13");
     }
-    <header id="header" class="sticky top-0 shadow-md z-40" style="background-color: #F4F1E9;">
-        <nav class="container mx-auto flex justify-between items-center py-2 px-6">
+    <header id="header" class="sticky top-0 z-40 shadow-md" style="background-color: #F4F1E9;">
+        <nav class="container mx-auto flex items-center justify-between px-6 py-2">
             <!-- Logo -->
             <a href="@Url.Action("Principal", "Home")" class="flex items-center">
                 <img src="~/css/Images/LOGO FINAL.png" alt="Abastecete Logo" class="h-14">
             </a>
 
             <!-- Botón Menú Móvil -->
-            <button id="menu-toggle" class="md:hidden text-black focus:outline-none">
+            <button id="menu-toggle" class="text-black focus:outline-none md:hidden">
                 <i class="fas fa-bars text-2xl"></i>
             </button>
 
             <!-- Contenedor del Menú de Navegación -->
-            <div id="menu-container"
-                 class="hidden md:flex items-center absolute left-1/2 transform -translate-x-1/2 w-auto z-50 bg-gray-100 md:bg-transparent">
-                <ul id="menu" class="md:flex md:space-x-6 text-base font-bold text-black md:flex-row flex-col">
+            <div id="menu-container" class="z-50 flex w-full flex-wrap items-center justify-center gap-4 bg-gray-100 px-4 py-2 md:absolute md:left-1/2 md:-translate-x-1/2 md:transform md:w-auto md:gap-6 md:bg-transparent">
+                <ul id="menu" class="flex flex-col items-center gap-2 text-base font-bold text-black md:flex-row md:gap-6">
                     <li>
-                        <a href="#" class="block px-4 py-2 hover:text-green-600 text-black">
-                            <i class="fa fa-search mr-1"></i>Buscar
+                        <form id="search-form" action="@Url.Action("Index", "Buscador")" method="get" class="w-full max-w-xs">
+                            <div class="relative">
+                                <div class="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-2">
+                                    <i class="fa fa-search text-sm text-gray-500 dark:text-gray-400"></i>
+                                </div>
+                                <input type="text" id="search-input" name="query"
+                                       value="@Context.Request.Query["query"]"
+                                       class="block w-full rounded-md border border-gray-300 bg-gray-50 py-2 ps-8 pe-24 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500"
+                                       placeholder="Buscar..." required />
+
+                                <button type="submit"
+                                        class="absolute end-1 top-1 bottom-1 my-auto rounded-md bg-[#F66623] px-3 py-1.5 text-sm font-semibold text-white hover:bg-[#e75b1f] focus:outline-none focus:ring-2 focus:ring-blue-300">
+                                    Buscar
+                                </button>
+                            </div>
+                        </form>
+
+                    </li>
+                    <li>
+                        <a href="@Url.Action("Listar","Categorias")" class="block px-4 py-2 whitespace-nowrap text-black hover:text-green-600">
+                            Proveedores
                         </a>
                     </li>
                     <li>
-                        <a href="#categories-container" class="block px-4 py-2 hover:text-green-600 text-black">
-                            Categorías
-                        </a>
-                    </li>
-                    <li>
-                        <a href="#ofertas-container" class="block px-4 py-2 hover:text-green-600 text-black">
+                        <a href="#ofertas-container" class="block px-4 py-2 whitespace-nowrap text-black hover:text-green-600">
                             Ofertas flash
                         </a>
                     </li>
                     <li>
-                        <a href="#promociones-container" class="block px-4 py-2 hover:text-green-600 text-black">
+                        <a href="#promociones-container" class="block px-4 py-2 text-black hover:text-green-600">
                             Promociones
                         </a>
                     </li>
                     <li>
                         <a href="#" id="open-contact-modal"
-                           class="block px-4 py-2 md:px-0 md:py-0 hover:text-green-600 text-black">
+                           class="block px-4 py-2 text-black hover:text-green-600 md:px-0 md:py-0">
                             Contacto
                         </a>
                     </li>
@@ -69,37 +85,37 @@
             </div>
 
 
+
             <!-- Usuario -->
             <div class="flex items-center space-x-4">
                 @if (permisos != null)
                 {
                     <div class="relative">
-                        <button id="user-btn" class="focus:outline-none flex items-center">
-                            <img src="~/css/Images/avatar.png" alt="Usuario" class="w-8 h-8 rounded-full">
+                        <button id="user-btn" class="flex items-center gap-2 rounded-full p-1 transition hover:bg-gray-100 focus:outline-none">
+                            <img src="~/css/Images/avatar.png" alt="Usuario" class="h-10 w-10 rounded-full border border-gray-300 shadow-sm">
                         </button>
-                        <ul id="user-menu"
-                        class="absolute right-0 mt-2 bg-white shadow-lg rounded-md min-w-[150px] md:min-w-[200px] text-sm hidden z-50 p-3 md:p-4">
 
-                            <li class="py-3 px-5 border-b hover:bg-gray-100">
-                                <a href="@Url.Action("Actualizar", "Usuarios")" class="block text-black">
-                                    Actualizar
-                                    Información
-                                </a>
+                        <ul id="user-menu"
+                            class="absolute right-0 z-50 mt-2 hidden min-w-[180px] overflow-hidden rounded-lg border border-gray-200 bg-white text-sm shadow-xl md:min-w-[220px]">
+
+                            <li class="border-b px-5 py-3 transition duration-200 hover:bg-gray-100">
+                                <button id="open-edit-profile" class="block w-full text-left font-medium text-black">
+                                    ✏️ Editar perfil
+                                </button>
                             </li>
-                            <li class="py-3 px-5 hover:bg-gray-100">
-                                <a href="@Url.Action("Logout", "Login")" class="block text-red-600 font-semibold">
-                                    Cerrar
-                                    Sesión
+                            <li class="px-5 py-3 transition duration-200 hover:bg-gray-100">
+                                <a href="@Url.Action("Logout", "Login")" class="block font-semibold text-black">
+                                    🚪 Cerrar Sesión
                                 </a>
                             </li>
                         </ul>
                     </div>
+
+
                 }
                 else
                 {
-                    <a href="@Url.Action("Login", "Login")" class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700
-                        sm:px-2 sm:py-1 sm:text-xs
-                        md:px-6 md:py-3 md:text-lg">
+                    <a href="@Url.Action("Login", "Login")" class="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 sm:px-2 sm:py-1 sm:text-xs md:px-6 md:py-3 md:text-lg">
                         Únete a nosotros
                     </a>
                 }
@@ -107,13 +123,13 @@
         </nav>
 
         <!-- Botón para mostrar las opciones en móviles -->
-        <button id="admin-menu-toggle" class="block md:hidden w-full text-center py-2 bg-gray-300 text-black font-bold">
+        <button id="admin-menu-toggle" class="block w-full bg-gray-300 py-2 text-center font-bold text-black md:hidden">
             Menú de Administración ⬇
         </button>
 
         <!-- Contenedor con alineación corregida -->
-        <div id="admin-menu" class="hidden md:flex justify-center bg-gray-200 py-2">
-            <ul class="flex flex-col md:flex-row md:space-x-6 text-sm text-center md:text-left">
+        <div id="admin-menu" class="hidden justify-center bg-gray-200 py-2 md:flex">
+            <ul class="flex flex-col text-center text-sm md:flex-row md:space-x-6 md:text-left">
 
                 @if (permisos != null)
                 {
@@ -130,6 +146,14 @@
                         <li class="group">
                             <a href="@Url.Action("ProductosNegocio", "Productos")" class="text-black group-hover:text-green-600">
                                 Mi negocio
+                            </a>
+                        </li>
+                    }
+                    @if (RolPermisos.TienePermiso("Mi negocio", permisos) && !ocultarPublicarOferta)
+                    {
+                        <li class="group">
+                            <a href="@Url.Action("Crear", "OfertasFlash")" class="text-black group-hover:text-green-600">
+                                Publicar oferta flash
                             </a>
                         </li>
                     }
@@ -173,6 +197,22 @@
                             </a>
                         </li>
                     }
+                    @if (RolPermisos.TienePermiso("Administrar Banners", permisos))
+                    {
+                        <li class="group">
+                            <a href="@Url.Action("Editar", "Banners")" class="text-black group-hover:text-green-600">
+                                Gestionar Banners
+                            </a>
+                        </li>
+                    }
+                    @if (RolPermisos.TienePermiso("Administrar Banners", permisos))
+                    {
+                        <li class="group">
+                            <a href="@Url.Action("Gestionar", "OfertasFlash")" class="text-black group-hover:text-green-600">
+                                Gestionar Ofertas
+                            </a>
+                        </li>
+                    }
                 } else {
                     <li class="group">
                         <a href="@Url.Action("Login", "Login")" class="text-black group-hover:text-green-600">
@@ -188,6 +228,20 @@
     <main role="main">
         @RenderBody()
     </main>
+
+    @await Html.PartialAsync("_Footer")
+
+    <div id="edit-profile-modal" class="bg-opacity-50 fixed inset-0 z-50 flex hidden items-center justify-center bg-black">
+        <div class="min-h-auto max-h-[80vh] w-auto max-w-6xl overflow-y-auto rounded-lg bg-white p-6 shadow-lg">
+            <div class="mb-4 flex justify-end">
+                <button id="close-edit-profile" class="text-lg text-red-500 hover:text-red-700" style="color: red !important;">
+                    ✖
+                </button>
+            </div>
+            <div id="edit-profile-content" class="overflow-auto"></div>
+        </div>
+    </div>
+
 
     <script>
         const menuToggle = document.getElementById('menu-toggle');
@@ -249,7 +303,7 @@
             // Mapeo de secciones en la vista principal y sus respectivas rutas en otras vistas
             const sections = [
                 { id: "categories-container", url: "/Categorias/Listar" },
-                { id: "ofertas-container", url: "/Ofertas/Listar" },
+                { id: "ofertas-container", url: "/OfertasFlash/ConsultarTodo" },
                 { id: "promociones-container", url: "/Promociones/Listar" }
             ];
 
@@ -275,7 +329,60 @@
         });
     </script>
 
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const editProfileBtn = document.getElementById("open-edit-profile");
+            const editProfileModal = document.getElementById("edit-profile-modal");
+            const editProfileContent = document.getElementById("edit-profile-content");
+            const closeEditProfileBtn = document.getElementById("close-edit-profile");
+
+            if (editProfileBtn && editProfileModal) {
+                editProfileBtn.addEventListener("click", function () {
+                    // Cargar la vista de edición de perfil con AJAX
+                    fetch("@Url.Action("Actualizar", "Usuarios")")
+                        .then(response => response.text())
+                        .then(html => {
+                            editProfileContent.innerHTML = html;
+                            editProfileModal.classList.remove("hidden");
+                        })
+                        .catch(error => console.error("Error al cargar la vista:", error));
+                });
+
+                closeEditProfileBtn.addEventListener("click", function () {
+                    editProfileModal.classList.add("hidden");
+                    editProfileContent.innerHTML = ""; // Limpiar contenido al cerrar
+                });
+
+                editProfileModal.addEventListener("click", function (event) {
+                    if (event.target === editProfileModal) {
+                        editProfileModal.classList.add("hidden");
+                        editProfileContent.innerHTML = "";
+                    }
+                });
+            }
+        });
+    </script>
 
 </body>
 
 </html>
+<style>
+    html, body {
+        height: 100%;
+        margin: 0;
+    }
+
+    body {
+        display: flex;
+        flex-direction: column;
+    }
+
+    main {
+        flex: 1;
+    }
+
+    footer {
+        margin-top: auto;
+    }
+
+</style>

@@ -11,11 +11,16 @@ namespace Abastecete.Controllers
     {
         private readonly ManejadorNegocios _manejadorNegocios;
         private readonly ManejadorMembresias _manejadorMembresias;
+        private readonly ManejadorProductos _manejadorProductos;
+        private readonly ManejadorCategorias _manejadorCategorias;
+
 
         public NegociosController()
         {
             _manejadorNegocios = new ManejadorNegocios();
             _manejadorMembresias = new ManejadorMembresias();
+            _manejadorProductos = new ManejadorProductos();
+            _manejadorCategorias = new ManejadorCategorias();
         }
 
         [HttpGet]
@@ -29,6 +34,36 @@ namespace Abastecete.Controllers
         {
             return View();
         }
+
+        [HttpPost]
+        public IActionResult Consultar(int idCategoria)
+        {
+            List<Categoria> categorias = _manejadorCategorias.ConsultarCategorias();
+            List<Negocio> negocios = _manejadorNegocios.ConsultarNegocioCategoria(idCategoria);
+            ViewBag.categoria = idCategoria;
+            ViewBag.Categorias = categorias;
+            return View(negocios);
+        }
+
+        [HttpPost]
+        public IActionResult ConsultarNegocios(int idCategoria)
+        {
+            List<Negocio> negocios = _manejadorNegocios.ConsultarNegocioCategoria(idCategoria);
+            return Json(negocios);
+        }
+
+        [HttpGet]
+        public IActionResult ConsultarProductos(int idLocal)
+        {
+            List<Producto> productos = _manejadorProductos.ConsultarProductosLocal(idLocal);
+            Negocio neg = _manejadorNegocios.ConsultarNegocioPoId(idLocal);
+            List<Categoria> cat = _manejadorNegocios.ConsultarCategoriasLocal(idLocal);
+            ViewBag.negocio = neg;
+            ViewBag.categorias = cat;
+            return View(productos);
+        }
+
+
 
         [HttpPost]
         public IActionResult GuardarDatosNegocio(Negocio negocio)
@@ -53,7 +88,7 @@ namespace Abastecete.Controllers
             HttpContext.Session.SetString("NegocioTemporal", JsonConvert.SerializeObject(negocio));
 
             // Redirigir a la vista de selección de membresía
-            return RedirectToAction("Publicar", "Membresias");
+            return RedirectToAction("Tipos", "Membresias");
         }
 
         [HttpGet]
@@ -76,7 +111,7 @@ namespace Abastecete.Controllers
             // Limpiar la sesión después de completar el registro
             HttpContext.Session.Remove("NegocioTemporal");
 
-            var usuarioId = HttpContext.Session.GetInt32("userId");
+            var usuarioId = HttpContext.Session.GetInt32("idUsuario");
 
             if (registrado)
             {

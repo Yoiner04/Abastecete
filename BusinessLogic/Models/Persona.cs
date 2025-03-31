@@ -18,7 +18,7 @@ namespace BusinessLogic.Models
         public string Apellido { get; set; }
 
         [Required]
-        public int TipoDeDocumento { get; set; }
+        public TipoDocumento TipoDeDocumento { get; set; }
 
         [Required]
         public int Documento { get; set; }
@@ -26,7 +26,7 @@ namespace BusinessLogic.Models
         [Required]
         public string Telefono { get; set; }
 
-        [Required]
         public string Estado { get; set; }
+        public string Correo { get; set; }
     }
 }

@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using Abastecete.Models;
 using BusinessLogic;
 using BusinessLogic.Models;
@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using ConnectionProject.Controllers;
+using Newtonsoft.Json;
 
 namespace Abastecete.Controllers
 {
@@ -13,11 +14,15 @@ namespace Abastecete.Controllers
     {
         private readonly ILogger<HomeController> _logger;
         private readonly ManejadorCategorias manejadorCategorias;
+        private readonly ManejadorNegocios manejadorNegocios;
+        private readonly ManejadorOfertasFlash manejadorOfertasFlash;
 
         public HomeController(ILogger<HomeController> logger)
         {
             _logger = logger;
             manejadorCategorias = new ManejadorCategorias();
+            manejadorNegocios = new ManejadorNegocios();
+            manejadorOfertasFlash = new ManejadorOfertasFlash();
         }
 
         public IActionResult Index()
@@ -38,9 +43,19 @@ namespace Abastecete.Controllers
 
         public IActionResult Principal()
         {
+            
             List<Categoria> categorias = manejadorCategorias.ConsultarCategorias();
+            List<Negocio> negocios = manejadorNegocios.ConsultarTodosLosNegocios();
+            List<Negocio> localesAleatorios = manejadorNegocios.ObtenerLocalesAleatorios();
+            List<OfertaFlash> ofertasFlash = manejadorOfertasFlash.ConsultarOfertasFlash();
+
             ViewBag.rol = LoginController.rol;
+            ViewBag.Negocios = negocios;
+            ViewBag.LocalesAleatoriosJson = JsonConvert.SerializeObject(localesAleatorios);
+            ViewBag.OfertasFlash = ofertasFlash;
+
             return View(categorias);
         }
+
     }
 }

@@ -13,9 +13,10 @@ namespace BusinessLogic.Models
         public int Estado { get; set; }
         public int TipoMembresia { get; set; }
         public string Nombre { get; set; }
-        public string Barrio { get; set; }
+        public string Localizacion { get; set; }
         public string Direccion { get; set; }
-        public int Telefono { get; set; }
-        public string Logotipo { get; set; }
+        public long Telefono { get; set; }
+        public float Puntuacion { get; set; } = 5;
+        public string? Logotipo { get; set; }
     }
 }

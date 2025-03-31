@@ -1,4 +1,5 @@
-﻿@model BusinessLogic.Models.Usuario;
+﻿@using BusinessLogic.Models
+@model BusinessLogic.Models.Usuario;
 
 @{
     Layout = null;
@@ -16,68 +17,78 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/3.2.12/jquery.validate.unobtrusive.min.js"></script>
 
-<body class="bg-gray-100 flex items-center justify-center min-h-screen">
-    <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-3xl">
-        <h2 class="text-2xl font-bold text-green-600 text-center mb-6">Crea tu cuenta</h2>
+<body class="relative flex min-h-screen items-center justify-center bg-gray-100" style="background-image: url('/css/Images/fondo_registroUsuario.jpg'); background-size: cover; background-position: center;">
+    <!-- Fondo con desenfoque -->
+    <div class="bg-opacity-70 absolute inset-0 bg-black"></div>
 
-        @using (Html.BeginForm("Registrar", "Usuarios", FormMethod.Post, new { id = "registroForm", @class = "grid grid-cols-1 md:grid-cols-2 gap-4" }))
+    <!-- Contenedor del formulario -->
+    <div class="relative w-full max-w-3xl rounded-2xl bg-white px-10 py-4 shadow-2xl">
+        <h2 class="mb-6 text-center text-3xl font-bold text-green-600">Crea tu cuenta</h2>
+
+        @using (Html.BeginForm("Registrar", "Usuarios", FormMethod.Post, new { id = "registroForm", @class = "grid grid-cols-1 md:grid-cols-2 gap-6" }))
         {
             <div class="md:col-span-2">
                 @Html.ValidationSummary(true, "", new { @class = "text-red-500 text-sm" })
             </div>
 
             <div>
-                <label class="block font-medium">Nombre</label>
-                @Html.TextBoxFor(m => m.Persona.Nombre, new { @type = "text", @class = "w-full border p-2 rounded", @placeholder = "Ingresa tu nombre", @id = "nombre" })
-                <span id="nombreError" class="text-red-500 text-sm hidden">Por favor, ingresa tu nombre.</span>
+                <label class="block font-medium text-gray-700">Nombre <span class="text-red-500">*</span></label>
+                @Html.TextBoxFor(m => m.Persona.Nombre, new { @type = "text", @class = "w-full border p-3 rounded-lg focus:ring-2 focus:ring-green-400 outline-none", @placeholder = "Ingresa tu nombre", @id = "nombre" })
             </div>
+
             <div>
-                <label class="block font-medium">Apellido</label>
-                @Html.TextBoxFor(m => m.Persona.Apellido, new { @type = "text", @class = "w-full border p-2 rounded", @placeholder = "Ingresa tu apellido", @id = "apellido" })
-                <span id="apellidoError" class="text-red-500 text-sm hidden">Por favor, ingresa tu apellido.</span>
+                <label class="block font-medium text-gray-700">Apellido <span class="text-red-500">*</span></label>
+                @Html.TextBoxFor(m => m.Persona.Apellido, new { @type = "text", @class = "w-full border p-3 rounded-lg focus:ring-2 focus:ring-green-400 outline-none", @placeholder = "Ingresa tu apellido", @id = "apellido" })
             </div>
+
             <div>
-                <label class="block font-medium">Tipo de Documento</label>
-                @Html.TextBoxFor(m => m.Persona.TipoDeDocumento, new { @type = "text", @class = "w-full border p-2 rounded", @placeholder = "Ingresa tu tipo de documento", @id = "tipoDeDocumento" })
-                <span id="tipoDeDocumentoError" class="text-red-500 text-sm hidden">Por favor, ingresa el tipo de documento.</span>
+                <label class="block font-medium text-gray-700">Tipo de Documento <span class="text-red-500">*</span></label>
+                <select class="w-full rounded-lg border p-3 outline-none focus:ring-2 focus:ring-green-400" id="tipoDeDocumento" name="Persona.TipoDeDocumento.Id">
+                    <option value="">Seleccione</option>
+                    @foreach (TipoDocumento td in ViewBag.TiposDocumento)
+                    {
+                        <option value="@td.Id">@td.Nombre</option>
+                    }
+                </select>
             </div>
+
             <div>
-                <label class="block font-medium">Documento</label>
-                @Html.TextBoxFor(m => m.Persona.Documento, new { @type = "text", @class = "w-full border p-2 rounded", @placeholder = "Ingresa tu documento", @oninput = "this.value=this.value.replace(/[^0-9]/g,'');", @id = "documento" })
-                <span id="documentoError" class="text-red-500 text-sm hidden">El documento es obligatorio.</span>
+                <label class="block font-medium text-gray-700">Documento <span class="text-red-500">*</span></label>
+                @Html.TextBoxFor(m => m.Persona.Documento, new { @type = "text", @class = "w-full border p-3 rounded-lg focus:ring-2 focus:ring-green-400 outline-none", @placeholder = "Ingresa tu documento", @oninput = "this.value=this.value.replace(/[^0-9]/g,'');", @id = "documento" })
             </div>
+
             <div>
-                <label class="block font-medium">Teléfono</label>
-                @Html.TextBoxFor(m => m.Persona.Telefono, new { @type = "text", @class = "w-full border p-2 rounded", @placeholder = "Ingresa tu teléfono", @oninput = "this.value=this.value.replace(/[^0-9]/g,'');", @id = "telefono" })
-                <span id="telefonoError" class="text-red-500 text-sm hidden">El teléfono debe comenzar con 3 y tener 10 dígitos.</span>
+                <label class="block font-medium text-gray-700">Teléfono <span class="text-red-500">*</span></label>
+                @Html.TextBoxFor(m => m.Persona.Telefono, new { @type = "text", @class = "w-full border p-3 rounded-lg focus:ring-2 focus:ring-green-400 outline-none", @placeholder = "Ingresa tu teléfono", @oninput = "this.value=this.value.replace(/[^0-9]/g,'');", @id = "telefono" })
             </div>
+
             <div>
-                <label class="block font-medium">Correo Electrónico</label>
-                @Html.TextBoxFor(m => m.Correo, new { @type = "email", @class = "w-full border p-2 rounded", @placeholder = "Ingresa tu correo", @id = "correo" })
-                <span id="correoError" class="text-red-500 text-sm hidden">El correo es obligatorio.</span>
+                <label class="block font-medium text-gray-700">Correo Electrónico <span class="text-red-500">*</span></label>
+                @Html.TextBoxFor(m => m.Correo, new { @type = "email", @class = "w-full border p-3 rounded-lg focus:ring-2 focus:ring-green-400 outline-none", @placeholder = "Ingresa tu correo", @id = "correo" })
             </div>
+
             <div>
-                <label class="block font-medium">Contraseña</label>
-                @Html.TextBoxFor(m => m.Contrasenia, new { @type = "password", @class = "w-full border p-2 rounded", @id = "password", @placeholder = "Ingresa tu contraseña" })
-                <span id="contraseniaError" class="text-red-500 text-sm hidden">La contraseña es obligatoria.</span>
+                <label class="block font-medium text-gray-700">Contraseña <span class="text-red-500">*</span></label>
+                @Html.TextBoxFor(m => m.Contrasenia, new { @type = "password", @class = "w-full border p-3 rounded-lg focus:ring-2 focus:ring-green-400 outline-none", @placeholder = "Ingresa tu contraseña", @id = "password" })
             </div>
+
             <div>
-                <label class="block font-medium">Confirmar Contraseña</label>
-                <input type="password" id="confirmPassword" class="w-full border p-2 rounded" placeholder="Confirma tu contraseña">
-                <span id="errorMessage" class="text-red-500 text-sm hidden">Las contraseñas no coinciden o son demasiado cortas.</span>
-            </div>
-            <div>
-                <label class="block font-medium">Código de Referido</label>
-                @Html.TextBoxFor(m => m.CodigoReferido, new { @type = "text", @class = "w-full border p-2 rounded", @placeholder = "Ingresa el código de referido (opcional)", @id = "codigoReferido" })
+                <label class="block font-medium text-gray-700">Confirmar Contraseña <span class="text-red-500">*</span></label>
+                <input type="password" id="confirmPassword" class="w-full rounded-lg border p-3 outline-none focus:ring-2 focus:ring-green-400" placeholder="Confirma tu contraseña">
             </div>
 
             <div class="md:col-span-2">
-                <button class="w-full bg-orange-500 text-white font-bold py-2 rounded">Registrarse</button>
+                <label class="block font-medium text-gray-700">Código de Referido (Opcional)</label>
+                @Html.TextBoxFor(m => m.CodigoReferido, new { @type = "text", @class = "w-full border p-3 rounded-lg focus:ring-2 focus:ring-gray-400 outline-none", @placeholder = "Ingresa el código de referido (opcional)", @id = "codigoReferido" })
+            </div>
+
+            <div class="md:col-span-2">
+                <button class="w-full transform rounded-lg bg-orange-500 py-3 text-lg font-bold text-white transition-transform hover:scale-105">Registrarse</button>
             </div>
         }
 
-        <p class="text-center text-sm mt-4">
-            ¿Ya tienes una cuenta? <a href="@Url.Action("Login", "Login")" class="text-green-600 font-bold">Inicia sesión</a>
+        <p class="mt-6 text-center text-sm text-gray-600">
+            ¿Ya tienes una cuenta? <a href="@Url.Action("Login", "Login")" class="font-bold text-green-600 hover:underline">Inicia sesión</a>
         </p>
     </div>
 
@@ -93,7 +104,7 @@
                 const fields = {
                     nombre: document.querySelector("[name='Persona.Nombre']"),
                     apellido: document.querySelector("[name='Persona.Apellido']"),
-                    tipoDeDocumento: document.querySelector("[name='Persona.TipoDeDocumento']"),
+                    tipoDeDocumento: document.querySelector("[name='Persona.TipoDeDocumento.Id']"),
                     documento: document.querySelector("[name='Persona.Documento']"),
                     telefono: document.querySelector("[name='Persona.Telefono']"),
                     correo: document.querySelector("[name='Correo']"),
@@ -150,9 +161,7 @@
                     valid = false;
                 }
 
-                if (!valid) {
-                    event.preventDefault();
-                }
+     
             });
         });
     </script>

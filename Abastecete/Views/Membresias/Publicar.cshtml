@@ -1,5 +1,4 @@
 ﻿@model List<BusinessLogic.Models.Membresia>
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -13,30 +12,187 @@
     <link rel="stylesheet" href="styles.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <link rel="stylesheet" href="~/css/styles.css" asp-append-version="true" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/1.6.3/flowbite.min.js"></script>
+
 </head>
 
 <body class="bg-gray-100 py-10">
     <br />
-    <div class="max-w-6xl mx-auto px-4">
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div class="mx-auto max-w-6xl px-4">
+        <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
             @foreach (var membresia in Model)
             {
-                <div class="bg-white p-6 rounded-2xl shadow-md text-center">
-                    <h3 class="text-xl font-semibold">@membresia.Nombre</h3>
-                    <p class="text-gray-500 mt-2">$@membresia.Costo/mes</p>
-                    <ul class="mt-4 text-gray-600">
-                        @foreach (var line in membresia.Descripcion.Split(new[] { '\n', '*' }, StringSplitOptions.RemoveEmptyEntries))
-                        {
-                            <li><span class="text-green-600 mr-2">⭐</span> @line.Trim()</li>
-                        }
-                    </ul>
-                    <a href="@Url.Action("CompletarRegistro", "Negocios", new { tipoMembresiaId = membresia.Id })"
-                       class="mt-4 inline-block bg-[#F6580F] text-white py-2 px-4 rounded-lg hover:bg-[#15803D]">
-                        Seleccionar
-                    </a>
+                <div class="flex flex-col justify-between rounded-2xl bg-white p-6 text-center shadow-md">
+                    <div>
+                        <h3 class="text-xl font-semibold">@membresia.Nombre</h3>
+                        <p class="mt-2 text-gray-500">$@membresia.Costo/mes</p>
+
+                        <!-- Lista con altura unificada -->
+                        <ul class="mt-4 min-h-[200px] text-left text-gray-600">
+                            @foreach (var line in membresia.Descripcion.Split(new[] { '\n', '*' }, StringSplitOptions.RemoveEmptyEntries))
+                            {
+                                <li class="flex items-start gap-2">
+                                    <span class="text-yellow-500">⭐</span>
+                                    <span class="flex-1">@line.Trim()</span>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                    @{
+                        var PrecioBase = membresia.Costo - (membresia.Costo * 0.19);
+                    }
+                    @if (membresia.Costo == 0)
+                    {
+                        <a href="@Url.Action("CompletarRegistro", "Negocios", new { tipoMembresiaId = membresia.Id })" class="mx-auto mt-4 inline-block w-2/4 rounded-lg bg-[#F6580F] px-4 py-2 text-white hover:bg-[#15803D]">
+                            Escoger
+                        </a>
+                    }
+                    else
+                    {
+                        <a class="open-modal mx-auto mt-4 inline-block w-2/4 rounded-lg bg-[#F6580F] px-4 py-2 text-white hover:bg-[#15803D]"
+                           data-id="@membresia.Id"
+                           data-nombre="@membresia.Nombre"
+                           data-descripcion="@membresia.Descripcion"
+                           data-costomensual="@membresia.Costo"
+                           data-costotrimestral="@membresia.Costo_trimestral"
+                           data-costosemestral="@membresia.Costo_semestral"
+                           data-costoanual="@membresia.Costo_anual"
+                           data-modal-target="default-modal"
+                           data-modal-toggle="default-modal">
+                            Seleccionar
+                        </a>
+                       
+
+
+                    }
                 </div>
             }
         </div>
     </div>
+    <div id="default-modal" tabindex="-1" aria-hidden="true" class="fixed top-0 right-0 left-0 z-50 hidden h-[calc(100%-1rem)] max-h-full w-full items-center justify-center overflow-x-hidden overflow-y-auto md:inset-0">
+        <div class="relative max-h-full w-full max-w-2xl p-4">
+            <div class="relative rounded-lg bg-white shadow-sm">
+                <div class="flex items-center justify-between rounded-t border-b border-gray-200 p-4 md:p-5">
+                    <h3 class="text-xl font-semibold text-gray-900">
+                        Seleccionar plan
+                    </h3>
+                    <button type="button" class="bg-transparent ms-auto inline-flex h-8 w-8 items-center justify-center rounded-lg text-sm text-gray-400 hover:bg-gray-200 hover:text-gray-900" data-modal-hide="default-modal">
+                        <svg class="h-3 w-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6" />
+                        </svg>
+                        <span class="sr-only">Cerrar</span>
+                    </button>
+                </div>
+                <div class="space-y-4 p-4 md:p-5">
+
+                    <form class="mx-auto max-w-sm">
+                        <label for="planes" class="mb-2 block text-sm font-medium text-gray-900">Escoge tu plan</label>
+                        <form class="mx-auto max-w-sm">
+                            <select id="planes" class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:ring-blue-500 focus:border-blue-500">
+                                <option value="mensual">Mensual</option>
+                                <option value="trimestral">Trimestral</option>
+                                <option value="semestral">Semestral</option>
+                                <option value="anual">Anual</option>
+                            </select>
+                        </form>
+
+                    </form>
+
+                    <form class="mx-auto mt-4 inline-block w-2/4 rounded-lg px-4 py-2">
+                        <div id="epayco-button-container"></div>
+
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const buttons = document.querySelectorAll(".open-modal");
+            const selectPlanes = document.getElementById("planes");
+            const epaycoContainer = document.getElementById("epayco-button-container");
+
+            let precios = { mensual: 0, trimestral: 0, semestral: 0, anual: 0 };
+            let nombreMembresia = "";
+            let descripcionMembresia = "";
+
+            function crearBotonEpayco(precio,idMembresia) {
+                epaycoContainer.innerHTML = "";
+
+                const precioTotal = Math.round(precio); // Asegurar entero
+                const precioBase = Math.round(precio / 1.19); // IVA 19%, redondeado
+                const impuesto = Math.round(precioTotal - precioBase); // Impuesto como entero
+
+                console.log("🚀 Creando botón ePayco con:");
+                console.log("Monto total (entero):", precioTotal);
+                console.log("Base sin impuestos (entero):", precioBase);
+                console.log("Impuesto (entero):", impuesto);
+                console.log("Nombre de la membresía:", nombreMembresia);
+                console.log("Descripción:", descripcionMembresia);
+
+                // Crear el script dinámico de ePayco
+                const epaycoScript = document.createElement("script");
+                epaycoScript.src = "https://checkout.epayco.co/checkout.js";
+                epaycoScript.classList.add("epayco-button");
+                epaycoScript.setAttribute("data-epayco-key", "@ViewBag.apikey");
+                epaycoScript.setAttribute("data-epayco-amount", precioTotal.toString());
+                epaycoScript.setAttribute("data-epayco-tax", impuesto.toString());
+                epaycoScript.setAttribute("data-epayco-tax-base", precioBase.toString());
+                epaycoScript.setAttribute("data-epayco-name", nombreMembresia || "Sin Nombre");
+                epaycoScript.setAttribute("data-epayco-description", descripcionMembresia || "Sin Descripción");
+
+                epaycoScript.setAttribute("data-epayco-currency", "cop");
+                epaycoScript.setAttribute("data-epayco-country", "co");
+                epaycoScript.setAttribute("data-epayco-external", "false");
+                epaycoScript.setAttribute("data-epayco-button", "https://multimedia.epayco.co/dashboard/btns/btn5.png");
+
+                epaycoScript.setAttribute("data-epayco-response", `https://localhost:7076/Negocios/CompletarRegistro?tipoMembresiaId=${idMembresia}`);
+                epaycoScript.setAttribute("data-epayco-test", "true");
+
+                console.log(`/Negocios/CompletarRegistro?tipoMembresiaId=${idMembresia}`);
+
+                epaycoContainer.appendChild(epaycoScript);
+            }
+
+            selectPlanes.addEventListener("change", function () {
+                if (precios[this.value] !== undefined) {
+                    crearBotonEpayco(precios[this.value]);
+                } else {
+                    console.warn("⚠ El valor seleccionado no tiene un precio definido:", this.value);
+                }
+            });
+
+            // Evento para capturar la membresía seleccionada
+            buttons.forEach(button => {
+                button.addEventListener("click", function () {
+                    idMembresia = this.getAttribute("data-id");
+                    nombreMembresia = this.getAttribute("data-nombre") || "Sin Nombre";
+                    descripcionMembresia = this.getAttribute("data-descripcion") || "Sin Descripción";
+                    precios.mensual = Math.round(parseFloat(this.getAttribute("data-costomensual")) || 0);
+                    precios.trimestral = Math.round(parseFloat(this.getAttribute("data-costotrimestral")) || 0);
+                    precios.semestral = Math.round(parseFloat(this.getAttribute("data-costosemestral")) || 0);
+                    precios.anual = Math.round(parseFloat(this.getAttribute("data-costoanual")) || 0);
+
+                    console.log("✅ Membresía seleccionada:", nombreMembresia);
+                    console.log("✅ Descripción:", descripcionMembresia);
+                    console.log("✅ Precios:", precios);
+
+                    // Por defecto, establecer el plan mensual si existe
+                    if (precios.mensual > 0) {
+                        crearBotonEpayco(precios.mensual,idMembresia);
+                    } else {
+                        console.warn("⚠ El precio mensual es 0 o no está definido.");
+                    }
+                });
+            });
+        });
+
+
+    </script>
+
+
 </body>
 </html>

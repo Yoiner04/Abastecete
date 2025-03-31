@@ -15,9 +15,11 @@
 
 /* Centrar el contenido del navbar */
 .navbar .container {
-    display: flex;
-    justify-content: space-between;
+    display: flex !important;
+    justify-content: center;
     align-items: center;
+    flex-wrap: nowrap;
+    gap: 1.5rem;
 }
 
 /* Centrar las opciones del navbar */
@@ -28,13 +30,14 @@
 }
 
     .navbar-nav .nav-item {
-        margin: 0 20px;
+        margin: 0 10px;
+        white-space: nowrap;
     }
 
     .navbar-nav .nav-link {
         text-align: center;
         font-weight: bold;
-        font-size: 18px;
+        font-size: 20px;
         color: black;
     }
 

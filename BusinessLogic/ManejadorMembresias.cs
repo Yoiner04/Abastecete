@@ -15,10 +15,28 @@ namespace BusinessLogic
             conexion = new Connection();
         }
 
-        // Consultar todas las membresías
-        public List<Membresia> ConsultarMembresias()
+        public List<Membresia> consultarTiposMembresia()
         {
-            DataTable datos = conexion.EjecutarConsulta("consultar_tipo_membresia");
+            DataTable datos = conexion.EjecutarConsulta("consultar_tipo_membresia_distinct");
+            List<Membresia> membresias = new List<Membresia>();
+            foreach (DataRow row in datos.Rows)
+            {
+                membresias.Add(new Membresia
+                {
+                    Nombre = row["Membresia"] + ""
+                });
+            }
+            return membresias;
+        }
+
+        public List<Membresia> ConsultarMembresias(string nombre)
+        {
+            List<Parametro> parametros = new List<Parametro>
+            {
+                new Parametro("nombre", nombre)
+            };
+
+            DataTable datos = conexion.EjecutarConsulta("consultar_tipo_membresia", parametros);
             List<Membresia> membresias = new List<Membresia>();
 
             foreach (DataRow row in datos.Rows)
@@ -28,8 +46,11 @@ namespace BusinessLogic
                     Id = Convert.ToInt32(row["PK_ID_TIPO_MEMBRESIA"]),
                     Nombre = row["NOMBRE"].ToString(),
                     Descripcion = row["DESCRIPCION"].ToString(),
-                    Costo = Convert.ToDecimal(row["COSTO"]),
-                    Estado = Convert.ToInt32(row["ESTADO"])
+                    Costo = float.Parse(row["COSTO"] + ""),
+                    Estado = Convert.ToInt32(row["ESTADO"]),
+                    Costo_trimestral = Convert.ToInt32(row["COSTO_TRIMESTRAL"]),
+                    Costo_semestral = Convert.ToInt32(row["COSTO_SEMESTRAL"]),
+                    Costo_anual = Convert.ToInt32(row["COSTO_ANUAL"])
                 });
             }
             return membresias;
@@ -64,7 +85,7 @@ namespace BusinessLogic
                     Id = Convert.ToInt32(row["PK_ID_TIPO_MEMBRESIA"]),
                     Nombre = row["NOMBRE"].ToString(),
                     Descripcion = row["DESCRIPCION"].ToString(),
-                    Costo = Convert.ToDecimal(row["COSTO"]),
+                    Costo = float.Parse(row["COSTO"] + ""),
                     Estado = Convert.ToInt32(row["ESTADO"])
                 };
             }
