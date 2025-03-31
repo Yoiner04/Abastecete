@@ -2,30 +2,30 @@
 
 <!DOCTYPE html>
 <html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Abastecete</title>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/Abastecete.styles.css" asp-append-version="true" />
-    <link rel="icon" type="image/x-icon" href="~/css/Images/Logo A naranja.png" />
-    <link rel="stylesheet" href="styles.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
-    <link rel="stylesheet" href="~/css/styles.css" asp-append-version="true" />
-</head>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Abastecete</title>
+        <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+        <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+        <link rel="stylesheet" href="~/Abastecete.styles.css" asp-append-version="true" />
+        <link rel="icon" type="image/x-icon" href="~/css/Images/Logo A naranja.png" />
+        <link rel="stylesheet" href="styles.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+        <link rel="stylesheet" href="~/css/styles.css" asp-append-version="true" />
+    </head>
 
-<body class="bg-gray-100 p-4 md:p-10">
-    <div class="max-w-5xl mx-auto bg-white shadow-lg rounded-xl p-4 md:p-8">
+<body class="mt-10 bg-gray-100 p-4 md:p-10">
+    <div class="mx-auto max-w-5xl rounded-xl bg-white p-4 shadow-lg md:p-8">
 
         @using (Html.BeginForm("AsignarRol", "Roles", FormMethod.Post))
         {
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
                 <!-- Roles -->
                 <div>
-                    <h2 class="text-xl font-semibold text-gray-700 mb-2">Roles</h2>
+                    <h2 class="mb-2 text-xl font-semibold text-gray-700">Roles</h2>
                     <select asp-for="Rol.Id"
-                            class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                            class="w-full rounded-lg border border-gray-300 p-3 focus:ring-2 focus:ring-green-500"
                             onchange="window.location.href = '@Url.Action("Consultar", "Roles")' + '?idRol=' + this.value">
                         <option value="">Seleccionar rol</option>
                         @foreach (var tipo in ViewBag.roles)
@@ -39,8 +39,8 @@
 
                 <!-- Usuarios -->
                 <div>
-                    <h2 class="text-xl font-semibold text-gray-700 mb-2">Usuarios</h2>
-                    <select class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500" asp-for="Usuario.Id">
+                    <h2 class="mb-2 text-xl font-semibold text-gray-700">Usuarios</h2>
+                    <select class="w-full rounded-lg border border-gray-300 p-3 focus:ring-2 focus:ring-green-500" asp-for="Usuario.Id">
                         <option>Seleccionar usuario</option>
                         @foreach (var usuario in ViewBag.usuarios)
                         {
@@ -51,7 +51,7 @@
 
                 <!-- Botón -->
                 <div class="flex items-end">
-                    <button class="bg-green-600 text-white font-bold px-6 py-3 w-full rounded-lg hover:bg-green-700">
+                    <button class="w-full rounded-lg bg-green-600 px-6 py-3 font-bold text-white hover:bg-green-700">
                         Asignar rol
                     </button>
                 </div>
@@ -62,15 +62,15 @@
         <div class="mt-8 border-t pt-6">
             @using (Html.BeginForm("CrearRol", "Roles", FormMethod.Post))
             {
-                <h2 class="text-xl font-semibold text-gray-700 mb-4">Crear nuevo rol</h2>
-                <div class="flex flex-col md:flex-row gap-4">
+                <h2 class="mb-4 text-xl font-semibold text-gray-700">Crear nuevo rol</h2>
+                <div class="flex flex-col gap-4 md:flex-row">
                     @Html.TextBoxFor(m => m.Rol.Nombre, new
                         {
                             @type = "text",
                             @class = "w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500",
                             @placeholder = "Nombre del rol"
                         })
-                    <button class="bg-green-600 text-white font-bold px-6 py-3 rounded-lg hover:bg-green-700">
+                    <button class="rounded-lg bg-green-600 px-6 py-3 font-bold text-white hover:bg-green-700">
                         Crear
                     </button>
                 </div>
@@ -82,8 +82,8 @@
 
         <!-- Permisos asignados -->
         <div class="mt-8 border-t pt-6">
-            <h2 class="text-xl font-semibold text-gray-700 mb-4">Permisos asignados</h2>
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 bg-gray-50 p-4 rounded-lg">
+            <h2 class="mb-4 text-xl font-semibold text-gray-700">Permisos asignados</h2>
+            <div class="grid grid-cols-1 gap-4 rounded-lg bg-gray-50 p-4 sm:grid-cols-2 md:grid-cols-3">
                 @foreach (var permiso in ViewBag.permisos)
                 {
                     <label class="flex items-center">
@@ -98,4 +98,6 @@
         </div>
     </div>
 </body>
+
+
 </html>
