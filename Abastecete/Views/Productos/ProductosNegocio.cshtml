@@ -70,11 +70,11 @@
     <main class="flex w-full p-6">
         <div class="w-full transition-all">
             <div id="productosWrapper" class="w-5/5 transition-all duration-300">
-                <h2 class="text-lg font-semibold text-green-700">All Product</h2>
+                <h2 class="text-lg font-semibold text-green-700">Todos mis productos</h2>
                 <div id="productosContainer" class="mt-4 grid w-full grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
                     @foreach (var producto in ViewBag.productos)
                     {
-                        <div id="producto-@producto.Id" class="producto relative flex h-[400px] w-full flex-col rounded-lg bg-white p-6 shadow-md" data-categoria-id="@producto.IdSubCategoria" data-precio="@producto.Precio">
+                        <div id="producto-@producto.Id" class="producto relative flex h-auto w-full flex-col rounded-lg bg-white p-6 shadow-md" data-categoria-id="@producto.IdSubCategoria" data-precio="@producto.Precio">
                             <img src="@producto.ImagenUrl" alt="@producto.Nombre" class="h-full w-full object-contain" />
                             <h3 class="mt-4 text-lg font-semibold">@producto.Nombre</h3>
                             <p class="text-xl font-bold text-orange-500">$@producto.Precio</p>
@@ -100,8 +100,6 @@
             <h3 id="detalleNombre" class="mt-4 text-2xl font-bold"></h3>
             <p id="detallePrecio" class="text-xl font-bold text-green-600"></p>
             <div class="mt-4 flex gap-2">
-                <button class="rounded-full bg-white p-2 shadow"><i class="far fa-heart"></i></button>
-                <button class="rounded-full bg-white p-2 shadow"><i class="fas fa-share"></i></button>
                 <button class="rounded-lg bg-green-600 px-6 py-2 text-white">Contactanos</button>
             </div>
         </div>

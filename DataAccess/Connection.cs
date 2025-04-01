@@ -10,7 +10,6 @@ namespace DataAccess
         public MySqlConnection connection;
         public bool Conectar()
         {
-
             string cadenaConnection = "server=167.71.91.199; database=abastecete; user=bd_abastecete; password=root_abastecete; port=3306";
 
             connection = new MySqlConnection(cadenaConnection);
