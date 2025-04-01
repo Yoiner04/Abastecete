@@ -34,11 +34,13 @@
             <div>
                 <label class="block font-medium text-gray-700">Nombre <span class="text-red-500">*</span></label>
                 @Html.TextBoxFor(m => m.Persona.Nombre, new { @type = "text", @class = "w-full border p-3 rounded-lg focus:ring-2 focus:ring-green-400 outline-none", @placeholder = "Ingresa tu nombre", @id = "nombre" })
+                <span id="nombreError" class="hidden text-sm text-red-500">El nombre es obligatorio.</span>
             </div>
 
             <div>
                 <label class="block font-medium text-gray-700">Apellido <span class="text-red-500">*</span></label>
                 @Html.TextBoxFor(m => m.Persona.Apellido, new { @type = "text", @class = "w-full border p-3 rounded-lg focus:ring-2 focus:ring-green-400 outline-none", @placeholder = "Ingresa tu apellido", @id = "apellido" })
+                <span id="apellidoError" class="hidden text-sm text-red-500">El apellido es obligatorio.</span>
             </div>
 
             <div>
@@ -50,31 +52,37 @@
                         <option value="@td.Id">@td.Nombre</option>
                     }
                 </select>
+                <span id="tipoDeDocumentoError" class="hidden text-sm text-red-500">Seleccione un tipo de documento.</span>
             </div>
 
             <div>
                 <label class="block font-medium text-gray-700">Documento <span class="text-red-500">*</span></label>
                 @Html.TextBoxFor(m => m.Persona.Documento, new { @type = "text", @class = "w-full border p-3 rounded-lg focus:ring-2 focus:ring-green-400 outline-none", @placeholder = "Ingresa tu documento", @oninput = "this.value=this.value.replace(/[^0-9]/g,'');", @id = "documento" })
+                <span id="documentoError" class="hidden text-sm text-red-500">El documento debe tener entre 10 y 15 dígitos.</span>
             </div>
 
             <div>
                 <label class="block font-medium text-gray-700">Teléfono <span class="text-red-500">*</span></label>
                 @Html.TextBoxFor(m => m.Persona.Telefono, new { @type = "text", @class = "w-full border p-3 rounded-lg focus:ring-2 focus:ring-green-400 outline-none", @placeholder = "Ingresa tu teléfono", @oninput = "this.value=this.value.replace(/[^0-9]/g,'');", @id = "telefono" })
+                <span id="telefonoError" class="hidden text-sm text-red-500">debe tener 10 dígitos.</span>
             </div>
 
             <div>
                 <label class="block font-medium text-gray-700">Correo Electrónico <span class="text-red-500">*</span></label>
                 @Html.TextBoxFor(m => m.Correo, new { @type = "email", @class = "w-full border p-3 rounded-lg focus:ring-2 focus:ring-green-400 outline-none", @placeholder = "Ingresa tu correo", @id = "correo" })
+                <span id="correoError" class="hidden text-sm text-red-500">El correo electrónico es obligatorio.</span>
             </div>
 
             <div>
                 <label class="block font-medium text-gray-700">Contraseña <span class="text-red-500">*</span></label>
                 @Html.TextBoxFor(m => m.Contrasenia, new { @type = "password", @class = "w-full border p-3 rounded-lg focus:ring-2 focus:ring-green-400 outline-none", @placeholder = "Ingresa tu contraseña", @id = "password" })
+                <span id="contraseniaError" class="hidden text-sm text-red-500">La contraseña debe tener al menos 8 caracteres.</span>
             </div>
 
             <div>
                 <label class="block font-medium text-gray-700">Confirmar Contraseña <span class="text-red-500">*</span></label>
                 <input type="password" id="confirmPassword" class="w-full rounded-lg border p-3 outline-none focus:ring-2 focus:ring-green-400" placeholder="Confirma tu contraseña">
+                <span id="errorMessage" class="hidden text-sm text-red-500">Las contraseñas no coinciden.</span>
             </div>
 
             <div class="md:col-span-2">
@@ -160,8 +168,9 @@
                     fields.confirmPassword.classList.add("border-red-500");
                     valid = false;
                 }
-
-     
+                if (!valid) {
+                    event.preventDefault();
+                }
             });
         });
     </script>
