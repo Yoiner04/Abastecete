@@ -22,8 +22,7 @@
 
     @{
         string permisos = HttpContextAccessor.HttpContext.Session.GetString("permisos");
-        string membresia = HttpContextAccessor.HttpContext.Session.GetString("membresia") ?? "0"; // Asegurar que no sea null
-        Console.WriteLine($"Valor de membresia en sesión: {membresia}"); // Depuración
+        string membresia = HttpContextAccessor.HttpContext.Session.GetString("membresia") ?? "0"; 
         bool ocultarPublicarOferta = (membresia == "11" || membresia == "12" || membresia == "13");
     }
     <header id="header" class="sticky top-0 z-40 shadow-md" style="background-color: #F4F1E9;">
@@ -70,11 +69,7 @@
                             Ofertas flash
                         </a>
                     </li>
-                    <li>
-                        <a href="#promociones-container" class="block px-4 py-2 text-black hover:text-green-600">
-                            Promociones
-                        </a>
-                    </li>
+                    
                     <li>
                         <a href="#" id="open-contact-modal"
                            class="block px-4 py-2 text-black hover:text-green-600 md:px-0 md:py-0">
