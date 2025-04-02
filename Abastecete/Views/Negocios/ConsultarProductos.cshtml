@@ -82,7 +82,7 @@
             <div class="mb-4 hidden rounded-lg bg-white p-4 shadow-md md:block">
                 <h3 class="text-lg font-semibold text-orange-600">Categorías</h3>
                 <select id="category" class="mt-2 block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:ring-blue-500 focus:border-blue-500">
-                    <option selected>Selecciona una categoría</option>
+                    <option selected value="">Selecciona una categoría</option>
                     @foreach (var categoria in ViewBag.categorias)
                     {
                         <option value="@categoria.Id">@categoria.Nombre</option>
@@ -124,7 +124,7 @@
             <div id="productosContainer" class="mt-4 grid w-full grid-cols-1 gap-6 pr-8 transition-all duration-300 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
                 @foreach (var producto in Model)
                 {
-                    <div id="producto-@producto.Id" class="producto relative flex h-[400px] w-full flex-col rounded-lg bg-white p-6 shadow-md" data-categoria-id="@producto.IdSubCategoria" data-precio="@producto.Precio">
+                    <div id="producto-@producto.Id" class="producto relative flex h-[400px] w-full flex-col rounded-lg bg-white p-6 shadow-md" data-categoria-id="@producto.Categoria"  data-subcategoria-id="@producto.IdSubCategoria" data-precio="@producto.Precio">
                         <img src="@producto.ImagenUrl" alt="@producto.Nombre" class="h-48 w-full object-contain" />
                         <h3 class="mt-4 text-lg font-semibold">@producto.Nombre</h3>
                         <p class="text-xl font-bold text-orange-500">$@producto.Precio</p>
@@ -156,11 +156,37 @@
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="./assets/vendor/nouislider/dist/nouislider.min.js"></script>
-
     <script>
         $(document).ready(function () {
+
+            // Función central para aplicar todos los filtros
+            function filtrarProductos() {
+                const categoriaSeleccionada = $("#category").val();
+                const subcategoriaSeleccionada = $("#subcategory").val();
+                const minVal = parseFloat($("#minPriceRange").val());
+                const maxVal = parseFloat($("#maxPriceRange").val());
+
+                $(".producto").each(function () {
+                    const precio = parseFloat($(this).attr("data-precio"));
+                    const categoria = $(this).attr("data-categoria-id");
+                    const subcategoria = $(this).attr("data-subcategoria-id");
+
+                    const cumpleCategoria = !categoriaSeleccionada || categoria === categoriaSeleccionada;
+                    const cumpleSubcategoria = !subcategoriaSeleccionada || subcategoria === subcategoriaSeleccionada;
+                    const cumplePrecio = precio >= minVal && precio <= maxVal;
+
+                    if (cumpleCategoria && cumpleSubcategoria && cumplePrecio) {
+                        $(this).removeClass("hidden");
+                    } else {
+                        $(this).addClass("hidden");
+                    }
+                });
+            }
+
+            // Evento: Cambio en la categoría
             $("#category").change(function () {
-                var idCategoria =  $(this).val();
+                const idCategoria = $(this).val();
+
                 if (idCategoria) {
                     $("#subcategory").prop("disabled", false);
                     $.ajax({
@@ -169,55 +195,43 @@
                         data: { idCategoria: idCategoria },
                         dataType: "json",
                         success: function (response) {
-                            $("#subcategory").empty();
-                            $("#subcategory").append('<option value="">Seleccione una subcategoría</option>');
-
+                            $("#subcategory").empty().append('<option value="">Seleccione una subcategoría</option>');
                             $.each(response, function (index, item) {
                                 $("#subcategory").append(`<option value="${item.id}">${item.nombre}</option>`);
                             });
+                            $("#subcategory").val("");
+                            filtrarProductos();
                         },
                         error: function () {
                             alert("Error al obtener subcategorías.");
                         }
                     });
                 } else {
-                    $("#subcategory").empty();
-                    $("#subcategory").append('<option value="">Seleccione una subcategoría</option>');
+                    $("#subcategory").empty().append('<option value="">Seleccione una subcategoría</option>').prop("disabled", true);
+                    filtrarProductos();
                 }
+
+                filtrarProductos();
             });
-        });
 
-                $("#subcategory").change(function () {
-            var idSubcategoriaSeleccionada = $(this).val();
-            console.log("Subcategoría seleccionada:", idSubcategoriaSeleccionada);
+            // Evento: Cambio en la subcategoría
+            $("#subcategory").change(filtrarProductos);
 
-            $(".producto").each(function () {
-                var idSubcategoriaProducto = $(this).attr("data-categoria-id");
-                console.log("Producto:", $(this).attr("id"), "Subcategoría:", idSubcategoriaProducto); 
-
-                if (!idSubcategoriaSeleccionada || idSubcategoriaSeleccionada == idSubcategoriaProducto) {
-                    $(this).removeClass("hidden");
-                } else {
-                    $(this).addClass("hidden");
-                }
-            });
-        });
-
-
-                $(document).ready(function () {
-            let precios = $(".producto").map(function () {
+            // Captura precios al cargar
+            const precios = $(".producto").map(function () {
                 return parseFloat($(this).attr("data-precio"));
             }).get();
 
-            let precioMin = Math.min(...precios);
-            let precioMax = Math.max(...precios);
+            const precioMin = Math.min(...precios);
+            const precioMax = Math.max(...precios);
 
-            $("#minPriceRange").attr({ "min": precioMin, "max": precioMax, "value": precioMin });
-            $("#maxPriceRange").attr({ "min": precioMin, "max": precioMax, "value": precioMax });
+            $("#minPriceRange").attr({ min: precioMin, max: precioMax, value: precioMin });
+            $("#maxPriceRange").attr({ min: precioMin, max: precioMax, value: precioMax });
 
             $("#minPriceValue").text(`$${precioMin}`);
             $("#maxPriceValue").text(`$${precioMax}`);
 
+            // Actualiza filtro por precio y barra visual
             function actualizarFiltro() {
                 let minVal = parseFloat($("#minPriceRange").val());
                 let maxVal = parseFloat($("#maxPriceRange").val());
@@ -230,51 +244,43 @@
                 $("#minPriceValue").text(`$${minVal}`);
                 $("#maxPriceValue").text(`$${maxVal}`);
 
-                let percentMin = ((minVal - precioMin) / (precioMax - precioMin)) * 100;
-                let percentMax = ((maxVal - precioMin) / (precioMax - precioMin)) * 100;
+                const percentMin = ((minVal - precioMin) / (precioMax - precioMin)) * 100;
+                const percentMax = ((maxVal - precioMin) / (precioMax - precioMin)) * 100;
 
                 $("#rangeBar").css({
-                    "left": `${percentMin}%`,
-                    "width": `${percentMax - percentMin}%`
+                    left: `${percentMin}%`,
+                    width: `${percentMax - percentMin}%`
                 });
 
-                $(".producto").each(function () {
-                    let precioProducto = parseFloat($(this).attr("data-precio"));
-                    if (precioProducto >= minVal && precioProducto <= maxVal) {
-                        $(this).removeClass("hidden");
-                    } else {
-                        $(this).addClass("hidden");
-                    }
-                });
+                filtrarProductos();
             }
 
+            // Evento: Cambios en los sliders
             $("#minPriceRange, #maxPriceRange").on("input", actualizarFiltro);
-        });
 
-                $("#filter").click(function () {
-            $("#category").val("Selecciona una categoría").trigger("change");
+            // Botón: Restablecer filtros
+            $("#filter").click(function () {
+                $("#category").val("").trigger("change");
 
-            $("#subcategory").empty().append('<option selected>Selecciona una subcategoria</option>').prop("disabled", true);
+                $("#subcategory").empty()
+                    .append('<option value="">Seleccione una subcategoría</option>')
+                    .prop("disabled", true)
+                    .val("");
 
-            let precioMin = Math.min(...$(".producto").map(function () { return parseFloat($(this).attr("data-precio")); }).get());
-            let precioMax = Math.max(...$(".producto").map(function () { return parseFloat($(this).attr("data-precio")); }).get());
+                $("#minPriceRange").val(precioMin);
+                $("#maxPriceRange").val(precioMax);
+                $("#minPriceValue").text(`$${precioMin}`);
+                $("#maxPriceValue").text(`$${precioMax}`);
 
-            $("#minPriceRange").val(precioMin);
-            $("#maxPriceRange").val(precioMax);
-            $("#minPriceValue").text(`$${precioMin}`);
-            $("#maxPriceValue").text(`$${precioMax}`);
+                $("#rangeBar").css({
+                    left: `0%`,
+                    width: `100%`
+                });
 
-            let percentMin = 0;
-            let percentMax = 100;
-
-            $("#rangeBar").css({
-                "left": `${percentMin}%`,
-                "width": `${percentMax - percentMin}%`
+                filtrarProductos();
             });
-
-            $(".producto").removeClass("hidden");
         });
-
     </script>
+
 </body>
 </html>
