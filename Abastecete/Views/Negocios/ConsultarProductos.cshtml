@@ -1,4 +1,7 @@
 ﻿@model List<BusinessLogic.Models.Producto>
+
+@Html.Partial("_ContactModal")
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -127,7 +130,7 @@
                     <div id="producto-@producto.Id" class="producto relative flex h-[400px] w-full flex-col rounded-lg bg-white p-6 shadow-md" data-categoria-id="@producto.Categoria"  data-subcategoria-id="@producto.IdSubCategoria" data-precio="@producto.Precio">
                         <img src="@producto.ImagenUrl" alt="@producto.Nombre" class="h-48 w-full object-contain" />
                         <h3 class="mt-4 text-lg font-semibold">@producto.Nombre</h3>
-                        <p class="text-xl font-bold text-orange-500">$@producto.Precio</p>
+                        <p class="text-xl font-bold text-orange-500">$@producto.Precio - @producto.Unidad.Nombre</p> 
                         <button onclick="mostrarDetalle('@producto.Nombre', '@producto.Precio', '@producto.ImagenUrl', '@producto.Id',)" class="mt-4 self-center rounded-lg bg-[#1A2D3D] px-6 py-2 text-white">Ver</button>
                     </div>
                 }
@@ -147,9 +150,7 @@
             <h3 id="detalleNombre" class="mt-4 text-2xl font-bold"></h3>
             <p id="detallePrecio" class="text-xl font-bold text-green-600"></p>
             <div class="mt-4 flex gap-2">
-                <button class="rounded-full bg-white p-2 shadow"><i class="far fa-heart"></i></button>
-                <button class="rounded-full bg-white p-2 shadow"><i class="fas fa-share"></i></button>
-                <button class="rounded-lg bg-green-600 px-6 py-2 text-white">Contactanos</button>
+                <button id="open-contact-modal" class="rounded-lg bg-green-600 px-6 py-2 text-white">Contactanos</button>
             </div>
         </div>
     </main>
