@@ -110,14 +110,15 @@
         <div class="mb-6 flex flex-wrap justify-center gap-4">
             @for (int i = 0; i < primeraFila; i++)
             {
-                <div class="flex w-[28%] flex-col items-center sm:w-[22%] md:w-[12%] lg:w-[12%]">
-                    <div class="category aspect-square w-full bg-gray-200 shadow-lg">
+                <form method="post" action="@Url.Action("Consultar", "Negocios")" class="flex w-[28%] flex-col items-center sm:w-[22%] md:w-[12%] lg:w-[12%]">
+                    <input type="hidden" name="idCategoria" value="@categoriasActivas[i].Id" />
+                    <button type="submit" class="category aspect-square w-full bg-gray-200 shadow-lg p-0 border-0">
                         <img src="@categoriasActivas[i].Imagen" alt="@categoriasActivas[i].Nombre" class="h-full w-full object-cover">
-                    </div>
+                    </button>
                     <p class="mt-2 text-center text-xs font-medium sm:text-sm">
                         @categoriasActivas[i].Nombre
                     </p>
-                </div>
+                </form>
             }
         </div>
 
@@ -125,14 +126,15 @@
         <div class="flex flex-wrap justify-center gap-4">
             @for (int i = primeraFila; i < totalCategorias; i++)
             {
-                <div class="flex w-[28%] flex-col items-center sm:w-[22%] md:w-[12%] lg:w-[12%]">
-                    <div class="category aspect-square w-full bg-gray-200 shadow-lg">
+                <form method="post" action="@Url.Action("Consultar", "Negocios")" class="flex w-[28%] flex-col items-center sm:w-[22%] md:w-[12%] lg:w-[12%]">
+                    <input type="hidden" name="idCategoria" value="@categoriasActivas[i].Id" />
+                    <button type="submit" class="category aspect-square w-full bg-gray-200 shadow-lg p-0 border-0">
                         <img src="@categoriasActivas[i].Imagen" alt="@categoriasActivas[i].Nombre" class="h-full w-full object-cover">
-                    </div>
+                    </button>
                     <p class="mt-2 text-center text-xs font-medium sm:text-sm">
                         @categoriasActivas[i].Nombre
                     </p>
-                </div>
+                </form>
             }
         </div>
 
@@ -284,15 +286,32 @@
                         <div>
                             <h3 class="text-sm font-bold text-gray-600 lg:text-lg">${provider.Nombre || defaultText}</h3>
                             <p class="text-base text-black lg:text-xl">${isPlaceholder ? "¡Anímate a unirte!" : "PROVEEDOR VERIFICADO"}</p>
-                            <button class="mt-3 rounded-full px-3 py-1 text-xs text-white lg:text-sm lg:px-4"
-                                style="background-color: ${i % 2 === 0 ? "#23916A" : "#F66623"}">
-                                ${buttonText}${buttonArrow}
-                            </button>
+                                    <button class="mt-3 rounded-full px-3 py-1 text-xs text-white lg:text-sm lg:px-4 proveedor-btn"
+                                        data-id="${provider.Id || ''}"
+                                        data-placeholder="${isPlaceholder}"
+                                        style="background-color: ${i % 2 === 0 ? "#23916A" : "#F66623"}">
+                                        ${buttonText}${buttonArrow}
+                                    </button>
                         </div>
                     `;
 
                 providersGrid.appendChild(card);
             }
+
+            // Asignar eventos a todos los botones
+            document.querySelectorAll(".proveedor-btn").forEach(button => {
+                button.addEventListener("click", () => {
+                    const isPlaceholder = button.getAttribute("data-placeholder") === "true";
+                    const id = button.getAttribute("data-id");
+
+                    if (isPlaceholder) {
+                        window.location.href = "/Login/Login";
+                    } else {
+                        window.location.href = `/Negocios/ConsultarProductos?idLocal=${id}`;
+                    }
+                });
+            });
+
         });
     </script>
 
