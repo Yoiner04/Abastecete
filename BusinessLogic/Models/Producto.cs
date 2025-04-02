@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Routing.Constraints;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -14,6 +15,7 @@ namespace BusinessLogic.Models
         public string Precio { get; set; }
         public Unidad Unidad { get; set; }
         public string ImagenUrl { get; set; }
+        public int Categoria { get; set; }
 
         // para el buscador
         public string NombreLocal { get; set; }

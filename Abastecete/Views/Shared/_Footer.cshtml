@@ -3,39 +3,55 @@
 
         <div>
             <h2 class="mb-3 text-lg font-semibold">Déjanos tu opinión</h2>
-            <textarea class="w-full rounded-lg bg-gray-800 p-3 text-white" placeholder="Tu opinión aquí"></textarea>
-            <div class="mt-3 flex items-center space-x-1 text-yellow-400">
-                <span>⭐</span><span>⭐</span><span>⭐</span><span>⭐</span><span class="text-gray-500">⭐</span>
-            </div>
+            <textarea class="w-full rounded-lg bg-gray-800 p-6 text-white" placeholder="Tu opinión aquí"></textarea>
             <button class="mt-3 rounded-lg bg-green-600 px-5 py-2">ENVIAR</button>
         </div>
 
         <div class="grid grid-cols-2 gap-4">
             <ul class="space-y-2">
-                <li><a href="#" class="text-green-400 hover:underline">Tiendas</a></li>
-                <li><a href="#" class="text-green-400 hover:underline">Ofertas hoy</a></li>
-                <li><a href="#" class="text-green-400 hover:underline">Nosotros</a></li>
-                <li><a href="#" class="text-green-400 hover:underline">Galería</a></li>
-            </ul>
-            <ul class="space-y-2">
-                <li><a href="#" class="text-green-400 hover:underline">Promociones</a></li>
-                <li><a href="#" class="text-green-400 hover:underline">Soporte</a></li>
-                <li><a href="#" class="text-green-400 hover:underline">Preguntas frecuentes</a></li>
-                <li><a href="#" class="text-green-400 hover:underline">Ayuda técnica</a></li>
+                <li>
+                    <a href="@Url.Action("Listar","Categorias")" class="flex items-center text-green-400 hover:underline">
+                        <span class="mr-2">➤</span> Tiendas
+                    </a>
+                </li>
+                <li>
+                    <a href="#ofertas-container" class="flex items-center text-green-400 hover:underline">
+                        <span class="mr-2">➤</span> Ofertas hoy
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="flex items-center text-green-400 hover:underline">
+                        <span class="mr-2">➤</span> Nosotros
+                    </a>
+                </li>
+                <li>
+                    <a href="#promociones-container" class="flex items-center text-green-400 hover:underline">
+                        <span class="mr-2">➤</span> Promociones
+                    </a>
+                </li>
+                <li>
+                    <a href="#categories-container" class="flex items-center text-green-400 hover:underline">
+                        <span class="mr-2">➤</span> Categorías
+                    </a>
+                </li>
             </ul>
             <div class="flex flex-col space-y-2">
-                <a href="https://www.facebook.com/profile.php?id=61571549591292" target="_blank" class="rounded-lg bg-green-600 px-4 py-2 text-center text-white hover:bg-green-700">FACEBOOK</a>
-                <a href="https://www.instagram.com/websencol" target="_blank" class="rounded-lg bg-orange-500 px-4 py-2 text-center text-white hover:bg-orange-600">INSTAGRAM</a>
-                <a href="https://www.linkedin.com/in/websen-col-99459733b/" target="_blank" class="rounded-lg bg-gray-700 px-4 py-2 text-center text-white hover:bg-gray-800">LINKEDIN</a>
+                <a href="https://web.facebook.com/people/Websen/61571549591292/" target="_blank" rel="noopener noreferrer"
+                   class="rounded-lg bg-green-600 px-4 py-2 text-center">FACEBOOK</a>
+                <a href="https://www.instagram.com/websencol/#" target="_blank" rel="noopener noreferrer"
+                   class="rounded-lg bg-orange-500 px-4 py-2 text-center">INSTAGRAM</a>
+                <a href="https://www.linkedin.com/in/websen-col-99459733b/" target="_blank" rel="noopener noreferrer"
+                   class="rounded-lg bg-gray-700 px-4 py-2 text-center">LINKEDIN</a>
             </div>
-
         </div>
 
         <div>
-            <h2 class="mb-3 text-lg font-semibold">No te pierdas ninguna <span class="text-green-400">Oferta</span></h2>
-            <div class="flex">
-                <input type="email" class="flex-grow rounded-l-lg bg-gray-800 p-3 text-white" placeholder="Tu correo">
-                <button class="rounded-r-lg bg-orange-500 px-4 py-3">Suscribete</button>
+            <div class="flex flex-col space-y-2">
+                <h2 class="mb-3 text-lg font-semibold">No te pierdas ninguna <span class="text-green-400">Oferta</span></h2>
+                <div class="flex">
+                    <input type="email" class="flex-grow rounded-l-lg bg-gray-800 p-3 text-white" placeholder="Tu correo">
+                    <a class="rounded-r-lg bg-orange-500 px-4 py-3" href="@Url.Action("Login","Login")">Suscribete</a>
+                </div>
             </div>
         </div>
     </div>
