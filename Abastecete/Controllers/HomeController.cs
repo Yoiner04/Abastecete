@@ -43,7 +43,6 @@ namespace Abastecete.Controllers
 
         public IActionResult Principal()
         {
-            
             List<Categoria> categorias = manejadorCategorias.ConsultarCategorias();
             List<Negocio> negocios = manejadorNegocios.ConsultarTodosLosNegocios();
             List<Negocio> localesAleatorios = manejadorNegocios.ObtenerLocalesAleatorios();
