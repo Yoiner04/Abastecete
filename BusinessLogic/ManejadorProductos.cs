@@ -27,7 +27,7 @@ namespace BusinessLogic
                     Id = Convert.ToInt32(row["PK_ID_PRODUCTO"]),
                     IdSubCategoria = Convert.ToInt32(row["FK_ID_SUB_CATEGORIA"]),
                     Nombre = row["NOMBRE_PRODUCTO"].ToString(),
-                    Precio = row["PRECIO"]+"",
+                    Precio = row["PRECIO"] + "",
                     ImagenUrl = row["IMAGEN_URL"].ToString()
                 });
             }
@@ -93,7 +93,7 @@ namespace BusinessLogic
             return productos;
         }
 
-        public List<Producto> ConsultarProductosLocal (int idlocal)
+        public List<Producto> ConsultarProductosLocal(int idlocal)
         {
             List<Parametro> parametros = new List<Parametro>
             {
@@ -104,18 +104,19 @@ namespace BusinessLogic
             foreach (DataRow row in datos.Rows)
             {
 
-                    productos.Add(new Producto
+                productos.Add(new Producto
+                {
+                    Id = Convert.ToInt32(row["PK_ID_PRODUCTO"]),
+                    Nombre = row["NOMBRE_PRODUCTO"].ToString(),
+                    Precio = row["PRECIOS"] + "",
+                    Unidad = new Unidad
                     {
-                        Id = Convert.ToInt32(row["PK_ID_PRODUCTO"]),
-                        Nombre = row["NOMBRE_PRODUCTO"].ToString(),
-                        Precio = row["PRECIOS"] + "",
-                        Unidad = new Unidad
-                        {
-                            Nombre = row["UNIDADES"].ToString()
-                        },
-                        ImagenUrl = row["IMAGEN_URL"].ToString(),
-                        IdSubCategoria = Convert.ToInt32(row["FK_ID_SUB_CATEGORIA"])
-                    });
+                        Nombre = row["UNIDADES"].ToString()
+                    },
+                    ImagenUrl = row["IMAGEN_URL"].ToString(),
+                    IdSubCategoria = Convert.ToInt32(row["FK_ID_SUB_CATEGORIA"]),
+                    Categoria = Convert.ToInt32(row["PK_ID_CATEGORIA"]),
+                });
             }
             return productos;
         }
