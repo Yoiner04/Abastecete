@@ -13,7 +13,7 @@ namespace Abastecete.Controllers
 
         public UsuariosController()
         {
-            
+
         }
 
         public IActionResult Consultar()
@@ -80,7 +80,7 @@ namespace Abastecete.Controllers
                 return RedirectToAction("Login", "Login"); // Redirigir al login si no hay usuario autenticado
             }
 
-            Usuario usuario = manejadorU.ConsultarUsuarios(idUsuario.Value).FirstOrDefault();
+            Usuario usuario = manejadorU.ObtenerUsuarios(idUsuario.Value).FirstOrDefault();
 
             //if (usuario == null)
             //{
