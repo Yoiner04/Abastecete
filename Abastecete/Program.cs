@@ -22,7 +22,6 @@ builder.Services.AddAuthentication(options =>
 // Pasarela de pagos
 builder.Services.AddScoped<IEpaycoService, EpaycoService>();
 
-
 // Agregar servicios de sesión
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
@@ -59,5 +58,3 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Principal}");
 
 app.Run();
-
-

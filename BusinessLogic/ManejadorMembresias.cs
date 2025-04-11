@@ -75,7 +75,13 @@ namespace BusinessLogic
         // Obtener una membresía por ID
         public Membresia ObtenerMembresia(int id)
         {
-            DataTable datos = conexion.EjecutarConsulta("consultar_tipo_membresia");
+            var parametros = new List<Parametro>
+            {
+                new Parametro("id_membresia", id)
+            };
+
+            DataTable datos = conexion.EjecutarConsulta("consultar_tipo_membresia_por_id", parametros);
+
             DataRow row = datos.AsEnumerable().FirstOrDefault(r => Convert.ToInt32(r["PK_ID_TIPO_MEMBRESIA"]) == id);
 
             if (row != null)
