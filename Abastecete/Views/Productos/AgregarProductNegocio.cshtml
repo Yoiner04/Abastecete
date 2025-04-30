@@ -17,64 +17,72 @@
 
 <body class="bg-gray-100 p-6">
 
-    <div class="flex flex-col lg:flex-row lg:justify-center lg:gap-10">
-        <!-- Sección de formulario -->
-        <div class="mt-5 w-full max-w-xl rounded-lg bg-white p-6 shadow-md">
-            <h2 class="mb-4 text-xl font-semibold">Agregar Producto</h2>
+    <div class="mt-12 flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-center lg:gap-10">
+
+        <!-- Formulario -->
+        <div class="w-full max-w-xl rounded-lg bg-white p-6 shadow-lg">
+            <h2 class="mb-4 text-center text-2xl font-bold text-gray-700">Agregar Producto</h2>
 
             <form id="productForm" class="space-y-4">
-                <select id="category" class="w-full rounded border p-2" >
-                    <option value="">Seleccione una categoría</option  >
+                <select id="category" class="w-full rounded-lg border border-gray-300 bg-gray-50 p-3 focus:outline-none focus:ring-2 focus:ring-green-500">
+                    <option value="">Seleccione una categoría</option>
                     @foreach (Categoria cate in ViewBag.categorias)
                     {
-                        <option data-nombre="@cate.Nombre" value="@cate.Id" >@cate.Nombre</option>
+                        <option data-nombre="@cate.Nombre" value="@cate.Id">@cate.Nombre</option>
                     }
                 </select>
 
-                <select id="subcategory" class="w-full rounded border p-2" disabled>
+                <select id="subcategory" disabled class="w-full rounded-lg border border-gray-300 bg-gray-50 p-3">
                     <option value="">Seleccione una subcategoría</option>
                 </select>
 
-                <select id="product" class="w-full rounded border p-2" disabled>
+                <select id="product" disabled class="w-full rounded-lg border border-gray-300 bg-gray-50 p-3">
                     <option value="">Seleccione un producto</option>
                 </select>
 
-                <select id="unit" class="w-full rounded border p-2" disabled>
+                <select id="unit" disabled class="w-full rounded-lg border border-gray-300 bg-gray-50 p-3">
                     <option value="">Seleccione una unidad de medida</option>
                 </select>
 
-                <input type="number" id="price" class="w-full rounded border p-2" placeholder="Ingrese el valor">
+                <input type="number" id="price" placeholder="Ingrese el valor"
+                       class="w-full rounded-lg border border-gray-300 bg-gray-50 p-3 focus:outline-none focus:ring-2 focus:ring-green-500" />
 
-                <button type="button" onclick="addProduct()" class="w-full rounded-lg bg-[#23916A] py-2 text-white">
+                <button type="button" onclick="addProduct()"
+                        class="w-full rounded-lg bg-green-600 py-3 text-white transition hover:bg-green-700">
                     Registrar
                 </button>
             </form>
         </div>
 
-        <div class="mt-5 w-full max-w-xl rounded-lg bg-white p-6 shadow-md">
-            <h2 class="mb-4 text-xl font-semibold">Productos Añadidos</h2>
-            <table class="w-full border-collapse border border-gray-300">
-                <thead>
-                    <tr class="bg-gray-200">
-                        <th class="border p-2">Categoría</th>
-                        <th class="border p-2">Subcategoría</th>
-                        <th class="border p-2">Producto</th>
-                        <th class="border p-2">Unidad</th>
-                        <th class="border p-2">Valor</th>
-                        <th class="border p-2">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody id="productTableBody"></tbody>
-            </table>
+        <!-- Tabla -->
+        <div class="w-full max-w-xl rounded-lg bg-white p-6 shadow-lg">
+            <h2 class="mb-4 text-center text-2xl font-bold text-gray-700">Productos Añadidos</h2>
+
+            <div class="overflow-auto rounded-lg border border-gray-300">
+                <table class="min-w-full border-collapse text-sm">
+                    <thead class="bg-gray-200 text-gray-700">
+                        <tr>
+                            <th class="border px-4 py-2 text-left">Categoría</th>
+                            <th class="border px-4 py-2 text-left">Subcategoría</th>
+                            <th class="border px-4 py-2 text-left">Producto</th>
+                            <th class="border px-4 py-2 text-left">Unidad</th>
+                            <th class="border px-4 py-2 text-left">Valor</th>
+                            <th class="border px-4 py-2 text-left">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="productTableBody" class="bg-white text-gray-700"></tbody>
+                </table>
+            </div>
 
             <form id="finalizarForm" method="post">
                 <input type="hidden" name="productosJson" id="productosJson">
-                <button type="button" onclick="finalizarRegistro()" class="mt-4 w-full rounded-lg bg-orange-500 py-2 text-white">Finalizar Registro</button>
+                <button type="button" onclick="finalizarRegistro()"
+                        class="mt-6 w-full rounded-lg bg-orange-500 py-3 text-white transition hover:bg-orange-600">
+                    Finalizar Registro
+                </button>
             </form>
-
         </div>
     </div>
-
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
         $(document).ready(function () {
@@ -126,25 +134,25 @@
                 
             });
             $("#product").change(function(){
-                var subCategoriaId = $(this).val();
-                if(subCategoriaId){
+                var productoId = $(this).val(); // ✅ corregido: ahora tomamos el id del producto
+                if(productoId){
                     $("#unit").prop("disabled", false);
                     $.ajax({
-                        url:"/Unidad/ConsultarUnidades",
-                        type:"GET",
-                        data:{subCategoriaId:subCategoriaId},
-                        dataType:"json",
-                        success:function(response){
+                        url: "/Unidad/ConsultarUnidades",
+                        type: "GET",
+                        data: { id_producto: productoId }, // ✅ enviamos el parámetro correcto
+                        dataType: "json",
+                        success: function(response){
                             $("#unit").empty();
-                            $("#unit").append('<option value="">Seleccione un producto</option>');
-                            $.each(response,function(index,item){
+                            $("#unit").append('<option value="">Seleccione una unidad</option>');
+                            $.each(response, function(index, item){
                                 $("#unit").append(`<option data-nombre=${item.nombre} value="${item.id}">${item.nombre}</option>`);
                             });
-                        },
-                    })
+                        }
+                    });
                 }
-
             });
+
         });
     </script>
 

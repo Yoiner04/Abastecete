@@ -1,0 +1,104 @@
+﻿@model BusinessLogic.Models.Negocio
+
+<div class="mx-auto mt-10 max-w-3xl px-4">
+    <h2 class="mb-6 text-2xl font-bold text-gray-800">Editar Negocio</h2>
+
+    @using (Html.BeginForm("EditarNegocio", "Negocios", FormMethod.Post, new { enctype = "multipart/form-data", @class = "space-y-6 rounded-xl bg-white p-6 shadow-md" }))
+    {
+        @Html.HiddenFor(m => m.Id)
+
+        <div>
+            <label class="mb-1 block text-sm font-medium text-gray-700">Nombre del Negocio</label>
+            @Html.TextBoxFor(m => m.Nombre, new { @class = "w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring focus:ring-green-400" })
+        </div>
+
+        <div>
+            <label class="mb-1 block text-sm font-medium text-gray-700">Dirección</label>
+            @Html.TextBoxFor(m => m.Direccion, new { @class = "w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring focus:ring-green-400", @id = "searchLocation" })
+        </div>
+
+        <div>
+            <label class="mb-1 block text-sm font-medium text-gray-700">Teléfono / WhatsApp</label>
+            @Html.TextBoxFor(m => m.Telefono, new { @class = "w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring focus:ring-green-400" })
+        </div>
+
+        <div>
+            <label class="mb-1 block text-sm font-medium text-gray-700">Imagen o Logo</label>
+            <input type="file" name="logotipoArchivo" class="block w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100" />
+        </div>
+        @if (Model.imagen !=null)
+        {
+            <div class="mb-3">
+                <label class="mb-1 block text-sm font-medium text-gray-700">Imagen actual</label>
+                <img src="@Url.Content(Model.imagen.Base64)" alt="Logotipo actual" class="h-32 rounded border object-contain" />
+            </div>
+            @Html.TextBoxFor(m => m.LogotipoId, new { @class = "hidden" })
+
+        }
+
+
+        <div>
+            <label class="mb-1 block text-sm font-medium text-gray-700">Localización (lat, lng)</label>
+            @Html.TextBoxFor(m => m.Localizacion, new { @class = "w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring focus:ring-green-400", @id = "location" })
+        </div>
+
+        <div>
+            <div id="map" class="mt-4 h-64 w-full rounded border"></div>
+        </div>
+
+        <div class="text-right">
+            <button type="submit" class="rounded-lg bg-green-600 px-6 py-2 text-white transition duration-200 hover:bg-green-700">
+                Guardar Cambios
+            </button>
+        </div>
+    }
+</div>
+
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAPudyk3G3YG7GOEpId4xMK_WFIEenOSp8&libraries=places"></script>
+    <script>
+        function initMap() {
+            const defaultLatLng = { lat: 2.9273, lng: -75.2819 };
+
+            const locationField = document.getElementById('location');
+            let initialCoords = defaultLatLng;
+
+            if (locationField.value && locationField.value.includes(',')) {
+                const parts = locationField.value.split(',');
+                initialCoords = {
+                    lat: parseFloat(parts[0]),
+                    lng: parseFloat(parts[1])
+                };
+            }
+
+            const map = new google.maps.Map(document.getElementById('map'), {
+                center: initialCoords,
+                zoom: 13
+            });
+
+            const marker = new google.maps.Marker({
+                position: initialCoords,
+                map: map,
+                draggable: true
+            });
+
+            const searchBox = new google.maps.places.SearchBox(document.getElementById('searchLocation'));
+
+            searchBox.addListener('places_changed', function () {
+                const places = searchBox.getPlaces();
+                if (places.length === 0) return;
+
+                const place = places[0];
+                map.setCenter(place.geometry.location);
+                marker.setPosition(place.geometry.location);
+                locationField.value = `${place.geometry.location.lat()},${place.geometry.location.lng()}`;
+            });
+
+            marker.addListener('dragend', function () {
+                const position = marker.getPosition();
+                locationField.value = `${position.lat()},${position.lng()}`;
+            });
+        }
+
+        window.onload = initMap;
+    </script>
+

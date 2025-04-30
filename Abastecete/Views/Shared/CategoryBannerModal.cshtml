@@ -1,42 +1,42 @@
-﻿<!-- CategoryBannerModal.cshtml -->
-<div id="categoryBannerModal" class="hidden fixed inset-0 z-50 bg-black bg-opacity-50 flex justify-center items-center px-4 py-8">
-    <div class="bg-white p-6 rounded-lg w-full max-w-5xl shadow-lg max-h-[90vh] overflow-y-auto md:overflow-visible md:max-h-full">
-        <h2 class="text-xl font-bold mb-4 text-center text-gray-800">Actualizar Banners de Categoría</h2>
-        <form id="uploadCategoryBannerForm" enctype="multipart/form-data" class="flex flex-col gap-4">
-            <!-- Selector de categoría -->
-            <label for="categorySelect" class="text-sm font-medium">Seleccionar Categoría</label>
-            <select id="categorySelect" name="nombreCategoria" class="border p-2 rounded w-full">
+﻿<div id="categoryBannerModal" class="bg-opacity-50 fixed inset-0 z-50 hidden overflow-auto bg-black px-4 py-8">
+    <div id="categoryBannerModalContent" class="mx-auto max-w-6xl rounded-2xl bg-white p-6 shadow-2xl">
+        <h2 class="mb-6 text-center text-2xl font-bold text-gray-800">Gestionar Banners por Categoría</h2>
+
+        <!-- Selector de categoría -->
+        <div class="mb-6">
+            <label for="categorySelect" class="block text-sm font-medium text-gray-700">Seleccionar categoría</label>
+            <select id="categorySelect"
+                    class="mt-1 w-full rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-800 shadow-sm">
                 @foreach (var categoria in Model)
                 {
                     <option value="@categoria.Nombre">@categoria.Nombre</option>
                 }
             </select>
+        </div>
 
-            <!-- Previsualización de imágenes -->
-            <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-                @for (int i = 1; i <= 6; i++)
-                {
-                    var tipo = i <= 2 ? "Ancha" : "Cuadrada";
-                    var rutaBase = "/images/default.webp";
+        <!-- Galería de banners por categoría -->
+        <div id="galeriaCategoria" class="mb-10 grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
+            <!-- Aquí se renderizan los banners dinámicamente -->
+        </div>
 
-                    <div class="flex flex-col items-center border p-3 rounded-lg shadow-md">
-                        <label class="text-sm font-medium mb-2">Imagen @tipo @((i <= 2) ? i : i - 2)</label>
-                        <img id="previewBanner@(i)" src="@rutaBase" alt="Banner @i" class="w-full h-28 object-cover rounded-lg mb-2">
-                        <input type="file" id="bannerImage@(i)" name="imagen@(i)" accept="image/*" class="text-xs w-full">
-                    </div>
-                }
+        <!-- Subida de nuevo banner -->
+        <form id="formNuevoBannerCategoria" class="flex flex-col gap-4 border-t pt-6">
+            <label class="text-lg font-semibold text-gray-700">Agregar nuevo banner</label>
+            <div class="flex flex-col gap-4 sm:flex-row sm:items-center">
+                <select id="formatoBannerCategoria" class="w-full rounded border border-gray-300 px-4 py-2 text-sm text-gray-700 sm:w-1/3">
+                    <option value="16:9">Formato Horizontal (16:9)</option>
+                    <option value="1:1">Formato Cuadrado (1:1)</option>
+                </select>
+                <input type="file" id="nuevoBannerCategoria" accept="image/*"
+                       class="w-full text-sm text-gray-700 file:mr-4 file:rounded-lg file:border-0 file:bg-green-50 file:px-4 file:py-2 file:text-green-700 hover:file:bg-green-100" />
             </div>
-
-            <!-- Botones -->
-            <div class="mt-4 flex flex-col sm:flex-row justify-center gap-4">
+            <div class="flex flex-col justify-center gap-4 pt-4 sm:flex-row">
                 <button type="submit"
-                        class="bg-green-600 text-white font-medium rounded-lg shadow-md transition-all duration-300 ease-in-out
-                        hover:bg-green-700 focus:ring focus:ring-green-300
-                        px-6 py-3">
-                    Subir Imágenes
+                        class="w-full rounded-lg bg-green-600 px-6 py-2 font-semibold text-white transition hover:bg-green-700 sm:w-auto">
+                    Subir Imagen
                 </button>
-
-                <button type="button" onclick="cerrarCategoryBannerModal()" class="bg-gray-500 text-white px-6 py-3 rounded-lg shadow-md hover:bg-gray-600">
+                <button type="button" onclick="cerrarCategoryBannerModal()"
+                        class="w-full rounded-lg bg-gray-600 px-6 py-2 font-semibold text-white transition hover:bg-gray-700 sm:w-auto">
                     Cerrar
                 </button>
             </div>
@@ -48,7 +48,7 @@
     function abrirCategoryBannerModal() {
         document.getElementById("categoryBannerModal").classList.remove("hidden");
         document.body.classList.add("overflow-hidden");
-        actualizarPrevisualizaciones();
+        cargarBannersCategoria();
     }
 
     function cerrarCategoryBannerModal() {
@@ -56,42 +56,112 @@
         document.body.classList.remove("overflow-hidden");
     }
 
-    document.getElementById("categoryBannerModal").addEventListener("click", function (event) {
-        if (event.target === this) {
-            cerrarCategoryBannerModal();
-        }
+    document.getElementById("categorySelect").addEventListener("change", cargarBannersCategoria);
+
+    function cargarBannersCategoria() {
+        const categoria = document.getElementById("categorySelect").value;
+        fetch(`/Banners/ListarBannersCategoria?categoriaId=${categoria}`)
+            .then(res => res.json())
+            .then(banners => {
+                const galeria = document.getElementById("galeriaCategoria");
+                galeria.innerHTML = banners.length === 0 ? '<p class="col-span-full text-center text-gray-500">No hay banners aún.</p>' : "";
+
+                    banners.forEach(b => {
+        galeria.innerHTML += `
+            <div class="flex flex-col items-center gap-2 rounded-lg border p-4 shadow">
+                <img src="${b.base64}" alt="${b.nombre}" data-formato="${b.formato}"
+                     class="h-32 w-full rounded bg-gray-100 object-contain" />
+                <div class="text-xs text-gray-500">Formato: ${b.formato === "1:1" ? "Cuadrado" : "Horizontal"}</div>
+                <div class="mt-2 flex gap-2">
+                    <button onclick="reemplazarBannerCategoria('${b.id}')" class="rounded bg-blue-500 px-3 py-1 text-sm text-white hover:bg-blue-600">Reemplazar</button>
+                    <button onclick="eliminarBannerCategoria('${b.id}')" class="rounded bg-red-500 px-3 py-1 text-sm text-white hover:bg-red-600">Eliminar</button>
+                </div>
+            </div>`;
     });
 
-    document.getElementById("categorySelect").addEventListener("change", actualizarPrevisualizaciones);
-
-    function actualizarPrevisualizaciones() {
-        let categoria = document.getElementById("categorySelect").value;
-        for (let i = 1; i <= 6; i++) {
-            let imgElement = document.getElementById("previewBanner" + i);
-            imgElement.src = `/images/${categoria}/banner${i}.webp`;
-            imgElement.onerror = function () {
-                this.src = "/images/default.webp";
-            };
-        }
+            });
     }
 
-    document.getElementById("uploadCategoryBannerForm").addEventListener("submit", function (event) {
-        event.preventDefault();
-        let formData = new FormData(this);
+       document.getElementById("formNuevoBannerCategoria").addEventListener("submit", function (e) {
+        e.preventDefault();
 
-        let nombreCategoria = document.getElementById("categorySelect").value;
-        formData.set("nombreCategoria", nombreCategoria);
+        const file = document.getElementById("nuevoBannerCategoria").files[0];
+        const formato = document.getElementById("formatoBannerCategoria").value;
+        const categoriaId = document.getElementById("categorySelect").value;
 
-        fetch("/Banners/SubirImagenesCategoria", {
+        if (!file) {
+            alert("⚠️ Selecciona una imagen para subir.");
+            return;
+        }
+
+        console.log(formato);
+
+        // ⚠️ VALIDAR MÁXIMO 2 HORIZONTALES
+        if (formato === "16:9") {
+            const horizontalesActuales = document.querySelectorAll(`#galeriaCategoria img[data-formato='16:9']`).length;
+            console.log(horizontalesActuales);
+            if (horizontalesActuales >= 2) {
+                alert("⚠️ Solo se permiten 2 banners horizontales (16:9) por categoría.");
+                return;
+            }
+        }
+
+        const formData = new FormData();
+        formData.append("imagen", file);
+        formData.append("formato", formato);
+        formData.append("categoriaId", categoriaId);
+
+        fetch("/Banners/AgregarBannerCategoria", {
             method: "POST",
             body: formData
         })
-            .then(response => response.json())
+            .then(res => res.json())
             .then(data => {
                 alert(data.mensaje);
-                cerrarCategoryBannerModal();
-                location.reload();
+                document.getElementById("nuevoBannerCategoria").value = "";
+                cargarBannersCategoria();
             })
-            .catch(error => console.error("Error:", error));
+            .catch(() => alert("Error al subir la imagen."));
     });
+
+
+    function reemplazarBannerCategoria(id) {
+        const input = document.createElement("input");
+        input.type = "file";
+        input.accept = "image/*";
+        input.onchange = () => {
+            const file = input.files[0];
+            if (file) {
+                const formData = new FormData();
+                formData.append("id", id);
+                formData.append("imagen", file);
+
+                fetch("/Banners/ReemplazarBannerCategoria", {
+                    method: "POST",
+                    body: formData
+                })
+                .then(res => res.json())
+                .then(data => {
+                    alert(data.mensaje);
+                    cargarBannersCategoria();
+                })
+                .catch(() => alert("Error al reemplazar banner."));
+            }
+        };
+        input.click();
+    }
+
+    function eliminarBannerCategoria(id) {
+        if (!confirm("¿Estás seguro de eliminar este banner?")) return;
+
+        fetch(`/Banners/EliminarBannerCategoria?id=${id}`, {
+            method: "DELETE"
+        })
+        .then(res => res.json())
+        .then(data => {
+            alert(data.mensaje);
+            cargarBannersCategoria();
+        })
+        .catch(() => alert("Error al eliminar banner."));
+    }
 </script>

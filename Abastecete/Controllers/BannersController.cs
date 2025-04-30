@@ -1,6 +1,4 @@
-﻿using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Formats.Webp;
-using SixLabors.ImageSharp.Processing;
+﻿
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -11,16 +9,19 @@ using Microsoft.AspNetCore.WebUtilities;
 using static System.Net.Mime.MediaTypeNames;
 using BusinessLogic.Models;
 using BusinessLogic;
+using MongoDB.Driver;
 
 namespace Abastecete.Controllers
 {
     public class BannersController : Controller
     {
         private readonly IWebHostEnvironment _webHostEnvironment;
+        private readonly ManejadorMongo _manejadorMongo;
 
         public BannersController(IWebHostEnvironment webHostEnvironment)
         {
             _webHostEnvironment = webHostEnvironment;
+            _manejadorMongo = new ManejadorMongo();
         }
 
         public IActionResult Editar()
@@ -30,121 +31,264 @@ namespace Abastecete.Controllers
 
             return View(categorias);
         }
-
-        [HttpPost]
-        public async Task<IActionResult> SubirImagenes(IFormFile carouselImage1, IFormFile carouselImage2, IFormFile carouselImage3, IFormFile sideImage1, IFormFile sideImage2)
+        [HttpGet]
+        public IActionResult ListarProveedores()
         {
-            if (carouselImage1 == null && carouselImage2 == null && carouselImage3 == null && sideImage1 == null && sideImage2 == null)
+            try
             {
-                return Json(new { mensaje = "No se seleccionó ninguna imagen" });
-            }
+                var banners = _manejadorMongo.ListarBannersProveedores();
+                var resultado = new List<object>();
 
-            string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images");
-            if (!Directory.Exists(uploadsFolder))
-            {
-                Directory.CreateDirectory(uploadsFolder);
-            }
-
-            string mensaje = "Imágenes actualizadas:";
-
-            if (carouselImage1 != null)
-            {
-                await GuardarImagenComoWebP(carouselImage1, uploadsFolder, "carrusel1");
-                mensaje += "\nCarrusel 1 actualizado";
-            }
-            if (carouselImage2 != null)
-            {
-                await GuardarImagenComoWebP(carouselImage2, uploadsFolder, "carrusel2");
-                mensaje += "\nCarrusel 2 actualizado";
-            }
-            if (carouselImage3 != null)
-            {
-                await GuardarImagenComoWebP(carouselImage3, uploadsFolder, "carrusel3");
-                mensaje += "\nCarrusel 3 actualizado";
-            }
-            if (sideImage1 != null)
-            {
-                await GuardarImagenComoWebP(sideImage1, uploadsFolder, "lateral1");
-                mensaje += "\nImagen lateral 1 actualizada";
-            }
-            if (sideImage2 != null)
-            {
-                await GuardarImagenComoWebP(sideImage2, uploadsFolder, "lateral2");
-                mensaje += "\nImagen lateral 2 actualizada";
-            }
-
-            return Json(new { mensaje });
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> SubirImagenesCategoria(string nombreCategoria, IFormFile imagen1, IFormFile imagen2, IFormFile imagen3, IFormFile imagen4, IFormFile imagen5, IFormFile imagen6)
-        {
-            Console.WriteLine($"Categoría recibida: {nombreCategoria}");
-
-            if (string.IsNullOrWhiteSpace(nombreCategoria))
-            {
-                return Json(new { mensaje = "Seleccione una categoría válida." });
-            }
-
-            string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images", nombreCategoria);
-
-            if (!Directory.Exists(uploadsFolder))
-            {
-                Directory.CreateDirectory(uploadsFolder);
-            }
-
-            await GuardarImagenComoWebP(imagen1, uploadsFolder, "banner1");
-            await GuardarImagenComoWebP(imagen2, uploadsFolder, "banner2");
-            await GuardarImagenComoWebP(imagen3, uploadsFolder, "banner3");
-            await GuardarImagenComoWebP(imagen4, uploadsFolder, "banner4");
-            await GuardarImagenComoWebP(imagen5, uploadsFolder, "banner5");
-            await GuardarImagenComoWebP(imagen6, uploadsFolder, "banner6");
-
-            return Json(new { mensaje = "Imágenes subidas correctamente" });
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> SubirImagenProveedor(IFormFile proveedoresImage)
-        {
-            if (proveedoresImage == null)
-            {
-                return Json(new { mensaje = "No se seleccionó ninguna imagen" });
-            }
-
-            string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images");
-
-            if (!Directory.Exists(uploadsFolder))
-            {
-                Directory.CreateDirectory(uploadsFolder);
-            }
-
-            await GuardarImagenComoWebP(proveedoresImage, uploadsFolder, "banner_proveedores");
-
-            return Json(new { mensaje = "Imagen del Banner de Proveedores actualizada correctamente" });
-        }
-
-
-        private async Task GuardarImagenComoWebP(IFormFile file, string uploadsFolder, string fileName)
-        {
-            if (file == null || file.Length == 0)
-            {
-                Console.WriteLine($"El archivo {fileName} es nulo o está vacío.");
-                return; // No intentar procesar un archivo vacío
-            }
-
-            string filePath = Path.Combine(uploadsFolder, $"{fileName}.webp");
-
-            using (var stream = file.OpenReadStream())
-            using (var image = await SixLabors.ImageSharp.Image.LoadAsync(stream))
-            {
-                image.Mutate(x => x.Resize(new ResizeOptions
+                foreach (var banner in banners)
                 {
-                    Mode = ResizeMode.Max,
-                    Size = new Size(1200, 800)
-                }));
+                    var imagen = _manejadorMongo.ObtenerImagen(banner.FileId);
+                    resultado.Add(new
+                    {
+                        id = banner.Id,
+                        nombre = banner.Nombre,
+                        base64 = imagen?.Base64 ?? "",
+                        tipo = banner.Formato
+                    });
+                }
 
-                await image.SaveAsync(filePath, new WebpEncoder { Quality = 90 });
+                return Json(resultado);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ Error al listar banners de proveedores: {ex.Message}");
+                return BadRequest(new { mensaje = "Error al listar banners." });
             }
         }
+
+        [HttpPost]
+        public IActionResult AgregarBannerProveedor(IFormFile imagen)
+        {
+            if (imagen == null)
+                return BadRequest(new { mensaje = "Debes seleccionar una imagen." });
+
+            try
+            {
+                _manejadorMongo.GuardarBannerProveedor(imagen);
+                return Json(new { mensaje = "Banner agregado correctamente." });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ Error al agregar banner: {ex.Message}");
+                return BadRequest(new { mensaje = "Error al agregar banner." });
+            }
+        }
+
+        [HttpPost]
+        public IActionResult ReemplazarBannerProveedor(string id, IFormFile imagen)
+        {
+            if (string.IsNullOrEmpty(id) || imagen == null)
+                return BadRequest(new { mensaje = "Faltan datos." });
+
+            try
+            {
+                _manejadorMongo.ReemplazarBannerProveedor(id, imagen);
+                return Json(new { mensaje = "Banner reemplazado correctamente." });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ Error al reemplazar banner: {ex.Message}");
+                return BadRequest(new { mensaje = "Error al reemplazar banner." });
+            }
+        }
+
+        [HttpDelete]
+        public IActionResult EliminarBannerProveedor(string id)
+        {
+            if (string.IsNullOrEmpty(id))
+                return BadRequest(new { mensaje = "ID inválido." });
+
+            try
+            {
+                _manejadorMongo.EliminarBannerProveedor(id);
+                return Json(new { mensaje = "Banner eliminado correctamente." });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ Error al eliminar banner: {ex.Message}");
+                return BadRequest(new { mensaje = "Error al eliminar banner." });
+            }
+        }
+
+        /*Inicio*/
+
+        // ✅ Listar banners de inicio
+        [HttpGet]
+        public IActionResult ListarBannersInicio()
+        {
+            try
+            {
+                var banners = _manejadorMongo.ListarBannersInicio();
+                var resultado = new List<object>();
+
+                foreach (var banner in banners)
+                {
+                    var imagen = _manejadorMongo.ObtenerImagen(banner.FileId);
+                    resultado.Add(new
+                    {
+                        id = banner.Id,
+                        nombre = banner.Nombre,
+                        base64 = imagen?.Base64 ?? "",
+                        tipo = banner.Formato // "16:9" o "1:1"
+                    });
+                }
+
+                return Json(resultado);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ Error al listar banners de inicio: {ex.Message}");
+                return BadRequest(new { mensaje = "Error al listar banners de inicio." });
+            }
+        }
+
+        // ✅ Agregar nuevo banner de inicio
+        [HttpPost]
+        public IActionResult AgregarBannerInicio(IFormFile imagen, string formato)
+        {
+            if (imagen == null || string.IsNullOrWhiteSpace(formato))
+                return BadRequest(new { mensaje = "Faltan datos requeridos." });
+
+            try
+            {
+                _manejadorMongo.GuardarBannerInicio(imagen, formato);
+                return Json(new { mensaje = "Banner de inicio agregado correctamente." });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ Error al agregar banner de inicio: {ex.Message}");
+                return BadRequest(new { mensaje = "Error al agregar banner." });
+            }
+        }
+
+        // ✅ Reemplazar banner de inicio
+        [HttpPost]
+        public IActionResult ReemplazarBannerInicio(string id, IFormFile imagen)
+        {
+            if (string.IsNullOrEmpty(id) || imagen == null)
+                return BadRequest(new { mensaje = "Faltan datos." });
+
+            try
+            {
+                _manejadorMongo.ReemplazarBannerInicio(id, imagen);
+                return Json(new { mensaje = "Banner reemplazado correctamente." });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ Error al reemplazar banner: {ex.Message}");
+                return BadRequest(new { mensaje = "Error al reemplazar banner." });
+            }
+        }
+
+        // ✅ Eliminar banner de inicio
+        [HttpDelete]
+        public IActionResult EliminarBannerInicio(string id)
+        {
+            if (string.IsNullOrEmpty(id))
+                return BadRequest(new { mensaje = "ID inválido." });
+
+            try
+            {
+                _manejadorMongo.EliminarBannerInicio(id);
+                return Json(new { mensaje = "Banner eliminado correctamente." });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ Error al eliminar banner: {ex.Message}");
+                return BadRequest(new { mensaje = "Error al eliminar banner." });
+            }
+        }
+        /*Categorias*/
+
+        [HttpGet]
+        public IActionResult ListarBannersCategoria(string categoriaId)
+        {
+            try
+            {
+                var manejador = new ManejadorMongo();
+                var imagenes = manejador.ListarBannersPorCategoria(categoriaId);
+
+                var respuesta = imagenes.Select(b =>
+                {
+                    var img = manejador.ObtenerImagen(b.FileId);
+                    return new
+                    {
+                        id = b.Id,
+                        nombre = b.Nombre,
+                        base64 = img?.Base64,
+                        formato = b.Formato
+                    };
+                });
+
+                return Json(respuesta);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { mensaje = "Error al listar banners.", error = ex.Message });
+            }
+        }
+
+        [HttpPost]
+        public IActionResult AgregarBannerCategoria(IFormFile imagen, string categoriaId, string formato)
+        {
+            if (imagen == null || string.IsNullOrWhiteSpace(categoriaId) || string.IsNullOrWhiteSpace(formato))
+                return BadRequest(new { mensaje = "Datos incompletos" });
+
+            try
+            {
+                var manejador = new ManejadorMongo();
+                manejador.AgregarBannerCategoria(imagen, categoriaId, formato);
+
+                return Json(new { mensaje = "Banner agregado correctamente." });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { mensaje = "Error al guardar banner.", error = ex.Message });
+            }
+        }
+
+        [HttpPost]
+        public IActionResult ReemplazarBannerCategoria(string id, IFormFile imagen)
+        {
+            if (string.IsNullOrWhiteSpace(id) || imagen == null)
+                return BadRequest(new { mensaje = "Datos inválidos." });
+
+            try
+            {
+                var manejador = new ManejadorMongo();
+                manejador.ReemplazarBannerCategoria(id, imagen);
+
+                return Json(new { mensaje = "Banner reemplazado correctamente." });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { mensaje = "Error al reemplazar banner.", error = ex.Message });
+            }
+        }
+
+        [HttpDelete]
+        public IActionResult EliminarBannerCategoria(string id)
+        {
+            if (string.IsNullOrWhiteSpace(id))
+                return BadRequest(new { mensaje = "ID inválido." });
+
+            try
+            {
+                var manejador = new ManejadorMongo();
+                manejador.EliminarBannerCategoria(id);
+
+                return Json(new { mensaje = "Banner eliminado correctamente." });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { mensaje = "Error al eliminar banner.", error = ex.Message });
+            }
+        }
+
+
     }
 }
