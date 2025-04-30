@@ -3,6 +3,9 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
 using BusinessLogic.Interfaces;
 using BusinessLogic.Models;
+using DataAccess;
+using MongoDB.Driver;
+using DataAccess.Interface;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,11 +22,11 @@ builder.Services.AddAuthentication(options =>
     options.CallbackPath = "/signin-google";
 });
 
-// Pasarela de pagos
 builder.Services.AddScoped<IEpaycoService, EpaycoService>();
 
+builder.Services.AddScoped<IMongoConnection, MongoConnection>();
 
-// Agregar servicios de sesión
+
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
 {

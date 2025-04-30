@@ -1,55 +1,34 @@
-﻿<div id="bannerModal" class="fixed inset-0 z-50 flex hidden items-center justify-center bg-black bg-opacity-50">
-    <div id="bannerModalContent" class="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-lg bg-white p-4 md:p-6">
-        <h2 class="mb-4 text-center text-xl font-bold">Editar Banners</h2>
+﻿
+<div id="bannerModal" class="bg-opacity-50 fixed inset-0 z-50 flex hidden items-center justify-center bg-black px-4 py-8">
+    <div id="bannerModalContent" class="max-h-[90vh] w-full max-w-6xl overflow-y-auto rounded-2xl border border-gray-200 bg-white p-6 shadow-xl">
+        <h2 class="mb-6 text-center text-2xl font-bold text-gray-800">Gestionar Banners de Inicio</h2>
 
-        <form id="uploadBannerForm" enctype="multipart/form-data" class="space-y-6">
-            <!-- Carrusel -->
-            <div>
-                <h3 class="mb-2 text-lg font-semibold">Carrusel</h3>
-                <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                    <div class="flex flex-col gap-2">
-                        <img src="/images/carrusel1.webp?t=@DateTime.Now.Ticks" alt="Carrusel 1"
-                             class="h-32 w-full rounded-lg object-cover shadow">
-                        <input type="file" id="carouselImage1" name="carouselImage1" accept="image/*" class="text-xs">
-                    </div>
-                    <div class="flex flex-col gap-2">
-                        <img src="/images/carrusel2.webp?t=@DateTime.Now.Ticks" alt="Carrusel 2"
-                             class="h-32 w-full rounded-lg object-cover shadow">
-                        <input type="file" id="carouselImage2" name="carouselImage2" accept="image/*" class="text-xs">
-                    </div>
-                    <div class="flex flex-col gap-2">
-                        <img src="/images/carrusel3.webp?t=@DateTime.Now.Ticks" alt="Carrusel 3"
-                             class="h-32 w-full rounded-lg object-cover shadow">
-                        <input type="file" id="carouselImage3" name="carouselImage3" accept="image/*" class="text-xs">
-                    </div>
-                </div>
+        <!-- Galería dinámica -->
+        <div class="mb-10 grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3" id="galeriaInicio">
+            <!-- Render dinámico aquí -->
+        </div>
+
+        <!-- Subida de nuevo banner -->
+        <form id="formNuevoBannerInicio" class="flex flex-col gap-4 border-t pt-6">
+            <label class="text-lg font-semibold text-gray-700">Agregar nuevo banner</label>
+
+            <div class="flex flex-col gap-4 sm:flex-row sm:items-center">
+                <select id="formatoBanner" class="w-full rounded border border-gray-300 px-4 py-2 text-sm text-gray-700 sm:w-1/3">
+                    <option value="16:9">📺 Formato Horizontal (16:9)</option>
+                    <option value="1:1">🔲 Formato Cuadrado (1:1)</option>
+                </select>
+
+                <input type="file" id="nuevoBannerInicio" accept="image/*"
+                       class="w-full text-sm text-gray-700 file:mr-4 file:rounded-lg file:border-0 file:bg-green-50 file:px-4 file:py-2 file:text-green-700 hover:file:bg-green-100" />
             </div>
 
-            <!-- Laterales -->
-            <div>
-                <h3 class="mb-2 text-lg font-semibold">Laterales</h3>
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="flex flex-col gap-2">
-                        <img src="/images/lateral1.webp?t=@DateTime.Now.Ticks" alt="Lateral 1"
-                             class="h-32 w-full rounded-lg object-cover shadow">
-                        <input type="file" id="sideImage1" name="sideImage1" accept="image/*" class="text-xs">
-                    </div>
-                    <div class="flex flex-col gap-2">
-                        <img src="/images/lateral2.webp?t=@DateTime.Now.Ticks" alt="Lateral 2"
-                             class="h-32 w-full rounded-lg object-cover shadow">
-                        <input type="file" id="sideImage2" name="sideImage2" accept="image/*" class="text-xs">
-                    </div>
-                </div>
-            </div>
-
-            <!-- Botones -->
-            <div class="flex flex-col sm:flex-row justify-center gap-4">
+            <div class="flex flex-col justify-center gap-4 pt-4 sm:flex-row">
                 <button type="submit"
-                        class="rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600 transition">
-                    Subir Imágenes
+                        class="w-full rounded-lg bg-green-600 px-6 py-2 font-semibold text-white transition hover:bg-green-700 sm:w-auto">
+                    Subir Imagen
                 </button>
                 <button type="button" onclick="cerrarBannerModal()"
-                        class="rounded bg-gray-500 px-4 py-2 text-white hover:bg-gray-600 transition">
+                        class="w-full rounded-lg bg-gray-500 px-6 py-2 font-semibold text-white transition hover:bg-gray-600 sm:w-auto">
                     Cerrar
                 </button>
             </div>
@@ -57,16 +36,18 @@
     </div>
 </div>
 
-
 <script>
+    let bannersInicio = [];
+
     function abrirBannerModal() {
-        document.body.classList.add("overflow-hidden");
         document.getElementById("bannerModal").classList.remove("hidden");
+        document.body.classList.add("overflow-hidden");
+        cargarBannersInicio();
     }
 
     function cerrarBannerModal() {
-        document.body.classList.remove("overflow-hidden");
         document.getElementById("bannerModal").classList.add("hidden");
+        document.body.classList.remove("overflow-hidden");
     }
 
     document.getElementById("bannerModal").addEventListener("click", function (event) {
@@ -75,35 +56,111 @@
         }
     });
 
-    document.getElementById("uploadBannerForm").addEventListener("submit", function (event) {
-        event.preventDefault();
-        let formData = new FormData();
-        let inputs = ["carouselImage1", "carouselImage2", "carouselImage3", "sideImage1", "sideImage2"];
-        let hasFile = false;
+    document.getElementById("formNuevoBannerInicio").addEventListener("submit", function (e) {
+        e.preventDefault();
+        const file = document.getElementById("nuevoBannerInicio").files[0];
+        const formato = document.getElementById("formatoBanner").value;
 
-        inputs.forEach(id => {
-            let file = document.getElementById(id).files[0];
-            if (file) {
-                formData.append(id, file);
-                hasFile = true;
-            }
-        });
-
-        if (!hasFile) {
-            alert("Selecciona al menos una imagen antes de subir.");
+        if (!file) {
+            alert("⚠️ Selecciona una imagen antes de subir.");
             return;
         }
 
-        fetch("/Banners/SubirImagenes", {
+        if (formato === "1:1") {
+            const cuadradas = document.querySelectorAll(`#galeriaInicio img[data-formato='1:1']`).length;
+            console.log(cuadradas);
+            if (cuadradas == 2) {
+                alert("⚠️ Solo puedes subir hasta 2 banners cuadrados (1:1).");
+                return;
+            }
+        }
+
+        const formData = new FormData();
+        formData.append("imagen", file);
+        formData.append("formato", formato);
+
+        fetch("/Banners/AgregarBannerInicio", {
             method: "POST",
             body: formData
         })
-            .then(response => response.json())
+        .then(res => res.json())
+        .then(data => {
+            alert(data.mensaje);
+            document.getElementById("nuevoBannerInicio").value = "";
+            cargarBannersInicio();
+        })
+        .catch(() => alert("❌ Error al subir imagen."));
+    });
+
+    // Cargar y mostrar banners existentes
+    function cargarBannersInicio() {
+        fetch("/Banners/ListarBannersInicio")
+            .then(res => res.json())
+            .then(banners => {
+                bannersInicio = banners;
+                const galeria = document.getElementById("galeriaInicio");
+                galeria.innerHTML = "";
+
+                if (!banners.length) {
+                    galeria.innerHTML = '<p class="col-span-full text-center text-gray-600">No hay banners aún.</p>';
+                    return;
+                }
+                console.log(banners);   
+
+                banners.forEach(b => {
+                    galeria.innerHTML += `
+                        <div class="flex flex-col items-center gap-2 rounded-lg border p-4 shadow">
+                            <img src="${b.base64}" alt="${b.nombre}"  data-formato="${b.tipo}" class="h-32 w-full rounded bg-gray-100 object-contain" />
+                            <div class="text-xs text-gray-500">${b.tipo === "1:1" ? "Formato: Cuadrado" : "Formato: Horizontal"}</div>
+                            <div class="mt-2 flex gap-2">
+                                <button onclick="reemplazarBannerInicio('${b.id}')" class="rounded bg-blue-500 px-3 py-1 text-sm text-white hover:bg-blue-600">Reemplazar</button>
+                                <button onclick="eliminarBannerInicio('${b.id}')" class="rounded bg-red-500 px-3 py-1 text-sm text-white hover:bg-red-600">Eliminar</button>
+                            </div>
+                        </div>`;
+                });
+            })
+            .catch(() => alert("❌ Error al cargar los banners."));
+    }
+
+    // Reemplazar imagen
+    function reemplazarBannerInicio(id) {
+        const input = document.createElement("input");
+        input.type = "file";
+        input.accept = "image/*";
+        input.onchange = () => {
+            const file = input.files[0];
+            if (file) {
+                const formData = new FormData();
+                formData.append("id", id);
+                formData.append("imagen", file);
+
+                fetch("/Banners/ReemplazarBannerInicio", {
+                    method: "POST",
+                    body: formData
+                })
+                .then(res => res.json())
+                .then(data => {
+                    alert(data.mensaje);
+                    cargarBannersInicio();
+                })
+                .catch(() => alert("❌ Error al reemplazar banner."));
+            }
+        };
+        input.click();
+    }
+
+    // Eliminar imagen
+    function eliminarBannerInicio(id) {
+        if (confirm("¿Estás seguro de eliminar este banner?")) {
+            fetch(`/Banners/EliminarBannerInicio?id=${id}`, {
+                method: "DELETE"
+            })
+            .then(res => res.json())
             .then(data => {
                 alert(data.mensaje);
-                cerrarBannerModal();
-                location.reload();
+                cargarBannersInicio();
             })
-            .catch(error => console.error("Error:", error));
-    });
+            .catch(() => alert("❌ Error al eliminar banner."));
+        }
+    }
 </script>

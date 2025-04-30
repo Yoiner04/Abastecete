@@ -9,15 +9,18 @@ namespace Abastecete.Controllers
     public class CategoriasController : Controller
     {
         private readonly ManejadorCategorias manejadorCategorias;
+        private readonly ManejadorMongo manejadorMongo;
 
         public CategoriasController()
         {
+            manejadorMongo = new ManejadorMongo();
             manejadorCategorias = new ManejadorCategorias();
         }
 
         public IActionResult Consultar()
         {
             List<Categoria> categorias = manejadorCategorias.ConsultarCategorias();
+
             return View(categorias);
         }
 
@@ -28,23 +31,55 @@ namespace Abastecete.Controllers
         }
 
         [HttpPost]
-        public IActionResult Crear(IFormFile Imagen, string Nombre, int Estado)
+        public IActionResult Crear(IFormFile Imagen, string Nombre, int Estado, IFormFile Banner)
         {
-            string imagenUrl = GuardarImagen(Imagen);
-            var categoria = new Categoria { Nombre = Nombre, Estado = Estado, Imagen = imagenUrl };
+
+            var categoria = new Categoria { Nombre = Nombre, Estado = Estado, ImagenId = manejadorMongo.SubirImagen(Imagen), BannerId = manejadorMongo.SubirImagen(Banner) };
             string mensaje = manejadorCategorias.CrearCategoria(categoria);
             return Json(new { mensaje });
         }
 
-        [HttpPost]
-        public IActionResult EditarCategoria(int Id, IFormFile Imagen, string Nombre, int Estado)
-        {
-            string imagenUrl = Imagen != null ? GuardarImagen(Imagen) : manejadorCategorias.ObtenerCategoria(Id)?.Imagen;
 
-            var categoria = new Categoria { Id = Id, Nombre = Nombre, Estado = Estado, Imagen = imagenUrl };
+        [HttpPost]
+        public IActionResult EditarCategoria(int Id, IFormFile Imagen, string Nombre, int Estado, IFormFile Banner)
+        {
+            // 1. Consultar la categoría actual
+            Categoria categoriaActual = manejadorCategorias.ObtenerCategoria(Id);
+
+            // 2. Definir variables para los nuevos IDs de imagen y banner
+            string imagenId = categoriaActual.ImagenId;
+            string bannerId = categoriaActual.BannerId;
+
+            // 3. Si subieron nueva imagen, la subimos a Mongo
+            if (Imagen != null && Imagen.Length > 0)
+            {
+                imagenId = manejadorMongo.updateImage(Imagen, imagenId);
+            }
+
+            // 4. Si subieron nuevo banner, lo subimos a Mongo
+            if (Banner != null && Banner.Length > 0)
+            {
+                bannerId = manejadorMongo.updateImage(Banner, bannerId);
+            }
+
+            // 5. Crear la nueva categoría que queremos guardar
+            var categoria = new Categoria
+            {
+                Id = Id,
+                Nombre = Nombre,
+                Estado = Estado,
+                ImagenId = imagenId,
+                BannerId = bannerId
+            };
+
+            // 6. Ejecutar la actualización
             string mensaje = manejadorCategorias.EditarCategoria(categoria);
-            return Json(new { mensaje });
+
+            // 7. Retornar la respuesta
+            return Json( mensaje );
         }
+
+
 
         [HttpGet]
         [Route("Categorias/ObtenerCategoria")]
@@ -56,29 +91,6 @@ namespace Abastecete.Controllers
                 return Json(categoria);
             }
             return NotFound();
-        }
-
-        private string GuardarImagen(IFormFile imagen)
-        {
-            if (imagen != null && imagen.Length > 0)
-            {
-                string uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/images");
-                if (!Directory.Exists(uploadsFolder))
-                {
-                    Directory.CreateDirectory(uploadsFolder);
-                }
-
-                string uniqueFileName = Guid.NewGuid().ToString() + "_" + imagen.FileName;
-                string filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-                using (var fileStream = new FileStream(filePath, FileMode.Create))
-                {
-                    imagen.CopyTo(fileStream);
-                }
-
-                return "/images/" + uniqueFileName;
-            }
-            return "/images/default.png";
         }
     }
 }

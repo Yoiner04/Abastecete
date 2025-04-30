@@ -3,15 +3,21 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using BusinessLogic.Models;
+using MongoDB.Driver.GridFS;
+using MongoDB.Driver;
+using MongoDB.Bson;
+using Microsoft.AspNetCore.Http;
 
 namespace BusinessLogic
 {
     public class ManejadorNegocios
     {
         private Connection conexion;
+        private readonly ManejadorMongo _manejadorMongo;
 
         public ManejadorNegocios()
         {
+            _manejadorMongo = new ManejadorMongo();
             conexion = new Connection();
         }
 
@@ -26,7 +32,7 @@ namespace BusinessLogic
                 new Parametro("p_nombre_local", negocio.Nombre),
                 new Parametro("p_direccion_local", negocio.Direccion),
                 new Parametro("p_telefono_local", negocio.Telefono),
-                new Parametro("p_fotos_local", negocio.Logotipo)
+                new Parametro("p_fotos_local", negocio.LogotipoId)
             };
             return conexion.EjecutarTransaccion("crear_local", parametros);
         }
@@ -45,7 +51,8 @@ namespace BusinessLogic
                 Nombre = row["NOMBRE_LOCAL"].ToString(),
                 Localizacion = row["LOCALIZACION"].ToString(),
                 Telefono = Convert.ToInt64(row["TELEFONO_LOCAL"]),
-                Logotipo = row["FOTOS_LOCAL"].ToString()
+                LogotipoId = row["FOTOS_LOCAL"].ToString(),
+                imagen = _manejadorMongo.ObtenerImagen(row["FOTOS_LOCAL"].ToString())
             };
         }
 
@@ -70,8 +77,6 @@ namespace BusinessLogic
 
         public Negocio ConsultarNegocio(int idPersona)
         {
-            //string consulta = $"consultar_local({idPersona})";
-
             List<Parametro> parametros = new List<Parametro>
             {
                 new Parametro("p_id_persona", idPersona)
@@ -86,8 +91,10 @@ namespace BusinessLogic
                 Id = Convert.ToInt32(row["PK_ID_LOCAL"]),
                 Nombre = row["NOMBRE_LOCAL"].ToString(),
                 Localizacion = row["LOCALIZACION"].ToString(),
+                Direccion = row["DIRECCION_LOCAL"] + "",
                 Telefono = Convert.ToInt64(row["TELEFONO_LOCAL"]),
-                Logotipo = row["FOTOS_LOCAL"].ToString()
+                LogotipoId = row["FOTOS_LOCAL"].ToString(),
+                imagen = _manejadorMongo.ObtenerImagen(row["FOTOS_LOCAL"].ToString())
             };
         }
 
@@ -104,11 +111,49 @@ namespace BusinessLogic
             return conexion.EjecutarTransaccion("agregar_productos_local", parametros);
         }
 
-        public List<Negocio> ConsultarNegocioCategoria(int idCategoria)
+        public bool EditarNegocio(Negocio negocio, Negocio actual)
+        {
+
+            List<Parametro> parametros = new List<Parametro>
+            {
+                new Parametro("p_id_local", negocio.Id)
+            };
+
+            if (negocio.Nombre != actual.Nombre)
+                parametros.Add(new Parametro("p_nombre_local", negocio.Nombre));
+            else
+                parametros.Add(new Parametro("p_nombre_local", actual.Nombre));
+
+            if (negocio.Direccion != actual.Direccion)
+                parametros.Add(new Parametro("p_direccion_local", negocio.Direccion));
+            else
+                parametros.Add(new Parametro("p_direccion_local", actual.Direccion));
+
+            if (negocio.Localizacion != actual.Localizacion)
+                parametros.Add(new Parametro("p_localizacion_local", negocio.Localizacion));
+            else
+                parametros.Add(new Parametro("p_localizacion_local", actual.Localizacion));
+
+            if (negocio.Telefono != actual.Telefono)
+                parametros.Add(new Parametro("p_telefono_local", negocio.Telefono));
+            else
+                parametros.Add(new Parametro("p_telefono_local", actual.Telefono));
+
+            if (negocio.LogotipoId != actual.LogotipoId)
+                parametros.Add(new Parametro("p_fotos_local", negocio.LogotipoId));
+            else
+                parametros.Add(new Parametro("p_fotos_local", actual.LogotipoId));
+
+            return conexion.EjecutarTransaccion("editar_local", parametros);
+
+        }
+
+        public List<Negocio> ConsultarNegocioCategoria(int idCategoria, string tipoMem)
         {
             List<Parametro> parametros = new List<Parametro>
             {
-                new Parametro("idcategoria", idCategoria)
+                new Parametro("idcategoria", idCategoria),
+                new Parametro("tipoMembresia", tipoMem)
             };
             DataTable datos = conexion.EjecutarConsulta("consultar_local_categoria", parametros);
             List<Negocio> negocios = new List<Negocio>();
@@ -120,7 +165,8 @@ namespace BusinessLogic
                     Nombre = row["NOMBRE_LOCAL"].ToString(),
                     Localizacion = row["LOCALIZACION"].ToString(),
                     Telefono = Convert.ToInt64(row["TELEFONO_LOCAL"]),
-                    Logotipo = row["FOTOS_LOCAL"].ToString()
+                    LogotipoId = row["FOTOS_LOCAL"].ToString(),
+                    imagen = _manejadorMongo.ObtenerImagen(row["FOTOS_LOCAL"].ToString()+"")
                 });
             }
             return negocios;
@@ -147,7 +193,7 @@ namespace BusinessLogic
                         Nombre = row["NOMBRE_LOCAL"].ToString(),
                         Direccion = row["LOCALIZACION"].ToString(),
                         Telefono = Convert.ToInt64(row["TELEFONO_LOCAL"]),
-                        Logotipo = row["FOTOS_LOCAL"].ToString()
+                        imagen = _manejadorMongo.ObtenerImagen(row["FOTOS_LOCAL"].ToString())
                     });
                 }
             }
@@ -170,7 +216,7 @@ namespace BusinessLogic
                 {
                     Id = Convert.ToInt32(row["PK_ID_LOCAL"]),
                     Nombre = row["NOMBRE_LOCAL"].ToString(),
-                    Logotipo = row["FOTOS_LOCAL"].ToString()
+                    imagen = _manejadorMongo.ObtenerImagen(row["FOTOS_LOCAL"].ToString())
                 });
             }
 

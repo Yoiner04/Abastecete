@@ -1,33 +1,44 @@
-﻿<div id="bannerProveedoresModal" class="fixed inset-0 z-50 flex hidden items-center justify-center bg-black bg-opacity-50">
-    <div id="bannerProveedoresModalContent" class="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-lg bg-white p-4 md:p-6">
-        <h2 class="mb-4 text-center text-xl font-bold">Editar Banner de Proveedores</h2>
+﻿<div id="bannerProveedoresModal" class="bg-opacity-50 fixed inset-0 z-50 hidden bg-black">
+    <div class="flex min-h-screen items-center justify-center">
+        <div id="bannerProveedoresModalContent" class="max-h-[90vh] w-full max-w-5xl overflow-y-auto rounded-2xl border border-gray-200 bg-white p-6 shadow-2xl">
 
-        <form id="uploadBannerProveedoresForm" enctype="multipart/form-data" class="space-y-4">
-            <div class="flex flex-col gap-3">
-                <img src="/images/banner_proveedores.webp?t=@DateTime.Now.Ticks"
-                     alt="Banner Proveedores"
-                     class="w-full h-auto rounded-lg object-cover shadow">
-                <input type="file" id="proveedoresImage" name="proveedoresImage" accept="image/*" class="w-full text-sm">
+            <h2 class="mb-6 text-center text-2xl font-bold text-gray-800">Gestionar Banners de Proveedores</h2>
+
+            <!-- Galería de banners actuales -->
+            <div id="galeriaProveedores" class="mb-8 grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
+                <!-- Aquí se renderizan los banners dinámicamente -->
             </div>
 
-            <div class="mt-4 flex flex-col sm:flex-row justify-center gap-4">
-                <button type="submit"
-                        class="rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600 transition">
-                    Subir Imagen
+            <!-- Subir nuevo banner -->
+            <form id="formNuevoBannerProveedor" class="flex flex-col items-center gap-4 border-t pt-6">
+                <label class="text-lg font-semibold text-gray-700">Agregar Nuevo Banner</label>
+                <input type="file" id="nuevoBannerProveedor" accept="image/*"
+                       class="block w-full text-sm text-gray-700 file:mr-4 file:rounded-lg file:border-0 file:bg-green-50 file:px-4 file:py-2 file:text-green-700 hover:file:bg-green-100" />
+            </form>
+
+            <!-- Botones de acción -->
+            <div class="mt-8 flex flex-col justify-center gap-4 border-t pt-6 sm:flex-row">
+                <button type="submit" form="formNuevoBannerProveedor"
+                        class="w-full rounded-lg bg-green-600 px-6 py-3 font-semibold text-white shadow transition hover:bg-green-700 sm:w-auto">
+                    📤 Subir Imagen
                 </button>
+
                 <button type="button" onclick="cerrarBannerProveedoresModal()"
-                        class="rounded bg-gray-500 px-4 py-2 text-white hover:bg-gray-600 transition">
-                    Cerrar
+                        class="w-full rounded-lg bg-gray-500 px-6 py-3 font-semibold text-white shadow transition hover:bg-gray-600 sm:w-auto">
+                    ❌ Cerrar
                 </button>
             </div>
-        </form>
+
+        </div>
     </div>
 </div>
 
+<!-- Scripts -->
 <script>
     function abrirBannerProveedoresModal() {
         document.getElementById("bannerProveedoresModal").classList.remove("hidden");
         document.body.classList.add("overflow-hidden");
+        cargarBannersProveedores(); 
     }
 
     function cerrarBannerProveedoresModal() {
@@ -41,28 +52,97 @@
         }
     });
 
-    document.getElementById("uploadBannerProveedoresForm").addEventListener("submit", function (event) {
+    // Evento para subir nuevo banner
+        document.getElementById("formNuevoBannerProveedor").addEventListener("submit", function (event) {
         event.preventDefault();
-        let formData = new FormData();
-        let file = document.getElementById("proveedoresImage").files[0];
+
+        const input = document.getElementById("nuevoBannerProveedor");
+        const file = input.files[0];
 
         if (!file) {
-            alert("Selecciona una imagen antes de subir.");
+            alert("Selecciona una imagen para subir.");
             return;
         }
 
-        formData.append("proveedoresImage", file);
+        const formData = new FormData();
+        formData.append("imagen", file);
 
-        fetch("/Banners/SubirImagenProveedor", {
+        fetch("/Banners/AgregarBannerProveedor", {
             method: "POST",
             body: formData
         })
+        .then(r => r.json())
+        .then(data => {
+            if (data.mensaje) alert(data.mensaje);
+            input.value = ""; // Limpiar input
+            cargarBannersProveedores();
+        })
+        .catch(() => alert("Error al subir la imagen."));
+    });
+
+
+    // Función para cargar banners existentes
+    function cargarBannersProveedores() {
+        fetch("/Banners/ListarProveedores")
+            .then(response => response.json())
+            .then(banners => {
+                const galeria = document.getElementById("galeriaProveedores");
+                galeria.innerHTML = "";
+
+                banners.forEach(banner => {
+                    galeria.innerHTML += `
+                        <div class="flex flex-col items-center gap-2 rounded-lg border p-4 shadow">
+                            <img src="${banner.base64}" alt="${banner.nombre}" class="h-32 w-full rounded-md bg-gray-100 object-contain">
+                            <div class="mt-2 flex gap-2">
+                                <button onclick="reemplazarBanner('${banner.id}')" class="rounded bg-blue-500 px-3 py-1 text-sm text-white hover:bg-blue-600">Reemplazar</button>
+                                <button onclick="eliminarBanner('${banner.id}')" class="rounded bg-red-500 px-3 py-1 text-sm text-white hover:bg-red-600">Eliminar</button>
+                            </div>
+                        </div>
+                    `;
+                });
+            })
+            .catch(error => console.error("Error cargando banners:", error));
+    }
+
+    // Función para reemplazar un banner existente
+    function reemplazarBanner(id) {
+        let input = document.createElement("input");
+        input.type = "file";
+        input.accept = "image/*";
+        input.onchange = () => {
+            let file = input.files[0];
+            if (file) {
+                let formData = new FormData();
+                formData.append("id", id);
+                formData.append("imagen", file);
+
+                fetch("/Banners/ReemplazarBannerProveedor", {
+                    method: "POST",
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.mensaje);
+                    cargarBannersProveedores();
+                })
+                .catch(error => console.error("Error al reemplazar:", error));
+            }
+        };
+        input.click();
+    }
+
+    // Función para eliminar un banner
+    function eliminarBanner(id) {
+        if (confirm("¿Estás seguro de que quieres eliminar este banner?")) {
+            fetch(`/Banners/EliminarBannerProveedor?id=${id}`, {
+                method: "DELETE"
+            })
             .then(response => response.json())
             .then(data => {
                 alert(data.mensaje);
-                cerrarBannerProveedoresModal();
-                location.reload();
+                cargarBannersProveedores();
             })
-            .catch(error => console.error("Error:", error));
-    });
+            .catch(error => console.error("Error al eliminar:", error));
+        }
+    }
 </script>

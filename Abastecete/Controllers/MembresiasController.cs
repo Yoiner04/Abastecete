@@ -2,6 +2,7 @@
 using BusinessLogic.Models;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace Abastecete.Controllers
 {
@@ -35,6 +36,8 @@ namespace Abastecete.Controllers
         {
             string epaycoPublicKey = _configuration["Epayco:PublicKey"];
             List<Membresia> membresias = manejadorMembresias.ConsultarMembresias(nombre);
+            ViewBag.nombre = "/images/"+nombre+".png";
+            
             ViewBag.apikey = epaycoPublicKey;
             return View(membresias);
         }

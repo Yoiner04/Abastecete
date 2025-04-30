@@ -1,52 +1,62 @@
 ﻿@inject IHttpContextAccessor HttpContextAccessor
 @using BusinessLogic.Utilidades
+@model List<BusinessLogic.Models.Categoria>
 @{
     ViewData["Title"] = "Editar Banners";
     string permisos = HttpContextAccessor.HttpContext.Session.GetString("permisos");
 }
-@model List<BusinessLogic.Models.Categoria>
 
-<h2 class="text-5xl font-bold mb-8 mt-6 text-center">Editar Banners</h2>
+<h2 class="mt-6 mb-10 text-center text-4xl font-bold text-gray-800">Gestión de Banners</h2>
 
-<div class="grid grid-cols-1 md:grid-cols-2 gap-6 relative">
-    <div class="absolute left-1/2 top-0 bottom-0 w-1 bg-gray-300 hidden md:block"></div>
+<div class="grid grid-cols-1 gap-10 px-4 lg:grid-cols-3 lg:px-10">
 
     @if (permisos != null && RolPermisos.TienePermiso("Administrar Banners", permisos))
     {
-        <div class="flex flex-col items-center text-center px-6">
-            <img src="/images/bannerssuperior.jpg" alt="Banners del Carrusel" class="w-full max-w-md rounded-lg shadow-lg mb-4">
-            <p class="text-gray-700 text-lg">Banners del carrusel superior que se muestran en la página principal.</p>
-            @Html.Partial("BannerModal")
-            <a onclick="abrirBannerModal()" class="mt-4 bg-green-600 text-white px-6 py-3 rounded-lg text-lg font-medium hover:bg-green-700">
-                Editar Banners Del Carrusel Superior
-            </a>
+        <!-- Banners de Inicio -->
+        <div class="flex flex-col items-center rounded-lg bg-white p-6 shadow-lg">
+            <img src="/images/bannerssuperior.jpg" alt="Banners del Carrusel"
+                 class="mb-4 h-40 w-full rounded-lg border object-contain">
+            <h3 class="mb-2 text-lg font-bold text-gray-800">Banners de Inicio</h3>
+            <p class="text-center text-sm text-gray-600">
+                Incluye banners del carrusel superior (16:9) y banners laterales (1:1) en la página de inicio.
+            </p>
+            <button onclick="abrirBannerModal()"
+                    class="mt-4 rounded bg-green-600 px-5 py-2 text-white hover:bg-green-700">
+                Editar Banners de Inicio
+            </button>
         </div>
-    }
 
-    @if (permisos != null && RolPermisos.TienePermiso("Administrar Banners", permisos))
-    {
-        <div class="flex flex-col items-center text-center px-6">
-            <img src="/images/bannerscategorias.jpg" alt="Banners de Categoría" class="w-full max-w-md rounded-lg shadow-lg mb-4">
-            <p class="text-gray-700 text-lg">Banners asociados a categorías específicas dentro del sitio.</p>
-            @Html.Partial("CategoryBannerModal")
-            <a onclick="abrirCategoryBannerModal()" class="mt-4 bg-green-600 text-white px-6 py-3 rounded-lg text-lg font-medium hover:bg-green-700">
-                Editar Banners de Las Categorías
-            </a>
+        <!-- Banners por Categoría -->
+        <div class="flex flex-col items-center rounded-lg bg-white p-6 shadow-lg">
+            <img src="/images/bannerscategorias.jpg" alt="Banners de Categoría"
+                 class="mb-4 h-40 w-full rounded-lg border object-contain">
+            <h3 class="mb-2 text-lg font-bold text-gray-800">Banners por Categoría</h3>
+            <p class="text-center text-sm text-gray-600">
+                Banners específicos por categoría. Incluye 2 banners horizontales y 4 banners cuadrados.
+            </p>
+            <button onclick="abrirCategoryBannerModal()"
+                    class="mt-4 rounded bg-green-600 px-5 py-2 text-white hover:bg-green-700">
+                Editar Banners de Categoría
+            </button>
         </div>
-    }
 
-    @if (permisos != null && RolPermisos.TienePermiso("Administrar Banners", permisos))
-    {
-        <div class="flex flex-col items-center text-center px-6">
-            <img src="/images/bannerproveedores.png" alt="Banner de Proveedores" class="w-full max-w-md rounded-lg shadow-lg mb-4">
-            <p class="text-gray-700 text-lg">Banner principal de la sección de proveedores.</p>
-            <a onclick="abrirBannerProveedoresModal()" class="mt-4 bg-green-600 text-white px-6 py-3 rounded-lg text-lg font-medium hover:bg-green-700">
+        <!-- Banner de Proveedores -->
+        <div class="flex flex-col items-center rounded-lg bg-white p-6 shadow-lg">
+            <img src="/images/bannerproveedores.png" alt="Banner de Proveedores"
+                 class="mb-4 h-40 w-full rounded-lg border object-contain">
+            <h3 class="mb-2 text-lg font-bold text-gray-800">Banner de Proveedores</h3>
+            <p class="text-center text-sm text-gray-600">
+                Imagen principal que aparece en la sección de proveedores.
+            </p>
+            <button onclick="abrirBannerProveedoresModal()"
+                    class="mt-4 rounded bg-green-600 px-5 py-2 text-white hover:bg-green-700">
                 Editar Banner de Proveedores
-            </a>
+            </button>
         </div>
     }
 </div>
 
+<!-- Inclusión de modales -->
 @Html.Partial("BannerModal")
 @Html.Partial("CategoryBannerModal")
 @Html.Partial("BannerProveedoresModal")
