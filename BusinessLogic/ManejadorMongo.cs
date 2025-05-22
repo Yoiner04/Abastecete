@@ -13,7 +13,8 @@ namespace BusinessLogic
         private readonly GridFSBucket _gridFS;
         public ManejadorMongo()
         {
-            var cliente = new MongoClient("mongodb+srv://websencol:%40WenSEN.Col_2024@websen.kgr8b.mongodb.net/WebSEN?retryWrites=true&w=majority");
+            var cliente = new MongoClient("mongodb://localhost:27017/");
+            //var cliente = new MongoClient("mongodb+srv://websencol:%40WenSEN.Col_2024@websen.kgr8b.mongodb.net/WebSEN?retryWrites=true&w=majority");
             _db = cliente.GetDatabase("abastecete");
             _gridFS = new GridFSBucket(_db);
         }

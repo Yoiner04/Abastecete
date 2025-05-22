@@ -519,19 +519,39 @@
                     <img src="@cuadrado[1].Base64" class="col-span-1 hidden h-60 w-full object-cover lg:block">
                     <img src="@horizontal[1].Base64" class="col-span-3 hidden h-60 w-full object-cover lg:block">
 
-                    <!-- Pantallas pequeñas -->
-                    <img src="@horizontal[0].Base64" class="block h-16 w-full rounded-tl-3xl object-cover lg:hidden">
-                    <div class="block grid grid-cols-2 gap-4 lg:hidden">
-                        <img src="@cuadrado[0].Base64" class="h-32 w-full rounded-tl-3xl object-cover">
-                        <img src="@cuadrado[1].Base64" class="h-32 w-full rounded-br-3xl object-cover">
+                    <!-- Primer bloque de imagen horizontal + dos cuadrados -->
+                    <div class="aspect-[16/9] w-full overflow-hidden rounded-tl-3xl lg:hidden">
+                        <img src="@horizontal[0].Base64" class="h-full w-full object-cover" alt="..." />
                     </div>
-                    <img src="@horizontal[1].Base64" class="block h-16 w-full rounded-br-3xl object-cover lg:hidden">
-                    <div class="block grid grid-cols-2 gap-4 lg:hidden">
-                        <img src="@cuadrado[2].Base64" class="h-32 w-full rounded-tl-3xl object-cover">
-                        <img src="@cuadrado[3].Base64" class="h-32 w-full rounded-br-3xl object-cover">
+
+                    <div class="grid grid-cols-2 gap-4 lg:hidden">
+                        <div class="mb-4 aspect-square overflow-hidden rounded-tl-3xl">
+                            <img src="@cuadrado[0].Base64" class="h-full w-full object-cover" alt="..." />
+                        </div>
+                        <div class="aspect-square overflow-hidden rounded-br-3xl">
+                            <img src="@cuadrado[1].Base64" class="h-full w-full object-cover" alt="..." />
+                        </div>
                     </div>
-                </div>
-            </div>
+
+                    <!-- Segundo bloque de imagen horizontal + dos cuadrados -->
+                    <div class="mt-4 aspect-[16/9] w-full overflow-hidden rounded-br-3xl lg:hidden">
+                        <img src="@horizontal[1].Base64" class="h-full w-full object-cover" alt="..." />
+                    </div>
+
+                    <div class="mt-4 grid grid-cols-2 gap-4 lg:hidden">
+                        <div class="mb-4 aspect-square overflow-hidden rounded-tl-3xl">
+                            <img src="@cuadrado[2].Base64" class="h-full w-full object-cover" alt="..." />
+                        </div>
+                        <div class="aspect-square overflow-hidden rounded-br-3xl">
+                            <img src="@cuadrado[3].Base64" class="h-full w-full object-cover" alt="..." />
+                        </div>
+                    </div>
+
+
+                        </div>
+                    </div>
+
+           
         }
     </section>
 
