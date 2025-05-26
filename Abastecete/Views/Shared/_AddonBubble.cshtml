@@ -1,0 +1,77 @@
+﻿<div id="addon-bubble" class="fixed right-6 bottom-6 z-50 flex flex-col items-center space-y-2">
+    <div id="addon-links" class="mb-2 flex hidden flex-col items-end space-y-3">
+        <a asp-controller="Store" asp-action="BuyAddon" target="_blank"
+           class="group addon-btn relative flex h-11 w-11 items-center justify-center rounded-full bg-indigo-600 text-white shadow-lg transition-all duration-300 hover:scale-110">
+            <span class="tooltip">Comprar ahora</span>
+            <box-icon type='solid' name='cart-add' color="white" size="md"></box-icon>
+        </a>
+    </div>
+
+    <button id="open-addon-purchase"
+            class="group relative flex h-16 w-16 items-center justify-center rounded-full bg-indigo-500 text-white shadow-lg transition-transform duration-200 hover:scale-110">
+        <span class="support-tooltip">Compra tu addon</span>
+        <box-icon type='solid' name='cart' color="white" size="lg"></box-icon>
+    </button>
+</div>
+
+@section Styles {
+    <style>
+        .tooltip {
+            position: absolute;
+            right: 100%;
+            margin-right: 10px;
+            background-color: rgba(0,0,0,0.8);
+            color: #fff;
+            font-size: 14px;
+            padding: 6px 10px;
+            border-radius: 5px;
+            white-space: nowrap;
+            opacity: 0;
+            transform: translateX(10px);
+            transition: opacity .3s ease, transform .3s ease;
+            visibility: hidden;
+        }
+        .group:hover .tooltip {
+            opacity: 1;
+            transform: translateX(0);
+            visibility: visible;
+        }
+        .addon-btn {
+            box-shadow: 0px 5px 15px rgba(0,0,0,0.7);
+            transition: box-shadow .3s ease-in-out;
+        }
+        .addon-btn:hover {
+            box-shadow: 0px 8px 20px rgba(0,0,0,0.5);
+        }
+        .support-tooltip {
+            position: absolute;
+            right: 100%;
+            margin-right: 10px;
+            background-color: rgba(0,0,0,0.8);
+            color: #fff;
+            font-size: 14px;
+            padding: 6px 12px;
+            border-radius: 5px;
+            white-space: nowrap;
+            opacity: 0;
+            transform: translateX(10px);
+            transition: opacity .3s ease, transform .3s ease;
+            visibility: hidden;
+            z-index: 10;
+        }
+        .group:hover .support-tooltip {
+            opacity: 1;
+            transform: translateX(0);
+            visibility: visible;
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        document.getElementById("open-addon-purchase")
+            .addEventListener("click", function() {
+                document.getElementById("addon-links").classList.toggle("hidden");
+            });
+    </script>
+}

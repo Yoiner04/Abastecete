@@ -44,14 +44,14 @@
     }
 
 
-    <section class="hero-section flex flex-col items-center gap-3 p-3 sm:p-5">
-        <div class="flex w-full flex-col justify-between gap-3 sm:flex-row sm:gap-6">
+    <section class="hero-section flex flex-col gap-3 p-3 sm:p-5">
+        <div class="flex w-full flex-col gap-3 sm:flex-row sm:gap-6">
             <!-- Carrusel Principal -->
-            <div class="relative h-[200px] flex-grow overflow-hidden rounded-lg sm:flex-grow-[2] sm:h-[250px] lg:h-[400px]">
+            <div class="relative h-[200px] w-full overflow-hidden rounded-lg sm:flex-grow-[2] sm:h-[250px] lg:h-[400px]">
                 <img id="carouselImage"
                      src="@primeraHorizontal"
                      alt="Carrusel"
-                     class="h-full w-full rounded-lg object-cover transition-opacity duration-500" />
+                     class="h-full w-full object-cover transition-opacity duration-500" />
 
                 <!-- Botón Anterior -->
                 <button id="prevBtn"
@@ -70,8 +70,7 @@
                 </button>
             </div>
 
-            <!-- Banners Laterales -->
-            <div class="flex h-[200px] w-full flex-col gap-2 sm:w-[200px] sm:h-[250px] lg:w-[250px] lg:h-[400px]">
+            <div class="flex h-[200px] w-full gap-2 sm:flex-col sm:w-[200px] sm:h-[250px] lg:w-[250px] lg:h-[400px]">
                 <div class="h-1/2 flex-1">
                     <img src="@imgIzquierda" alt="Imagen lateral 1"
                          class="h-full w-full rounded-lg object-cover">
@@ -83,6 +82,7 @@
             </div>
         </div>
     </section>
+
 
     <script>
         document.addEventListener("DOMContentLoaded", function () {
@@ -142,8 +142,6 @@
         });
     </script>
 
-
-
     <section class="space-y-3 p-10" id="categories-container">
         <div class="mb-4 flex items-center justify-between">
             <h2 class="pl-10 text-lg font-bold text-gray-800">Categorías</h2>
@@ -171,7 +169,6 @@
 
     </section>
 
-    <!-- OFERTAS FLASH -->
     <section class="off-section p-6 lg:p-10" id="ofertas-container">
 
         @{
@@ -224,11 +221,10 @@
                     </div>
                 }
             </div>
-        }
-        else
+        }else
         {
             <div class="mt-6 flex justify-center">
-                <img src="~/images/sinofertas.jpg" alt="Sin Ofertas" class="h-auto w-full max-w-5xl rounded-lg shadow-md">
+                <img src="~/images/sinOfertas.jpg" alt="Sin Ofertas" class="h-auto w-full max-w-5xl rounded-lg shadow-md">
             </div>
         }
 
@@ -511,7 +507,6 @@
 
                 <!-- Rejilla de imágenes -->
                 <div class="grid grid-cols-1 gap-4 lg:grid-cols-5">
-                    <!-- Pantallas grandes -->
                     <img src="@horizontal[0].Base64" class="col-span-3 hidden h-60 w-full rounded-tl-3xl object-cover lg:block">
                     <img src="@cuadrado[3].Base64" class="col-span-1 hidden h-60 w-full rounded-tl-3xl rounded-br-3xl object-cover lg:block">
                     <img src="@cuadrado[2].Base64" class="col-span-1 hidden h-60 w-full rounded-tl-3xl rounded-br-3xl object-cover lg:block">
@@ -519,44 +514,43 @@
                     <img src="@cuadrado[1].Base64" class="col-span-1 hidden h-60 w-full object-cover lg:block">
                     <img src="@horizontal[1].Base64" class="col-span-3 hidden h-60 w-full object-cover lg:block">
 
-                    <!-- Primer bloque de imagen horizontal + dos cuadrados -->
-                    <div class="aspect-[16/9] w-full overflow-hidden rounded-tl-3xl lg:hidden">
-                        <img src="@horizontal[0].Base64" class="h-full w-full object-cover" alt="..." />
+                    <div class="flex flex-col gap-2 lg:hidden">
+                        <div class="aspect-[16/9] w-full overflow-hidden rounded-tl-3xl">
+                            <img src="@horizontal[0].Base64"
+                                 class="h-full w-full object-cover" alt="..." />
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2">
+                            <div class="aspect-square overflow-hidden rounded-tl-3xl">
+                                <img src="@cuadrado[0].Base64"
+                                     class="h-full w-full object-cover" alt="..." />
+                            </div>
+                            <div class="aspect-square overflow-hidden rounded-br-3xl">
+                                <img src="@cuadrado[1].Base64"
+                                     class="h-full w-full object-cover" alt="..." />
+                            </div>
+                        </div>
+
+                        <div class="aspect-[16/9] w-full overflow-hidden rounded-br-3xl">
+                            <img src="@horizontal[1].Base64"
+                                 class="h-full w-full object-cover" alt="..." />
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2">
+                            <div class="aspect-square overflow-hidden rounded-tl-3xl">
+                                <img src="@cuadrado[2].Base64"
+                                     class="h-full w-full object-cover" alt="..." />
+                            </div>
+                            <div class="aspect-square overflow-hidden rounded-br-3xl">
+                                <img src="@cuadrado[3].Base64"
+                                     class="h-full w-full object-cover" alt="..." />
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-4 lg:hidden">
-                        <div class="mb-4 aspect-square overflow-hidden rounded-tl-3xl">
-                            <img src="@cuadrado[0].Base64" class="h-full w-full object-cover" alt="..." />
-                        </div>
-                        <div class="aspect-square overflow-hidden rounded-br-3xl">
-                            <img src="@cuadrado[1].Base64" class="h-full w-full object-cover" alt="..." />
-                        </div>
-                    </div>
-
-                    <!-- Segundo bloque de imagen horizontal + dos cuadrados -->
-                    <div class="mt-4 aspect-[16/9] w-full overflow-hidden rounded-br-3xl lg:hidden">
-                        <img src="@horizontal[1].Base64" class="h-full w-full object-cover" alt="..." />
-                    </div>
-
-                    <div class="mt-4 grid grid-cols-2 gap-4 lg:hidden">
-                        <div class="mb-4 aspect-square overflow-hidden rounded-tl-3xl">
-                            <img src="@cuadrado[2].Base64" class="h-full w-full object-cover" alt="..." />
-                        </div>
-                        <div class="aspect-square overflow-hidden rounded-br-3xl">
-                            <img src="@cuadrado[3].Base64" class="h-full w-full object-cover" alt="..." />
-                        </div>
-                    </div>
-
-
-                        </div>
-                    </div>
-
-           
+                </div>
+            </div>
         }
     </section>
-
-
-
-
 </body>
 </html>

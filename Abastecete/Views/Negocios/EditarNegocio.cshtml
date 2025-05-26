@@ -2,7 +2,10 @@
 
 <div class="mx-auto mt-10 max-w-3xl px-4">
     <h2 class="mb-6 text-2xl font-bold text-gray-800">Editar Negocio</h2>
-
+    @{
+        // ViewBag.banner contiene List<(BannerModel, ImagenModel)>
+        var proveedores = ViewBag.banner as IEnumerable<(BusinessLogic.Models.BannerModel, BusinessLogic.Models.ImagenModel)>;
+    }
     @using (Html.BeginForm("EditarNegocio", "Negocios", FormMethod.Post, new { enctype = "multipart/form-data", @class = "space-y-6 rounded-xl bg-white p-6 shadow-md" }))
     {
         @Html.HiddenFor(m => m.Id)
@@ -51,6 +54,26 @@
                 Guardar Cambios
             </button>
         </div>
+        <div>
+            <h3 class="mb-2 text-lg font-semibold text-gray-800">Selecciona tu Banner</h3>
+            <div class="grid grid-cols-2 gap-4 sm:grid-cols-3">
+                @foreach (var tuple in proveedores ?? Enumerable.Empty<(BusinessLogic.Models.BannerModel, BusinessLogic.Models.ImagenModel)>())
+                {
+                    var banner = tuple.Item1;
+                    var imagen = tuple.Item2;
+                    <label class="block cursor-pointer">
+                        <input type="radio"
+                               name="SelectedBannerFileId"
+                               value="@banner.FileId"
+                               class="peer hidden" />
+                        <img src="@imagen.Base64"
+                             alt="Banner @banner.FileId"
+                             class="h-32 w-full rounded-lg border border-gray-200 object-contain peer-checked:border-green-500 peer-checked:ring-2 peer-checked:ring-green-500" />
+                    </label>
+                }
+            </div>
+        </div>
+
     }
 </div>
 

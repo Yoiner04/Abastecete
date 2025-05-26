@@ -297,7 +297,7 @@
             })
                 .then(response => response.json())
                 .then(data => {
-                    alert(data.mensaje);
+                    alert("Se ha agregado la imagen con exito");
                     location.reload();
                 })
                 .catch(error => console.error("Error:", error));

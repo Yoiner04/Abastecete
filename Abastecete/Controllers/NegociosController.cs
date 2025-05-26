@@ -80,6 +80,16 @@ namespace Abastecete.Controllers
         {
             var personaId = HttpContext.Session.GetInt32("PersonaId").Value;
             Negocio ne = _manejadorNegocios.ConsultarNegocio(personaId);
+            var proveedores = new List<(BannerModel, ImagenModel)>();
+
+            List<BannerModel> banners = _manejadorMongo.ListarBannersProveedores();
+
+            foreach (var banner in banners)
+            {
+                var imagen = _manejadorMongo.ObtenerImagen(banner.FileId);
+                proveedores.Add((banner, imagen));
+            }
+            ViewBag.banner = proveedores;
             return View(ne);
         }
 

@@ -98,6 +98,27 @@ namespace BusinessLogic
             };
         }
 
+        public Producto ConsultarProductoNegocio(int idProducto, int IdLocal)
+        {
+            List<Parametro> parametros = new List<Parametro>
+            {
+                new Parametro("idproducto", idProducto),
+                new Parametro("idlocal", IdLocal)
+            };
+            DataTable datos = conexion.EjecutarConsulta("consultar_producto_negocio", parametros);
+            DataRow row = datos.Rows[0];
+            return new Producto
+            {
+                Nombre = row["NOMBRE_PRODUCTO"] + "",
+                Precio = row["VALOR_PRODUCTS_LOCAL"] + "",
+                ImagenUrl = row["IMAGEN_URL"] + "",
+                Unidad = new Unidad
+                {
+                    Nombre = row["NOMBRE_UNIDAD"] + "",
+                },
+            };
+        }
+
         public bool AgregarProductosLocal(productoLocal producto)
         {
             List<Parametro> parametros = new List<Parametro>
@@ -166,7 +187,7 @@ namespace BusinessLogic
                     Localizacion = row["LOCALIZACION"].ToString(),
                     Telefono = Convert.ToInt64(row["TELEFONO_LOCAL"]),
                     LogotipoId = row["FOTOS_LOCAL"].ToString(),
-                    imagen = _manejadorMongo.ObtenerImagen(row["FOTOS_LOCAL"].ToString()+"")
+                    imagen = _manejadorMongo.ObtenerImagen(row["FOTOS_LOCAL"].ToString() + "")
                 });
             }
             return negocios;
