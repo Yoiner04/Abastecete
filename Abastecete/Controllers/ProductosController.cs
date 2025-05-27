@@ -73,6 +73,23 @@ namespace Abastecete.Controllers
             return View(negocioPersona);
         }
 
+        public IActionResult ProductDetailLocal(int idlocal, int idProducto)
+        {
+            Negocio neg = manejadorNegocios.ConsultarNegocioPoId(idlocal);
+
+            if (neg == null)
+            {
+                return View("ErrorNegocioNoEncontrado");
+            }
+
+            Producto producto = manejadorNegocios.ConsultarProductoNegocio(idProducto, neg.Id);
+
+            ViewBag.SelectedProduct = producto;
+
+
+            return View(neg);
+        }
+
 
 
         public IActionResult ListaNegocios()

@@ -3,18 +3,23 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using BusinessLogic.Models;
+using MongoDB.Driver;
+using System.Linq;
 
 namespace BusinessLogic
 {
     public class ManejadorCategorias
     {
-        private Connection conexion;
+        private readonly Connection conexion;
+        private readonly ManejadorMongo manejadorMongo;
 
         public ManejadorCategorias()
         {
             conexion = new Connection();
+            manejadorMongo = new ManejadorMongo();
         }
 
+        // Consultar todas las categorías
         public List<Categoria> ConsultarCategorias()
         {
             DataTable datos = conexion.EjecutarConsulta("consultar_categoria");
@@ -22,12 +27,18 @@ namespace BusinessLogic
 
             foreach (DataRow row in datos.Rows)
             {
+                string imagenId = row["IMAGEN_CATEGORIA"] + "";
+                string bannerId = row["BANNER_CATEGORIA"] + "";
+
                 categorias.Add(new Categoria
                 {
                     Id = Convert.ToInt32(row["PK_ID_CATEGORIA"]),
                     Nombre = row["NOMBRE_CATEGORIA"].ToString(),
                     Estado = Convert.ToInt32(row["ESTADO_CATEGORIA"]),
-                    Imagen = row["IMAGEN_CATEGORIA"].ToString()
+                    ImagenId = imagenId,
+                    BannerId = bannerId,
+                    Imagen = manejadorMongo.ObtenerImagen(imagenId),
+                    BannerImagen = manejadorMongo.ObtenerImagen(bannerId),
                 });
             }
             return categorias;
@@ -40,7 +51,8 @@ namespace BusinessLogic
             {
                 new Parametro("p_nombre_categoria", categoria.Nombre),
                 new Parametro("p_estado_categoria", categoria.Estado),
-                new Parametro("p_imagen_categoria", categoria.Imagen)
+                new Parametro("p_imagen_categoria", categoria.ImagenId ?? ""),
+                new Parametro("p_banner_categoria", categoria.BannerId ?? "")
             };
 
             var mensaje = new Parametro("mensaje", DBNull.Value);
@@ -59,7 +71,8 @@ namespace BusinessLogic
                 new Parametro("p_id_categoria", categoria.Id),
                 new Parametro("p_nombre_categoria", categoria.Nombre),
                 new Parametro("p_estado_categoria", categoria.Estado),
-                new Parametro("p_imagen_categoria", categoria.Imagen)
+                new Parametro("p_imagen_categoria", categoria.ImagenId ?? ""),
+                new Parametro("p_banner_categoria", categoria.BannerId ?? "")
             };
 
             var mensaje = new Parametro("mensaje", "");
@@ -78,12 +91,18 @@ namespace BusinessLogic
 
             if (row != null)
             {
+                string imagenId = row["IMAGEN_CATEGORIA"] + "";
+                string bannerId = row["BANNER_CATEGORIA"] + "";
+
                 return new Categoria
                 {
                     Id = Convert.ToInt32(row["PK_ID_CATEGORIA"]),
                     Nombre = row["NOMBRE_CATEGORIA"].ToString(),
                     Estado = Convert.ToInt32(row["ESTADO_CATEGORIA"]),
-                    Imagen = row["IMAGEN_CATEGORIA"].ToString()
+                    ImagenId = imagenId,
+                    BannerId = bannerId,
+                    Imagen = manejadorMongo.ObtenerImagen(imagenId),
+                    BannerImagen = manejadorMongo.ObtenerImagen(bannerId),
                 };
             }
 

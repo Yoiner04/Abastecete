@@ -17,6 +17,8 @@
 
 @Html.Partial("_SupportBubble")
 @Html.Partial("_ContactModal")
+@Html.Partial("_AddonBubble")
+
 
 <body class="bg-gray-100" style="color: black;">
 
@@ -117,12 +119,10 @@
             </div>
         </nav>
 
-        <!-- Botón para mostrar las opciones en móviles -->
         <button id="admin-menu-toggle" class="block w-full bg-gray-300 py-2 text-center font-bold text-black md:hidden">
             Menú de Administración ⬇
         </button>
 
-        <!-- Contenedor con alineación corregida -->
         <div id="admin-menu" class="hidden justify-center bg-gray-200 py-2 md:flex">
             <ul class="flex flex-col text-center text-sm md:flex-row md:space-x-6 md:text-left">
 
@@ -224,7 +224,6 @@
         @RenderBody()
     </main>
 
-    @await Html.PartialAsync("_Footer")
 
     <div id="edit-profile-modal" class="bg-opacity-50 fixed inset-0 z-50 flex hidden items-center justify-center bg-black">
         <div class="min-h-auto max-h-[80vh] w-auto max-w-6xl overflow-y-auto rounded-lg bg-white p-6 shadow-lg">
@@ -357,6 +356,7 @@
             }
         });
     </script>
+    @await Html.PartialAsync("_Footer")
 
 </body>
 

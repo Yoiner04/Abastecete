@@ -11,6 +11,13 @@ namespace BusinessLogic.Models
         public int Id { get; set; }
         public string Nombre { get; set; }
         public int Estado { get; set; }
-        public string Imagen { get; set; }
+
+        // Para MongoDB
+        public string ImagenId { get; set; }
+        public ImagenModel Imagen { get; set; }
+
+        public string BannerId { get; set; }
+        public ImagenModel BannerImagen { get; set; }
     }
+
 }

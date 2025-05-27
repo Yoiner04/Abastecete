@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using ConnectionProject.Controllers;
 using Newtonsoft.Json;
+using Humanizer;
 
 namespace Abastecete.Controllers
 {
@@ -16,10 +17,12 @@ namespace Abastecete.Controllers
         private readonly ManejadorCategorias manejadorCategorias;
         private readonly ManejadorNegocios manejadorNegocios;
         private readonly ManejadorOfertasFlash manejadorOfertasFlash;
+        private readonly ManejadorMongo manejadorMongo;
 
         public HomeController(ILogger<HomeController> logger)
         {
             _logger = logger;
+            manejadorMongo = new ManejadorMongo();
             manejadorCategorias = new ManejadorCategorias();
             manejadorNegocios = new ManejadorNegocios();
             manejadorOfertasFlash = new ManejadorOfertasFlash();
@@ -40,21 +43,50 @@ namespace Abastecete.Controllers
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
-
         public IActionResult Principal()
         {
+            var bannersPorCategoria = new Dictionary<string, List<(BannerModel Banner, ImagenModel Imagen)>>();
+            var bannerInicio = new List<(BannerModel, ImagenModel)>();
+            var bannersInicio = manejadorMongo.ListarBannersInicio();
+
+            foreach (var banner in bannersInicio)
+            {
+                var imagen = manejadorMongo.ObtenerImagen(banner.FileId);
+                bannerInicio.Add((banner, imagen));
+            }
+            ViewBag.BannerInicio = bannerInicio;
+
             List<Categoria> categorias = manejadorCategorias.ConsultarCategorias();
             List<Negocio> negocios = manejadorNegocios.ConsultarTodosLosNegocios();
             List<Negocio> localesAleatorios = manejadorNegocios.ObtenerLocalesAleatorios();
             List<OfertaFlash> ofertasFlash = manejadorOfertasFlash.ConsultarOfertasFlash();
 
+
+
+
+            foreach (var categoria in categorias)
+            {
+                var banners = manejadorMongo.ListarBannersPorCategoria(categoria.Nombre);
+                var lista = new List<(BannerModel, ImagenModel)>();
+
+                foreach (var banner in banners)
+                {
+                    var imagen = manejadorMongo.ObtenerImagen(banner.FileId);
+                    lista.Add((banner, imagen));
+                }
+
+                bannersPorCategoria[categoria.Nombre] = lista;
+            }
+
             ViewBag.rol = LoginController.rol;
             ViewBag.Negocios = negocios;
             ViewBag.LocalesAleatoriosJson = JsonConvert.SerializeObject(localesAleatorios);
             ViewBag.OfertasFlash = ofertasFlash;
+            ViewBag.BannersPorCategoria = bannersPorCategoria;
 
             return View(categorias);
         }
+
 
     }
 }

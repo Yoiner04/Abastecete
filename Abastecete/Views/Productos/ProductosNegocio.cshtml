@@ -15,22 +15,30 @@
 </head>
 
 <body class="bg-white">
-    <header class="flex items-center justify-between bg-[#F5EFE4] p-3 shadow-md">
-        <div class="flex items-center gap-4">
+    <header class="relative w-full bg-[#F5EFE4] shadow-md">
+        <div class="relative h-56 w-full">
+            <img src="/ruta/a/la/imagen/de/fondo.jpg" alt="Fondo"
+                 class="absolute inset-0 h-full w-full object-contain brightness-50" />
+            <div class="relative top-[69%] z-10 flex flex-row items-start gap-4 px-4 sm:top-24 md:items-start md:gap-6 md:px-10">
+                <div class="flex size-32 items-center justify-center overflow-hidden rounded-xl border bg-white shadow-lg sm:size-60">
+                    @if (!string.IsNullOrWhiteSpace(Model.Negocio?.imagen?.Base64))
+                    {
+                        <img src="@Model.Negocio.imagen.Base64" alt="Logo negocio" class="h-full w-full object-cover" />
+                    }
+                </div>
 
-            <div class="flex h-12 w-12 items-center justify-center overflow-hidden rounded-md border border-gray-300 bg-white">
-                <img src="@Model.Negocio.Logotipo" alt="Imagen del negocio" class="h-full w-full object-contain">
+                <div class="absolute top-1/2 left-44 -translate-y-1/2 text-left sm:left-72">
+                    <h1 class="text-3xl leading-tight font-extrabold tracking-tight text-gray-800 sm:text-4xl">
+                        @Model.Negocio?.Nombre
+                    </h1>
+                    <p class="text-base font-semibold tracking-wide text-[#15803D] uppercase sm:text-lg">
+                        @Model.Negocio?.Telefono
+                    </p>
+                </div>  
             </div>
-            <h1 class="text-2xl font-bold text-black">@Model.Negocio.Nombre</h1>
-        </div>
-        <div class="flex gap-2">
-            <a href="#" onclick="openMensajeModal()" class="flex items-center gap-2 rounded-lg px-2 py-2 text-white">
-                <img src="~/css/Images/msg.png" alt="Mensaje" class="h-10 w-10">
-            </a>
-            <a href="@Url.Action("AgregarProductNegocio", "Productos")" class="rounded-lg bg-orange-500 px-4 py-3 text-white">Agregar Producto</a>
-            <a class="rounded-lg bg-orange-500 px-4 py-3 text-white">Editar Negocio</a>
         </div>
     </header>
+
 
     <div id="mensaje-modal" class="fixed inset-0 z-50 flex hidden items-center justify-center bg-black/50">
         <div class="w-full max-w-md rounded-lg p-6 shadow-lg" style="background-color: #F4F1E9;">
@@ -66,44 +74,55 @@
         </div>
     </div>
 
-
-    <main class="flex w-full p-6">
+    <main class="mt-32 w-full px-4 sm:px-6 lg:px-10">
         <div class="w-full transition-all">
-            <div id="productosWrapper" class="w-5/5 transition-all duration-300">
-                <h2 class="text-lg font-semibold text-green-700">Todos mis productos</h2>
-                <div id="productosContainer" class="mt-4 grid w-full grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+            <div id="productosWrapper"
+                 class="w-full rounded-lg border border-gray-300 bg-white p-4 shadow-md transition-all duration-300 sm:p-6">
+
+                <div class="flex items-center gap-2">
+                    <a href="#" onclick="openMensajeModal()"
+                       class="flex h-10 w-10 items-center justify-center rounded-md bg-gray-600 text-white transition hover:bg-gray-700">
+                        <i class="fas fa-comment-dots text-sm"></i>
+                    </a>
+
+                    <a href="@Url.Action("AgregarProductNegocio", "Productos")"
+                       class="flex h-10 w-10 items-center justify-center rounded-md bg-orange-500 text-white transition hover:bg-orange-600">
+                        <i class="fas fa-plus text-sm"></i>
+                    </a>
+
+                    <a href="@Url.Action("EditarNegocio","Negocios")"
+                       class="flex h-10 w-10 items-center justify-center rounded-md bg-orange-500 text-white transition hover:bg-orange-600">
+                        <i class="fas fa-pen-to-square text-sm"></i>
+                    </a>
+                </div>
+                <div id="productosContainer"
+                     class="mt-5 grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
                     @foreach (var producto in ViewBag.productos)
                     {
-                        <div id="producto-@producto.Id" class="producto relative flex h-auto w-full flex-col rounded-lg bg-white p-6 shadow-md" data-categoria-id="@producto.IdSubCategoria" data-precio="@producto.Precio">
-                            <img src="@producto.ImagenUrl" alt="@producto.Nombre" class="h-full w-full object-contain" />
-                            <h3 class="mt-4 text-lg font-semibold">@producto.Nombre</h3>
+                        <div id="producto-@producto.Id"
+                             class="producto relative flex flex-col rounded-lg border bg-white p-4 shadow-md"
+                             data-categoria-id="@producto.IdSubCategoria" data-precio="@producto.Precio">
+                            <img src="@producto.ImagenUrl" alt="@producto.Nombre"
+                                 class="mb-4 h-40 w-full object-contain" />
+                            <h3 class="text-lg font-semibold">@producto.Nombre</h3>
                             <p class="text-xl font-bold text-orange-500">$@producto.Precio</p>
-                            <button onclick="mostrarDetalle('@producto.Nombre', '@producto.Precio', '@producto.ImagenUrl', '@producto.Id')" class="mt-4 self-center rounded-lg bg-[#1A2D3D] px-6 py-2 text-white">Ver</button>
+                            <a href="@Url.Action(
+                                    "ProductDetailLocal",
+                                    "Productos",
+                                    new { idProducto = producto.Id }
+                                )"
+                               class="mt-4 self-center rounded-lg bg-[#1A2D3D] px-6 py-2 text-white hover:bg-[#162331]">
+                                Ver
+                            </a>
+
                         </div>
                     }
-
                 </div>
             </div>
         </div>
 
-        <!-- Contenedor del detalle del producto -->
-        <div id="detalleProducto" class="fixed right-0 hidden translate-x-full transform rounded-tl-2xl bg-white p-6 shadow-lg transition-all duration-300"
-             style="top: calc(100px + 4rem); height: calc(100vh - 100px - 4rem);">
-
-            <button onclick="ocultarDetalle()" class="absolute top-4 right-4 text-gray-700 transition duration-200 hover:text-red-500">
-                <i class="fas fa-times-circle text-2xl"></i>
-            </button>
-
-            <div class="flex h-64 w-full items-center justify-center rounded-md bg-gray-300">
-                <img id="detalleImagen" class="h-full w-full object-contain" src="" alt="Imagen del producto" />
-            </div>
-            <h3 id="detalleNombre" class="mt-4 text-2xl font-bold"></h3>
-            <p id="detallePrecio" class="text-xl font-bold text-green-600"></p>
-            <div class="mt-4 flex gap-2">
-                <button class="rounded-lg bg-green-600 px-6 py-2 text-white">Contactanos</button>
-            </div>
-        </div>
     </main>
+
 
     <script>
         // Definir la función en el ámbito global

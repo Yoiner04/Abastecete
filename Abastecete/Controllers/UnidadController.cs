@@ -12,9 +12,9 @@ namespace Abastecete.Controllers
         }
 
         [HttpGet]
-        public IActionResult ConsultarUnidades()
+        public IActionResult ConsultarUnidades(int id_producto)
         {
-            var unidades = manejadorUnidad.ConsultarUnidades();
+            var unidades = manejadorUnidad.ConsultarUnidades(id_producto);
             return Json(unidades);
         }
 

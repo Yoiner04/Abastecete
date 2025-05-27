@@ -19,121 +19,122 @@
 <body class="bg-gray-100 py-10">
     <br />
     <div class="mx-auto max-w-6xl px-4">
-        <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div class="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
             @foreach (var membresia in Model)
             {
-                <div class="flex flex-col justify-between rounded-2xl bg-white p-6 text-center shadow-md">
-                    <div>
-                        <h3 class="text-xl font-semibold">@membresia.Nombre</h3>
-                        <p class="mt-2 text-gray-500">$@membresia.Costo/mes</p>
-
-                        <!-- Lista con altura unificada -->
-                        <ul class="mt-4 min-h-[200px] text-left text-gray-600">
-                            @foreach (var line in membresia.Descripcion.Split(new[] { '\n', '*' }, StringSplitOptions.RemoveEmptyEntries))
-                            {
-                                <li class="flex items-start gap-2">
-                                    <span class="text-yellow-500">⭐</span>
-                                    <span class="flex-1">@line.Trim()</span>
-                                </li>
-                            }
-                        </ul>
+                <div class="flex flex-col justify-between overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-md transition hover:shadow-xl">
+                    <!-- Encabezado con imagen -->
+                    <div class="h-56 w-full overflow-hidden bg-gray-100">
+                        <img src="@ViewBag.nombre" alt="Encabezado" class="h-full w-full object-cover" />
                     </div>
-                    @{
-                        var PrecioBase = membresia.Costo - (membresia.Costo * 0.19);
-                    }
-                    @if (membresia.Costo == 0)
-                    {
-                        <a href="@Url.Action("CompletarRegistro", "Negocios", new { tipoMembresiaId = membresia.Id })" class="mx-auto mt-4 inline-block w-2/4 rounded-lg bg-[#F6580F] px-4 py-2 text-white hover:bg-[#15803D]">
-                            Escoger
-                        </a>
-                    }
-                    else
-                    {
-                        <a class="open-modal mx-auto mt-4 inline-block w-2/4 rounded-lg bg-[#F6580F] px-4 py-2 text-white hover:bg-[#15803D]"
-                           data-id="@membresia.Id"
-                           data-nombre="@membresia.Nombre"
-                           data-descripcion="@membresia.Descripcion"
-                           data-costomensual="@membresia.Costo"
-                           data-costotrimestral="@membresia.Costo_trimestral"
-                           data-costosemestral="@membresia.Costo_semestral"
-                           data-costoanual="@membresia.Costo_anual"
-                           data-modal-target="default-modal"
-                           data-modal-toggle="default-modal">
-                            Seleccionar
-                        </a>
-                       
 
+                    <!-- Contenido -->
+                    <div class="flex h-[75%] flex-col justify-between p-6">
+                        <div>
+                            <h3 class="text-center text-xl font-bold text-gray-800">@membresia.Nombre</h3>
+                            <p class="mt-2 text-center text-3xl font-bold text-black">
+                                @(membresia.Costo == 0 ? "$0" : $"${membresia.Costo:N0}")
+                                <span class="text-lg font-medium text-gray-400">/mes</span>
+                            </p>
 
-                    }
+                            <ul class="mt-4 space-y-3 text-sm text-gray-700">
+                                @foreach (var line in membresia.Descripcion.Split(new[] { '\n', '*' }, StringSplitOptions.RemoveEmptyEntries))
+                                {
+                                    <li class="flex items-start gap-2">
+                                        <span class="mt-[3px] text-purple-600">✔</span>
+                                        <span>@line.Trim()</span>
+                                    </li>
+                                }
+                            </ul>
+                        </div>
+
+                        <!-- Botón principal -->
+                        <div class="mt-6">
+                            @if (membresia.Costo == 0)
+                            {
+                                <a href="@Url.Action("CompletarRegistro", "Negocios", new { tipoMembresiaId = membresia.Id })"
+                                   class="block w-full rounded-full border border-[#F6580F] bg-white py-2 text-center text-sm font-semibold text-[#F6580F] uppercase transition hover:bg-[#15803D]">
+                                    Empieza Ahora
+                                </a>
+
+                            }
+                            else
+                            {
+                                <a class="open-modal block w-full rounded-full bg-[#F6580F] py-2 text-center text-sm font-semibold text-white uppercase transition hover:bg-[#15803D]"
+                                   data-id="@membresia.Id"
+                                   data-nombre="@membresia.Nombre"
+                                   data-descripcion="@membresia.Descripcion"
+                                   data-costomensual="@membresia.Costo"
+                                   data-costotrimestral="@membresia.Costo_trimestral"
+                                   data-costosemestral="@membresia.Costo_semestral"
+                                   data-costoanual="@membresia.Costo_anual"
+                                   data-modal-target="default-modal"
+                                   data-modal-toggle="default-modal">
+                                    Empieza Ahora
+                                </a>
+
+                            }
+                        </div>
+                    </div>
                 </div>
+
+
             }
         </div>
     </div>
-    <div id="default-modal" tabindex="-1" aria-hidden="true" class="fixed top-0 right-0 left-0 z-50 hidden h-[calc(100%-1rem)] max-h-full w-full items-center justify-center overflow-x-hidden overflow-y-auto md:inset-0">
-        <div class="relative max-h-full w-full max-w-2xl p-4">
-            <div class="relative rounded-lg bg-white shadow-sm">
-                <div class="flex items-center justify-between rounded-t border-b border-gray-200 p-4 md:p-5">
-                    <h3 class="text-xl font-semibold text-gray-900">
-                        Seleccionar plan
-                    </h3>
-                    <button type="button" class="bg-transparent ms-auto inline-flex h-8 w-8 items-center justify-center rounded-lg text-sm text-gray-400 hover:bg-gray-200 hover:text-gray-900" data-modal-hide="default-modal">
-                        <svg class="h-3 w-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
-                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6" />
-                        </svg>
-                        <span class="sr-only">Cerrar</span>
-                    </button>
+
+    <div id="default-modal" tabindex="-1" aria-hidden="true" class="bg-opacity-40 fixed top-0 left-0 z-50 hidden h-screen w-screen overflow-x-hidden overflow-y-auto backdrop-blur-sm">
+        <div class="relative mx-auto mt-24 w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+            <div class="mb-4 flex items-center justify-between border-b pb-3">
+                <h3 class="text-xl font-bold text-gray-800">Seleccionar plan</h3>
+                <button type="button" class="rounded-md p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-700" data-modal-hide="default-modal">
+                    <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <div class="space-y-4">
+                <div>
+                    <label for="planes" class="mb-1 block text-sm font-medium text-gray-700">Selecciona la duración</label>
+                    <select id="planes" class="w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:border-green-500 focus:ring-1 focus:ring-green-500">
+                        <option value="mensual">Mensual</option>
+                        <option value="trimestral">Trimestral</option>
+                        <option value="semestral">Semestral</option>
+                        <option value="anual">Anual</option>
+                    </select>
                 </div>
-                <div class="space-y-4 p-4 md:p-5">
 
-                    <form class="mx-auto max-w-sm">
-                        <label for="planes" class="mb-2 block text-sm font-medium text-gray-900">Escoge tu plan</label>
-                        <form class="mx-auto max-w-sm">
-                            <select id="planes" class="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 text-sm text-gray-900 focus:ring-blue-500 focus:border-blue-500">
-                                <option value="mensual">Mensual</option>
-                                <option value="trimestral">Trimestral</option>
-                                <option value="semestral">Semestral</option>
-                                <option value="anual">Anual</option>
-                            </select>
-                        </form>
+                <div id="plan-price" class="text-center text-lg font-semibold text-green-600"></div>
 
-                    </form>
-
-                    <form class="mx-auto mt-4 inline-block w-2/4 rounded-lg px-4 py-2">
-                        <div id="epayco-button-container"></div>
-
-                    </form>
-
+                <div class="mt-4">
+                    <div id="epayco-button-container" class="flex justify-center"></div>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-
         document.addEventListener("DOMContentLoaded", function () {
             const buttons = document.querySelectorAll(".open-modal");
             const selectPlanes = document.getElementById("planes");
             const epaycoContainer = document.getElementById("epayco-button-container");
+            const priceLabel = document.getElementById("plan-price");
 
             let precios = { mensual: 0, trimestral: 0, semestral: 0, anual: 0 };
             let nombreMembresia = "";
             let descripcionMembresia = "";
+            let idMembresia = 0;
 
-            function crearBotonEpayco(precio,idMembresia) {
+            function crearBotonEpayco(precio, idMembresia) {
                 epaycoContainer.innerHTML = "";
 
-                const precioTotal = Math.round(precio); // Asegurar entero
-                const precioBase = Math.round(precio / 1.19); // IVA 19%, redondeado
-                const impuesto = Math.round(precioTotal - precioBase); // Impuesto como entero
+                const precioTotal = Math.round(precio);
+                const precioBase = Math.round(precio / 1.19);
+                const impuesto = precioTotal - precioBase;
 
-                console.log("🚀 Creando botón ePayco con:");
-                console.log("Monto total (entero):", precioTotal);
-                console.log("Base sin impuestos (entero):", precioBase);
-                console.log("Impuesto (entero):", impuesto);
-                console.log("Nombre de la membresía:", nombreMembresia);
-                console.log("Descripción:", descripcionMembresia);
+                priceLabel.textContent = `Total a pagar: $${precioTotal.toLocaleString()} COP`;
 
-                // Crear el script dinámico de ePayco
                 const epaycoScript = document.createElement("script");
                 epaycoScript.src = "https://checkout.epayco.co/checkout.js";
                 epaycoScript.classList.add("epayco-button");
@@ -141,56 +142,44 @@
                 epaycoScript.setAttribute("data-epayco-amount", precioTotal.toString());
                 epaycoScript.setAttribute("data-epayco-tax", impuesto.toString());
                 epaycoScript.setAttribute("data-epayco-tax-base", precioBase.toString());
-                epaycoScript.setAttribute("data-epayco-name", nombreMembresia || "Sin Nombre");
-                epaycoScript.setAttribute("data-epayco-description", descripcionMembresia || "Sin Descripción");
-
+                epaycoScript.setAttribute("data-epayco-name", nombreMembresia);
+                epaycoScript.setAttribute("data-epayco-description", descripcionMembresia);
                 epaycoScript.setAttribute("data-epayco-currency", "cop");
                 epaycoScript.setAttribute("data-epayco-country", "co");
                 epaycoScript.setAttribute("data-epayco-external", "false");
                 epaycoScript.setAttribute("data-epayco-button", "https://multimedia.epayco.co/dashboard/btns/btn5.png");
-
                 epaycoScript.setAttribute("data-epayco-response", `http://167.71.91.199:7076/Negocios/CompletarRegistro?tipoMembresiaId=${idMembresia}`);
                 epaycoScript.setAttribute("data-epayco-test", "true");
-
-                console.log(`/Negocios/CompletarRegistro?tipoMembresiaId=${idMembresia}`);
 
                 epaycoContainer.appendChild(epaycoScript);
             }
 
             selectPlanes.addEventListener("change", function () {
                 if (precios[this.value] !== undefined) {
-                    crearBotonEpayco(precios[this.value]);
-                } else {
-                    console.warn("⚠ El valor seleccionado no tiene un precio definido:", this.value);
+                    crearBotonEpayco(precios[this.value], idMembresia);
                 }
             });
 
-            // Evento para capturar la membresía seleccionada
             buttons.forEach(button => {
                 button.addEventListener("click", function () {
                     idMembresia = this.getAttribute("data-id");
-                    nombreMembresia = this.getAttribute("data-nombre") || "Sin Nombre";
-                    descripcionMembresia = this.getAttribute("data-descripcion") || "Sin Descripción";
-                    precios.mensual = Math.round(parseFloat(this.getAttribute("data-costomensual")) || 0);
-                    precios.trimestral = Math.round(parseFloat(this.getAttribute("data-costotrimestral")) || 0);
-                    precios.semestral = Math.round(parseFloat(this.getAttribute("data-costosemestral")) || 0);
-                    precios.anual = Math.round(parseFloat(this.getAttribute("data-costoanual")) || 0);
+                    nombreMembresia = this.getAttribute("data-nombre") || "Plan";
+                    descripcionMembresia = this.getAttribute("data-descripcion") || "Sin descripción";
+                    precios.mensual = parseFloat(this.getAttribute("data-costomensual")) || 0;
+                    precios.trimestral = parseFloat(this.getAttribute("data-costotrimestral")) || 0;
+                    precios.semestral = parseFloat(this.getAttribute("data-costosemestral")) || 0;
+                    precios.anual = parseFloat(this.getAttribute("data-costoanual")) || 0;
 
-                    console.log("✅ Membresía seleccionada:", nombreMembresia);
-                    console.log("✅ Descripción:", descripcionMembresia);
-                    console.log("✅ Precios:", precios);
-
-                    // Por defecto, establecer el plan mensual si existe
                     if (precios.mensual > 0) {
-                        crearBotonEpayco(precios.mensual,idMembresia);
+                        selectPlanes.value = "mensual";
+                        crearBotonEpayco(precios.mensual, idMembresia);
                     } else {
-                        console.warn("⚠ El precio mensual es 0 o no está definido.");
+                        selectPlanes.value = "anual";
+                        crearBotonEpayco(precios.anual, idMembresia);
                     }
                 });
             });
         });
-
-
     </script>
 
 

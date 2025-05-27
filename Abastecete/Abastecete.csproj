@@ -8,16 +8,16 @@
 
 
 	<ItemGroup>
-    <Content Remove="wwwroot\LOGO FINAL.png" />
-  </ItemGroup>
+		<Content Remove="wwwroot\LOGO FINAL.png" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <None Include="wwwroot\css\Images\LOGO FINAL.png" />
-  </ItemGroup>
+	<ItemGroup>
+		<None Include="wwwroot\css\Images\LOGO FINAL.png" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\BusinessLogic\BusinessLogic.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\BusinessLogic\BusinessLogic.csproj" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<UpToDateCheckBuilt Include="wwwroot/css/site.css" Set="Css" />
@@ -25,9 +25,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="8.0.0" />
-	  <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="8.0.7" />
-	  <PackageReference Include="SixLabors.ImageSharp" Version="3.1.6" />
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="8.0.0" />
+		<PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="8.0.7" />
+		<PackageReference Include="MongoDB.Driver" Version="3.3.0" />
 	</ItemGroup>
 
 	<Target Name="Tailwind" BeforeTargets="Build">

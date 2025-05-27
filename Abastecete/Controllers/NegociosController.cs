@@ -2,8 +2,9 @@
 using BusinessLogic.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using MongoDB.Bson;
+using MongoDB.Driver.GridFS;
 using Newtonsoft.Json;
-using System.Collections.Generic;
 
 namespace Abastecete.Controllers
 {
@@ -13,6 +14,7 @@ namespace Abastecete.Controllers
         private readonly ManejadorMembresias _manejadorMembresias;
         private readonly ManejadorProductos _manejadorProductos;
         private readonly ManejadorCategorias _manejadorCategorias;
+        private readonly ManejadorMongo _manejadorMongo;
 
 
         public NegociosController()
@@ -21,6 +23,7 @@ namespace Abastecete.Controllers
             _manejadorMembresias = new ManejadorMembresias();
             _manejadorProductos = new ManejadorProductos();
             _manejadorCategorias = new ManejadorCategorias();
+            _manejadorMongo = new ManejadorMongo();
         }
 
         [HttpGet]
@@ -36,19 +39,28 @@ namespace Abastecete.Controllers
         }
 
         [HttpPost]
-        public IActionResult Consultar(int idCategoria)
+        public IActionResult Consultar(int idCategoria, string membre)
         {
             List<Categoria> categorias = _manejadorCategorias.ConsultarCategorias();
-            List<Negocio> negocios = _manejadorNegocios.ConsultarNegocioCategoria(idCategoria);
-            ViewBag.categoria = idCategoria;
+            List<Membresia> membresias = _manejadorMembresias.consultarTiposMembresia();
+            if (membre == null)
+            {
+                membre = "";
+            }
+            List<Negocio> negocios = _manejadorNegocios.ConsultarNegocioCategoria(idCategoria, membre);
+
+            ViewBag.membresias = membresias;
+            ViewBag.membresia = membre;
+            ViewBag.categoria = _manejadorCategorias.ObtenerCategoria(idCategoria);
             ViewBag.Categorias = categorias;
             return View(negocios);
         }
 
         [HttpPost]
-        public IActionResult ConsultarNegocios(int idCategoria)
+        public IActionResult ConsultarNegocios(int idCategoria, string membe)
         {
-            List<Negocio> negocios = _manejadorNegocios.ConsultarNegocioCategoria(idCategoria);
+
+            List<Negocio> negocios = _manejadorNegocios.ConsultarNegocioCategoria(idCategoria, membe);
             return Json(negocios);
         }
 
@@ -63,10 +75,39 @@ namespace Abastecete.Controllers
             return View(productos);
         }
 
+        [HttpGet]
+        public IActionResult EditarNegocio()
+        {
+            var personaId = HttpContext.Session.GetInt32("PersonaId").Value;
+            Negocio ne = _manejadorNegocios.ConsultarNegocio(personaId);
+            var proveedores = new List<(BannerModel, ImagenModel)>();
 
+            List<BannerModel> banners = _manejadorMongo.ListarBannersProveedores();
+
+            foreach (var banner in banners)
+            {
+                var imagen = _manejadorMongo.ObtenerImagen(banner.FileId);
+                proveedores.Add((banner, imagen));
+            }
+            ViewBag.banner = proveedores;
+            return View(ne);
+        }
 
         [HttpPost]
-        public IActionResult GuardarDatosNegocio(Negocio negocio)
+        public IActionResult EditarNegocio(Negocio a)
+        {
+            var personaId = HttpContext.Session.GetInt32("PersonaId").Value;
+            Negocio actual = _manejadorNegocios.ConsultarNegocio(personaId);
+            if (a.logotipoArchivo != null && a.logotipoArchivo.Length > 0)
+            {
+                a.LogotipoId = _manejadorMongo.updateImage(a.logotipoArchivo, actual.LogotipoId + "");
+            }
+            _manejadorNegocios.EditarNegocio(a, actual);
+            return RedirectToAction("ProductosNegocio", "Productos");
+        }
+
+        [HttpPost]
+        public IActionResult GuardarDatosNegocio(Negocio negocio, IFormFile logo_archivo)
         {
             var personaId = HttpContext.Session.GetInt32("PersonaId");
 
@@ -76,7 +117,6 @@ namespace Abastecete.Controllers
                 return RedirectToAction("Login", "Login");
             }
 
-            // ✅ Asegurar que `Persona` no sea null antes de asignar el ID
             if (negocio.Persona == null)
             {
                 negocio.Persona = new Persona();
@@ -84,31 +124,33 @@ namespace Abastecete.Controllers
 
             negocio.Persona.Id = personaId.Value;
 
-            // Guardar los datos del negocio en la sesión en formato JSON
+            if (logo_archivo != null && logo_archivo.Length > 0)
+            {
+
+                negocio.LogotipoId = _manejadorMongo.SubirImagen(logo_archivo);
+            }
+
             HttpContext.Session.SetString("NegocioTemporal", JsonConvert.SerializeObject(negocio));
 
-            // Redirigir a la vista de selección de membresía
             return RedirectToAction("Tipos", "Membresias");
         }
 
         [HttpGet]
-        public IActionResult CompletarRegistro(int tipoMembresiaId)
+        public async Task<IActionResult> CompletarRegistro(int tipoMembresiaId)
         {
             // Recuperar los datos del negocio desde la sesión
             var negocioJson = HttpContext.Session.GetString("NegocioTemporal");
             if (string.IsNullOrEmpty(negocioJson))
             {
-                return RedirectToAction("Crear"); // Si no hay datos, volver al formulario de registro
+                return RedirectToAction("Crear");
             }
 
-            // Convertir JSON a objeto
             Negocio negocio = JsonConvert.DeserializeObject<Negocio>(negocioJson);
-            negocio.TipoMembresia = tipoMembresiaId; // Asignar el tipo de membresía seleccionado
+            negocio.TipoMembresia = tipoMembresiaId;
 
-            // Llamar al método que crea el negocio en la base de datos
+
             bool registrado = _manejadorNegocios.CrearNegocio(negocio);
 
-            // Limpiar la sesión después de completar el registro
             HttpContext.Session.Remove("NegocioTemporal");
 
             var usuarioId = HttpContext.Session.GetInt32("idUsuario");

@@ -22,15 +22,22 @@
         <div class="mt-10 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
             @foreach (var membresia in Model)
             {
-                <div class="flex flex-col justify-between rounded-2xl bg-white p-6 text-center shadow-md">
-                    <div>
-                        <h3 class="text-xl font-semibold">@membresia.Nombre</h3>
-                        <a href="@Url.Action("Publicar", "Membresias", new { nombre = membresia.Nombre })" class="mx-auto mt-4 inline-block w-2/4 rounded-lg bg-[#F6580F] px-4 py-2 text-white hover:bg-[#15803D]" data-modal-target="default-modal" data-modal-toggle="default-modal">
+                <div class="flex flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-md transition hover:shadow-lg">
+                    <div class="h-48 w-full overflow-hidden">
+                        <img src="~/images/@(membresia.Nombre).png" alt="Membresía @membresia.Nombre" class="h-full w-full object-cover">
+                    </div>
+
+                    <div class="flex flex-col items-center justify-between space-y-4 p-4 text-center">
+                        <h3 class="text-lg font-bold text-gray-800">@membresia.Nombre</h3>
+
+                        <a href="@Url.Action("Publicar", "Membresias", new { nombre = membresia.Nombre })"
+                           class="w-full rounded-full bg-[#F6580F] py-2 text-sm font-semibold text-white uppercase transition hover:bg-[#15803D]">
                             Seleccionar
                         </a>
                     </div>
-                    
                 </div>
+
+
             }
         </div>
     </div>

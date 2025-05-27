@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Http;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -17,6 +18,10 @@ namespace BusinessLogic.Models
         public string Direccion { get; set; }
         public long Telefono { get; set; }
         public float Puntuacion { get; set; } = 5;
-        public string? Logotipo { get; set; }
+        public string? LogotipoId { get; set; }
+        public IFormFile? logotipoArchivo { get; set; }
+        public ImagenModel imagen { get; set; }
+        public string BannerId { get; set; }
+
     }
 }

@@ -13,17 +13,33 @@
 </head>
 
 <body>
-    <!-- CATEGORÍAS (TARJETAS RECTANGULARES) -->
-    <section class="space-y-3 p-10">
-        <div class="grid grid-cols-2 gap-6 sm:grid-cols-4 md:grid-cols-4 lg:grid-cols-5">
+    <!-- CATEGORÍAS (TARJETAS RESPONSIVAS) -->
+    <section class="p-6 md:p-10">
+        <div class="grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
             @foreach (var categoria in Model.Where(c => c.Estado != 0))
             {
                 <form method="post" action="@Url.Action("Consultar", "Negocios")">
                     <input type="hidden" name="idCategoria" value="@categoria.Id" />
-                    <button type="submit" class="w-full transform overflow-hidden rounded-lg bg-white shadow-md transition-transform hover:shadow-lg hover:scale-105">
-                        <img src="@categoria.Imagen" alt="@categoria.Nombre" class="h-90 w-full object-cover">
-                        <div class="p-4">
-                            <p class="text-center text-lg font-semibold text-gray-800">@categoria.Nombre</p>
+                    <button type="submit" class="group w-full overflow-hidden rounded-2xl bg-white shadow-md transition-transform hover:scale-105 hover:shadow-lg">
+                        <div class="flex h-full flex-col">
+                            <div class="h-40 w-full overflow-hidden md:h-44 lg:h-48">
+                                @if (categoria.Imagen != null)
+                                {
+                                    <img src="@categoria.Imagen.Base64" alt="@categoria.Nombre"
+                                         class="h-full w-full object-contain transition-transform duration-300" />
+                                }
+                                else
+                                {
+                                    <div class="flex h-full w-full items-center justify-center bg-gray-100 text-sm text-gray-400">
+                                        Sin imagen
+                                    </div>
+                                }
+                            </div>
+                            <div class="p-3">
+                                <p class="text-center text-xl font-semibold text-gray-800 md:text-base">
+                                    @categoria.Nombre
+                                </p>
+                            </div>
                         </div>
                     </button>
                 </form>
