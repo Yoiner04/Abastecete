@@ -16,29 +16,36 @@
 
     <header class="relative w-full bg-[#F5EFE4] shadow-md">
         <div class="relative h-56 w-full">
-            <img src="/ruta/a/la/imagen/de/fondo.jpg" alt="Fondo"
-                 class="absolute inset-0 h-full w-full object-contain brightness-50" />
-            <div class="relative top-[69%] z-10 flex flex-row items-start gap-4 px-4 sm:top-24 md:items-start md:gap-6 md:px-10">
+            @if (!string.IsNullOrWhiteSpace(Model.BannerImagen?.Base64))
+            {
+                <img src="@Model.BannerImagen.Base64" alt="Fondo"
+                     class="absolute inset-0 h-full w-full object-contain brightness-50" />
+            }
+
+            <!-- Logo del negocio -->
+            <div class="relative z-10 flex flex-row items-start gap-4 px-4 sm:top-24 md:items-start md:gap-6 md:px-10">
                 <div class="flex size-32 items-center justify-center overflow-hidden rounded-xl border bg-white shadow-lg sm:size-60">
                     @if (!string.IsNullOrWhiteSpace(Model?.imagen?.Base64))
                     {
                         <img src="@Model.imagen.Base64" alt="Logo negocio" class="h-full w-full object-cover" />
                     }
                 </div>
-                <div class="absolute top-1/2 left-44 -translate-y-1/2 text-left sm:left-72">
-                    <h1 class="text-3xl leading-tight font-extrabold tracking-tight text-gray-800 sm:text-4xl">
-                        @Model?.Nombre
-                    </h1>
-                    <p class="text-base font-semibold tracking-wide text-[#15803D] uppercase sm:text-lg">
-                        @Model?.Descripcion
-                    </p>
-                    <p class="text-base font-semibold tracking-wide text-[#15803D] uppercase sm:text-lg">
-                        @Model?.Telefono
-                    </p>
-                </div>
             </div>
         </div>
     </header>
+
+    <!-- NUEVA sección centrada con datos del negocio -->
+    <section class="w-full bg-white px-4 py-6 text-center">
+        <h1 class="text-3xl font-extrabold tracking-tight text-gray-800 sm:text-4xl">
+            @Model?.Nombre
+        </h1>
+        <p class="mt-2 text-base font-semibold tracking-wide text-[#15803D] uppercase sm:text-lg">
+            @Model?.Descripcion
+        </p>
+        <p class="text-base font-semibold tracking-wide text-[#15803D] uppercase sm:text-lg">
+            @Model?.Telefono
+        </p>
+    </section>
 
     @Html.Partial("_ContactModal")
 
