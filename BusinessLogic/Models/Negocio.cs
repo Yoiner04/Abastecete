@@ -26,5 +26,6 @@ namespace BusinessLogic.Models
 
         public string Descripcion { get; set; }
 
+
     }
 }

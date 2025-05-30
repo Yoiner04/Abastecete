@@ -34,6 +34,7 @@ namespace BusinessLogic
                 new Parametro("p_telefono_local", negocio.Telefono),
                 new Parametro("p_fotos_local", negocio.LogotipoId),
                 new Parametro("p_descripcion_local", negocio.Descripcion)
+
             };
             return conexion.EjecutarTransaccion("crear_local", parametros);
         }
@@ -57,6 +58,7 @@ namespace BusinessLogic
                 imagen = _manejadorMongo.ObtenerImagen(row["FOTOS_LOCAL"].ToString()),
                 BannerId = row["BANNER_LOCAL"].ToString(),
                 BannerImagen = _manejadorMongo.ObtenerImagen(row["BANNER_LOCAL"].ToString())
+
             };
         }
 
@@ -123,6 +125,7 @@ namespace BusinessLogic
                 {
                     Nombre = row["NOMBRE_UNIDAD"] + "",
                 },
+
             };
         }
 
@@ -208,6 +211,7 @@ namespace BusinessLogic
                     imagen = _manejadorMongo.ObtenerImagen(row["FOTOS_LOCAL"].ToString() + ""),
                     BannerId = row["BANNER_LOCAL"].ToString(),
                     BannerImagen = _manejadorMongo.ObtenerImagen(row["BANNER_LOCAL"].ToString())
+
                 });
             }
             return negocios;
@@ -237,6 +241,7 @@ namespace BusinessLogic
                         imagen = _manejadorMongo.ObtenerImagen(row["FOTOS_LOCAL"].ToString()),
                         BannerId = row["BANNER_LOCAL"].ToString(),
                         BannerImagen = _manejadorMongo.ObtenerImagen(row["BANNER_LOCAL"].ToString())
+
                     });
                 }
             }
