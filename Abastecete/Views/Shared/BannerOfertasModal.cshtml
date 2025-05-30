@@ -1,0 +1,135 @@
+﻿<div id="bannerOfertasModal" class="bg-opacity-50 fixed inset-0 z-50 hidden bg-black">
+    <div class="flex min-h-screen items-center justify-center">
+        <div id="bannerOfertasModalContent" class="max-h-[90vh] w-full max-w-5xl overflow-y-auto rounded-2xl border border-gray-200 bg-white p-6 shadow-2xl">
+
+            <h2 class="mb-6 text-center text-2xl font-bold text-gray-800">Gestionar Banners de Ofertas</h2>
+
+            <!-- Galería de banners actuales -->
+            <div id="galeriaOfertas" class="mb-8 grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
+                <!-- Aquí se renderizan los banners dinámicamente -->
+            </div>
+
+            <!-- Subir nuevo banner -->
+            <form id="formNuevoBannerOfertas" class="flex flex-col items-center gap-4 border-t pt-6">
+                <label class="text-lg font-semibold text-gray-700">Agregar Nuevo Banner</label>
+                <input type="file" id="nuevoBannerOfertas" accept="image/*"
+                       class="block w-full text-sm text-gray-700 file:mr-4 file:rounded-lg file:border-0 file:bg-green-50 file:px-4 file:py-2 file:text-green-700 hover:file:bg-green-100" />
+            </form>
+
+            <!-- Botones de acción -->
+            <div class="mt-8 flex flex-col justify-center gap-4 border-t pt-6 sm:flex-row">
+                <button type="submit" form="formNuevoBannerOfertas"
+                        class="w-full rounded-lg bg-green-600 px-6 py-3 font-semibold text-white shadow transition hover:bg-green-700 sm:w-auto">
+                    📤 Subir Imagen
+                </button>
+
+                <button type="button" onclick="cerrarBannerOfertasModal()"
+                        class="w-full rounded-lg bg-gray-500 px-6 py-3 font-semibold text-white shadow transition hover:bg-gray-600 sm:w-auto">
+                    ❌ Cerrar
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Scripts -->
+<script>
+    function abrirBannerOfertasModal() {
+        document.getElementById("bannerOfertasModal").classList.remove("hidden");
+        document.body.classList.add("overflow-hidden");
+        cargarBannersOfertas();
+    }
+
+    function cerrarBannerOfertasModal() {
+        document.getElementById("bannerOfertasModal").classList.add("hidden");
+        document.body.classList.remove("overflow-hidden");
+    }
+
+    document.getElementById("bannerOfertasModal").addEventListener("click", function (event) {
+        if (!document.getElementById("bannerOfertasModalContent").contains(event.target)) {
+            cerrarBannerOfertasModal();
+        }
+    });
+
+    // Evento para subir nuevo banner
+        document.getElementById("formNuevoBannerOfertas").addEventListener("submit", function (event) {
+        event.preventDefault();
+
+        const input = document.getElementById("nuevoBannerOfertas");
+
+        const file = input.files[0];
+                        console.log(file);
+
+        if (!file) {
+            alert("Selecciona una imagen para subir.");
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append("imagen", file);
+        
+
+        fetch("/Banners/AgregarBannerOfertas", {
+            method: "POST",
+            body: formData
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.mensaje) alert(data.mensaje);
+            input.value = ""; // Limpiar input
+            cargarBannersOfertas();
+        })
+        .catch(() => alert("Error al subir la imagen."));
+    });
+
+
+    // Función para cargar banners existentes
+    function cargarBannersOfertas() {
+        fetch("/Banners/ListarBannersOfertas")
+            .then(response => response.json())
+            .then(banners => {
+                const galeria = document.getElementById("galeriaOfertas");
+                galeria.innerHTML = "";
+
+                banners.forEach(banner => {
+                    galeria.innerHTML += `
+                        <div class="flex flex-col items-center gap-2 rounded-lg border p-4 shadow">
+                            <img src="${banner.base64}" alt="${banner.nombre}" class="h-32 w-full rounded-md bg-gray-100 object-contain">
+                            <div class="mt-2 flex gap-2">
+                                <button onclick="reemplazarBanner('${banner.id}')" class="rounded bg-blue-500 px-3 py-1 text-sm text-white hover:bg-blue-600">Reemplazar</button>
+                              </div>
+                        </div>
+                    `;
+                });
+            })
+            .catch(error => console.error("Error cargando banners:", error));
+    }
+
+    // Función para reemplazar un banner existente
+    function reemplazarBanner(id) {
+        let input = document.createElement("input");
+        input.type = "file";
+        input.accept = "image/*";
+        input.onchange = () => {
+            let file = input.files[0];
+            if (file) {
+                let formData = new FormData();
+                formData.append("id", id);
+                formData.append("imagen", file);
+
+                fetch("/Banners/ReemplazarBannerOfertas", {
+                    method: "POST",
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.mensaje);
+                    cargarBannersOfertas();
+                })
+                .catch(error => console.error("Error al reemplazar:", error));
+            }
+        };
+        input.click();
+    }
+</script>

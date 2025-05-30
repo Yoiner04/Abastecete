@@ -30,6 +30,9 @@
                         @Model?.Nombre
                     </h1>
                     <p class="text-base font-semibold tracking-wide text-[#15803D] uppercase sm:text-lg">
+                        @Model?.Descripcion
+                    </p>
+                    <p class="text-base font-semibold tracking-wide text-[#15803D] uppercase sm:text-lg">
                         @Model?.Telefono
                     </p>
                 </div>
@@ -70,9 +73,6 @@
         <section class="mt-10">
             <h3 class="mb-4 text-xl font-semibold sm:text-2xl">Ubicación</h3>
             <div class="mb-4">
-                <input id="searchLocation" type="text"
-                       placeholder="Buscar ubicación..."
-                       class="w-full rounded border border-gray-300 p-2" />
                 <input id="location" type="hidden" value="@Model?.Localizacion" />
             </div>
             <div id="map" class="h-64 w-full rounded-lg border sm:h-80 md:h-96"></div>

@@ -53,6 +53,34 @@
                 Editar Banner de Proveedores
             </button>
         </div>
+
+        <!-- Banner de Ofertas flash -->
+        <div class="flex flex-col items-center rounded-lg bg-white p-6 shadow-lg">
+            <img src="/images/bannerproveedores.png" alt="Banner de Ofertas"
+                 class="mb-4 h-40 w-full rounded-lg border object-contain">
+            <h3 class="mb-2 text-lg font-bold text-gray-800">Banner de Ofertas Flash</h3>
+            <p class="text-center text-sm text-gray-600">
+                Imagen que aparece en la sección principal para mostrar ofertas flashes.
+            </p>
+            <button onclick="abrirBannerOfertasModal()"
+                    class="mt-4 rounded bg-green-600 px-5 py-2 text-white hover:bg-green-700">
+                Editar Banner de Ofertas Flashes
+            </button>
+        </div>
+
+        <!-- Banner de Inicio Sesión -->
+        <div class="flex flex-col items-center rounded-lg bg-white p-6 shadow-lg">
+            <img src="/images/bannerproveedores.png" alt="Banner de Sesion"
+                 class="mb-4 h-40 w-full rounded-lg border object-contain">
+            <h3 class="mb-2 text-lg font-bold text-gray-800">Banner de Inicio Sesión</h3>
+            <p class="text-center text-sm text-gray-600">
+                Imagen que aparece en la sección principal del Inicio de Sesión.
+            </p>
+            <button onclick="abrirBannerSesionModal()"
+                    class="mt-4 rounded bg-green-600 px-5 py-2 text-white hover:bg-green-700">
+                Editar Banner de Inicio de Sesión
+            </button>
+        </div>
     }
 </div>
 
@@ -60,3 +88,5 @@
 @Html.Partial("BannerModal")
 @Html.Partial("CategoryBannerModal")
 @Html.Partial("BannerProveedoresModal")
+@Html.Partial("BannerOfertasModal")
+@Html.Partial("BannerSesionModal")

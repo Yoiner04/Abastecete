@@ -8,6 +8,7 @@
 
 
 	<ItemGroup>
+		<Content Remove="wwwroot\css\custom-mobile.css" />
 		<Content Remove="wwwroot\LOGO FINAL.png" />
 	</ItemGroup>
 

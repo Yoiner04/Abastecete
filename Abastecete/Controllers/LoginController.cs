@@ -19,11 +19,13 @@ namespace ConnectionProject.Controllers
     public class LoginController : Controller
     {
         private readonly ManejadorUsuario _manejadorUsuario;
+        private readonly ManejadorMongo manejadorMongo;
         public static int rol = 0;
 
         public LoginController()
         {
             _manejadorUsuario = new ManejadorUsuario();
+            manejadorMongo = new ManejadorMongo();
         }
 
         public IActionResult Login()
@@ -32,6 +34,14 @@ namespace ConnectionProject.Controllers
             Response.Headers["Pragma"] = "no-cache";
             Response.Headers["Expires"] = "0";
 
+            var bannerSesion= new List<(BannerModel, ImagenModel)>();
+            var bannersSesion = manejadorMongo.ListarBannersSesion();
+            foreach (var banner in bannersSesion)
+            {
+                var imagen = manejadorMongo.ObtenerImagen(banner.FileId);
+                bannerSesion.Add((banner, imagen));
+            }
+            ViewBag.BannerSesion = bannerSesion;
             return View();
         }
 
