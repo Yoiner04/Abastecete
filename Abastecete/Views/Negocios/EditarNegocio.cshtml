@@ -2,7 +2,10 @@
 
 <div class="mx-auto mt-10 max-w-3xl px-4">
     <h2 class="mb-6 text-2xl font-bold text-gray-800">Editar Negocio</h2>
-
+    @{
+        // ViewBag.banner contiene List<(BannerModel, ImagenModel)>
+        var proveedores = ViewBag.banner as IEnumerable<(BusinessLogic.Models.BannerModel, BusinessLogic.Models.ImagenModel)>;
+    }
     @using (Html.BeginForm("EditarNegocio", "Negocios", FormMethod.Post, new { enctype = "multipart/form-data", @class = "space-y-6 rounded-xl bg-white p-6 shadow-md" }))
     {
         @Html.HiddenFor(m => m.Id)
@@ -15,6 +18,11 @@
         <div>
             <label class="mb-1 block text-sm font-medium text-gray-700">Dirección</label>
             @Html.TextBoxFor(m => m.Direccion, new { @class = "w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring focus:ring-green-400", @id = "searchLocation" })
+        </div>
+
+         <div>
+            <label class="block font-medium">Descripción del negocio</label>
+            @Html.TextBoxFor(m => m.Descripcion, new { @class = "w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring focus:ring-green-400"})
         </div>
 
         <div>
@@ -51,8 +59,49 @@
                 Guardar Cambios
             </button>
         </div>
+        <div>
+            <h3 class="mb-2 text-lg font-semibold text-gray-800">Selecciona tu Banner</h3>
+            <div class="grid grid-cols-2 gap-4 sm:grid-cols-3">
+                @foreach (var tuple in proveedores ?? Enumerable.Empty<(BusinessLogic.Models.BannerModel, BusinessLogic.Models.ImagenModel)>())
+                {
+                    var banner = tuple.Item1;
+                    var imagen = tuple.Item2;
+                    <label class="block cursor-pointer">
+                        <input type="radio"
+                               name="BannerId"
+                               value="@banner.FileId"
+                               class="peer hidden"
+                               @(Model.BannerId == banner.FileId ? "checked" : "")/>
+                        <img src="@imagen.Base64"
+                             alt="Banner @banner.FileId"
+                             class="h-32 w-full rounded-lg border border-gray-200 object-contain peer-checked:border-green-500 peer-checked:ring-2 peer-checked:ring-green-500" />
+                    </label>
+                }
+            </div>
+            @Html.HiddenFor(m => m.BannerId)
+        </div>
     }
 </div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const radios = document.querySelectorAll('input[name="BannerId"]');
+        const hiddenInput = document.querySelector('input[name="BannerId"][type="hidden"]');
+
+        radios.forEach(radio => {
+            radio.addEventListener("change", function () {
+                if (this.checked) {
+                    hiddenInput.value = this.value;
+                }
+            });
+
+            // Al cargar la página, si algún radio está marcado, sincronizarlo también
+            if (radio.checked) {
+                hiddenInput.value = radio.value;
+            }
+        });
+    });
+</script>
 
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAPudyk3G3YG7GOEpId4xMK_WFIEenOSp8&libraries=places"></script>
     <script>

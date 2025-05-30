@@ -19,11 +19,13 @@ namespace ConnectionProject.Controllers
     public class LoginController : Controller
     {
         private readonly ManejadorUsuario _manejadorUsuario;
+        private readonly ManejadorMongo manejadorMongo;
         public static int rol = 0;
 
         public LoginController()
         {
             _manejadorUsuario = new ManejadorUsuario();
+            manejadorMongo = new ManejadorMongo();
         }
 
         public IActionResult Login()
@@ -32,72 +34,80 @@ namespace ConnectionProject.Controllers
             Response.Headers["Pragma"] = "no-cache";
             Response.Headers["Expires"] = "0";
 
+            var bannerSesion= new List<(BannerModel, ImagenModel)>();
+            var bannersSesion = manejadorMongo.ListarBannersSesion();
+            foreach (var banner in bannersSesion)
+            {
+                var imagen = manejadorMongo.ObtenerImagen(banner.FileId);
+                bannerSesion.Add((banner, imagen));
+            }
+            ViewBag.BannerSesion = bannerSesion;
             return View();
         }
 
         [HttpPost]
-public IActionResult Login(Usuario usuario)
-{
-    ManejadorUsuario manejador = new ManejadorUsuario();
-    DataTable data = manejador.Login(usuario.Correo, usuario.Contrasenia);
-
-    if (data.Rows.Count == 0)
-    {
-        TempData["Error"] = "Credenciales incorrectas. Por favor, verifica tu usuario y contraseña.";
-        return View(usuario);
-    }
-
-    try
-    {
-        int idRol = Convert.ToInt32(data.Rows[0]["FK_ID_ROL"]);
-        int idPersona = Convert.ToInt32(data.Rows[0]["FK_ID_PERSONA"]);
-        int idUsuario = Convert.ToInt32(data.Rows[0]["PK_ID_USUARIO"]);
-        int idTipoMembresia = 0;
-        if (data.Rows[0]["FK_ID_TIPOMEMBRESIA"] == "")
+        public IActionResult Login(Usuario usuario)
         {
-            idTipoMembresia = Convert.ToInt32(data.Rows[0]["FK_ID_TIPOMEMBRESIA"]);
+            ManejadorUsuario manejador = new ManejadorUsuario();
+            DataTable data = manejador.Login(usuario.Correo, usuario.Contrasenia);
 
+            if (data.Rows.Count == 0)
+            {
+                TempData["Error"] = "Credenciales incorrectas. Por favor, verifica tu usuario y contraseña.";
+                return View(usuario);
+            }
+
+            try
+            {
+                int idRol = Convert.ToInt32(data.Rows[0]["FK_ID_ROL"]);
+                int idPersona = Convert.ToInt32(data.Rows[0]["FK_ID_PERSONA"]);
+                int idUsuario = Convert.ToInt32(data.Rows[0]["PK_ID_USUARIO"]);
+                int idTipoMembresia = 0;
+                if (data.Rows[0]["FK_ID_TIPOMEMBRESIA"] == "")
+                {
+                    idTipoMembresia = Convert.ToInt32(data.Rows[0]["FK_ID_TIPOMEMBRESIA"]);
+
+                }
+
+                HttpContext.Session.SetInt32("PersonaId", idPersona);
+                HttpContext.Session.SetInt32("idUsuario", idUsuario);
+                HttpContext.Session.SetString("membresia", ((data.Rows[0]["FK_ID_TIPOMEMBRESIA"] == "") ? "sin membresia" : idTipoMembresia.ToString()));
+
+                if (HttpContext.Session.GetString("LastLoginError") == usuario.Correo)
+                {
+                    TempData["Error"] = "Contraseña incorrecta. Si fallas 5 veces, tu cuenta será bloqueada.";
+                    return View(usuario);
+                }
+
+                switch (idRol)
+                {
+                    case 97:
+                        TempData["Error"] = "Tu cuenta ha sido inhabilitada.";
+                        return View(usuario);
+                    case 98:
+                        TempData["Error"] = "Correo electrónico no válido.";
+                        return View(usuario);
+                    case 99:
+                        TempData["Error"] = "Contraseña incorrecta. Si fallas 5 veces, tu cuenta será bloqueada.";
+                        HttpContext.Session.SetString("LastLoginError", usuario.Correo);
+                        return View(usuario);
+                    case 0:
+                        TempData["Error"] = "Tu cuenta ha sido bloqueada por demasiados intentos fallidos. Inténtalo en una hora.";
+                        return View(usuario);
+                    default:
+                        HttpContext.Session.Remove("LastLoginError");
+
+                        GuardarPermisosRol(idRol);
+                        return Redirect("~/Home/Principal");
+                }
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = "Error al procesar la solicitud. Por favor registrate e intenta de nuevo.";
+                Console.WriteLine($"Error en Login: {ex.Message}");
+                return View(usuario);
+            }
         }
-
-        HttpContext.Session.SetInt32("PersonaId", idPersona);
-        HttpContext.Session.SetInt32("idUsuario", idUsuario);
-        HttpContext.Session.SetString("membresia", ((data.Rows[0]["FK_ID_TIPOMEMBRESIA"] == "") ? "sin membresia" : idTipoMembresia.ToString()));
-
-        if (HttpContext.Session.GetString("LastLoginError") == usuario.Correo)
-        {
-            TempData["Error"] = "Contraseña incorrecta. Si fallas 5 veces, tu cuenta será bloqueada.";
-            return View(usuario);
-        }
-
-        switch (idRol)
-        {
-            case 97:
-                TempData["Error"] = "Tu cuenta ha sido inhabilitada.";
-                return View(usuario);
-            case 98:
-                TempData["Error"] = "Correo electrónico no válido.";
-                return View(usuario);
-            case 99:
-                TempData["Error"] = "Contraseña incorrecta. Si fallas 5 veces, tu cuenta será bloqueada.";
-                HttpContext.Session.SetString("LastLoginError", usuario.Correo);
-                return View(usuario);
-            case 0:
-                TempData["Error"] = "Tu cuenta ha sido bloqueada por demasiados intentos fallidos. Inténtalo en una hora.";
-                return View(usuario);
-            default:
-                HttpContext.Session.Remove("LastLoginError");
-
-                GuardarPermisosRol(idRol);
-                return Redirect("~/Home/Principal");
-        }
-    }
-    catch (Exception ex)
-    {
-        TempData["Error"] = "Error al procesar la solicitud. Por favor registrate e intenta de nuevo.";
-        Console.WriteLine($"Error en Login: {ex.Message}");
-        return View(usuario);
-    }
-}
 
         public IActionResult Logout()
         {
@@ -273,9 +283,6 @@ public IActionResult Login(Usuario usuario)
             return RedirectToAction("IngresarNuevaContrasenia", new { token = Codigo });
         }
 
-
-
-
         public IActionResult IngresarNuevaContrasenia(string token)
         {
             if (string.IsNullOrEmpty(token) || !_manejadorUsuario.ValidarToken(token, out int userId))
@@ -288,8 +295,6 @@ public IActionResult Login(Usuario usuario)
             ViewBag.Token = token;
             return View();
         }
-
-
 
         [HttpPost]
         public IActionResult IngresarNuevaContrasenia(int userId, string NuevaContrasenia, string ConfirmarContrasenia)
@@ -318,8 +323,6 @@ public IActionResult Login(Usuario usuario)
             TempData.Keep("Success");
             return RedirectToAction("Login");
         }
-
-
 
         private void EnviarCorreoRecuperacion(string correo, string token)
         {

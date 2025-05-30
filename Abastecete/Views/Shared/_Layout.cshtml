@@ -17,28 +17,27 @@
 
 @Html.Partial("_SupportBubble")
 @Html.Partial("_ContactModal")
+@Html.Partial("_AddonBubble")
+
 
 <body class="bg-gray-100" style="color: black;">
 
     @{
         string permisos = HttpContextAccessor.HttpContext.Session.GetString("permisos");
-        string membresia = HttpContextAccessor.HttpContext.Session.GetString("membresia") ?? "0"; 
+        string membresia = HttpContextAccessor.HttpContext.Session.GetString("membresia") ?? "0";
         bool ocultarPublicarOferta = (membresia == "11" || membresia == "12" || membresia == "13");
     }
     <header id="header" class="sticky top-0 z-40 shadow-md" style="background-color: #F4F1E9;">
-        <nav class="container mx-auto flex items-center justify-between px-6 py-2">
-            <!-- Logo -->
-            <a href="@Url.Action("Principal", "Home")" class="flex items-center">
-                <img src="~/css/Images/LOGO FINAL.png" alt="Abastecete Logo" class="h-14">
-            </a>
-
-            <!-- Botón Menú Móvil -->
-            <button id="menu-toggle" class="text-black focus:outline-none md:hidden">
-                <i class="fas fa-bars text-2xl"></i>
-            </button>
-
-            <!-- Contenedor del Menú de Navegación -->
-            <div id="menu-container" class="z-50 flex w-full flex-wrap items-center justify-center gap-4 bg-gray-100 px-4 py-2 md:absolute md:left-1/2 md:-translate-x-1/2 md:transform md:w-auto md:gap-6 md:bg-transparent">
+        <nav class="flex flex-wrap items-center justify-between px-6 py-2">
+            <div class="flex items-center justify-between w-full md:w-auto">
+                <a href="@Url.Action("Principal", "Home")" class="flex items-center">
+                    <img src="~/css/Images/LOGO FINAL.png" alt="Abastecete Logo" class="h-14">
+                </a>
+                <button id="menu-toggle" class="text-black focus:outline-none md:hidden">
+                    <i class="fas fa-bars text-2xl"></i>
+                </button>
+            </div>
+            <div id="menu-container" class="hidden w-full flex-col items-center gap-4 bg-gray-100 px-4 py-2 md:flex md:w-auto md:flex-row md:gap-6 md:bg-transparent">
                 <ul id="menu" class="flex flex-col items-center gap-2 text-base font-bold text-black md:flex-row md:gap-6">
                     <li>
                         <form id="search-form" action="@Url.Action("Index", "Buscador")" method="get" class="w-full max-w-xs">
@@ -46,83 +45,50 @@
                                 <div class="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-2">
                                     <i class="fa fa-search text-sm text-gray-500 dark:text-gray-400"></i>
                                 </div>
-                                <input type="text" id="search-input" name="query"
-                                       value="@Context.Request.Query["query"]"
-                                       class="block w-full rounded-md border border-gray-300 bg-gray-50 py-2 ps-8 pe-24 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500"
-                                       placeholder="Buscar..." required />
-
-                                <button type="submit"
-                                        class="absolute end-1 top-1 bottom-1 my-auto rounded-md bg-[#F66623] px-3 py-1.5 text-sm font-semibold text-white hover:bg-[#e75b1f] focus:outline-none focus:ring-2 focus:ring-blue-300">
-                                    Buscar
-                                </button>
+                                <input type="text" id="search-input" name="query" value="@Context.Request.Query["query"]" class="block w-full rounded-md border border-gray-300 bg-gray-50 py-2 ps-8 pe-24 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500" placeholder="Buscar..." required />
+                                <button type="submit" class="absolute end-1 top-1 bottom-1 my-auto rounded-md bg-[#F66623] px-3 py-1.5 text-sm font-semibold text-white hover:bg-[#e75b1f] focus:outline-none focus:ring-2 focus:ring-blue-300">Buscar</button>
                             </div>
                         </form>
-
                     </li>
                     <li>
-                        <a href="@Url.Action("Listar","Categorias")" class="block px-4 py-2 whitespace-nowrap text-black hover:text-green-600">
-                            Proveedores
-                        </a>
+                        <a href="@Url.Action("Listar", "Categorias")" class="block px-4 py-2 whitespace-nowrap text-black hover:text-green-600">Proveedores</a>
                     </li>
                     <li>
-                        <a href="#ofertas-container" class="block px-4 py-2 whitespace-nowrap text-black hover:text-green-600">
-                            Ofertas flash
-                        </a>
+                        <a href="#ofertas-container" class="block px-4 py-2 whitespace-nowrap text-black hover:text-green-600">Ofertas flash</a>
                     </li>
-                    
                     <li>
-                        <a href="#" id="open-contact-modal"
-                           class="block px-4 py-2 text-black hover:text-green-600 md:px-0 md:py-0">
-                            Contacto
-                        </a>
+                        <a href="#" id="open-contact-modal" class="block px-4 py-2 text-black hover:text-green-600 md:px-0 md:py-0">Contacto</a>
                     </li>
                 </ul>
-            </div>
-
-
-
-            <!-- Usuario -->
-            <div class="flex items-center space-x-4">
-                @if (permisos != null)
-                {
-                    <div class="relative">
-                        <button id="user-btn" class="flex items-center gap-2 rounded-full p-1 transition hover:bg-gray-100 focus:outline-none">
-                            <img src="~/css/Images/avatar.png" alt="Usuario" class="h-10 w-10 rounded-full border border-gray-300 shadow-sm">
-                        </button>
-
-                        <ul id="user-menu"
-                            class="absolute right-0 z-50 mt-2 hidden min-w-[180px] overflow-hidden rounded-lg border border-gray-200 bg-white text-sm shadow-xl md:min-w-[220px]">
-
-                            <li class="border-b px-5 py-3 transition duration-200 hover:bg-gray-100">
-                                <button id="open-edit-profile" class="block w-full text-left font-medium text-black">
-                                    ✏️ Editar perfil
-                                </button>
-                            </li>
-                            <li class="px-5 py-3 transition duration-200 hover:bg-gray-100">
-                                <a href="@Url.Action("Logout", "Login")" class="block font-semibold text-black">
-                                    🚪 Cerrar Sesión
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-
-
-                }
-                else
-                {
-                    <a href="@Url.Action("Login", "Login")" class="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 sm:px-2 sm:py-1 sm:text-xs md:px-6 md:py-3 md:text-lg">
-                        Únete a nosotros
-                    </a>
-                }
+                <div class="md:ml-4 flex justify-center w-full md:w-auto">
+                    @if (permisos != null)
+                    {
+                        <div class="relative">
+                            <button id="user-btn" class="flex items-center gap-2 rounded-full p-1 transition hover:bg-gray-100 focus:outline-none">
+                                <img src="~/css/Images/avatar.png" alt="Usuario" class="h-10 w-10 rounded-full border border-gray-300 shadow-sm">
+                            </button>
+                            <ul id="user-menu" class="absolute right-0 z-50 mt-2 hidden min-w-[180px] overflow-hidden rounded-lg border border-gray-200 bg-white text-sm shadow-xl md:min-w-[220px]">
+                                <li class="border-b px-5 py-3 transition duration-200 hover:bg-gray-100">
+                                    <button id="open-edit-profile" class="block w-full text-left font-medium text-black">✏️ Editar perfil</button>
+                                </li>
+                                <li class="px-5 py-3 transition duration-200 hover:bg-gray-100">
+                                    <a href="@Url.Action("Logout", "Login")" class="block font-semibold text-black">🚪 Cerrar Sesión</a>
+                                </li>
+                            </ul>
+                        </div>
+                    }
+                    else
+                    {
+                        <a href="@Url.Action("Login", "Login")" class="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 text-center md:px-6 md:py-3 md:text-lg">Únete a nosotros</a>
+                    }
+                </div>
             </div>
         </nav>
 
-        <!-- Botón para mostrar las opciones en móviles -->
         <button id="admin-menu-toggle" class="block w-full bg-gray-300 py-2 text-center font-bold text-black md:hidden">
             Menú de Administración ⬇
         </button>
 
-        <!-- Contenedor con alineación corregida -->
         <div id="admin-menu" class="hidden justify-center bg-gray-200 py-2 md:flex">
             <ul class="flex flex-col text-center text-sm md:flex-row md:space-x-6 md:text-left">
 
@@ -208,7 +174,9 @@
                             </a>
                         </li>
                     }
-                } else {
+                }
+                else
+                {
                     <li class="group">
                         <a href="@Url.Action("Login", "Login")" class="text-black group-hover:text-green-600">
                             ¡Publica tu negocio o dejanos tu reseña!
@@ -216,7 +184,7 @@
                     </li>
                 }
             </ul>
-            </div>
+        </div>
 
     </header>
 
@@ -224,7 +192,6 @@
         @RenderBody()
     </main>
 
-    @await Html.PartialAsync("_Footer")
 
     <div id="edit-profile-modal" class="bg-opacity-50 fixed inset-0 z-50 flex hidden items-center justify-center bg-black">
         <div class="min-h-auto max-h-[80vh] w-auto max-w-6xl overflow-y-auto rounded-lg bg-white p-6 shadow-lg">
@@ -239,124 +206,121 @@
 
 
     <script>
-        const menuToggle = document.getElementById('menu-toggle');
-        const menuContainer = document.getElementById('menu-container');
+                document.addEventListener("DOMContentLoaded", function () {
+                    // Menú de navegación principal
+                    const menuToggle = document.getElementById('menu-toggle');
+                    const menuContainer = document.getElementById('menu-container');
 
-        if (menuToggle && menuContainer) {
-            menuToggle.addEventListener('click', () => {
-                menuContainer.classList.toggle('hidden');
+                    function resetMenuOnResize() {
+                        if (window.innerWidth >= 768) {
+                            menuContainer.classList.remove('hidden');
+                        } else {
+                            menuContainer.classList.add('hidden');
+                        }
+                    }
 
-                if (!menuContainer.classList.contains('hidden')) {
-                    menuContainer.style.position = 'absolute';
-                    menuContainer.style.top = '100%';
-                    menuContainer.style.left = '0';
-                    menuContainer.style.width = '100%';
-                } else {
-                    menuContainer.style.position = 'relative';
-                }
-            });
-        }
+                    if (menuToggle && menuContainer) {
+                        menuToggle.addEventListener('click', () => {
+                            menuContainer.classList.toggle('hidden');
+                        });
+                        window.addEventListener('resize', resetMenuOnResize);
+                        resetMenuOnResize();
+                    }
 
-        const userBtn = document.getElementById('user-btn');
-        const userMenu = document.getElementById('user-menu');
+                    // Menú de administración
+                    const adminMenuToggle = document.getElementById('admin-menu-toggle');
+                    const adminMenu = document.getElementById('admin-menu');
 
-        if (userBtn && userMenu) {
-            userBtn.addEventListener('click', () => {
-                userMenu.classList.toggle('hidden');
-            });
+                    function resetAdminMenuOnResize() {
+                        if (window.innerWidth >= 768) {
+                            adminMenu.classList.remove('hidden');
+                        } else {
+                            adminMenu.classList.add('hidden');
+                        }
+                    }
 
-            document.addEventListener('click', (e) => {
-                if (!userBtn.contains(e.target) && !userMenu.contains(e.target)) {
-                    userMenu.classList.add('hidden');
-                }
-            });
-        }
+                    if (adminMenuToggle && adminMenu) {
+                        adminMenuToggle.addEventListener('click', () => {
+                            adminMenu.classList.toggle('hidden');
+                        });
+                        window.addEventListener('resize', resetAdminMenuOnResize);
+                        resetAdminMenuOnResize();
+                    }
+                });
 
-        const adminMenuToggle = document.getElementById('admin-menu-toggle');
-        const adminMenu = document.getElementById('admin-menu');
+                document.addEventListener("DOMContentLoaded", function () {
+                    const editProfileBtn = document.getElementById("open-edit-profile");
+                    const editProfileModal = document.getElementById("edit-profile-modal");
+                    const editProfileContent = document.getElementById("edit-profile-content");
+                    const closeEditProfileBtn = document.getElementById("close-edit-profile");
 
-        if (adminMenuToggle && adminMenu) {
-            adminMenuToggle.addEventListener('click', () => {
-                adminMenu.classList.toggle('hidden');
+                    if (editProfileBtn && editProfileModal) {
+                        editProfileBtn.addEventListener("click", function () {
+                            // Cargar la vista de edición de perfil con AJAX
+                            fetch("@Url.Action("Actualizar", "Usuarios")")
+                                .then(response => response.text())
+                                .then(html => {
+                                    editProfileContent.innerHTML = html;
+                                    editProfileModal.classList.remove("hidden");
+                                })
+                                .catch(error => console.error("Error al cargar la vista:", error));
+                        });
 
-                if (!adminMenu.classList.contains('hidden')) {
-                    adminMenu.style.position = 'absolute';
-                    adminMenu.style.top = '100%';
-                    adminMenu.style.left = '0';
-                    adminMenu.style.width = '100%';
-                } else {
-                    adminMenu.style.position = 'relative';
-                }
-            });
-        }
+                        closeEditProfileBtn.addEventListener("click", function () {
+                            editProfileModal.classList.add("hidden");
+                            editProfileContent.innerHTML = ""; // Limpiar contenido al cerrar
+                        });
 
-        
-    </script>
-
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            // Mapeo de secciones en la vista principal y sus respectivas rutas en otras vistas
-            const sections = [
-                { id: "categories-container", url: "/Categorias/Listar" },
-                { id: "ofertas-container", url: "/OfertasFlash/ConsultarTodo" },
-                { id: "promociones-container", url: "/Promociones/Listar" }
-            ];
-
-            // Detectar si estamos en la vista principal
-            const isHome = window.location.pathname === "/" || window.location.pathname.includes("Index");
-
-            sections.forEach(section => {
-                const link = document.querySelector(`a[href="#${section.id}"]`);
-
-                if (link) {
-                    if (!isHome) {
-                        // Si no estamos en la página principal, cambiar la URL a la vista correspondiente
-                        link.setAttribute("href", section.url);
-                    } else {
-                        // Si estamos en la página principal, permitir el scroll suave
-                        link.addEventListener("click", function (e) {
-                            e.preventDefault();
-                            document.querySelector(`#${section.id}`).scrollIntoView({ behavior: "smooth" });
+                        editProfileModal.addEventListener("click", function (event) {
+                            if (event.target === editProfileModal) {
+                                editProfileModal.classList.add("hidden");
+                                editProfileContent.innerHTML = "";
+                            }
                         });
                     }
+                });
+                document.addEventListener("DOMContentLoaded", function () {
+            const adminMenu = document.getElementById('admin-menu');
+            const adminMenuToggle = document.getElementById('admin-menu-toggle');
+
+            function resetAdminMenuOnResize() {
+                if (window.innerWidth >= 768) {
+                    adminMenu.classList.remove('hidden');
+                    adminMenu.style.position = '';
+                    adminMenu.style.top = '';
+                    adminMenu.style.left = '';
+                    adminMenu.style.width = '';
+                } else {
+                    adminMenu.classList.add('hidden');
                 }
-            });
+            }
+
+            window.addEventListener('resize', resetAdminMenuOnResize);
+            resetAdminMenuOnResize();
         });
-    </script>
 
-    <script>
         document.addEventListener("DOMContentLoaded", function () {
-            const editProfileBtn = document.getElementById("open-edit-profile");
-            const editProfileModal = document.getElementById("edit-profile-modal");
-            const editProfileContent = document.getElementById("edit-profile-content");
-            const closeEditProfileBtn = document.getElementById("close-edit-profile");
+            const userBtn = document.getElementById("user-btn");
+            const userMenu = document.getElementById("user-menu");
 
-            if (editProfileBtn && editProfileModal) {
-                editProfileBtn.addEventListener("click", function () {
-                    // Cargar la vista de edición de perfil con AJAX
-                    fetch("@Url.Action("Actualizar", "Usuarios")")
-                        .then(response => response.text())
-                        .then(html => {
-                            editProfileContent.innerHTML = html;
-                            editProfileModal.classList.remove("hidden");
-                        })
-                        .catch(error => console.error("Error al cargar la vista:", error));
+            if (userBtn && userMenu) {
+                userBtn.addEventListener("click", function (e) {
+                    e.stopPropagation();
+                    userMenu.classList.toggle("hidden");
                 });
 
-                closeEditProfileBtn.addEventListener("click", function () {
-                    editProfileModal.classList.add("hidden");
-                    editProfileContent.innerHTML = ""; // Limpiar contenido al cerrar
-                });
-
-                editProfileModal.addEventListener("click", function (event) {
-                    if (event.target === editProfileModal) {
-                        editProfileModal.classList.add("hidden");
-                        editProfileContent.innerHTML = "";
+                // Cierra el menú si se hace clic fuera
+                document.addEventListener("click", function (e) {
+                    if (!userMenu.classList.contains("hidden")) {
+                        if (!userMenu.contains(e.target) && e.target !== userBtn) {
+                            userMenu.classList.add("hidden");
+                        }
                     }
                 });
             }
         });
     </script>
+    @await Html.PartialAsync("_Footer")
 
 </body>
 

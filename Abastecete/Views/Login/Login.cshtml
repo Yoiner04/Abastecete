@@ -16,6 +16,10 @@
 </head>
 
 <body>
+    @{
+       var bannerSesion = ViewBag.BannerSesion as List<(BusinessLogic.Models.BannerModel, BusinessLogic.Models.ImagenModel)> ?? new();
+
+    }
     <div class="login-container">
         <div class="login-box">
 
@@ -60,10 +64,11 @@
                         }
                         else
                         {
-                            <a href="/Login/LoginWithGoogle" class="btn btn-light">
+                            <a asp-controller="Login" asp-action="LoginWithGoogle" class="btn btn-light">
                                 <img src="https://developers.google.com/identity/images/g-logo.png" width="20" />
                                 Iniciar sesión con Google
                             </a>
+
                         }
                     </div>
                 </div>
@@ -76,11 +81,28 @@
                 <a href="/" class="btn-back">Regresar</a>
             </div>
         </div>
-        <div class="image-section">
-            <img src="~/css/Images/login.png" alt="Promoción" style="width: 100%; height: auto;" />
-        </div>
+        <div id="galeriaSesion" class="image-section">
+
+         </div>
     </div>
 
+    <script>
+        function cargarBannersSesion() {
+        fetch("/Banners/ListarBannersSesion")
+            .then(response => response.json())
+            .then(banners => {
+                const galeria = document.getElementById("galeriaSesion");
+                galeria.innerHTML = "";
+
+                banners.forEach(banner => {
+                    galeria.innerHTML += `
+                            <img src="${banner.base64}" alt="${banner.nombre}" style="width: 100%; height: auto;">
+                    `;
+                });
+            })
+            .catch(error => console.error("Error cargando banners:", error));
+    }
+    </script>
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             const form = document.getElementById("loginForm");
@@ -128,6 +150,7 @@
                 }
             });
         });
+        cargarBannersSesion();
     </script>
 
     <!-- Estilo para los bordes rojos -->

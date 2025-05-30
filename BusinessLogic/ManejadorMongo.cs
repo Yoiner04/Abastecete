@@ -3,6 +3,9 @@ using MongoDB.Driver;
 using MongoDB.Bson;
 using BusinessLogic.Models;
 using Microsoft.AspNetCore.Http;
+using Image = SixLabors.ImageSharp.Image;
+using SixLabors.ImageSharp.Formats.Webp;
+
 
 namespace BusinessLogic
 {
@@ -13,6 +16,7 @@ namespace BusinessLogic
         private readonly GridFSBucket _gridFS;
         public ManejadorMongo()
         {
+
             var cliente = new MongoClient("mongodb+srv://websencol:%40WenSEN.Col_2024@websen.kgr8b.mongodb.net/WebSEN?retryWrites=true&w=majority");
             _db = cliente.GetDatabase("abastecete");
             _gridFS = new GridFSBucket(_db);
@@ -52,26 +56,54 @@ namespace BusinessLogic
         }
 
 
-        public string SubirImagen(IFormFile archivo)
+        public string SubirImagen(IFormFile archivo, int calidad = 75)
         {
             try
             {
+                // Cargar imagen desde el stream
                 using var stream = archivo.OpenReadStream();
-                var memory = new MemoryStream();
-                stream.CopyTo(memory);
-                var bytes = memory.ToArray();
+                using var image = Image.Load(stream);
+
+                // Eliminar metadata innecesaria para reducir peso
+                image.Metadata.ExifProfile = null;
+                image.Metadata.IccProfile = null;
+
+                // Redimensionar a un máximo de 1920x1080 manteniendo proporción
+                image.Mutate(x => x.Resize(new ResizeOptions
+                {
+                    Mode = ResizeMode.Max,
+                    Size = new Size(1920, 1080)
+                }));
+
+                // Guardar en WebP con compresión ajustable
+                using var memoryStream = new MemoryStream();
+                var encoder = new WebpEncoder
+                {
+                    Quality = calidad,
+                    FileFormat = WebpFileFormatType.Lossy,
+                    NearLossless = false,
+                    Method = WebpEncodingMethod.BestQuality
+                };
+                image.Save(memoryStream, encoder);
+                memoryStream.Position = 0;
+
+                // Preparar subida a GridFS como .webp
+                var fileName = Path.GetFileNameWithoutExtension(archivo.FileName) + ".webp";
                 var options = new GridFSUploadOptions
                 {
-                    Metadata = new BsonDocument { { "ContentType", archivo.ContentType } }
+                    Metadata = new BsonDocument { { "ContentType", "image/webp" } }
                 };
-                var id = _gridFS.UploadFromStream(archivo.FileName, new MemoryStream(bytes), options);
+                var id = _gridFS.UploadFromStream(fileName, memoryStream, options);
+
+
                 return id.ToString();
             }
             catch (Exception ex)
             {
                 Console.WriteLine("❌ Error al subir imagen a GridFS: " + ex.Message);
+                return null;
             }
-            return null;
+
         }
 
         public string updateImage(IFormFile archivo, string id)
@@ -364,6 +396,144 @@ namespace BusinessLogic
 
             banners.DeleteOne(b => b.Id == id);
         }
+
+        public string AgregarBannerSesion(IFormFile archivo)
+        {
+            var banners = _db.GetCollection<BannerModel>("banners");
+
+            var fileId = SubirImagen(archivo);
+
+            var banner = new BannerModel
+            {
+                FileId = fileId,
+                Nombre = $"banner_sesion_{DateTime.UtcNow.Ticks}",
+                Tipo = "sesion",
+                Formato = "1:1",
+                Activo = true,
+                FechaRegistro = DateTime.UtcNow
+            };
+
+            banners.InsertOne(banner);
+
+            return banner.Id;
+        }
+
+        public List<BannerModel> ListarBannersSesion()
+        {
+            var banners = _db.GetCollection<BannerModel>("banners");
+
+            var filtro = Builders<BannerModel>.Filter.And(
+                Builders<BannerModel>.Filter.Eq(b => b.Tipo, "sesion"),
+                Builders<BannerModel>.Filter.Eq(b => b.Activo, true)
+            );
+
+            return banners.Find(filtro).SortByDescending(b => b.FechaRegistro).ToList();
+        }
+
+        public string ReemplazarBannerSesion(string bannerId, IFormFile archivo)
+        {
+            var banners = _db.GetCollection<BannerModel>("banners");
+
+            var banner = banners.Find(b => b.Id == bannerId).FirstOrDefault();
+            if (banner == null)
+                throw new Exception("❌ Banner no encontrado.");
+
+            // Eliminar imagen anterior
+            if (!string.IsNullOrEmpty(banner.FileId))
+            {
+                try
+                {
+                    _gridFS.Delete(new ObjectId(banner.FileId));
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"⚠️ Error eliminando imagen anterior: {ex.Message}");
+                }
+            }
+
+            // Subir nueva imagen usando SubirImagen
+            var newFileId = SubirImagen(archivo);
+
+            // Actualizar documento
+            var update = Builders<BannerModel>.Update
+                .Set(b => b.FileId, newFileId)
+                .Set(b => b.FechaRegistro, DateTime.UtcNow);
+
+            banners.UpdateOne(b => b.Id == bannerId, update);
+
+            return bannerId;
+        }
+
+
+
+
+        public string AgregarBannerOfertas(IFormFile archivo)
+        {
+            var banners = _db.GetCollection<BannerModel>("banners");
+
+            var fileId = SubirImagen(archivo);
+
+            var banner = new BannerModel
+            {
+                FileId = fileId,
+                Nombre = $"banner_ofertas_{DateTime.UtcNow.Ticks}",
+                Tipo = "ofertas",
+                Formato = "1:1",
+                Activo = true,
+                FechaRegistro = DateTime.UtcNow
+            };
+
+            banners.InsertOne(banner);
+
+            return banner.Id;
+        }
+
+        public List<BannerModel> ListarBannersOfertas()
+        {
+            var banners = _db.GetCollection<BannerModel>("banners");
+
+            var filtro = Builders<BannerModel>.Filter.And(
+                Builders<BannerModel>.Filter.Eq(b => b.Tipo, "ofertas"),
+                Builders<BannerModel>.Filter.Eq(b => b.Activo, true)
+            );
+
+            return banners.Find(filtro).SortByDescending(b => b.FechaRegistro).ToList();
+        }
+
+        public string ReemplazarBannerOfertas(string bannerId, IFormFile archivo)
+        {
+            var banners = _db.GetCollection<BannerModel>("banners");
+
+            var banner = banners.Find(b => b.Id == bannerId).FirstOrDefault();
+            if (banner == null)
+                throw new Exception("❌ Banner no encontrado.");
+
+            // Eliminar imagen anterior
+            if (!string.IsNullOrEmpty(banner.FileId))
+            {
+                try
+                {
+                    _gridFS.Delete(new ObjectId(banner.FileId));
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"⚠️ Error eliminando imagen anterior: {ex.Message}");
+                }
+            }
+            
+            // Subir nueva imagen usando SubirImagen
+            var newFileId = SubirImagen(archivo);
+
+            // Actualizar documento
+            var update = Builders<BannerModel>.Update
+                .Set(b => b.FileId, newFileId)
+                .Set(b => b.FechaRegistro, DateTime.UtcNow);
+
+            banners.UpdateOne(b => b.Id == bannerId, update);
+
+            return bannerId;
+        }
+
 
     }
 }

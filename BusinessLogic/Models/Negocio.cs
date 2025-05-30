@@ -21,6 +21,11 @@ namespace BusinessLogic.Models
         public string? LogotipoId { get; set; }
         public IFormFile? logotipoArchivo { get; set; }
         public ImagenModel imagen { get; set; }
+        public string BannerId { get; set; }
+        public ImagenModel BannerImagen { get; set; }
+
+        public string Descripcion { get; set; }
+
 
     }
 }

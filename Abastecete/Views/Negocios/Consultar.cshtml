@@ -25,8 +25,18 @@
 
 <body class="bg-[#F4F1E9] text-gray-800">
     <section class="flex w-full items-center justify-center overflow-hidden rounded-lg bg-gray-200">
-        <img src="@ViewBag.categoria.BannerImagen.Base64" alt="Banner Proveedores"
-             class="max-h-64 w-full object-cover" />
+        @if (ViewBag.categoria.BannerImagen != null)
+        {
+            <img src="@ViewBag.categoria.BannerImagen.Base64" alt="Banner Proveedores"
+                 class="max-h-64 w-full object-cover" />
+        }
+        else
+        {
+            <div class="flex h-64 w-full items-center justify-center bg-gray-300 text-gray-500">
+                Sin imagen
+            </div>
+        }
+
     </section>
 
     <div class="flex flex-wrap items-center justify-between bg-white p-4 shadow-md">

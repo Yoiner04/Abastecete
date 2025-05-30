@@ -1,4 +1,4 @@
-﻿
+
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -289,6 +289,137 @@ namespace Abastecete.Controllers
             }
         }
 
+        [HttpPost]
+        public IActionResult AgregarBannerSesion(IFormFile imagen)
+        {
+            if (imagen == null)
+                return BadRequest(new { mensaje = "Debes seleccionar una imagen." });
 
+            try
+            {
+                _manejadorMongo.AgregarBannerSesion(imagen);
+                return Json(new { mensaje = "Banner agregado correctamente." });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ Error al agregar banner: {ex.Message}");
+                return BadRequest(new { mensaje = "Error al agregar banner." });
+            }
+        }
+
+        [HttpGet]
+        public IActionResult ListarBannersSesion()
+        {
+            try
+            {
+                var banners = _manejadorMongo.ListarBannersSesion();
+                var resultado = new List<object>();
+
+                foreach (var banner in banners)
+                {
+                    var imagen = _manejadorMongo.ObtenerImagen(banner.FileId);
+                    resultado.Add(new
+                    {
+                        id = banner.Id,
+                        nombre = banner.Nombre,
+                        base64 = imagen?.Base64 ?? "",
+                        tipo = banner.Formato // "16:9" o "1:1"
+                    });
+                }
+
+                return Json(resultado);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ Error al listar banners de inicio: {ex.Message}");
+                return BadRequest(new { mensaje = "Error al listar banners de inicio." });
+            }
+        }
+
+        [HttpPost]
+        public IActionResult ReemplazarBannerSesion(string id, IFormFile imagen)
+        {
+            if (string.IsNullOrEmpty(id) || imagen == null)
+                return BadRequest(new { mensaje = "Faltan datos." });
+
+            try
+            {
+                _manejadorMongo.ReemplazarBannerSesion(id, imagen);
+                return Json(new { mensaje = "Banner reemplazado correctamente." });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ Error al reemplazar banner: {ex.Message}");
+                return BadRequest(new { mensaje = "Error al reemplazar banner." });
+            }
+        }
+
+
+
+
+        [HttpPost]
+        public IActionResult AgregarBannerOfertas(IFormFile imagen)
+        {
+            if (imagen == null)
+                return BadRequest(new { mensaje = "Debes seleccionar una imagen." });
+
+            try
+            {
+                _manejadorMongo.AgregarBannerOfertas(imagen);
+                return Json(new { mensaje = "Banner agregado correctamente." });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ Error al agregar banner: {ex.Message}");
+                return BadRequest(new { mensaje = "Error al agregar banner." });
+            }
+        }
+
+        [HttpGet]
+        public IActionResult ListarBannersOfertas()
+        {
+            try
+            {
+                var banners = _manejadorMongo.ListarBannersOfertas();
+                var resultado = new List<object>();
+
+                foreach (var banner in banners)
+                {
+                    var imagen = _manejadorMongo.ObtenerImagen(banner.FileId);
+                    resultado.Add(new
+                    {
+                        id = banner.Id,
+                        nombre = banner.Nombre,
+                        base64 = imagen?.Base64 ?? "",
+                        tipo = banner.Formato // "16:9" o "1:1"
+                    });
+                }
+
+                return Json(resultado);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ Error al listar banners de inicio: {ex.Message}");
+                return BadRequest(new { mensaje = "Error al listar banners de inicio." });
+            }
+        }
+
+        [HttpPost]
+        public IActionResult ReemplazarBannerOfertas(string id, IFormFile imagen)
+        {
+            if (string.IsNullOrEmpty(id) || imagen == null)
+                return BadRequest(new { mensaje = "Faltan datos." });
+
+            try
+            {
+                _manejadorMongo.ReemplazarBannerOfertas(id, imagen);
+                return Json(new { mensaje = "Banner reemplazado correctamente." });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ Error al reemplazar banner: {ex.Message}");
+                return BadRequest(new { mensaje = "Error al reemplazar banner." });
+            }
+        }
     }
 }
