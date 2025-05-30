@@ -1,4 +1,4 @@
-﻿ @using BusinessLogic.Utilidades
+﻿@using BusinessLogic.Utilidades
 @using Microsoft.AspNetCore.Http
 @inject IHttpContextAccessor HttpContextAccessor
 @model List<BusinessLogic.Models.Categoria>
@@ -70,7 +70,7 @@
                 </button>
             </div>
 
-            <div class="flex h-[200px] w-full gap-2 sm:flex-col sm:w-[200px] sm:h-[250px] lg:w-[250px] lg:h-[400px]">
+            <div class="flex h-[200px] w-full gap-2 sm:flex-col sm:w-[200px] sm:h-[250px] lg:w-[250px] lg:h-[400px] lateral-full-mobile">
                 <div class="h-1/2 flex-1">
                     <img src="@imgIzquierda" alt="Imagen lateral 1"
                          class="h-full w-full rounded-lg object-cover">
@@ -139,6 +139,36 @@
                     updateImage();
                 }, 5000);
             }
+        });
+    </script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            function ajustarAlturaLaterales() {
+                if (window.innerWidth < 640) {
+                    var carrusel = document.querySelector('.relative.h-\\[200px\\].w-full');
+                    var laterales = document.querySelector('.lateral-full-mobile');
+                    if (carrusel && laterales) {
+                        laterales.style.height = carrusel.offsetHeight + "px";
+                        var hijos = laterales.querySelectorAll('div');
+                        hijos.forEach(function (hijo) {
+                            hijo.style.height = "100%";
+                        });
+                    }
+                } else {
+                    var laterales = document.querySelector('.lateral-full-mobile');
+                    if (laterales) {
+                        laterales.style.height = "";
+                        var hijos = laterales.querySelectorAll('div');
+                        hijos.forEach(function (hijo) {
+                            hijo.style.height = "";
+                        });
+                    }
+                }
+            }
+
+            ajustarAlturaLaterales();
+            window.addEventListener('resize', ajustarAlturaLaterales);
         });
     </script>
 
@@ -223,12 +253,30 @@
             </div>
         }else
         {
-            <div class="mt-6 flex justify-center">
-                <img src="~/images/sinOfertas.jpg" alt="Sin Ofertas" class="h-auto w-full max-w-5xl rounded-lg shadow-md">
+            <div class="mt-6 flex justify-center" id="galeriaOfertas">
+
             </div>
         }
 
     </section>
+    <script>
+        function cargarBannersOfertas() {
+            fetch("/Banners/ListarBannersOfertas")
+                .then(response => response.json())
+                .then(banners => {
+                    const galeria = document.getElementById("galeriaOfertas");
+                    galeria.innerHTML = "";
+
+                    banners.forEach(banner => {
+                        galeria.innerHTML += `
+                                <img src="${banner.base64}" alt="${banner.nombre}" class="h-auto w-full max-w-5xl rounded-lg shadow-md">
+                        `;
+                    });
+                })
+                .catch(error => console.error("Error cargando banners:", error));
+        }
+        cargarBannersOfertas();
+    </script>
     <script>
         function actualizarContadores() {
         document.querySelectorAll(".countdown-timer").forEach(timer => {

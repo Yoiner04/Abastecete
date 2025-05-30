@@ -2,6 +2,7 @@
 using BusinessLogic.Models;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
+using System.Diagnostics;
 using static System.Net.Mime.MediaTypeNames;
 
 namespace Abastecete.Controllers
@@ -43,9 +44,9 @@ namespace Abastecete.Controllers
         }
 
         [HttpPost]
-        public IActionResult Editar(int Id, string Nombre, string Descripcion, float Costo, int Estado)
+        public IActionResult Editar(int Id, string Nombre, string Descripcion, float Costo, float Costo_trimestral, float Costo_semestral, float Costo_anual, int Duracion, int Cantidad, int Estado)
         {
-            var membresia = new Membresia { Id = Id, Nombre = Nombre, Descripcion = Descripcion, Costo = Costo, Estado = Estado };
+            var membresia = new Membresia { Id = Id, Nombre = Nombre, Descripcion = Descripcion, Costo = Costo, Estado = Estado, Cantidad = Cantidad, Duracion = Duracion, Costo_trimestral = Costo_trimestral, Costo_semestral = Costo_semestral, Costo_anual = Costo_anual };
             string mensaje = manejadorMembresias.EditarMembresia(membresia);
             return Json(new { mensaje });
         }
@@ -55,11 +56,15 @@ namespace Abastecete.Controllers
         public IActionResult ObtenerMembresia([FromQuery] int id)
         {
             Membresia membresia = manejadorMembresias.ObtenerMembresia(id);
+
             if (membresia != null)
             {
                 return Json(membresia);
             }
+
+            Debug.WriteLine("Membresía no encontrada");
             return NotFound();
         }
+
     }
 }

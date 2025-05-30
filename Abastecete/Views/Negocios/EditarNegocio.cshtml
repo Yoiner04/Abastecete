@@ -20,6 +20,11 @@
             @Html.TextBoxFor(m => m.Direccion, new { @class = "w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring focus:ring-green-400", @id = "searchLocation" })
         </div>
 
+         <div>
+            <label class="block font-medium">Descripción del negocio</label>
+            @Html.TextBoxFor(m => m.Descripcion, new { @class = "w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring focus:ring-green-400"})
+        </div>
+
         <div>
             <label class="mb-1 block text-sm font-medium text-gray-700">Teléfono / WhatsApp</label>
             @Html.TextBoxFor(m => m.Telefono, new { @class = "w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring focus:ring-green-400" })
@@ -63,19 +68,40 @@
                     var imagen = tuple.Item2;
                     <label class="block cursor-pointer">
                         <input type="radio"
-                               name="SelectedBannerFileId"
+                               name="BannerId"
                                value="@banner.FileId"
-                               class="peer hidden" />
+                               class="peer hidden"
+                               @(Model.BannerId == banner.FileId ? "checked" : "")"/>
                         <img src="@imagen.Base64"
                              alt="Banner @banner.FileId"
                              class="h-32 w-full rounded-lg border border-gray-200 object-contain peer-checked:border-green-500 peer-checked:ring-2 peer-checked:ring-green-500" />
                     </label>
                 }
             </div>
+            @Html.HiddenFor(m => m.BannerId)
         </div>
-
     }
 </div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const radios = document.querySelectorAll('input[name="BannerId"]');
+        const hiddenInput = document.querySelector('input[name="BannerId"][type="hidden"]');
+
+        radios.forEach(radio => {
+            radio.addEventListener("change", function () {
+                if (this.checked) {
+                    hiddenInput.value = this.value;
+                }
+            });
+
+            // Al cargar la página, si algún radio está marcado, sincronizarlo también
+            if (radio.checked) {
+                hiddenInput.value = radio.value;
+            }
+        });
+    });
+</script>
 
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAPudyk3G3YG7GOEpId4xMK_WFIEenOSp8&libraries=places"></script>
     <script>

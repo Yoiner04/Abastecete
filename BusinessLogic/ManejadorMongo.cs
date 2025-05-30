@@ -394,5 +394,142 @@ namespace BusinessLogic
             banners.DeleteOne(b => b.Id == id);
         }
 
+        public string AgregarBannerSesion(IFormFile archivo)
+        {
+            var banners = _db.GetCollection<BannerModel>("banners");
+
+            var fileId = SubirImagen(archivo);
+
+            var banner = new BannerModel
+            {
+                FileId = fileId,
+                Nombre = $"banner_sesion_{DateTime.UtcNow.Ticks}",
+                Tipo = "sesion",
+                Formato = "1:1",
+                Activo = true,
+                FechaRegistro = DateTime.UtcNow
+            };
+
+            banners.InsertOne(banner);
+
+            return banner.Id;
+        }
+
+        public List<BannerModel> ListarBannersSesion()
+        {
+            var banners = _db.GetCollection<BannerModel>("banners");
+
+            var filtro = Builders<BannerModel>.Filter.And(
+                Builders<BannerModel>.Filter.Eq(b => b.Tipo, "sesion"),
+                Builders<BannerModel>.Filter.Eq(b => b.Activo, true)
+            );
+
+            return banners.Find(filtro).SortByDescending(b => b.FechaRegistro).ToList();
+        }
+
+        public string ReemplazarBannerSesion(string bannerId, IFormFile archivo)
+        {
+            var banners = _db.GetCollection<BannerModel>("banners");
+
+            var banner = banners.Find(b => b.Id == bannerId).FirstOrDefault();
+            if (banner == null)
+                throw new Exception("❌ Banner no encontrado.");
+
+            // Eliminar imagen anterior
+            if (!string.IsNullOrEmpty(banner.FileId))
+            {
+                try
+                {
+                    _gridFS.Delete(new ObjectId(banner.FileId));
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"⚠️ Error eliminando imagen anterior: {ex.Message}");
+                }
+            }
+
+            // Subir nueva imagen usando SubirImagen
+            var newFileId = SubirImagen(archivo);
+
+            // Actualizar documento
+            var update = Builders<BannerModel>.Update
+                .Set(b => b.FileId, newFileId)
+                .Set(b => b.FechaRegistro, DateTime.UtcNow);
+
+            banners.UpdateOne(b => b.Id == bannerId, update);
+
+            return bannerId;
+        }
+
+
+
+
+        public string AgregarBannerOfertas(IFormFile archivo)
+        {
+            var banners = _db.GetCollection<BannerModel>("banners");
+
+            var fileId = SubirImagen(archivo);
+
+            var banner = new BannerModel
+            {
+                FileId = fileId,
+                Nombre = $"banner_ofertas_{DateTime.UtcNow.Ticks}",
+                Tipo = "ofertas",
+                Formato = "1:1",
+                Activo = true,
+                FechaRegistro = DateTime.UtcNow
+            };
+
+            banners.InsertOne(banner);
+
+            return banner.Id;
+        }
+
+        public List<BannerModel> ListarBannersOfertas()
+        {
+            var banners = _db.GetCollection<BannerModel>("banners");
+
+            var filtro = Builders<BannerModel>.Filter.And(
+                Builders<BannerModel>.Filter.Eq(b => b.Tipo, "ofertas"),
+                Builders<BannerModel>.Filter.Eq(b => b.Activo, true)
+            );
+
+            return banners.Find(filtro).SortByDescending(b => b.FechaRegistro).ToList();
+        }
+
+        public string ReemplazarBannerOfertas(string bannerId, IFormFile archivo)
+        {
+            var banners = _db.GetCollection<BannerModel>("banners");
+
+            var banner = banners.Find(b => b.Id == bannerId).FirstOrDefault();
+            if (banner == null)
+                throw new Exception("❌ Banner no encontrado.");
+
+            // Eliminar imagen anterior
+            if (!string.IsNullOrEmpty(banner.FileId))
+            {
+                try
+                {
+                    _gridFS.Delete(new ObjectId(banner.FileId));
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"⚠️ Error eliminando imagen anterior: {ex.Message}");
+                }
+            }
+            
+            // Subir nueva imagen usando SubirImagen
+            var newFileId = SubirImagen(archivo);
+
+            // Actualizar documento
+            var update = Builders<BannerModel>.Update
+                .Set(b => b.FileId, newFileId)
+                .Set(b => b.FechaRegistro, DateTime.UtcNow);
+
+            banners.UpdateOne(b => b.Id == bannerId, update);
+
+            return bannerId;
+        }
+
     }
 }

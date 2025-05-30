@@ -1,8 +1,9 @@
-﻿using DataAccess;
+﻿using BusinessLogic.Models;
+using DataAccess;
+using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
 using System.Data;
-using BusinessLogic.Models;
 
 namespace BusinessLogic
 {
@@ -46,11 +47,11 @@ namespace BusinessLogic
                     Id = Convert.ToInt32(row["PK_ID_TIPO_MEMBRESIA"]),
                     Nombre = row["NOMBRE"].ToString(),
                     Descripcion = row["DESCRIPCION"].ToString(),
-                    Costo = float.Parse(row["COSTO"] + ""),
+                    Costo = float.Parse(row["COSTO"].ToString()),
                     Estado = Convert.ToInt32(row["ESTADO"]),
-                    Costo_trimestral = Convert.ToInt32(row["COSTO_TRIMESTRAL"]),
-                    Costo_semestral = Convert.ToInt32(row["COSTO_SEMESTRAL"]),
-                    Costo_anual = Convert.ToInt32(row["COSTO_ANUAL"])
+                    Costo_trimestral = float.Parse(row["COSTO_TRIMESTRAL"].ToString()),
+                    Costo_semestral = float.Parse(row["COSTO_SEMESTRAL"].ToString()),
+                    Costo_anual = float.Parse(row["COSTO_ANUAL"].ToString())
                 });
             }
             return membresias;
@@ -65,7 +66,12 @@ namespace BusinessLogic
                 new Parametro("p_nombre", membresia.Nombre),
                 new Parametro("p_descripcion", membresia.Descripcion),
                 new Parametro("p_costo", membresia.Costo),
-                new Parametro("p_estado", membresia.Estado)
+                new Parametro("p_estado", membresia.Estado),
+                new Parametro("p_duracion", membresia.Duracion),
+                new Parametro("p_cantidad", membresia.Cantidad),
+                new Parametro("p_costo_trimestral", membresia.Costo_trimestral),
+                new Parametro("p_costo_semestral", membresia.Costo_semestral),
+                new Parametro("p_costo_anual", membresia.Costo_anual)
             };
 
             bool resultado = conexion.EjecutarTransaccion("editar_tipo_membresia", parametros);
@@ -75,22 +81,32 @@ namespace BusinessLogic
         // Obtener una membresía por ID
         public Membresia ObtenerMembresia(int id)
         {
-            DataTable datos = conexion.EjecutarConsulta("consultar_tipo_membresia");
-            DataRow row = datos.AsEnumerable().FirstOrDefault(r => Convert.ToInt32(r["PK_ID_TIPO_MEMBRESIA"]) == id);
-
-            if (row != null)
+            List<Parametro> parametros = new List<Parametro>
             {
+                new Parametro("id_membresia", id)
+            };
+
+            DataTable datos = conexion.EjecutarConsulta("consultar_tipo_membresia_por_id", parametros);
+            if (datos.Rows.Count > 0)
+            {
+                DataRow row = datos.Rows[0];
                 return new Membresia
                 {
                     Id = Convert.ToInt32(row["PK_ID_TIPO_MEMBRESIA"]),
                     Nombre = row["NOMBRE"].ToString(),
                     Descripcion = row["DESCRIPCION"].ToString(),
-                    Costo = float.Parse(row["COSTO"] + ""),
-                    Estado = Convert.ToInt32(row["ESTADO"])
+                    Costo = float.Parse(row["COSTO"].ToString()),
+                    Estado = Convert.ToInt32(row["ESTADO"]),
+                    Duracion = Convert.ToInt32(row["DURACION_OFERTA"]),
+                    Cantidad = Convert.ToInt32(row["CANTIDAD_PRODUCTOS"]),
+                    Costo_trimestral = float.Parse(row["COSTO_TRIMESTRAL"].ToString()),
+                    Costo_semestral = float.Parse(row["COSTO_SEMESTRAL"].ToString()),
+                    Costo_anual = float.Parse(row["COSTO_ANUAL"].ToString())
                 };
             }
 
             return null;
         }
+
     }
 }
