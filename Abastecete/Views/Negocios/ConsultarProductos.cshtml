@@ -17,7 +17,11 @@
     <header class="flex items-center justify-between bg-[#F5EFE4] p-4 shadow-md">
         <div class="flex items-center gap-4">
             <div class="h-12 w-12 overflow-hidden rounded-md border bg-white">
-                <img src="@negocio?.imagen.Base64" alt="Logo negocio" class="h-full w-full object-cover" />
+            @if (!string.IsNullOrWhiteSpace(negocio?.BannerImagen?.Base64))
+            {
+                <img src="@negocio?.BannerImagen.Base64" alt="Logo negocio"
+                         class="h-full w-full object-cover" />
+            }
 
             </div>
             <h1 class="text-2xl font-bold text-gray-800">@negocio?.Nombre</h1>
@@ -80,7 +84,7 @@
                                                 "Productos",
                                                 new {idlocal= negocio?.Id, idProducto = producto.Id }
                                             )"
-                                class="mt-auto rounded-lg bg-[#1A2D3D] px-4 py-2 text-white hover:bg-[#162331]">
+                       class="mt-3 mx-auto w-1/2 rounded-lg bg-[#1A2D3D] px-2 py-1 text-sm text-white hover:bg-[#162331] block text-center">
                             Ver
                         </a>
                     </div>

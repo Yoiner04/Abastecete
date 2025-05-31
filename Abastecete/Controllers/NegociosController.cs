@@ -1,5 +1,7 @@
 using BusinessLogic;
 using BusinessLogic.Models;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Bson;
@@ -162,7 +164,13 @@ namespace Abastecete.Controllers
                 ManejadorRoles manejadorRoles = new ManejadorRoles();
                 bool rolAsignado = manejadorRoles.AsignarRol(2, usuarioId.Value);
 
+                await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme); // Cierra autenticación
+                HttpContext.Session.Clear();
+                Response.Cookies.Delete(".AspNetCore.Session");
+                Response.Cookies.Delete(".AspNetCore.Cookies");
+
                 return RedirectToAction("Login", "Login", new { negocioId = negocio.Id });
+
             }
             else
             {

@@ -25,8 +25,8 @@ builder.Services.AddAuthentication(options =>
 .AddCookie()
 .AddGoogle(options =>
 {
-    options.ClientId = "702810247533-mr5m7fa94hsvv8ui62v4df3kafovndn2.apps.googleusercontent.com";
-    options.ClientSecret = "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";
+    options.ClientId = "169045921628-am6cj2hhhpkthrqckqp3k9l667kp7ahb.apps.googleusercontent.com";
+    options.ClientSecret = "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";
     options.CallbackPath = "/signin-google";
 });
 
@@ -42,13 +42,6 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
-
-// Middleware
-if (!app.Environment.IsDevelopment())
-{
-    app.UseExceptionHandler("/Home/Error");
-    app.UseHsts();
-}
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
