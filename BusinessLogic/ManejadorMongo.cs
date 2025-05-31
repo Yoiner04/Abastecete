@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Image = SixLabors.ImageSharp.Image;
 using SixLabors.ImageSharp.Formats.Webp;
 
+
 namespace BusinessLogic
 {
 
@@ -15,7 +16,7 @@ namespace BusinessLogic
         private readonly GridFSBucket _gridFS;
         public ManejadorMongo()
         {
-            //var cliente = new MongoClient("mongodb://localhost:27017/");
+
             var cliente = new MongoClient("mongodb+srv://websencol:%40WenSEN.Col_2024@websen.kgr8b.mongodb.net/WebSEN?retryWrites=true&w=majority");
             _db = cliente.GetDatabase("abastecete");
             _gridFS = new GridFSBucket(_db);
@@ -94,6 +95,7 @@ namespace BusinessLogic
                 };
                 var id = _gridFS.UploadFromStream(fileName, memoryStream, options);
 
+
                 return id.ToString();
             }
             catch (Exception ex)
@@ -101,6 +103,7 @@ namespace BusinessLogic
                 Console.WriteLine("❌ Error al subir imagen a GridFS: " + ex.Message);
                 return null;
             }
+
         }
 
         public string updateImage(IFormFile archivo, string id)
@@ -530,6 +533,7 @@ namespace BusinessLogic
 
             return bannerId;
         }
+
 
     }
 }

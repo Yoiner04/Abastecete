@@ -1,4 +1,4 @@
-﻿using BusinessLogic;
+using BusinessLogic;
 using BusinessLogic.Models;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;

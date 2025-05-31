@@ -81,20 +81,24 @@
     </div>
 
     <main class="mt-10 w-full px-4 sm:px-6 lg:px-10">
+
         <div class="w-full transition-all">
             <div id="productosWrapper"
                  class="w-full rounded-lg border border-gray-300 bg-white p-4 shadow-md transition-all duration-300 sm:p-6">
 
                 <div class="flex items-center gap-2">
+
                     <a href="#" onclick="openMensajeModal()"
                        class="flex h-10 w-10 items-center justify-center rounded-md bg-gray-600 text-white transition hover:bg-gray-700">
                         <i class="fas fa-comment-dots text-sm"></i>
                     </a>
 
+
                     <a href="@Url.Action("AgregarProductNegocio", "Productos")"
                        class="flex h-10 w-10 items-center justify-center rounded-md bg-orange-500 text-white transition hover:bg-orange-600">
                         <i class="fas fa-plus text-sm"></i>
                     </a>
+
 
                     <a href="@Url.Action("EditarNegocio","Negocios")"
                        class="flex h-10 w-10 items-center justify-center rounded-md bg-orange-500 text-white transition hover:bg-orange-600">
@@ -103,6 +107,7 @@
                 </div>
                 <div id="productosContainer"
                      class="mt-5 grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+
                     @foreach (var producto in ViewBag.productos)
                     {
                         <div id="producto-@producto.Id"
@@ -121,12 +126,12 @@
                                 Ver
                             </a>
 
+
                         </div>
                     }
                 </div>
             </div>
         </div>
-
     </main>
 
 
