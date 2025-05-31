@@ -42,25 +42,21 @@ builder.Services.AddDistributedMemoryCache();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddControllersWithViews();
 
-builder.Services.Configure<ForwardedHeadersOptions>(options =>
-{
-    options.ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto;
-});
-
 
 var app = builder.Build();
 
-var env = app.Environment;
+builder.WebHost.ConfigureKestrel(serverOptions =>
+{
+    serverOptions.AddServerHeader = false;
+});
 
-if (env.IsDevelopment())
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
-    app.UseDeveloperExceptionPage(); // Muestra errores detallados
-}
-else
-{
-    app.UseExceptionHandler("/Home/Error"); // Redirige a una página de error genérica
-    app.UseHsts(); // Habilita HTTP Strict Transport Security
-}
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownNetworks.Clear(); // Permitir cualquier IP de proxy
+    options.KnownProxies.Clear();
+});
+
 
 app.UseForwardedHeaders();
 app.UseHttpsRedirection();
