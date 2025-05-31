@@ -187,6 +187,7 @@ namespace ConnectionProject.Controllers
 
                 int rol = data.Rows.Count > 0 ? Convert.ToInt32(data.Rows[0]["FK_ID_ROL"]) : 0;
 
+                // Si no existe, registrar nuevo usuario
                 if (rol == 0)
                 {
                     int userId = manejador.RegistrarUsuarioGoogle(email, name);
@@ -197,10 +198,18 @@ namespace ConnectionProject.Controllers
                     }
 
                     data = manejador.LoginGoogle(email);
-                    if (data.Rows.Count > 0)
-                    {
-                        rol = Convert.ToInt32(data.Rows[0]["FK_ID_ROL"]);
-                    }
+                    rol = data.Rows.Count > 0 ? Convert.ToInt32(data.Rows[0]["FK_ID_ROL"]) : 0;
+                }
+
+                if (data.Rows.Count > 0)
+                {
+                    int idUsuario = Convert.ToInt32(data.Rows[0]["PK_ID_USUARIO"]);
+                    int idPersona = Convert.ToInt32(data.Rows[0]["FK_ID_PERSONA"]);
+                    string membresia = data.Rows[0]["FK_ID_TIPOMEMBRESIA"]?.ToString() ?? "sin membresia";
+
+                    HttpContext.Session.SetInt32("idUsuario", idUsuario);
+                    HttpContext.Session.SetInt32("PersonaId", idPersona);
+                    HttpContext.Session.SetString("membresia", string.IsNullOrWhiteSpace(membresia) ? "sin membresia" : membresia);
                 }
 
                 HttpContext.Session.SetString("userEmail", email);
@@ -208,6 +217,11 @@ namespace ConnectionProject.Controllers
                 HttpContext.Session.SetInt32("userRol", rol);
 
                 GuardarPermisosRol(rol);
+
+                await HttpContext.SignInAsync(
+                    CookieAuthenticationDefaults.AuthenticationScheme,
+                    result.Principal,
+                    new AuthenticationProperties { IsPersistent = false });
 
                 return Redirect("~/Home/Principal");
             }
@@ -217,6 +231,7 @@ namespace ConnectionProject.Controllers
                 return RedirectToAction("Login");
             }
         }
+
 
         public IActionResult RecuperarContrasenia()
         {
