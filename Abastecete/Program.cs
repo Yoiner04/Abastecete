@@ -50,6 +50,18 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
 
 var app = builder.Build();
 
+var env = app.Environment;
+
+if (env.IsDevelopment())
+{
+    app.UseDeveloperExceptionPage(); // Muestra errores detallados
+}
+else
+{
+    app.UseExceptionHandler("/Home/Error"); // Redirige a una página de error genérica
+    app.UseHsts(); // Habilita HTTP Strict Transport Security
+}
+
 app.UseForwardedHeaders();
 app.UseHttpsRedirection();
 app.UseStaticFiles();
