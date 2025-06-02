@@ -115,10 +115,10 @@ namespace Abastecete.Controllers
         }
 
         [HttpGet]
-        public IActionResult ObtenerSubCategorias()
+        public IActionResult ObtenerSubCategorias(int idCategoria)
         {
             ManejadorSubCategorias manejadorSubCategorias = new ManejadorSubCategorias();
-            List<SubCategoria> subCategorias = manejadorSubCategorias.ConsultarSubCategorias(0);
+            List<SubCategoria> subCategorias = manejadorSubCategorias.ConsultarSubCategorias(idCategoria);
             return Json(subCategorias);
         }
 

@@ -271,5 +271,26 @@ namespace BusinessLogic
             return negocios;
         }
 
+        public bool RegistrarFacturacion(DetalleFacturacionModel factura)
+        {
+            List<Parametro> parametros = new List<Parametro>
+            {
+                new Parametro("p_id_usuario", factura.UsuarioId),
+                new Parametro("p_id_tipo_membresia", factura.TipoMembresiaId),
+                new Parametro("p_nombre", factura.Nombre),
+                new Parametro("p_apellidos", factura.Apellidos),
+                new Parametro("p_empresa", factura.Empresa),
+                new Parametro("p_direccion", factura.Direccion),
+                new Parametro("p_departamento", factura.Departamento),
+                new Parametro("p_municipio", factura.Municipio),
+                new Parametro("p_telefono", factura.Telefono ?? ""),
+                new Parametro("p_correo", factura.Correo),
+                new Parametro("p_monto", factura.Monto)
+            };
+
+            return conexion.EjecutarTransaccion("registrar_pago", parametros);
+        }
+
+
     }
 }

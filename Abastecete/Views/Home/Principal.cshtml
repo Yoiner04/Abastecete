@@ -16,6 +16,11 @@
     <link rel="stylesheet" href="styles.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <link rel="stylesheet" href="~/css/styles.css" asp-append-version="true" />
+    <style>
+        html {
+            scroll-behavior: smooth;
+        }
+    </style>
 
 </head>
 
@@ -75,11 +80,11 @@
 
                 <div class="h-1/2 flex-1">
                     <img src="@imgIzquierda" alt="Imagen lateral 1"
-                         class="h-full w-full rounded-lg object-cover">
+                         class="h-[95%] w-full rounded-lg object-cover">
                 </div>
                 <div class="h-1/2 flex-1">
                     <img src="@imgDerecha" alt="Imagen lateral 2"
-                         class="h-full w-full rounded-lg object-cover">
+                         class="h-[96%] w-full rounded-lg object-cover">
                 </div>
             </div>
         </div>
@@ -302,9 +307,11 @@
     <section class="proveedores-section p-6 lg:p-10" style="background-color: #F4F1E9">
         <div class="mb-4 flex flex-col items-center justify-between lg:flex-row">
             <h2 class="pl-0 text-center text-lg font-bold text-gray-800 lg:text-left lg:pl-10">Mejores proveedores</h2>
-            <a href="/Categorias/Listar" class="flex items-center pr-0 text-sm font-medium text-gray-600 hover:text-gray-800 lg:pr-10">
+            <a href="@Url.Action("Listar", "Categorias")"
+               class="flex items-center pr-0 text-sm font-medium text-gray-600 hover:text-gray-800 lg:pr-10">
                 Ver todo <span class="ml-1">&gt;</span>
             </a>
+
         </div>
 
         <div id="providers-grid">
@@ -413,7 +420,8 @@
 
                         @foreach (var negocio in negociosDuplicados)
                         {
-                            <div class="card w-72 flex-none overflow-hidden rounded-2xl bg-white shadow-lg">
+                            <a href="@Url.Action("ConsultarProductos", "Negocios", new { idLocal = negocio.Id })"
+                               class="card w-72 flex-none overflow-hidden rounded-2xl bg-white shadow-lg transition-transform duration-300 hover:scale-105">
                                 <div class="flex flex-col items-center justify-center p-6">
                                     <img src="@(negocio.imagen?.Base64 ?? "/images/default.webp")"
                                          alt="@negocio.Nombre"
@@ -421,7 +429,7 @@
                                     <h3 class="mt-4 text-center text-base font-semibold text-gray-800">@negocio.Nombre</h3>
                                     <p class="text-center text-sm text-gray-500">@negocio.Localizacion</p>
                                 </div>
-                            </div>
+                            </a>
                         }
                     }
                     else
@@ -520,7 +528,7 @@
         var imagenPorDefecto = "/images/default.webp";
     }
 
-    <section id="discounts-section" class="discounts-section p-6 lg:p-10">
+    <section class="discounts-section p-6 lg:p-10" id="categorias-container">
         <div class="mb-6 text-center lg:text-start">
             <h2 class="text-3xl font-bold text-[#F66623] lg:text-5xl">DESCUENTOS</h2>
             <h2 class="text-5xl font-bold text-[#23916A] lg:text-8xl">IMPERDIBLES</h2>
@@ -547,12 +555,18 @@
                     <h2 class="pl-0 text-center text-lg font-bold text-gray-800 lg:text-left lg:pl-10">
                         @categoriaNombre
                     </h2>
-                    <a href="#" class="mt-2 flex items-center pr-0 text-sm font-medium text-gray-600 hover:text-gray-800 lg:pr-10 lg:mt-0">
-                        Ver más
-                        <svg xmlns="http://www.w3.org/2000/svg" class="ml-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                        </svg>
-                    </a>
+                    <form method="post" action="@Url.Action("Consultar", "Negocios")" class="inline">
+                        <input type="hidden" name="idCategoria" value="@categoria.Id" />
+                        <input type="hidden" name="membre" value="" />
+                        <button type="submit"
+                                class="mt-2 flex items-center text-sm font-medium text-gray-600 hover:text-gray-800">
+                            Ver más
+                            <svg xmlns="http://www.w3.org/2000/svg" class="ml-1 h-4 w-4" fill="none" viewBox="0 0 24 24"
+                                 stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                            </svg>
+                        </button>
+                    </form>
                 </div>
 
                 <!-- Rejilla de imágenes -->
