@@ -11,6 +11,46 @@
     <title>@negocio?.Nombre</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <style>
+        .range-slider {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 0.75rem;
+            -webkit-appearance: none;
+            background: transparent;
+            pointer-events: auto;
+        }
+
+            .range-slider::-webkit-slider-thumb {
+                -webkit-appearance: none;
+                height: 1rem;
+                width: 1rem;
+                border-radius: 50%;
+                background: #2563EB; /* Azul */
+                cursor: pointer;
+                z-index: 3;
+                position: relative;
+            }
+
+            .range-slider::-moz-range-thumb {
+                height: 1rem;
+                width: 1rem;
+                border-radius: 50%;
+                background: #2563EB;
+                cursor: pointer;
+                z-index: 3;
+                position: relative;
+            }
+
+        #rangeBar {
+            top: 0;
+            height: 0.75rem;
+            z-index: 1;
+        }
+    </style>
+
 </head>
 <body class="bg-gray-100">
     <!-- HEADER NEGOCIO -->
@@ -57,10 +97,11 @@
             <div class="rounded-lg bg-white p-4 shadow-md">
                 <label class="mb-2 block font-semibold text-orange-600">Precio</label>
                 <div class="relative h-3">
-                    <input id="minPriceRange" type="range" class="absolute inset-0 h-3 w-full appearance-none bg-gray-300" />
-                    <input id="maxPriceRange" type="range" class="absolute inset-0 h-3 w-full appearance-none bg-gray-300" />
-                    <div id="rangeBar" class="absolute h-3 rounded bg-green-500"></div>
+                    <input id="minPriceRange" type="range" class="range-slider" />
+                    <input id="maxPriceRange" type="range" class="range-slider" />
+                    <div id="rangeBar" class="absolute h-3 bg-green-500 rounded pointer-events-none"></div>
                 </div>
+
                 <div class="mt-2 flex justify-between text-sm text-gray-600">
                     <span id="minPriceValue"></span>
                     <span id="maxPriceValue"></span>
@@ -94,6 +135,157 @@
     </main>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function () {
+
+            // --- Subcategorías ---
+            $('#category').on('change', function () {
+                const idCategoria = $(this).val();
+                const subcatSelect = $('#subcategory');
+
+                // Limpia y deshabilita el select de subcategorías
+                subcatSelect.prop('disabled', true).empty().append('<option value="">Todas</option>');
+
+                if (idCategoria) {
+                    $.get("/Productos/ObtenerSubCategorias", { idCategoria: idCategoria })
+                        .done(function (data) {
+                            if (data.length > 0) {
+                                data.forEach(function (sub) {
+                                    subcatSelect.append(`<option value="${sub.id}">${sub.nombre}</option>`);
+                                });
+                                subcatSelect.prop('disabled', false);
+                            }
+                            // Aplica el filtro cuando se cambie la categoría
+                            aplicarFiltros();
+                        })
+                        .fail(function () {
+                            alert("No se pudieron cargar las subcategorías.");
+                        });
+                } else {
+                    aplicarFiltros();
+                }
+            });
+
+            // --- Rango de Precio ---
+            const minPriceRange = $('#minPriceRange');
+            const maxPriceRange = $('#maxPriceRange');
+            const minPriceValue = $('#minPriceValue');
+            const maxPriceValue = $('#maxPriceValue');
+
+            // Define valores mínimos y máximos (ajusta según tus necesidades)
+            minPriceRange.attr('min', 0).attr('max', 100000).val(0);
+            maxPriceRange.attr('min', 0).attr('max', 100000).val(100000);
+            minPriceValue.text('$0');
+            maxPriceValue.text('$100,000');
+
+            // --- Función Combinada para aplicar filtros ---
+            function aplicarFiltros() {
+                const selectedCategory = $('#category').val();
+                const selectedSubcat = $('#subcategory').val();
+                const minPrice = parseFloat(minPriceRange.val());
+                const maxPrice = parseFloat(maxPriceRange.val());
+
+                // Actualizar los textos de precio
+                minPriceValue.text('$' + parseInt(minPrice).toLocaleString());
+                maxPriceValue.text('$' + parseInt(maxPrice).toLocaleString());
+
+                $('.producto').each(function () {
+                    const prodCat = $(this).data('categoria-id');
+                    const prodSub = $(this).data('subcategoria-id');
+                    const precio = parseFloat($(this).data('precio'));
+
+                    // Verifica si el producto coincide con cada filtro
+                    const coincideCategoria = !selectedCategory || prodCat == selectedCategory;
+                    const coincideSubcat = !selectedSubcat || prodSub == selectedSubcat;
+                    const coincidePrecio = precio >= minPrice && precio <= maxPrice;
+
+                    if (coincideCategoria && coincideSubcat && coincidePrecio) {
+                        $(this).show();
+                    } else {
+                        $(this).hide();
+                    }
+                });
+            }
+
+            // Aplica filtros al cambiar el rango de precio
+            minPriceRange.on('input', aplicarFiltros);
+            maxPriceRange.on('input', aplicarFiltros);
+            // Aplica filtros al cambiar subcategoría (ya aplicado en category change, pero también individualmente)
+            $('#subcategory').on('change', aplicarFiltros);
+
+            // --- Botón de Restablecer ---
+            $('#filter').on('click', function () {
+                // Reinicia los selectores
+                $('#category').val('');
+                $('#subcategory').empty().append('<option value="">Todas</option>').prop('disabled', true);
+                // Reinicia los rangos de precio
+                minPriceRange.val(0);
+                maxPriceRange.val(100000);
+                // Muestra todos los productos
+                $('.producto').show();
+                // Actualiza los valores mostrados
+                minPriceValue.text('$0');
+                maxPriceValue.text('$100,000');
+            });
+        });
+    </script>
+    <script>
+        $(document).ready(function () {
+            const minInput = $('#minPriceRange');
+            const maxInput = $('#maxPriceRange');
+            const minLabel = $('#minPriceValue');
+            const maxLabel = $('#maxPriceValue');
+            const rangeBar = $('#rangeBar');
+
+            let precios = [];
+            $('.producto').each(function () {
+                const precio = parseFloat($(this).data('precio'));
+                if (!isNaN(precio)) precios.push(precio);
+            });
+
+            if (precios.length === 0) precios = [0, 1000];
+
+            const precioMin = Math.min(...precios);
+            const precioMax = Math.max(...precios);
+
+            // Configura sliders
+            minInput.attr({ min: precioMin, max: precioMax, value: precioMin });
+            maxInput.attr({ min: precioMin, max: precioMax, value: precioMax });
+            minLabel.text(`$${precioMin.toLocaleString()}`);
+            maxLabel.text(`$${precioMax.toLocaleString()}`);
+
+            function actualizarRango() {
+                let min = parseFloat(minInput.val());
+                let max = parseFloat(maxInput.val());
+
+                if (min > max) {
+                    [min, max] = [max, min];
+                    minInput.val(min);
+                    maxInput.val(max);
+                }
+
+                minLabel.text(`$${min.toLocaleString()}`);
+                maxLabel.text(`$${max.toLocaleString()}`);
+
+                // Calcular posición del rango visual
+                const percentMin = ((min - precioMin) / (precioMax - precioMin)) * 100;
+                const percentMax = ((max - precioMin) / (precioMax - precioMin)) * 100;
+
+                rangeBar.css({
+                    left: `${percentMin}%`,
+                    width: `${percentMax - percentMin}%`
+                });
+
+                if (typeof aplicarFiltros === 'function') aplicarFiltros();
+            }
+
+            minInput.on('input', actualizarRango);
+            maxInput.on('input', actualizarRango);
+            actualizarRango();
+        });
+    </script>
+
+
 
 </body>
 </html>
