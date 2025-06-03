@@ -94,6 +94,27 @@ namespace Abastecete.Controllers
         }
 
         [HttpPost]
+        public IActionResult EditarUsuario(Usuario usuario)
+        {
+            Persona persona = usuario.Persona;
+            persona.Correo = usuario.Correo;
+            bool resultado = manejadorU.EditarUsuario(persona);
+
+            if (resultado)
+            {
+                TempData["mensaje"] = "¡Tu información ha sido actualizada correctamente!";
+                TempData["tipo"] = "success";
+            }
+            else
+            {
+                TempData["mensaje"] = "Hubo un error al actualizar la información.";
+                TempData["tipo"] = "danger";
+            }
+
+            return RedirectToAction("Actualizar", "Usuarios");
+        }
+
+        [HttpPost]
         public IActionResult Registrar(Usuario usuario)
         {
             bool result = manejadorU.RegistrarUsuario(usuario);

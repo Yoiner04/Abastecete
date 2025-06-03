@@ -68,8 +68,14 @@ namespace BusinessLogic
                         Nombre = row["NOMBRES"].ToString(),
                         Apellido = row["APELLIDOS"].ToString(),
                         Documento = Convert.ToInt32(row["DOCUMENTO_IDENTIDAD"].ToString()),
-                        Telefono = row["TELEFONO"].ToString()
+                        Telefono = row["TELEFONO"].ToString(),
+                        TipoDeDocumento = new TipoDocumento()
+                        {
+                            Id = Convert.ToInt32(row["PK_ID_TIPO_DOCUMENTO"].ToString()),
+                            Nombre = row["NOMBRE_TIPO_DOCUMENTO"].ToString()
+                        }
                     }
+
                 });
             }
             return usuarios;
@@ -265,6 +271,22 @@ namespace BusinessLogic
             {
                 return false;
             }
+        }
+
+        
+        public bool EditarUsuario(Persona usuario)
+        {
+            List<Parametro> parametros = new List<Parametro>
+            {
+                new Parametro("p_nombre", usuario.Nombre),
+                new Parametro("p_apellido", usuario.Apellido),
+                new Parametro("p_documento", usuario.Documento),
+                new Parametro("p_fk_tipo_documento", usuario.TipoDeDocumento.Id),
+                new Parametro("p_telefono", usuario.Telefono),
+                new Parametro("p_correo", usuario.Correo),
+            };
+            bool act = conexion.EjecutarTransaccion("editar_usuario_persona", parametros);
+            return act;
         }
 
     }

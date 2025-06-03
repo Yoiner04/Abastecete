@@ -1,23 +1,23 @@
 ﻿@using BusinessLogic.Models
 @model BusinessLogic.Models.Usuario;
 
-@{
-    Layout = null;
-}
-
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-
-<body class="flex min-h-screen items-center justify-center bg-gray-100">
-    
+<main class="flex min-h-[80vh] items-center justify-center bg-gray-100 py-10 px-4">
     <div class="w-full max-w-3xl rounded-2xl bg-white px-10 py-8 shadow-2xl">
+        @if (TempData["mensaje"] != null)
+        {
+            var tipo = TempData["tipo"]?.ToString() ?? "info";
+            var bgColor = tipo == "success" ? "bg-green-100 border-green-500 text-green-700"
+                        : tipo == "danger" ? "bg-red-100 border-red-500 text-red-700"
+                        : "bg-blue-100 border-blue-500 text-blue-700";
+    
+            <div class="mb-6 rounded border-l-4 px-4 py-3 shadow-sm @bgColor">
+                <p class="text-sm font-medium">@TempData["mensaje"]</p>
+            </div>
+        }
+
         <h2 class="mb-6 text-center text-3xl font-bold text-green-600">Actualizar Información</h2>
 
-        @using (Html.BeginForm("Actualizar", "Usuarios", FormMethod.Post, new { id = "actualizarForm", @class = "grid grid-cols-1 md:grid-cols-2 gap-6" }))
+        @using (Html.BeginForm("EditarUsuario", "Usuarios", FormMethod.Post, new { id = "actualizarForm", @class = "grid grid-cols-1 md:grid-cols-2 gap-6" }))
         {
             <div class="md:col-span-2">
                 @Html.ValidationSummary(true, "", new { @class = "text-red-500 text-sm" })
@@ -35,22 +35,34 @@
 
             <div>
                 <label class="block font-medium text-gray-700">Tipo de Documento <span class="text-red-500">*</span></label>
-                <select class="w-full rounded-lg border p-3 outline-none focus:ring-2 focus:ring-green-400" name="Persona.TipoDeDocumento.Id">
-                    <option value="">Seleccione</option>
-                    @foreach (TipoDocumento td in ViewBag.TiposDocumento)
-                    {
-                        if (Model.Persona.TipoDeDocumento != null && Model.Persona.TipoDeDocumento.Id == td.Id)
-                        {
-                            <option value="@td.Id" selected>@td.Nombre</option>
-                        }
-                        else
-                        {
-                            <option value="@td.Id">@td.Nombre</option>
-                        }
-                    }
-                </select>
-            </div>
+                <select class="w-full rounded-lg border p-3 outline-none focus:ring-2 focus:ring-green-400"
+        name="Persona.TipoDeDocumento.Id" required>
 
+    @if (Model.Persona.TipoDeDocumento == null)
+    {
+        <option value="" selected disabled>Seleccione</option>
+    }
+    else
+    {
+        <option value="" disabled>Seleccione</option>
+    }
+
+    @foreach (TipoDocumento td in ViewBag.TiposDocumento)
+    {
+        if (Model.Persona.TipoDeDocumento != null && Model.Persona.TipoDeDocumento.Id == td.Id)
+        {
+            <option value="@td.Id" selected>@td.Nombre</option>
+        }
+
+        else
+        {
+            <option value="@td.Id">@td.Nombre</option>
+        }
+    }
+</select>
+
+
+            </div>
 
             <div>
                 <label class="block font-medium text-gray-700">Documento <span class="text-red-500">*</span></label>
@@ -68,10 +80,10 @@
             </div>
 
             <div class="md:col-span-2">
-                <button type="submit" class="w-full transform rounded-lg bg-green-500 py-3 text-lg font-bold text-white transition-transform hover:scale-105">Actualizar Información</button>
+                <button type="submit" class="w-full transform rounded-lg bg-green-500 py-3 text-lg font-bold text-white transition-transform hover:scale-105">
+                    Actualizar Información
+                </button>
             </div>
         }
     </div>
-
-</body>
-</html>
+</main>
