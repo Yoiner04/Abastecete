@@ -1,5 +1,6 @@
 ﻿using BusinessLogic.Models;
 using DataAccess;
+using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -49,5 +50,6 @@ namespace BusinessLogic
             }
             return personas;
         }
+
     }
 }

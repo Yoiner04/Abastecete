@@ -69,7 +69,10 @@
                             </button>
                             <ul id="user-menu" class="absolute right-0 z-50 mt-2 hidden min-w-[180px] overflow-hidden rounded-lg border border-gray-200 bg-white text-sm shadow-xl md:min-w-[220px]">
                                 <li class="border-b px-5 py-3 transition duration-200 hover:bg-gray-100">
-                                    <button id="open-edit-profile" class="block w-full text-left font-medium text-black">✏️ Editar perfil</button>
+                                    <a href="@Url.Action("Actualizar", "Usuarios")" class="block w-full text-left font-medium text-black">
+                                        ✏️ Editar perfil
+                                    </a>
+
                                 </li>
                                 <li class="px-5 py-3 transition duration-200 hover:bg-gray-100">
                                     <a href="@Url.Action("Logout", "Login")" class="block font-semibold text-black">🚪 Cerrar Sesión</a>
@@ -192,19 +195,6 @@
         @RenderBody()
     </main>
 
-
-    <div id="edit-profile-modal" class="bg-opacity-50 fixed inset-0 z-50 flex hidden items-center justify-center bg-black">
-        <div class="min-h-auto max-h-[80vh] w-auto max-w-6xl overflow-y-auto rounded-lg bg-white p-6 shadow-lg">
-            <div class="mb-4 flex justify-end">
-                <button id="close-edit-profile" class="text-lg text-red-500 hover:text-red-700" style="color: red !important;">
-                    ✖
-                </button>
-            </div>
-            <div id="edit-profile-content" class="overflow-auto"></div>
-        </div>
-    </div>
-
-
     <script>
                 document.addEventListener("DOMContentLoaded", function () {
                     // Menú de navegación principal
@@ -248,37 +238,7 @@
                     }
                 });
 
-                document.addEventListener("DOMContentLoaded", function () {
-                    const editProfileBtn = document.getElementById("open-edit-profile");
-                    const editProfileModal = document.getElementById("edit-profile-modal");
-                    const editProfileContent = document.getElementById("edit-profile-content");
-                    const closeEditProfileBtn = document.getElementById("close-edit-profile");
-
-                    if (editProfileBtn && editProfileModal) {
-                        editProfileBtn.addEventListener("click", function () {
-                            // Cargar la vista de edición de perfil con AJAX
-                            fetch("@Url.Action("Actualizar", "Usuarios")")
-                                .then(response => response.text())
-                                .then(html => {
-                                    editProfileContent.innerHTML = html;
-                                    editProfileModal.classList.remove("hidden");
-                                })
-                                .catch(error => console.error("Error al cargar la vista:", error));
-                        });
-
-                        closeEditProfileBtn.addEventListener("click", function () {
-                            editProfileModal.classList.add("hidden");
-                            editProfileContent.innerHTML = ""; // Limpiar contenido al cerrar
-                        });
-
-                        editProfileModal.addEventListener("click", function (event) {
-                            if (event.target === editProfileModal) {
-                                editProfileModal.classList.add("hidden");
-                                editProfileContent.innerHTML = "";
-                            }
-                        });
-                    }
-                });
+                
                 document.addEventListener("DOMContentLoaded", function () {
             const adminMenu = document.getElementById('admin-menu');
             const adminMenuToggle = document.getElementById('admin-menu-toggle');
