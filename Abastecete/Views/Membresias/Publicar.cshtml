@@ -70,18 +70,18 @@
     </div>
 
     <!-- Modal de facturación -->
-    <div id="billing-modal" class="fixed top-0 left-0 z-50 hidden h-screen w-screen overflow-y-auto bg-black bg-opacity-40 backdrop-blur-sm">
-        <div class="relative top-1/2 -translate-y-1/2 mx-auto w-full max-w-2xl rounded-xl bg-white p-6 shadow-lg">
-            <div class="flex justify-between items-center border-b pb-3 mb-4">
+    <div id="billing-modal" class="bg-opacity-40 fixed top-0 left-0 z-50 hidden h-screen w-screen overflow-y-auto bg-black backdrop-blur-sm">
+        <div class="relative top-1/2 mx-auto w-full max-w-2xl -translate-y-1/2 rounded-xl bg-white p-6 shadow-lg">
+            <div class="mb-4 flex items-center justify-between border-b pb-3">
                 <h2 class="text-xl font-bold">Detalles de facturación</h2>
                 <button class="text-gray-600 hover:text-red-500" onclick="document.getElementById('billing-modal').classList.add('hidden')">✖</button>
             </div>
             <form id="billing-form" class="space-y-4">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div><label class="block text-sm font-medium">Nombre *</label><input type="text" name="nombre" required class="w-full rounded border border-gray-300" /></div>
-                    <div><label class="block text-sm font-medium">Apellidos *</label><input type="text" name="apellidos" required class="w-full rounded border  border-gray-300" /></div>
-                    <div><label class="block text-sm font-medium">Empresa *</label><input type="text" name="empresa" required class="w-full rounded border  border-gray-300" /></div>
-                    <div><label class="block text-sm font-medium">Dirección *</label><input type="text" name="direccion" required class="w-full rounded border  border-gray-300" /></div>
+                    <div><label class="block text-sm font-medium">Apellidos *</label><input type="text" name="apellidos" required class="w-full rounded border border-gray-300" /></div>
+                    <div><label class="block text-sm font-medium">Empresa *</label><input type="text" name="empresa" required class="w-full rounded border border-gray-300" /></div>
+                    <div><label class="block text-sm font-medium">Dirección *</label><input type="text" name="direccion" required class="w-full rounded border border-gray-300" /></div>
                     <div>
                         <label class="block text-sm font-medium">Departamento *</label>
                         <select id="departamento" name="departamento" required class="w-full rounded border border-gray-300 bg-white"></select>
@@ -169,7 +169,7 @@
             epaycoScript.setAttribute("data-epayco-country", "co");
             epaycoScript.setAttribute("data-epayco-external", "false");
             epaycoScript.setAttribute("data-epayco-button", "https://multimedia.epayco.co/dashboard/btns/btn5.png");
-            epaycoScript.setAttribute("data-epayco-response", `http://167.71.91.199:7076/Negocios/CompletarRegistro?tipoMembresiaId=${idMembresia}`);
+            epaycoScript.setAttribute("data-epayco-response", `https://abastecete.com/Negocios/CompletarRegistro?tipoMembresiaId=${idMembresia}`);
             epaycoScript.setAttribute("data-epayco-test", "true");
 
             epaycoContainer.appendChild(epaycoScript);
