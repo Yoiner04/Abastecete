@@ -13,22 +13,16 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <link rel="stylesheet" href="~/css/styles.css" asp-append-version="true" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/1.6.3/flowbite.min.js"></script>
-
 </head>
-
 <body class="bg-gray-100 py-10">
-    <br />
     <div class="mx-auto max-w-6xl px-4">
         <div class="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
             @foreach (var membresia in Model)
             {
                 <div class="flex flex-col justify-between overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-md transition hover:shadow-xl">
-                    <!-- Encabezado con imagen -->
                     <div class="h-56 w-full overflow-hidden bg-gray-100">
                         <img src="@ViewBag.nombre" alt="Encabezado" class="h-full w-full object-cover" />
                     </div>
-
-                    <!-- Contenido -->
                     <div class="flex h-[75%] flex-col justify-between p-6">
                         <div>
                             <h3 class="text-center text-xl font-bold text-gray-800">@membresia.Nombre</h3>
@@ -36,7 +30,6 @@
                                 @(membresia.Costo == 0 ? "$0" : $"${membresia.Costo:N0}")
                                 <span class="text-lg font-medium text-gray-400">/mes</span>
                             </p>
-
                             <ul class="mt-4 space-y-3 text-sm text-gray-700">
                                 @foreach (var line in membresia.Descripcion.Split(new[] { '\n', '*' }, StringSplitOptions.RemoveEmptyEntries))
                                 {
@@ -47,8 +40,6 @@
                                 }
                             </ul>
                         </div>
-
-                        <!-- Botón principal -->
                         <div class="mt-6">
                             @if (membresia.Costo == 0)
                             {
@@ -56,40 +47,71 @@
                                    class="block w-full rounded-full border border-[#F6580F] bg-white py-2 text-center text-sm font-semibold text-[#F6580F] uppercase transition hover:bg-[#15803D]">
                                     Empieza Ahora
                                 </a>
-
                             }
                             else
                             {
-                                <a class="open-modal block w-full rounded-full bg-[#F6580F] py-2 text-center text-sm font-semibold text-white uppercase transition hover:bg-[#15803D]"
+                                <a href="javascript:void(0);"
+                                   class="abrir-formulario block w-full rounded-full bg-[#F6580F] py-2 text-center text-sm font-semibold text-white uppercase transition hover:bg-[#15803D]"
                                    data-id="@membresia.Id"
                                    data-nombre="@membresia.Nombre"
                                    data-descripcion="@membresia.Descripcion"
                                    data-costomensual="@membresia.Costo"
                                    data-costotrimestral="@membresia.Costo_trimestral"
                                    data-costosemestral="@membresia.Costo_semestral"
-                                   data-costoanual="@membresia.Costo_anual"
-                                   data-modal-target="default-modal"
-                                   data-modal-toggle="default-modal">
+                                   data-costoanual="@membresia.Costo_anual">
                                     Empieza Ahora
                                 </a>
-
                             }
                         </div>
                     </div>
                 </div>
-
-
             }
         </div>
     </div>
 
+    <!-- Modal de facturación -->
+    <div id="billing-modal" class="fixed top-0 left-0 z-50 hidden h-screen w-screen overflow-y-auto bg-black bg-opacity-40 backdrop-blur-sm">
+        <div class="relative top-1/2 -translate-y-1/2 mx-auto w-full max-w-2xl rounded-xl bg-white p-6 shadow-lg">
+            <div class="flex justify-between items-center border-b pb-3 mb-4">
+                <h2 class="text-xl font-bold">Detalles de facturación</h2>
+                <button class="text-gray-600 hover:text-red-500" onclick="document.getElementById('billing-modal').classList.add('hidden')">✖</button>
+            </div>
+            <form id="billing-form" class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div><label class="block text-sm font-medium">Nombre *</label><input type="text" name="nombre" required class="w-full rounded border border-gray-300" /></div>
+                    <div><label class="block text-sm font-medium">Apellidos *</label><input type="text" name="apellidos" required class="w-full rounded border  border-gray-300" /></div>
+                    <div><label class="block text-sm font-medium">Empresa *</label><input type="text" name="empresa" required class="w-full rounded border  border-gray-300" /></div>
+                    <div><label class="block text-sm font-medium">Dirección *</label><input type="text" name="direccion" required class="w-full rounded border  border-gray-300" /></div>
+                    <div>
+                        <label class="block text-sm font-medium">Departamento *</label>
+                        <select id="departamento" name="departamento" required class="w-full rounded border border-gray-300 bg-white"></select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium">Municipio *</label>
+                        <select id="municipio" name="municipio" required class="w-full rounded border border-gray-300 bg-white"></select>
+                    </div>
+                    <div><label class="block text-sm font-medium">Teléfono</label><input type="text" name="telefono" class="w-full rounded border border-gray-300" /></div>
+                    <div><label class="block text-sm font-medium">Correo *</label><input type="email" name="correo" required class="w-full rounded border border-gray-300" /></div>
+                </div>
+                <div class="mt-6 text-right">
+                    <button type="submit" class="rounded bg-[#F6580F] px-6 py-2 text-white hover:bg-[#15803D]">Continuar al pago</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal de selección de plan y pago ePayco -->
     <div id="default-modal" tabindex="-1" aria-hidden="true" class="bg-opacity-40 fixed top-0 left-0 z-50 hidden h-screen w-screen overflow-x-hidden overflow-y-auto backdrop-blur-sm">
         <div class="relative mx-auto mt-24 w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
             <div class="mb-4 flex items-center justify-between border-b pb-3">
                 <h3 class="text-xl font-bold text-gray-800">Seleccionar plan</h3>
-                <button type="button" class="rounded-md p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-700" data-modal-hide="default-modal">
-                    <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                <button type="button" class="rounded-md p-1 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+                        onclick="document.getElementById('default-modal').classList.add('hidden')">
+                    <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none"
+                         viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M6 18L18 6M6 6l12 12" />
                     </svg>
                 </button>
             </div>
@@ -114,74 +136,192 @@
         </div>
     </div>
 
+
+
+    <!-- Script para mostrar modal y generar ePayco -->
     <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            const buttons = document.querySelectorAll(".open-modal");
-            const selectPlanes = document.getElementById("planes");
+
+
+        let precios = {}, idMembresia = 0, nombreMembresia = '', descripcionMembresia = '';
+
+        function crearBotonEpayco(precio, idMembresia) {
             const epaycoContainer = document.getElementById("epayco-button-container");
             const priceLabel = document.getElementById("plan-price");
+            epaycoContainer.innerHTML = "";
 
-            let precios = { mensual: 0, trimestral: 0, semestral: 0, anual: 0 };
-            let nombreMembresia = "";
-            let descripcionMembresia = "";
-            let idMembresia = 0;
+            const precioTotal = Math.round(precio);
+            const precioBase = Math.round(precio / 1.19);
+            const impuesto = precioTotal - precioBase;
 
-            function crearBotonEpayco(precio, idMembresia) {
-                epaycoContainer.innerHTML = "";
+            priceLabel.textContent = `Total a pagar: $${precioTotal.toLocaleString()} COP`;
 
-                const precioTotal = Math.round(precio);
-                const precioBase = Math.round(precio / 1.19);
-                const impuesto = precioTotal - precioBase;
+            const epaycoScript = document.createElement("script");
+            epaycoScript.src = "https://checkout.epayco.co/checkout.js";
+            epaycoScript.classList.add("epayco-button");
+            epaycoScript.setAttribute("data-epayco-key", "@ViewBag.apikey");
+            epaycoScript.setAttribute("data-epayco-amount", precioTotal.toString());
+            epaycoScript.setAttribute("data-epayco-tax", impuesto.toString());
+            epaycoScript.setAttribute("data-epayco-tax-base", precioBase.toString());
+            epaycoScript.setAttribute("data-epayco-name", nombreMembresia);
+            epaycoScript.setAttribute("name", nombreMembresia);
+            epaycoScript.setAttribute("data-epayco-description", descripcionMembresia);
+            epaycoScript.setAttribute("data-epayco-currency", "cop");
+            epaycoScript.setAttribute("data-epayco-country", "co");
+            epaycoScript.setAttribute("data-epayco-external", "false");
+            epaycoScript.setAttribute("data-epayco-button", "https://multimedia.epayco.co/dashboard/btns/btn5.png");
+            epaycoScript.setAttribute("data-epayco-response", `http://167.71.91.199:7076/Negocios/CompletarRegistro?tipoMembresiaId=${idMembresia}`);
+            epaycoScript.setAttribute("data-epayco-test", "true");
 
-                priceLabel.textContent = `Total a pagar: $${precioTotal.toLocaleString()} COP`;
+            epaycoContainer.appendChild(epaycoScript);
+        }
 
-                const epaycoScript = document.createElement("script");
-                epaycoScript.src = "https://checkout.epayco.co/checkout.js";
-                epaycoScript.classList.add("epayco-button");
-                epaycoScript.setAttribute("data-epayco-key", "@ViewBag.apikey");
-                epaycoScript.setAttribute("data-epayco-amount", precioTotal.toString());
-                epaycoScript.setAttribute("data-epayco-tax", impuesto.toString());
-                epaycoScript.setAttribute("data-epayco-tax-base", precioBase.toString());
-                epaycoScript.setAttribute("data-epayco-name", nombreMembresia);
-                epaycoScript.setAttribute("data-epayco-description", descripcionMembresia);
-                epaycoScript.setAttribute("data-epayco-currency", "cop");
-                epaycoScript.setAttribute("data-epayco-country", "co");
-                epaycoScript.setAttribute("data-epayco-external", "false");
-                epaycoScript.setAttribute("data-epayco-button", "https://multimedia.epayco.co/dashboard/btns/btn5.png");
-                epaycoScript.setAttribute("data-epayco-response", `https://abastecete.com/Negocios/CompletarRegistro?tipoMembresiaId=${idMembresia}`);
-                epaycoScript.setAttribute("data-epayco-test", "true");
-
-                epaycoContainer.appendChild(epaycoScript);
-            }
-
-            selectPlanes.addEventListener("change", function () {
-                if (precios[this.value] !== undefined) {
-                    crearBotonEpayco(precios[this.value], idMembresia);
-                }
+        document.addEventListener("DOMContentLoaded", function () {
+            document.querySelectorAll(".abrir-formulario").forEach(btn => {
+                btn.addEventListener("click", () => {
+                    idMembresia = btn.dataset.id;
+                    nombreMembresia = btn.dataset.nombre || "Plan";
+                    descripcionMembresia = btn.dataset.descripcion || "Membresía";
+                    precios = {
+                        mensual: parseFloat(btn.dataset.costomensual) || 0,
+                        trimestral: parseFloat(btn.dataset.costotrimestral) || 0,
+                        semestral: parseFloat(btn.dataset.costosemestral) || 0,
+                        anual: parseFloat(btn.dataset.costoanual) || 0
+                    };
+                    document.getElementById("billing-modal").classList.remove("hidden");
+                });
             });
 
-            buttons.forEach(button => {
-                button.addEventListener("click", function () {
-                    idMembresia = this.getAttribute("data-id");
-                    nombreMembresia = this.getAttribute("data-nombre") || "Plan";
-                    descripcionMembresia = this.getAttribute("data-descripcion") || "Sin descripción";
-                    precios.mensual = parseFloat(this.getAttribute("data-costomensual")) || 0;
-                    precios.trimestral = parseFloat(this.getAttribute("data-costotrimestral")) || 0;
-                    precios.semestral = parseFloat(this.getAttribute("data-costosemestral")) || 0;
-                    precios.anual = parseFloat(this.getAttribute("data-costoanual")) || 0;
 
-                    if (precios.mensual > 0) {
-                        selectPlanes.value = "mensual";
-                        crearBotonEpayco(precios.mensual, idMembresia);
-                    } else {
-                        selectPlanes.value = "anual";
-                        crearBotonEpayco(precios.anual, idMembresia);
-                    }
-                });
+            document.getElementById("planes").addEventListener("change", function () {
+                const planSeleccionado = this.value;
+                crearBotonEpayco(precios[planSeleccionado], idMembresia);
             });
         });
     </script>
 
+    @inject IHttpContextAccessor HttpContextAccessor
+
+    <script>
+                document.getElementById("billing-form").addEventListener("submit", function (e) {
+            e.preventDefault();
+
+            const formData = new FormData(this);
+            const datosFacturacion = {
+                nombre: formData.get("nombre"),
+                apellidos: formData.get("apellidos"),
+                empresa: formData.get("empresa"),
+                direccion: formData.get("direccion"),
+                departamento: formData.get("departamento"),
+                municipio: formData.get("municipio"),
+                telefono: formData.get("telefono"),
+                correo: formData.get("correo")
+            };
+
+            // Guardamos en sessionStorage para luego usarlo
+            sessionStorage.setItem("facturacionData", JSON.stringify(datosFacturacion));
+
+            document.getElementById("billing-modal").classList.add("hidden");
+            document.getElementById("default-modal").classList.remove("hidden");
+
+            crearBotonEpayco(precios[document.getElementById("planes").value], idMembresia);
+        });
+    </script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const datosFacturacion = JSON.parse(sessionStorage.getItem("facturacionData"));
+            if (!datosFacturacion) {
+                return;
+            }
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const tipoMembresiaId = urlParams.get("tipoMembresiaId");
+            const monto = urlParams.get("amount"); // o puedes pasar el monto real si ePayco lo devuelve
+
+            const payload = {
+                usuarioId: @HttpContextAccessor.HttpContext.Session.GetInt32("idUsuario"),
+                tipoMembresiaId,
+                monto,
+                ...datosFacturacion
+            };
+
+            fetch("/Negocios/CompletarRegistroFacturacion", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            })
+            .then(res => res.json())
+            .then(data => {
+                console.log("✅ Registro completado:", data);
+                sessionStorage.removeItem("facturacionData");
+                // mostrar confirmación o redirigir
+            })
+            .catch(err => {
+                console.error("Error:", err);
+                alert("Hubo un problema al guardar la facturación.");
+            });
+        });
+    </script>
+
+
+
+    <script>
+        const departamentoSelect = document.getElementById("departamento");
+        const municipioSelect = document.getElementById("municipio");
+
+        let datos = [];
+
+        // Estado inicial
+        departamentoSelect.innerHTML = '<option value="">Selecciona un departamento</option>';
+        municipioSelect.innerHTML = '<option value="">Selecciona primero un departamento</option>';
+        municipioSelect.disabled = true;
+
+        // Cargar JSON con departamentos y municipios
+        fetch("/js/departamentos_municipios.json")
+            .then(res => res.json())
+            .then(data => {
+                datos = data;
+
+                data.forEach(dep => {
+                    const option = document.createElement("option");
+                    option.value = dep.departamento;
+                    option.textContent = dep.departamento;
+                    departamentoSelect.appendChild(option);
+                });
+            });
+
+        // Cuando selecciona un departamento
+        departamentoSelect.addEventListener("change", function () {
+            const seleccionado = this.value;
+
+            if (!seleccionado) {
+                municipioSelect.innerHTML = '<option value="">Selecciona primero un departamento</option>';
+                municipioSelect.disabled = true;
+                return;
+            }
+
+            cargarMunicipios(seleccionado);
+        });
+
+        function cargarMunicipios(nombreDepartamento) {
+            const departamento = datos.find(d => d.departamento === nombreDepartamento);
+            municipioSelect.innerHTML = "";
+
+            if (departamento && departamento.ciudades.length > 0) {
+                municipioSelect.disabled = false;
+                municipioSelect.innerHTML = '<option value="">Selecciona un municipio</option>';
+                departamento.ciudades.forEach(muni => {
+                    const opt = document.createElement("option");
+                    opt.value = muni;
+                    opt.textContent = muni;
+                    municipioSelect.appendChild(opt);
+                });
+            } else {
+                municipioSelect.disabled = true;
+                municipioSelect.innerHTML = '<option value="">No hay municipios disponibles</option>';
+            }
+        }
+    </script>
 
 </body>
 </html>

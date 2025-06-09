@@ -178,5 +178,31 @@ namespace Abastecete.Controllers
             }
         }
 
+        [HttpPost]
+        public IActionResult CompletarRegistroFacturacion([FromBody] DetalleFacturacionModel factura)
+        {
+            var usuarioId = HttpContext.Session.GetInt32("idUsuario");
+            if (usuarioId == null)
+            {
+                return Unauthorized("Sesión expirada");
+            }
+
+            factura.UsuarioId = usuarioId.Value;
+
+            // Llamar al procedimiento almacenado usando el manejador
+            var registrado = _manejadorNegocios.RegistrarFacturacion(factura);
+
+            if (registrado)
+            {
+                return Ok(new { mensaje = "Registro de facturación exitoso" });
+            }
+            else
+            {
+                return StatusCode(500, new { mensaje = "Error al registrar la facturación" });
+            }
+        }
+
+
+
     }
 }

@@ -20,7 +20,7 @@
             {
                 <form method="post" action="@Url.Action("Consultar", "Negocios")">
                     <input type="hidden" name="idCategoria" value="@categoria.Id" />
-                    <button type="submit" class="group w-full overflow-hidden rounded-2xl bg-white shadow-md transition-transform hover:scale-105 hover:shadow-lg">
+                    <button type="submit" class="group w-full min-h-80 overflow-hidden rounded-2xl bg-white shadow-md transition-transform hover:scale-105 hover:shadow-lg">
                         <div class="flex h-full flex-col">
                             <div class="h-40 w-full overflow-hidden md:h-44 lg:h-48">
                                 @if (categoria.Imagen != null)
