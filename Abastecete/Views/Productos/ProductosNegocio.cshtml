@@ -2,6 +2,7 @@
 
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -15,38 +16,39 @@
 </head>
 
 <body class="bg-white">
-<header class="relative w-full bg-[#F5EFE4] shadow-md">
-    <div class="relative h-56 w-full">
-        @if (!string.IsNullOrWhiteSpace(Model.Negocio?.BannerImagen?.Base64))
-        {
-            <img src="@Model.Negocio.BannerImagen.Base64" alt="Fondo"
-                 class="absolute inset-0 h-full w-full object-contain brightness-50" />
-        }
-        <div class="relative z-10 flex flex-row items-start gap-4 px-4 sm:top-24 md:items-start md:gap-6 md:px-10">
-            <div class="flex size-32 items-center justify-center overflow-hidden rounded-xl border bg-white shadow-lg sm:size-60">
-                @if (!string.IsNullOrWhiteSpace(Model.Negocio?.imagen?.Base64))
-                {
-                    <img src="@Model.Negocio.imagen.Base64" alt="Logo negocio" class="h-full w-full object-cover" />
-                }
+    <header class="relative w-full bg-[#F5EFE4] shadow-md">
+        <div class="relative h-56 w-full">
+            @if (!string.IsNullOrWhiteSpace(Model.Negocio?.BannerImagen?.Base64))
+            {
+                <img src="@Model.Negocio.BannerImagen.Base64" alt="Fondo"
+                    class="absolute inset-0 h-full w-full object-contain brightness-50" />
+            }
+            <div class="relative z-10 flex flex-row items-start gap-4 px-4 sm:top-24 md:items-start md:gap-6 md:px-10">
+                <div
+                    class="flex size-32 items-center justify-center overflow-hidden rounded-xl border bg-white shadow-lg sm:size-60">
+                    @if (!string.IsNullOrWhiteSpace(Model.Negocio?.imagen?.Base64))
+                    {
+                        <img src="@Model.Negocio.imagen.Base64" alt="Logo negocio" class="h-full w-full object-cover" />
+                    }
+                </div>
             </div>
         </div>
-    </div>
-</header>
+    </header>
 
-<!-- NUEVO BLOQUE DE INFORMACIÓN CENTRADO -->
-<section class="w-full bg-white px-4 py-4 text-center">
-    <h1 class="text-3xl font-extrabold tracking-tight text-gray-800 sm:text-4xl">
-        @Model.Negocio?.Nombre
-    </h1>
-    <p class="mt-2 text-base font-semibold tracking-wide text-[#15803D] uppercase sm:text-lg">
-        @Model.Negocio?.Descripcion
-    </p>
-    <p class="text-base font-semibold tracking-wide text-[#15803D] uppercase sm:text-lg">
-        @Model.Negocio?.Telefono
-    </p>
-</section>
+    <!-- NUEVO BLOQUE DE INFORMACIÓN CENTRADO -->
+    <section class="w-full bg-white px-4 py-4 text-center">
+        <h1 class="text-3xl font-extrabold tracking-tight text-gray-800 sm:text-4xl">
+            @Model.Negocio?.Nombre
+        </h1>
+        <p class="mt-2 text-base font-semibold tracking-wide text-[#15803D] uppercase sm:text-lg">
+            @Model.Negocio?.Descripcion
+        </p>
+        <p class="text-base font-semibold tracking-wide text-[#15803D] uppercase sm:text-lg">
+            @Model.Negocio?.Telefono
+        </p>
+    </section>
 
-    <div id="mensaje-modal" class="fixed inset-0 z-50 flex hidden items-center justify-center bg-black/50">
+    <div id="mensaje-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50">
         <div class="w-full max-w-md rounded-lg p-6 shadow-lg" style="background-color: #F4F1E9;">
             <div class="flex justify-center">
                 <img src="~/css/Images/LOGO FINAL.png" alt="Abastecete Logo" class="h-12">
@@ -55,21 +57,22 @@
 
             <form id="mensaje-form" class="mt-4">
                 <input type="email" id="email" name="email" value="@Model.Persona.Correo"
-                       class="mb-3 w-full rounded-lg border border-gray-300 bg-gray-100 p-3 text-black" required>
+                    class="mb-3 w-full rounded-lg border border-gray-300 bg-gray-100 p-3 text-black" required>
 
                 <div class="mb-3 flex items-center space-x-2">
                     <span class="flex items-center rounded-lg border border-gray-300 bg-white px-4 py-3">
                         +57
                     </span>
                     <input type="text" id="phone" name="phone" value="@Model.Negocio.Telefono"
-                           class="w-full rounded-lg border border-gray-300 bg-gray-100 p-3 text-black" required>
+                        class="w-full rounded-lg border border-gray-300 bg-gray-100 p-3 text-black" required>
                 </div>
 
                 <textarea id="message" name="message" placeholder="Escribe tu solicitud..."
-                          class="mb-3 h-32 w-full resize-none rounded-lg border border-gray-300 bg-gray-100 p-3 text-black"
-                          required></textarea>
+                    class="mb-3 h-32 w-full resize-none rounded-lg border border-gray-300 bg-gray-100 p-3 text-black"
+                    required></textarea>
 
-                <button type="submit" class="w-full rounded-lg bg-[#23916A] py-3 font-bold text-white hover:bg-[#1E7B57]">
+                <button type="submit"
+                    class="w-full rounded-lg bg-[#23916A] py-3 font-bold text-white hover:bg-[#1E7B57]">
                     Enviar solicitud
                 </button>
             </form>
@@ -84,49 +87,38 @@
 
         <div class="w-full transition-all">
             <div id="productosWrapper"
-                 class="w-full rounded-lg border border-gray-300 bg-white p-4 shadow-md transition-all duration-300 sm:p-6">
+                class="w-full rounded-lg border border-gray-300 bg-white p-4 shadow-md transition-all duration-300 sm:p-6">
 
                 <div class="flex items-center gap-2">
 
-                    <a href="#" onclick="openMensajeModal()"
-                       class="flex h-10 w-10 items-center justify-center rounded-md bg-gray-600 text-white transition hover:bg-gray-700">
+                    <a href="#" onclick="openMensajeModal()" title="Enviar solicitud"
+                        class="flex h-10 w-10 items-center justify-center rounded-md bg-gray-600 text-white transition hover:bg-gray-700">
                         <i class="fas fa-comment-dots text-sm"></i>
                     </a>
 
 
-                    <a href="@Url.Action("AgregarProductNegocio", "Productos")"
-                       class="flex h-10 w-10 items-center justify-center rounded-md bg-orange-500 text-white transition hover:bg-orange-600">
+                    <a href="@Url.Action("AgregarProductNegocio", "Productos")" title="Agregar producto"
+                        class="flex h-10 w-10 items-center justify-center rounded-md bg-orange-500 text-white transition hover:bg-orange-600">
                         <i class="fas fa-plus text-sm"></i>
                     </a>
 
 
-                    <a href="@Url.Action("EditarNegocio","Negocios")"
-                       class="flex h-10 w-10 items-center justify-center rounded-md bg-orange-500 text-white transition hover:bg-orange-600">
+                    <a href="@Url.Action("EditarNegocio", "Negocios")" title="Editar negocio"
+                        class="flex h-10 w-10 items-center justify-center rounded-md bg-orange-500 text-white transition hover:bg-orange-600">
                         <i class="fas fa-pen-to-square text-sm"></i>
                     </a>
                 </div>
                 <div id="productosContainer"
-                     class="mt-5 grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                    class="mt-5 grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
 
                     @foreach (var producto in ViewBag.productos)
                     {
                         <div id="producto-@producto.Id"
-                             class="producto relative flex flex-col rounded-lg border bg-white p-4 shadow-md"
-                             data-categoria-id="@producto.IdSubCategoria" data-precio="@producto.Precio">
-                            <img src="@producto.ImagenUrl" alt="@producto.Nombre"
-                                 class="mb-4 h-40 w-full object-contain" />
+                            class="producto relative flex flex-col rounded-lg border bg-white p-4 shadow-md"
+                            data-categoria-id="@producto.IdSubCategoria" data-precio="@producto.Precio">
+                            <img src="@producto.ImagenUrl" alt="@producto.Nombre" class="mb-4 h-40 w-full object-contain" />
                             <h3 class="text-lg font-semibold">@producto.Nombre</h3>
                             <p class="text-xl font-bold text-orange-500">$@producto.Precio</p>
-                            <a href="@Url.Action(
-                                    "ProductDetailLocal",
-                                    "Productos",
-                                    new { idProducto = producto.Id }
-                                )"
-                               class="mt-4 self-center rounded-lg bg-[#1A2D3D] px-6 py-2 text-white hover:bg-[#162331]">
-                                Ver
-                            </a>
-
-
                         </div>
                     }
                 </div>
@@ -260,6 +252,7 @@
         }
     </script>
 
-   
+
 </body>
+
 </html>

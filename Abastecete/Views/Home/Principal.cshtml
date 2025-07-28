@@ -1,10 +1,11 @@
-﻿ @using BusinessLogic.Utilidades
+﻿@using BusinessLogic.Utilidades
 @using Microsoft.AspNetCore.Http
 @inject IHttpContextAccessor HttpContextAccessor
 @model List<BusinessLogic.Models.Categoria>
 
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -29,7 +30,8 @@
     @{
         string permisos = HttpContextAccessor.HttpContext.Session.GetString("permisos");
 
-        var bannerInicio = ViewBag.BannerInicio as List<(BusinessLogic.Models.BannerModel, BusinessLogic.Models.ImagenModel)> ?? new();
+        var bannerInicio = ViewBag.BannerInicio as List<(BusinessLogic.Models.BannerModel,
+        BusinessLogic.Models.ImagenModel)> ?? new();
 
         var horizontales = bannerInicio
         .Where(b => b.Item1.Formato == "16:9")
@@ -52,39 +54,41 @@
     <section class="hero-section flex flex-col gap-3 p-3 sm:p-5">
         <div class="flex w-full flex-col gap-3 sm:flex-row sm:gap-6">
             <!-- Carrusel Principal -->
-            <div class="relative h-[200px] w-full overflow-hidden rounded-lg sm:flex-grow-[2] sm:h-[250px] lg:h-[400px]">
-                <img id="carouselImage"
-                     src="@primeraHorizontal"
-                     alt="Carrusel"
-                     class="h-full w-full object-cover transition-opacity duration-500" />
+            <div
+                class="relative h-[200px] w-full overflow-hidden rounded-lg sm:flex-grow-[2] sm:h-[250px] lg:h-[400px]">
+                <img id="carouselImage" src="@primeraHorizontal" alt="Carrusel"
+                    class="h-full w-full object-cover transition-opacity duration-500" />
 
 
                 <!-- Botón Anterior -->
                 <button id="prevBtn"
-                        class="absolute top-1/2 left-2 z-10 -translate-y-1/2 transform rounded-full bg-white px-2 py-1 text-black sm:left-3 sm:px-3 sm:py-2">
-                    <svg class="h-6 w-6 text-gray-800" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10">
-                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 1 1 5l4 4" />
+                    class="absolute top-1/2 left-2 z-10 -translate-y-1/2 transform rounded-full bg-white px-2 py-1 text-black sm:left-3 sm:px-3 sm:py-2">
+                    <svg class="h-6 w-6 text-gray-800" xmlns="http://www.w3.org/2000/svg" fill="none"
+                        viewBox="0 0 6 10">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M5 1 1 5l4 4" />
                     </svg>
                 </button>
 
                 <!-- Botón Siguiente -->
                 <button id="nextBtn"
-                        class="absolute top-1/2 right-2 z-10 -translate-y-1/2 transform rounded-full bg-white px-2 py-1 text-black sm:right-3 sm:px-3 sm:py-2">
-                    <svg class="h-6 w-6 text-gray-800" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10">
-                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 9 4-4-4-4" />
+                    class="absolute top-1/2 right-2 z-10 -translate-y-1/2 transform rounded-full bg-white px-2 py-1 text-black sm:right-3 sm:px-3 sm:py-2">
+                    <svg class="h-6 w-6 text-gray-800" xmlns="http://www.w3.org/2000/svg" fill="none"
+                        viewBox="0 0 6 10">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="m1 9 4-4-4-4" />
                     </svg>
                 </button>
             </div>
 
-            <div class="flex h-[200px] w-full gap-2 sm:flex-col sm:w-[200px] sm:h-[250px] lg:w-[250px] lg:h-[400px] lateral-full-mobile">
+            <div
+                class="flex h-[200px] w-full gap-2 sm:flex-col sm:w-[200px] sm:h-[250px] lg:w-[250px] lg:h-[400px] lateral-full-mobile">
 
                 <div class="h-1/2 flex-1">
-                    <img src="@imgIzquierda" alt="Imagen lateral 1"
-                         class="h-[95%] w-full rounded-lg object-cover">
+                    <img src="@imgIzquierda" alt="Imagen lateral 1" class="h-[95%] w-full rounded-lg object-cover">
                 </div>
                 <div class="h-1/2 flex-1">
-                    <img src="@imgDerecha" alt="Imagen lateral 2"
-                         class="h-[96%] w-full rounded-lg object-cover">
+                    <img src="@imgDerecha" alt="Imagen lateral 2" class="h-[96%] w-full rounded-lg object-cover">
                 </div>
             </div>
         </div>
@@ -94,9 +98,9 @@
         document.addEventListener("DOMContentLoaded", function () {
             const images = [
         @foreach (var img in horizontales)
-        {
-            @Html.Raw($"\"{img}\",")
-        }
+                {
+                    @Html.Raw($"\"{img}\",")
+                }
             ];
 
             let currentIndex = 0;
@@ -181,7 +185,8 @@
     <section class="space-y-3 p-10" id="categories-container">
         <div class="mb-4 flex items-center justify-between">
             <h2 class="pl-10 text-lg font-bold text-gray-800">Categorías</h2>
-            <a href="@Url.Action("Listar", "Categorias")" class="flex items-center pr-10 text-sm font-medium text-gray-600 hover:text-gray-800">
+            <a href="@Url.Action("Listar", "Categorias")"
+                class="flex items-center pr-10 text-sm font-medium text-gray-600 hover:text-gray-800">
                 Ver todo <span class="ml-1">&gt;</span>
             </a>
         </div>
@@ -189,10 +194,12 @@
         <div class="mb-6 flex flex-wrap justify-center gap-4">
             @foreach (var categoria in Model)
             {
-                <form method="post" action="@Url.Action("Consultar", "Negocios")" class="flex w-[28%] flex-col items-center sm:w-[22%] md:w-[12%] lg:w-[12%]">
+                <form method="post" action="@Url.Action("Consultar", "Negocios")"
+                    class="flex w-[28%] flex-col items-center sm:w-[22%] md:w-[12%] lg:w-[12%]">
                     <input type="hidden" name="idCategoria" value="@categoria.Id" />
                     <button type="submit">
-                        <img src="@(categoria.Imagen?.Base64 ?? "/images/default.webp")" alt="@categoria.Nombre" class="h-full w-full object-contain">
+                        <img src="@(categoria.Imagen?.Base64 ?? "/images/default.webp")" alt="@categoria.Nombre"
+                            class="h-full w-full object-contain">
 
                     </button>
                     <p class="mt-2 text-center text-xs font-medium sm:text-sm">
@@ -216,7 +223,8 @@
             <h2 class="pl-10 text-lg font-bold text-gray-800">Ofertas flash: Por tiempo limitado</h2>
             @if (ofertas != null && ofertas.Any())
             {
-                <a href="@Url.Action("ConsultarTodo", "OfertasFlash")" class="flex items-center pr-10 text-sm font-medium text-gray-600 hover:text-gray-800">
+                <a href="@Url.Action("ConsultarTodo", "OfertasFlash")"
+                    class="flex items-center pr-10 text-sm font-medium text-gray-600 hover:text-gray-800">
                     Ver todo <span class="ml-1">&gt;</span>
                 </a>
             }
@@ -231,10 +239,12 @@
                 {
                     <div class="relative flex flex-col rounded-lg bg-white p-4 shadow-md">
                         <div class="relative aspect-square overflow-hidden rounded-md bg-gray-300">
-                            <img src="@oferta.ImagenProductoOfertaFlash" alt="Imagen del Producto" class="absolute inset-0 h-full w-full object-cover">
+                            <img src="@oferta.ImagenProductoOfertaFlash" alt="Imagen del Producto"
+                                class="absolute inset-0 h-full w-full object-cover">
                         </div>
 
-                        <div class="border-2 absolute top-4 left-4 h-28 w-28 overflow-hidden rounded-full border-white shadow-md">
+                        <div
+                            class="border-2 absolute top-4 left-4 h-28 w-28 overflow-hidden rounded-full border-white shadow-md">
                             <img src="@oferta.FotoLocal" alt="Local" class="h-full w-full object-cover">
 
                         </div>
@@ -250,14 +260,16 @@
                             <!-- Temporizador -->
                             <div class="mt-4">
                                 <span class="font-semibold text-red-500">
-                                    ⏳ Expira en <span class="countdown-timer" data-expiration="@oferta.TiempoOferta?.ToString("yyyy-MM-ddTHH:mm:ss")"></span>
+                                    ⏳ Expira en <span class="countdown-timer"
+                                        data-expiration="@oferta.TiempoOferta?.ToString("yyyy-MM-ddTHH:mm:ss")"></span>
                                 </span>
                             </div>
                         </div>
                     </div>
                 }
             </div>
-        }else
+        }
+        else
         {
             <div class="mt-6 flex justify-center" id="galeriaOfertas">
 
@@ -285,20 +297,20 @@
     </script>
     <script>
         function actualizarContadores() {
-        document.querySelectorAll(".countdown-timer").forEach(timer => {
-        const expirationTime = new Date(timer.dataset.expiration).getTime();
-        const now = new Date().getTime();
-        const timeLeft = expirationTime - now;
+            document.querySelectorAll(".countdown-timer").forEach(timer => {
+                const expirationTime = new Date(timer.dataset.expiration).getTime();
+                const now = new Date().getTime();
+                const timeLeft = expirationTime - now;
 
-        if (timeLeft > 0) {
-        const hours = Math.floor(timeLeft / (1000 * 60 * 60));
-        const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
-        timer.innerText = `${hours}h ${minutes}m ${seconds}s`;
-        } else {
-        timer.innerText = "Expirado";
-        }
-        });
+                if (timeLeft > 0) {
+                    const hours = Math.floor(timeLeft / (1000 * 60 * 60));
+                    const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+                    timer.innerText = `${hours}h ${minutes}m ${seconds}s`;
+                } else {
+                    timer.innerText = "Expirado";
+                }
+            });
         }
         setInterval(actualizarContadores, 1000);
         actualizarContadores();
@@ -308,7 +320,7 @@
         <div class="mb-4 flex flex-col items-center justify-between lg:flex-row">
             <h2 class="pl-0 text-center text-lg font-bold text-gray-800 lg:text-left lg:pl-10">Mejores proveedores</h2>
             <a href="@Url.Action("Listar", "Categorias")"
-               class="flex items-center pr-0 text-sm font-medium text-gray-600 hover:text-gray-800 lg:pr-10">
+                class="flex items-center pr-0 text-sm font-medium text-gray-600 hover:text-gray-800 lg:pr-10">
                 Ver todo <span class="ml-1">&gt;</span>
             </a>
 
@@ -322,23 +334,23 @@
     </section>
 
     <script>
-                document.addEventListener("DOMContentLoaded", () => {
-          const providers = JSON.parse('@Html.Raw(ViewBag.LocalesAleatoriosJson)');
-          const highlightedContainer = document.getElementById("providers-highlighted");
-          const providersListContainer = document.getElementById("providers-list");
+        document.addEventListener("DOMContentLoaded", () => {
+            const providers = JSON.parse('@Html.Raw(ViewBag.LocalesAleatoriosJson)');
+            const highlightedContainer = document.getElementById("providers-highlighted");
+            const providersListContainer = document.getElementById("providers-list");
 
-          const DEFAULT_IMAGE = "/images/Logo2.jpg";
-          const DEFAULT_TEXT = "Acá podría estar tu local";
+            const DEFAULT_IMAGE = "/images/Logo2.jpg";
+            const DEFAULT_TEXT = "Acá podría estar tu local";
 
-          const createProviderCard = (provider, index) => {
-            const isPlaceholder = provider.Nombre === DEFAULT_TEXT;
-            const buttonText = isPlaceholder ? "Registrarme" : "Ver Ahora";
-            const buttonColor = index % 2 === 0 ? "bg-green-600 hover:bg-green-700" : "bg-orange-500 hover:bg-orange-600";
+            const createProviderCard = (provider, index) => {
+                const isPlaceholder = provider.Nombre === DEFAULT_TEXT;
+                const buttonText = isPlaceholder ? "Registrarme" : "Ver Ahora";
+                const buttonColor = index % 2 === 0 ? "bg-green-600 hover:bg-green-700" : "bg-orange-500 hover:bg-orange-600";
 
-            const card = document.createElement("div");
-            card.className = "bg-white rounded-xl shadow-md p-4 lg:p-6 flex flex-row items-center gap-4 col-span-1 h-[170px] sm:h-[180px] lg:h-[190px]";
+                const card = document.createElement("div");
+                card.className = "bg-white rounded-xl shadow-md p-4 lg:p-6 flex flex-row items-center gap-4 col-span-1 h-[170px] sm:h-[180px] lg:h-[190px]";
 
-            card.innerHTML = `
+                card.innerHTML = `
               <img src="${provider.imagen?.Base64 || DEFAULT_IMAGE}" alt="${provider.Nombre}" class="h-16 w-16 rounded-xl object-contain lg:w-20 lg:h-20">
               <div class="flex flex-col justify-center">
                 <h3 class="text-sm font-bold text-gray-600 lg:text-lg">${provider.Nombre || DEFAULT_TEXT}</h3>
@@ -351,19 +363,19 @@
                 </button>
               </div>
             `;
-            return card;
-          };
+                return card;
+            };
 
-                  const createHighlightedSection = () => {
-          const highlighted = document.createElement("div");
-          highlighted.className = `
+            const createHighlightedSection = () => {
+                const highlighted = document.createElement("div");
+                highlighted.className = `
             rounded-xl flex flex-col lg:flex-row
             px-0 py-6 overflow-hidden
             max-h-[350px]
             bg-green-700
           `.trim();
 
-          highlighted.innerHTML = `
+                highlighted.innerHTML = `
             <div class="flex h-[220px] w-full items-center justify-center sm:h-[280px] lg:h-auto lg:w-1/2">
               <img src="/images/mujer.png" alt="Imagen de mujer" class="max-h-[300px] w-auto object-contain">
             </div>
@@ -377,32 +389,32 @@
               </a>
             </div>
           `;
-          return highlighted;
-        };
+                return highlighted;
+            };
 
 
-          // Insertar contenido dinámico
-          highlightedContainer.appendChild(createHighlightedSection());
+            // Insertar contenido dinámico
+            highlightedContainer.appendChild(createHighlightedSection());
 
-          for (let i = 0; i < 6; i++) {
-            const provider = providers[i] || { Nombre: DEFAULT_TEXT, imagen: { Base64: DEFAULT_IMAGE } };
-            providersListContainer.appendChild(createProviderCard(provider, i));
-          }
-
-          // Delegar eventos en el contenedor
-          document.getElementById("providers-grid").addEventListener("click", (e) => {
-            if (e.target.classList.contains("proveedor-btn")) {
-              const button = e.target;
-              const isPlaceholder = button.getAttribute("data-placeholder") === "true";
-              const id = button.getAttribute("data-id");
-
-              if (isPlaceholder) {
-                window.location.href = "/Login/Login";
-              } else {
-                window.location.href = `/Negocios/ConsultarProductos?idLocal=${id}`;
-              }
+            for (let i = 0; i < 6; i++) {
+                const provider = providers[i] || { Nombre: DEFAULT_TEXT, imagen: { Base64: DEFAULT_IMAGE } };
+                providersListContainer.appendChild(createProviderCard(provider, i));
             }
-          });
+
+            // Delegar eventos en el contenedor
+            document.getElementById("providers-grid").addEventListener("click", (e) => {
+                if (e.target.classList.contains("proveedor-btn")) {
+                    const button = e.target;
+                    const isPlaceholder = button.getAttribute("data-placeholder") === "true";
+                    const id = button.getAttribute("data-id");
+
+                    if (isPlaceholder) {
+                        window.location.href = "/Login/Login";
+                    } else {
+                        window.location.href = `/Negocios/ConsultarProductos?idLocal=${id}`;
+                    }
+                }
+            });
         });
 
     </script>
@@ -421,11 +433,10 @@
                         @foreach (var negocio in negociosDuplicados)
                         {
                             <a href="@Url.Action("ConsultarProductos", "Negocios", new { idLocal = negocio.Id })"
-                               class="card w-72 flex-none overflow-hidden rounded-2xl bg-white shadow-lg transition-transform duration-300 hover:scale-105">
+                                class="card w-72 flex-none overflow-hidden rounded-2xl bg-white shadow-lg transition-transform duration-300 hover:scale-105">
                                 <div class="flex flex-col items-center justify-center p-6">
-                                    <img src="@(negocio.imagen?.Base64 ?? "/images/default.webp")"
-                                         alt="@negocio.Nombre"
-                                         class="h-32 w-32 rounded-full border border-gray-300 object-contain shadow" />
+                                    <img src="@(negocio.imagen?.Base64 ?? "/images/default.webp")" alt="@negocio.Nombre"
+                                        class="h-32 w-32 rounded-full border border-gray-300 object-contain shadow" />
                                     <h3 class="mt-4 text-center text-base font-semibold text-gray-800">@negocio.Nombre</h3>
                                     <p class="text-center text-sm text-gray-500">@negocio.Localizacion</p>
                                 </div>
@@ -440,16 +451,20 @@
             </div>
 
             <!-- Botones -->
-            <button type="button" class="absolute top-1/2 left-0 z-10 -translate-y-1/2 rounded-full bg-white p-2 shadow hover:bg-gray-100"
-                    data-carousel-prev>
-                <svg class="h-5 w-5 text-gray-700" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <button type="button"
+                class="absolute top-1/2 left-0 z-10 -translate-y-1/2 rounded-full bg-white p-2 shadow hover:bg-gray-100"
+                data-carousel-prev>
+                <svg class="h-5 w-5 text-gray-700" fill="none" stroke="currentColor" stroke-width="2"
+                    viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
                 </svg>
             </button>
 
-            <button type="button" class="absolute top-1/2 right-0 z-10 -translate-y-1/2 rounded-full bg-white p-2 shadow hover:bg-gray-100"
-                    data-carousel-next>
-                <svg class="h-5 w-5 text-gray-700" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <button type="button"
+                class="absolute top-1/2 right-0 z-10 -translate-y-1/2 rounded-full bg-white p-2 shadow hover:bg-gray-100"
+                data-carousel-next>
+                <svg class="h-5 w-5 text-gray-700" fill="none" stroke="currentColor" stroke-width="2"
+                    viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
                 </svg>
             </button>
@@ -537,7 +552,8 @@
         @foreach (var categoria in Model)
         {
             var categoriaNombre = categoria.Nombre;
-            var banners = ViewBag.BannersPorCategoria[categoriaNombre] as List<(BusinessLogic.Models.BannerModel Banner, BusinessLogic.Models.ImagenModel Imagen)> ?? new();
+            var banners = ViewBag.BannersPorCategoria[categoriaNombre] as List<(BusinessLogic.Models.BannerModel Banner,
+            BusinessLogic.Models.ImagenModel Imagen)> ?? new();
 
             var horizontal = banners.Where(b => b.Banner.Formato == "16:9").Select(b => b.Imagen).ToList();
             var cuadrado = banners.Where(b => b.Banner.Formato == "1:1").Select(b => b.Imagen).ToList();
@@ -559,10 +575,10 @@
                         <input type="hidden" name="idCategoria" value="@categoria.Id" />
                         <input type="hidden" name="membre" value="" />
                         <button type="submit"
-                                class="mt-2 flex items-center text-sm font-medium text-gray-600 hover:text-gray-800">
+                            class="mt-2 flex items-center text-sm font-medium text-gray-600 hover:text-gray-800">
                             Ver más
                             <svg xmlns="http://www.w3.org/2000/svg" class="ml-1 h-4 w-4" fill="none" viewBox="0 0 24 24"
-                                 stroke="currentColor">
+                                stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                             </svg>
                         </button>
@@ -572,43 +588,40 @@
                 <!-- Rejilla de imágenes -->
                 <div class="grid grid-cols-1 gap-4 lg:grid-cols-5">
 
-                    <img src="@horizontal[0].Base64" class="col-span-3 hidden h-60 w-full rounded-tl-3xl object-cover lg:block">
-                    <img src="@cuadrado[3].Base64" class="col-span-1 hidden h-60 w-full rounded-tl-3xl rounded-br-3xl object-cover lg:block">
-                    <img src="@cuadrado[2].Base64" class="col-span-1 hidden h-60 w-full rounded-tl-3xl rounded-br-3xl object-cover lg:block">
+                    <img src="@horizontal[0].Base64"
+                        class="col-span-3 hidden h-60 w-full rounded-tl-3xl object-cover lg:block">
+                    <img src="@cuadrado[3].Base64"
+                        class="col-span-1 hidden h-60 w-full rounded-tl-3xl rounded-br-3xl object-cover lg:block">
+                    <img src="@cuadrado[2].Base64"
+                        class="col-span-1 hidden h-60 w-full rounded-tl-3xl rounded-br-3xl object-cover lg:block">
                     <img src="@cuadrado[0].Base64" class="col-span-1 hidden h-60 w-full object-cover lg:block">
                     <img src="@cuadrado[1].Base64" class="col-span-1 hidden h-60 w-full object-cover lg:block">
                     <img src="@horizontal[1].Base64" class="col-span-3 hidden h-60 w-full object-cover lg:block">
 
                     <div class="flex flex-col gap-2 lg:hidden">
                         <div class="aspect-[16/9] w-full overflow-hidden rounded-tl-3xl">
-                            <img src="@horizontal[0].Base64"
-                                 class="h-full w-full object-cover" alt="..." />
+                            <img src="@horizontal[0].Base64" class="h-full w-full object-cover" alt="..." />
                         </div>
 
                         <div class="grid grid-cols-2 gap-2">
                             <div class="aspect-square overflow-hidden rounded-tl-3xl">
-                                <img src="@cuadrado[0].Base64"
-                                     class="h-full w-full object-cover" alt="..." />
+                                <img src="@cuadrado[0].Base64" class="h-full w-full object-cover" alt="..." />
                             </div>
                             <div class="aspect-square overflow-hidden rounded-br-3xl">
-                                <img src="@cuadrado[1].Base64"
-                                     class="h-full w-full object-cover" alt="..." />
+                                <img src="@cuadrado[1].Base64" class="h-full w-full object-cover" alt="..." />
                             </div>
                         </div>
 
                         <div class="aspect-[16/9] w-full overflow-hidden rounded-br-3xl">
-                            <img src="@horizontal[1].Base64"
-                                 class="h-full w-full object-cover" alt="..." />
+                            <img src="@horizontal[1].Base64" class="h-full w-full object-cover" alt="..." />
                         </div>
 
                         <div class="grid grid-cols-2 gap-2">
                             <div class="aspect-square overflow-hidden rounded-tl-3xl">
-                                <img src="@cuadrado[2].Base64"
-                                     class="h-full w-full object-cover" alt="..." />
+                                <img src="@cuadrado[2].Base64" class="h-full w-full object-cover" alt="..." />
                             </div>
                             <div class="aspect-square overflow-hidden rounded-br-3xl">
-                                <img src="@cuadrado[3].Base64"
-                                     class="h-full w-full object-cover" alt="..." />
+                                <img src="@cuadrado[3].Base64" class="h-full w-full object-cover" alt="..." />
                             </div>
                         </div>
 
@@ -620,4 +633,5 @@
     </section>
 
 </body>
+
 </html>

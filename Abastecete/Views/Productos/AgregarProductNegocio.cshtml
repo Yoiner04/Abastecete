@@ -1,6 +1,7 @@
 ﻿@using BusinessLogic.Models
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,7 +13,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <link rel="stylesheet" href="~/css/styles.css" asp-append-version="true" />
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAPudyk3G3YG7GOEpId4xMK_WFIEenOSp8&libraries=places"></script>
+    <script
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAPudyk3G3YG7GOEpId4xMK_WFIEenOSp8&libraries=places"></script>
 </head>
 
 <body class="bg-gray-100 p-6">
@@ -24,7 +26,8 @@
             <h2 class="mb-4 text-center text-2xl font-bold text-gray-700">Agregar Producto</h2>
 
             <form id="productForm" class="space-y-4">
-                <select id="category" class="w-full rounded-lg border border-gray-300 bg-gray-50 p-3 focus:outline-none focus:ring-2 focus:ring-green-500">
+                <select id="category"
+                    class="w-full rounded-lg border border-gray-300 bg-gray-50 p-3 focus:outline-none focus:ring-2 focus:ring-green-500">
                     <option value="">Seleccione una categoría</option>
                     @foreach (Categoria cate in ViewBag.categorias)
                     {
@@ -45,10 +48,10 @@
                 </select>
 
                 <input type="number" id="price" placeholder="Ingrese el valor"
-                       class="w-full rounded-lg border border-gray-300 bg-gray-50 p-3 focus:outline-none focus:ring-2 focus:ring-green-500" />
+                    class="w-full rounded-lg border border-gray-300 bg-gray-50 p-3 focus:outline-none focus:ring-2 focus:ring-green-500" />
 
                 <button type="button" onclick="addProduct()"
-                        class="w-full rounded-lg bg-green-600 py-3 text-white transition hover:bg-green-700">
+                    class="w-full rounded-lg bg-green-600 py-3 text-white transition hover:bg-green-700">
                     Registrar
                 </button>
             </form>
@@ -77,7 +80,7 @@
             <form id="finalizarForm" method="post">
                 <input type="hidden" name="productosJson" id="productosJson">
                 <button type="button" onclick="finalizarRegistro()"
-                        class="mt-6 w-full rounded-lg bg-orange-500 py-3 text-white transition hover:bg-orange-600">
+                    class="mt-6 w-full rounded-lg bg-orange-500 py-3 text-white transition hover:bg-orange-600">
                     Finalizar Registro
                 </button>
             </form>
@@ -87,7 +90,7 @@
     <script>
         $(document).ready(function () {
             $("#category").change(function () {
-                var idCategoria =  $(this).val();
+                var idCategoria = $(this).val();
                 if (idCategoria) {
                     $("#subcategory").prop("disabled", false);
                     $.ajax({
@@ -96,7 +99,7 @@
                         data: { idCategoria: idCategoria },
                         dataType: "json",
                         success: function (response) {
-                            $("#subcategory").empty(); 
+                            $("#subcategory").empty();
                             $("#subcategory").append('<option value="">Seleccione una subcategoría</option>');
 
                             $.each(response, function (index, item) {
@@ -113,39 +116,39 @@
                 }
             });
 
-            $("#subcategory").change(function(){
+            $("#subcategory").change(function () {
                 var subCategoriaId = $(this).val();
-                if(subCategoriaId){
+                if (subCategoriaId) {
                     $("#product").prop("disabled", false);
                     $.ajax({
-                        url:"/Productos/obtenerProductosSubcategoria",
-                        type:"GET",
-                        data:{subCategoriaId:subCategoriaId},
-                        dataType:"json",
-                        success:function(response){
+                        url: "/Productos/obtenerProductosSubcategoria",
+                        type: "GET",
+                        data: { subCategoriaId: subCategoriaId },
+                        dataType: "json",
+                        success: function (response) {
                             $("#product").empty();
                             $("#product").append('<option value="">Seleccione un producto</option>');
-                            $.each(response,function(index,item){
+                            $.each(response, function (index, item) {
                                 $("#product").append(`<option data-nombre=${item.nombre} value="${item.id}">${item.nombre}</option>`);
                             });
                         },
                     })
                 }
-                
+
             });
-            $("#product").change(function(){
+            $("#product").change(function () {
                 var productoId = $(this).val(); // ✅ corregido: ahora tomamos el id del producto
-                if(productoId){
+                if (productoId) {
                     $("#unit").prop("disabled", false);
                     $.ajax({
                         url: "/Unidad/ConsultarUnidades",
                         type: "GET",
                         data: { id_producto: productoId }, // ✅ enviamos el parámetro correcto
                         dataType: "json",
-                        success: function(response){
+                        success: function (response) {
                             $("#unit").empty();
                             $("#unit").append('<option value="">Seleccione una unidad</option>');
-                            $.each(response, function(index, item){
+                            $.each(response, function (index, item) {
                                 $("#unit").append(`<option data-nombre=${item.nombre} value="${item.id}">${item.nombre}</option>`);
                             });
                         }
@@ -171,8 +174,16 @@
                 });
             });
 
+            if (productos.length === 0) {
+                alert("Debe agregar al menos un producto antes de finalizar.");
+                return;
+            }
+
             $("#productosJson").val(JSON.stringify(productos));
-            console.log(productos);
+
+            // 🔒 Deshabilitar el botón y cambiar texto
+            const $btn = $("#finalizarForm button[type='button']");
+            $btn.prop("disabled", true).text("Procesando...");
 
             $.ajax({
                 url: '@Url.Action("FinalizarRegistroProductos", "Productos")',
@@ -180,10 +191,11 @@
                 data: { productosJson: JSON.stringify(productos) },
                 success: function (response) {
                     alert(response.mensaje);
-                    window.location.reload();
+                    window.location.href = "/Productos/ProductosNegocio";
                 },
                 error: function () {
                     alert("Hubo un error al registrar los productos.");
+                    $btn.prop("disabled", false).text("Finalizar Registro");
                 }
             });
         }
@@ -205,14 +217,14 @@
             let price = document.getElementById("price").value;
 
             if (!category || !subcategory || !product || !unit || !price) {
-                console.log(category,subcategory,product,unit,price);
+                console.log(category, subcategory, product, unit, price);
                 alert("Por favor, complete todos los campos.");
                 return;
             }
 
             let tableBody = document.getElementById("productTableBody");
             let row = document.createElement("tr");
-                row.innerHTML = `
+            row.innerHTML = `
             <td class="border p-2" data-idcategoria="${categoryid}">${category}</td>
             <td class="border p-2" data-idsubcategoria="${subcategoryid}">${subcategory}</td>
             <td class="border p-2" data-idproducto="${productid}">${product}</td>
@@ -230,4 +242,5 @@
         }
     </script>
 </body>
+
 </html>
