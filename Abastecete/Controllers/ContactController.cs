@@ -29,12 +29,39 @@ namespace Abastecete.Controllers
             }
             return BadRequest(new { success = false, message = "Datos inválidos." });
         }
+
+        [HttpPost("opinion")]
+        public async Task<IActionResult> SendFooterOpinion([FromForm] OpinionModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                string asunto = "Opinión desde el formulario de Abastecete";
+                string cuerpo = $"Nombre: {model.Nombre}\nCorreo: {model.Correo}\nTeléfono: {model.Telefono}\n\nOpinión:\n{model.Mensaje}";
+
+                bool enviado = await _emailService.EnviarCorreoOpinion(asunto, cuerpo);
+
+                if (enviado)
+                    return Ok(new { success = true, message = "Opinión enviada correctamente." });
+
+                return BadRequest(new { success = false, message = "Error al enviar la opinión." });
+            }
+            return BadRequest(new { success = false, message = "Datos inválidos." });
+        }
     }
 
     public class ContactFormModel
     {
-        public string Email { get; set; }
+        public string Email
+        { get; set; }
         public string Phone { get; set; }
         public string Message { get; set; }
+    }
+
+    public class OpinionModel
+    {
+        public string Nombre { get; set; }
+        public string Correo { get; set; }
+        public string Telefono { get; set; }
+        public string Mensaje { get; set; }
     }
 }

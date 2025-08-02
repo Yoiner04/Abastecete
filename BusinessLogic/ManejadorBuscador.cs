@@ -12,9 +12,11 @@ namespace BusinessLogic
     public class ManejadorBuscador
     {
         private Connection conexion;
+        private readonly ManejadorMongo _manejadorMongo;
 
         public ManejadorBuscador()
         {
+            _manejadorMongo = new ManejadorMongo();
             conexion = new Connection();
         }
 
@@ -38,7 +40,9 @@ namespace BusinessLogic
                     NombreLocal = row["NOMBRE_LOCAL"].ToString(),
                     FotoLocal = row["FOTOS_LOCAL"].ToString(),
                     ProductoOfertaFlash = row["PRODUCTO_OFERTA_FLASH"].ToString(),
-                    ImagenProductoOfertaFlash = row["IMAGEN_PRODUCTO_OFERTA_FLASH"].ToString()
+                    ImagenProductoOfertaFlash = row["IMAGEN_PRODUCTO_OFERTA_FLASH"].ToString(),
+                    ImagenLocal = _manejadorMongo.ObtenerImagen(row["FOTOS_LOCAL"].ToString()),
+                    IdLocal = Convert.ToInt32(row["PK_ID_LOCAL"])
                 });
             }
             return ofertas;
@@ -64,7 +68,8 @@ namespace BusinessLogic
                     NombreLocal = row["NOMBRE_LOCAL"].ToString(),
                     DireccionLocal = row["DIRECCION_LOCAL"].ToString(),
                     FotoLocal = row["FOTOS_LOCAL"].ToString(),
-                    IdLocal = Convert.ToInt32(row["PK_ID_LOCAL"])
+                    IdLocal = Convert.ToInt32(row["PK_ID_LOCAL"]),
+                    ImagenLocal = _manejadorMongo.ObtenerImagen(row["FOTOS_LOCAL"].ToString())
                 });
             }
             return productos;

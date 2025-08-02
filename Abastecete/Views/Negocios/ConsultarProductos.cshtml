@@ -5,6 +5,7 @@
 @Html.Partial("_ContactModal")
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -23,26 +24,27 @@
             pointer-events: auto;
         }
 
-            .range-slider::-webkit-slider-thumb {
-                -webkit-appearance: none;
-                height: 1rem;
-                width: 1rem;
-                border-radius: 50%;
-                background: #2563EB; /* Azul */
-                cursor: pointer;
-                z-index: 3;
-                position: relative;
-            }
+        .range-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 1rem;
+            width: 1rem;
+            border-radius: 50%;
+            background: #2563EB;
+            /* Azul */
+            cursor: pointer;
+            z-index: 3;
+            position: relative;
+        }
 
-            .range-slider::-moz-range-thumb {
-                height: 1rem;
-                width: 1rem;
-                border-radius: 50%;
-                background: #2563EB;
-                cursor: pointer;
-                z-index: 3;
-                position: relative;
-            }
+        .range-slider::-moz-range-thumb {
+            height: 1rem;
+            width: 1rem;
+            border-radius: 50%;
+            background: #2563EB;
+            cursor: pointer;
+            z-index: 3;
+            position: relative;
+        }
 
         #rangeBar {
             top: 0;
@@ -52,29 +54,45 @@
     </style>
 
 </head>
+
 <body class="bg-gray-100">
-    <!-- HEADER NEGOCIO -->
-    <header class="flex items-center justify-between bg-[#F5EFE4] p-4 shadow-md">
-        <div class="flex items-center gap-4">
-            <div class="h-12 w-12 overflow-hidden rounded-md border bg-white">
+    <!-- HEADER NEGOCIO CON BANNER -->
+    <header class="relative w-full bg-[#F5EFE4] shadow-md">
+        <div class="relative h-56 w-full">
             @if (!string.IsNullOrWhiteSpace(negocio?.BannerImagen?.Base64))
             {
-                <img src="@negocio?.BannerImagen.Base64" alt="Logo negocio"
-                         class="h-full w-full object-cover" />
+                <img src="@negocio.BannerImagen.Base64" alt="Fondo"
+                    class="absolute inset-0 h-full w-full object-contain brightness-50" />
             }
 
+            <div class="relative z-10 flex flex-row items-start gap-4 px-4 sm:top-24 md:items-start md:gap-6 md:px-10">
+                <div
+                    class="flex size-32 items-center justify-center overflow-hidden rounded-xl border bg-white shadow-lg sm:size-60">
+                    @if (!string.IsNullOrWhiteSpace(negocio?.imagen?.Base64))
+                    {
+                        <img src="@negocio.imagen.Base64" alt="Logo negocio" class="h-full w-full object-cover" />
+                    }
+                </div>
             </div>
-            <h1 class="text-2xl font-bold text-gray-800">@negocio?.Nombre</h1>
-            <h1 class="text-2xl font-bold text-gray-800">@negocio?.Descripcion</h1>
-        </div>
-        <div>
-            <span class="text-lg font-semibold text-gray-700">Celular: @negocio?.Telefono</span>
         </div>
     </header>
 
-    <main class="flex w-full gap-6 p-6">
+    <!-- SECCIÓN DE INFORMACIÓN CENTRADA -->
+    <section class="w-full bg-white px-4 py-4 text-center">
+        <h1 class="text-3xl font-extrabold tracking-tight text-gray-800 sm:text-4xl">
+            @negocio?.Nombre
+        </h1>
+        <p class="mt-2 text-base font-semibold tracking-wide text-[#15803D] uppercase sm:text-lg">
+            @negocio?.Descripcion
+        </p>
+        <p class="text-base font-semibold tracking-wide text-[#15803D] uppercase sm:text-lg">
+            @negocio?.Telefono
+        </p>
+    </section>
+
+    <main class="flex flex-col md:flex-row w-full gap-6 p-4">
         <!-- FILTROS -->
-        <aside id="filtros" class="w-1/5 space-y-6 overflow-auto">
+        <aside id="filtros" class="w-full md:w-1/5 space-y-6">
             <div>
                 <h2 class="mb-2 text-xl font-bold text-green-600">Filtros</h2>
             </div>
@@ -107,29 +125,32 @@
                     <span id="maxPriceValue"></span>
                 </div>
             </div>
-            <button id="filter" class="w-full rounded-full bg-green-700 py-2 text-white hover:bg-green-800">Restablecer</button>
+            <button id="filter"
+                class="w-full rounded-full bg-green-700 py-2 text-white hover:bg-green-800">Restablecer</button>
         </aside>
 
         <!-- LISTA DE PRODUCTOS -->
-        <section id="productosWrapper" class="w-4/5">
+        <section id="productosWrapper" class="w-full md:w-4/5">
             <h2 class="mb-4 text-lg font-semibold text-green-600">Productos disponibles</h2>
             <div id="productosContainer" class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
                 @foreach (var producto in Model)
                 {
-                    <div id="producto-@producto.Id" class="producto flex flex-col rounded-lg bg-white p-4 shadow-md" data-categoria-id="@producto.Categoria" data-subcategoria-id="@producto.IdSubCategoria" data-precio="@producto.Precio">
+                    <div id="producto-@producto.Id" class="producto flex flex-col rounded-lg bg-white p-4 shadow-md"
+                        data-categoria-id="@producto.Categoria" data-subcategoria-id="@producto.IdSubCategoria"
+                        data-precio="@producto.Precio">
                         <img src="@producto.ImagenUrl" alt="@producto.Nombre" class="mb-4 h-40 w-full object-contain" />
                         <h3 class="font-semibold text-gray-800">@producto.Nombre</h3>
                         <p class="mt-2 font-bold text-orange-500">$@producto.Precio - @producto.Unidad.Nombre</p>
                         <a href="@Url.Action(
-                                                "ProductDetailLocal",
-                                                "Productos",
-                                                new {idlocal= negocio?.Id, idProducto = producto.Id }
-                                            )"
-                       class="mt-3 mx-auto w-1/2 rounded-lg bg-[#1A2D3D] px-2 py-1 text-sm text-white hover:bg-[#162331] block text-center">
-                            Ver
-                        </a>
-                    </div>
-                }
+                                                                                                                                                                                                                                             "ProductDetailLocal",
+                                                                                                                                                                                                                                             "Productos",
+                                                                                                                                                                                                                                             new { idlocal = negocio?.Id, idProducto = producto.Id }
+                                                                                                                                                                                                                                         )"
+                        class="mt-3 mx-auto w-1/2 rounded-lg bg-[#1A2D3D] px-2 py-1 text-sm text-white hover:bg-[#162331] block text-center">
+                        Ver
+                    </a>
+                </div>
+                                }
             </div>
         </section>
     </main>
@@ -288,4 +309,5 @@
 
 
 </body>
+
 </html>

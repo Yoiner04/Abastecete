@@ -9,9 +9,11 @@ namespace BusinessLogic
     public class ManejadorProductos
     {
         private Connection conexion;
+        private readonly ManejadorMongo _manejadorMongo;
 
         public ManejadorProductos()
         {
+            _manejadorMongo = new ManejadorMongo();
             conexion = new Connection();
         }
 
@@ -99,11 +101,12 @@ namespace BusinessLogic
             {
                 new Parametro("localid", idlocal)
             };
+
             DataTable datos = conexion.EjecutarConsulta("productos_local", parametros);
             List<Producto> productos = new List<Producto>();
+
             foreach (DataRow row in datos.Rows)
             {
-
                 productos.Add(new Producto
                 {
                     Id = Convert.ToInt32(row["PK_ID_PRODUCTO"]),
@@ -115,7 +118,7 @@ namespace BusinessLogic
                     },
                     ImagenUrl = row["IMAGEN_URL"].ToString(),
                     IdSubCategoria = Convert.ToInt32(row["FK_ID_SUB_CATEGORIA"]),
-                    Categoria = Convert.ToInt32(row["PK_ID_CATEGORIA"]),
+                    Categoria = Convert.ToInt32(row["PK_ID_CATEGORIA"])
                 });
             }
             return productos;

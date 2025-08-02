@@ -48,38 +48,40 @@
         </p>
     </section>
 
-    <div id="mensaje-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50">
-        <div class="w-full max-w-md rounded-lg p-6 shadow-lg" style="background-color: #F4F1E9;">
-            <div class="flex justify-center">
-                <img src="~/css/Images/LOGO FINAL.png" alt="Abastecete Logo" class="h-12">
-            </div>
-            <h2 class="mt-2 text-center text-xl font-bold text-[#23916A]">Solicitud</h2>
-
-            <form id="mensaje-form" class="mt-4">
-                <input type="email" id="email" name="email" value="@Model.Persona.Correo"
-                    class="mb-3 w-full rounded-lg border border-gray-300 bg-gray-100 p-3 text-black" required>
-
-                <div class="mb-3 flex items-center space-x-2">
-                    <span class="flex items-center rounded-lg border border-gray-300 bg-white px-4 py-3">
-                        +57
-                    </span>
-                    <input type="text" id="phone" name="phone" value="@Model.Negocio.Telefono"
-                        class="w-full rounded-lg border border-gray-300 bg-gray-100 p-3 text-black" required>
+    <div id="mensaje-modal" class="fixed inset-0 z-50 hidden bg-black/50 transition-opacity duration-300">
+        <div class="flex min-h-screen items-center justify-center">
+            <div class="w-full max-w-md rounded-lg p-6 shadow-lg" style="background-color: #F4F1E9;">
+                <div class="flex justify-center">
+                    <img src="~/css/Images/LOGO FINAL.png" alt="Abastecete Logo" class="h-12">
                 </div>
+                <h2 class="mt-2 text-center text-xl font-bold text-[#23916A]">Solicitud</h2>
 
-                <textarea id="message" name="message" placeholder="Escribe tu solicitud..."
-                    class="mb-3 h-32 w-full resize-none rounded-lg border border-gray-300 bg-gray-100 p-3 text-black"
-                    required></textarea>
+                <form id="mensaje-form" class="mt-4">
+                    <input type="email" id="email" name="email" value="@Model.Persona.Correo"
+                        class="mb-3 w-full rounded-lg border border-gray-300 bg-gray-100 p-3 text-black" required>
 
-                <button type="submit"
-                    class="w-full rounded-lg bg-[#23916A] py-3 font-bold text-white hover:bg-[#1E7B57]">
-                    Enviar solicitud
+                    <div class="mb-3 flex items-center space-x-2">
+                        <span class="flex items-center rounded-lg border border-gray-300 bg-white px-4 py-3">
+                            +57
+                        </span>
+                        <input type="text" id="phone" name="phone" value="@Model.Negocio.Telefono"
+                            class="w-full rounded-lg border border-gray-300 bg-gray-100 p-3 text-black" required>
+                    </div>
+
+                    <textarea id="message" name="message" placeholder="Escribe tu solicitud..."
+                        class="mb-3 h-32 w-full resize-none rounded-lg border border-gray-300 bg-gray-100 p-3 text-black"
+                        required></textarea>
+
+                    <button type="submit"
+                        class="w-full rounded-lg bg-[#23916A] py-3 font-bold text-white hover:bg-[#1E7B57]">
+                        Enviar solicitud
+                    </button>
+                </form>
+
+                <button id="close-mensaje-modal" class="mt-3 block w-full text-center font-medium text-black">
+                    Cerrar
                 </button>
-            </form>
-
-            <button id="close-mensaje-modal" class="mt-3 block w-full text-center font-medium text-black">
-                Cerrar
-            </button>
+            </div>
         </div>
     </div>
 

@@ -10,10 +10,12 @@ namespace BusinessLogic
     public class ManejadorOfertasFlash
     {
         private Connection conexion;
+        private readonly ManejadorMongo _manejadorMongo;
         private readonly EmailService _emailService;
 
         public ManejadorOfertasFlash()
         {
+            _manejadorMongo = new ManejadorMongo();
             conexion = new Connection();
             _emailService = new EmailService();
         }
@@ -77,7 +79,9 @@ namespace BusinessLogic
                         NombreLocal = row["NOMBRE_LOCAL"].ToString(),
                         FotoLocal = row["FOTOS_LOCAL"].ToString(),
                         ProductoOfertaFlash = row["PRODUCTO_OFERTA_FLASH"].ToString(),
-                        ImagenProductoOfertaFlash = row["IMAGEN_PRODUCTO_OFERTA_FLASH"].ToString()
+                        ImagenProductoOfertaFlash = row["IMAGEN_PRODUCTO_OFERTA_FLASH"].ToString(),
+                        ImagenLocal = _manejadorMongo.ObtenerImagen(row["FOTOS_LOCAL"].ToString()),
+                        IdLocal = Convert.ToInt32(row["PK_ID_LOCAL"])
                     });
                 }
             }

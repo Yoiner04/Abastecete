@@ -70,13 +70,13 @@
                     </li>
 
                     <li class="flex-1 md:flex-none text-center">
-                        <a href="#ofertas-container"
+                        <a href="/#ofertas-container"
                             class="block px-4 md:px-1 lg:px-0 xl:px-2 py-2 whitespace-nowrap text-black hover:text-green-600">Ofertas
                             flash</a>
                     </li>
 
                     <li class="flex-1 md:flex-none text-center">
-                        <a href="#" id="open-contact-modal"
+                        <a href="/" id="open-contact-modal"
                             class="block px-4 py-2 text-black hover:text-green-600 md:px-0 lg:px-0 xl:px-2 md:py-0">Contacto</a>
                     </li>
                 </ul>
@@ -92,7 +92,7 @@
                             </button>
 
                             <ul id="user-menu"
-                                class="absolute right-0 z-50 mt-2 hidden min-w-[180px] overflow-hidden rounded-lg border border-gray-200 bg-white text-sm shadow-xl md:min-w-[220px]">
+                                class="absolute top-2 right-0 z-50 mt-2 hidden min-w-[180px] overflow-hidden rounded-lg border border-gray-200 bg-white text-sm shadow-xl md:min-w-[220px]">
                                 <li class="border-b px-5 py-3 transition duration-200 hover:bg-gray-100">
                                     <a href="@Url.Action("Actualizar", "Usuarios")"
                                         class="block w-full text-left font-medium text-black">
@@ -154,7 +154,7 @@
                     @if (RolPermisos.TienePermiso("Dejanos tu reseña", permisos))
                     {
                         <li class="group">
-                            <a href="@Url.Action("", "")" class="text-black group-hover:text-green-600">
+                            <a href="/#dejanos-tu-resenia" class="text-black group-hover:text-green-600">
                                 Dejanos tu reseña
                             </a>
                         </li>
@@ -221,7 +221,7 @@
 
     </header>
 
-    <main role="main" class="pt-28 md:pt-48 lg:pt-28">
+    <main role="main" class="pt-28">
         @RenderBody()
     </main>
 
@@ -232,7 +232,7 @@
             const menuContainer = document.getElementById('menu-container');
 
             function resetMenuOnResize() {
-                if (window.innerWidth >= 768) {
+                if (window.innerWidth >= 1024) {
                     menuContainer.classList.remove('hidden');
                 } else {
                     menuContainer.classList.add('hidden');
@@ -252,7 +252,7 @@
             const adminMenu = document.getElementById('admin-menu');
 
             function resetAdminMenuOnResize() {
-                if (window.innerWidth >= 768) {
+                if (window.innerWidth >= 1024) {
                     adminMenu.classList.remove('hidden');
                 } else {
                     adminMenu.classList.add('hidden');
@@ -274,7 +274,7 @@
             const adminMenuToggle = document.getElementById('admin-menu-toggle');
 
             function resetAdminMenuOnResize() {
-                if (window.innerWidth >= 768) {
+                if (window.innerWidth >= 1024) {
                     adminMenu.classList.remove('hidden');
                     adminMenu.style.position = '';
                     adminMenu.style.top = '';
@@ -315,6 +315,7 @@
 </body>
 
 </html>
+
 <style>
     html,
     body {

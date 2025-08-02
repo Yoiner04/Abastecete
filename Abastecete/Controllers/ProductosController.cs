@@ -59,7 +59,7 @@ namespace Abastecete.Controllers
                 return View("ErrorNegocioNoEncontrado"); // Vista de error si no tiene negocio
             }
 
-            List<Persona> persona = manejadorPersonas.ObtenerPersonas(personaId); // Suponiendo que tienes este método
+            List<Persona> persona = manejadorPersonas.ObtenerPersonas(personaId);
             List<Producto> productos = manejadorProductos.ConsultarProductosLocal(negocio.Id);
 
             ViewBag.productos = productos;
@@ -89,16 +89,12 @@ namespace Abastecete.Controllers
 
             return View(neg);
         }
-
-
-
         public IActionResult ListaNegocios()
         {
 
             List<Negocio> negocios = manejadorNegocios.ConsultarTodosLosNegocios();
             return View(negocios);
         }
-
 
         [HttpGet]
         public IActionResult AgregarProductNegocio()
@@ -146,8 +142,6 @@ namespace Abastecete.Controllers
                 return Json(new { mensaje = "Error al registrar productos: " + ex.Message });
             }
         }
-
-
 
         [HttpPost]
         public IActionResult CrearProducto(IFormFile Imagen, int IdSubCategoria, string Nombre, string Precio)

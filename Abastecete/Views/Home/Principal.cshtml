@@ -237,35 +237,39 @@
             <div id="offers-container" class="grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-3">
                 @foreach (var oferta in ofertas)
                 {
-                    <div class="relative flex flex-col rounded-lg bg-white p-4 shadow-md">
-                        <div class="relative aspect-square overflow-hidden rounded-md bg-gray-300">
-                            <img src="@oferta.ImagenProductoOfertaFlash" alt="Imagen del Producto"
-                                class="absolute inset-0 h-full w-full object-cover">
-                        </div>
+                    <a href="@Url.Action("ConsultarProductos", "Negocios", new { idLocal = oferta.IdLocal })" title="Ver Local">
+                        <div class="relative flex flex-col rounded-lg bg-white p-4 shadow-md">
+                            <div class="relative aspect-square overflow-hidden rounded-md bg-gray-300">
+                                <img src="@oferta.ImagenProductoOfertaFlash" alt="Imagen del Producto"
+                                    class="absolute inset-0 h-full w-full object-cover">
+                            </div>
 
-                        <div
-                            class="border-2 absolute top-4 left-4 h-28 w-28 overflow-hidden rounded-full border-white shadow-md">
-                            <img src="@oferta.FotoLocal" alt="Local" class="h-full w-full object-cover">
+                            <div
+                                class="border-2 absolute top-4 left-4 h-28 w-28 overflow-hidden rounded-full border-white shadow-md">
+                                @if (!string.IsNullOrWhiteSpace(oferta?.ImagenLocal?.Base64))
+                                {
+                                    <img src="@oferta.ImagenLocal.Base64" alt="Local" class="h-full w-full object-cover">
+                                }
+                            </div>
 
-                        </div>
+                            <!-- Información de la oferta -->
+                            <div class="mt-4 text-center">
+                                <h3 class="text-lg font-bold text-gray-800">
+                                    @oferta.Titulo <span class="text-gray-500">(@oferta.ProductoOfertaFlash)</span>
+                                </h3>
+                                <p class="text-gray-600">@oferta.Descripcion</p>
+                                <p class="text-sm font-medium text-gray-500">📍 @oferta.NombreLocal</p>
 
-                        <!-- Información de la oferta -->
-                        <div class="mt-4 text-center">
-                            <h3 class="text-lg font-bold text-gray-800">
-                                @oferta.Titulo <span class="text-gray-500">(@oferta.ProductoOfertaFlash)</span>
-                            </h3>
-                            <p class="text-gray-600">@oferta.Descripcion</p>
-                            <p class="text-sm font-medium text-gray-500">📍 @oferta.NombreLocal</p>
-
-                            <!-- Temporizador -->
-                            <div class="mt-4">
-                                <span class="font-semibold text-red-500">
-                                    ⏳ Expira en <span class="countdown-timer"
-                                        data-expiration="@oferta.TiempoOferta?.ToString("yyyy-MM-ddTHH:mm:ss")"></span>
-                                </span>
+                                <!-- Temporizador -->
+                                <div class="mt-4">
+                                    <span class="font-semibold text-red-500">
+                                        ⏳ Expira en <span class="countdown-timer"
+                                            data-expiration="@oferta.TiempoOferta?.ToString("yyyy-MM-ddTHH:mm:ss")"></span>
+                                    </span>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    </a>
                 }
             </div>
         }
@@ -631,7 +635,6 @@
             </div>
         }
     </section>
-
 </body>
 
 </html>
