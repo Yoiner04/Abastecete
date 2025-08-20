@@ -44,6 +44,36 @@ namespace BusinessLogic.Utilidades
             }
         }
 
+        public async Task<bool> EnviarCorreoOpinion(string asunto, string cuerpo)
+        {
+            try
+            {
+                using (var client = new SmtpClient(_smtpHost, _smtpPort))
+                {
+                    client.Credentials = new NetworkCredential(_smtpUser, _smtpPass);
+                    client.EnableSsl = true;
+
+                    var mailMessage = new MailMessage
+                    {
+                        From = new MailAddress(_emailFrom),
+                        Subject = asunto,
+                        Body = cuerpo,
+                        IsBodyHtml = false
+                    };
+
+                    mailMessage.To.Add(_emailTo);
+
+                    await client.SendMailAsync(mailMessage);
+                    return true;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error enviando correo: {ex.Message}");
+                return false;
+            }
+        }
+
         public async Task<bool> EnviarCorreoAviso(string asunto, string mensaje)
         {
             try

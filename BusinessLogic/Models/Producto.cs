@@ -23,5 +23,6 @@ namespace BusinessLogic.Models
         public string FotoLocal { get; set; }
         public int IdLocal { get; set; }
 
+        public ImagenModel ImagenLocal { get; set; }
     }
 }

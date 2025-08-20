@@ -25,7 +25,5 @@ namespace BusinessLogic.Models
         public ImagenModel BannerImagen { get; set; }
 
         public string Descripcion { get; set; }
-
-
     }
 }

@@ -180,7 +180,7 @@ namespace BusinessLogic
             else
                 parametros.Add(new Parametro("p_descripcion_local", actual.Descripcion));
 
-            if(negocio.BannerId != actual.BannerId)
+            if (negocio.BannerId != actual.BannerId)
                 parametros.Add(new Parametro("p_banner_local", negocio.BannerId));
             else
                 parametros.Add(new Parametro("p_banner_local", actual.BannerId));

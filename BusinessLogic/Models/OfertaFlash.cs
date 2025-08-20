@@ -20,6 +20,7 @@ namespace BusinessLogic.Models
         public string ProductoOfertaFlash { get; set; }
         public string ImagenProductoOfertaFlash { get; set; }
         public int Prioridad { get; set; }
+        public ImagenModel ImagenLocal { get; set; }
     }
 }
 
