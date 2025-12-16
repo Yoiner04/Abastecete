@@ -27,82 +27,90 @@
         string membresia = HttpContextAccessor.HttpContext.Session.GetString("membresia") ?? "0";
         bool ocultarPublicarOferta = (membresia == "11" || membresia == "12" || membresia == "13");
     }
-    <header id="header" class="fixed top-0 left-0 w-full z-40 shadow-md" style="background-color: #F4F1E9;">
-        <nav class="flex flex-col lg:flex-row items-start lg:items-center px-6 py-2 gap-2 lg:gap-0">
-            <div class="flex items-center gap-4 md:gap-x-6 lg:gap-x-2 w-full lg:w-auto justify-between">
-                <a href="@Url.Action("Principal", "Home")" class="flex items-center min-w-max">
-                    <img src="~/css/Images/LOGO FINAL.png" alt="Abastecete Logo" class="h-14 w-auto">
+    <!-- Header Principal Modernizado -->
+    <header id="header" class="fixed top-0 left-0 w-full z-40 shadow-lg transition-shadow duration-300" style="background-color: #F4F1E9;">
+        <nav class="max-w-7xl mx-auto flex flex-col lg:flex-row items-center px-4 lg:px-6 py-3 gap-3 lg:gap-6">
+            <!-- Logo y botón móvil -->
+            <div class="flex items-center gap-4 w-full lg:w-auto justify-between">
+                <a href="@Url.Action("Principal", "Home")" class="flex items-center group">
+                    <img src="~/css/Images/LOGO FINAL.png" alt="Abastecete Logo"
+                         class="h-12 lg:h-14 w-auto transition-transform duration-300 group-hover:scale-105">
                 </a>
-
-                <button id="menu-toggle" class="text-black focus:outline-none lg:hidden">
-                    <i class="fas fa-bars text-2xl"></i>
+                <button id="menu-toggle" class="lg:hidden flex items-center justify-center w-10 h-10 rounded-lg hover:bg-[#23916A]/10 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#23916A]">
+                    <i class="fas fa-bars text-xl text-gray-700"></i>
                 </button>
             </div>
 
-            <div id="menu-container"
-                class="hidden lg:flex w-full justify-center items-center gap-4 bg-gray-100 px-4 md:px-2 py-2 lg:flex-row lg:flex-nowrap lg:justify-between lg:gap-2 lg:px-2 bg-transparent">
-                <ul id="menu"
-                    class="flex flex-col items-center gap-x-2 text-base font-bold text-black lg:flex-row lg:gap-x-2 lg:justify-start">
+            <!-- Contenedor del menú -->
+            <div id="menu-container" class="hidden lg:flex w-full flex-col lg:flex-row items-center gap-4 lg:gap-6">
+                <!-- Barra de búsqueda mejorada -->
+                <form id="search-form-md" action="@Url.Action("Index", "Buscador")" method="get" class="w-full lg:w-auto lg:flex-1 lg:max-w-md order-1">
+                    <div class="relative group">
+                        <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+                            <i class="fa fa-search text-gray-400 group-focus-within:text-[#23916A] transition-colors duration-200"></i>
+                        </div>
+                        <input type="text" id="search-input-md" name="query"
+                            value="@Context.Request.Query["query"]"
+                            class="w-full pl-11 pr-24 py-2.5 rounded-full border border-gray-300 bg-white text-sm text-gray-900 placeholder-gray-400 transition-all duration-200 focus:border-[#23916A] focus:ring-2 focus:ring-[#23916A]/20 focus:outline-none"
+                            placeholder="¿Qué estás buscando?" />
+                        <button type="submit"
+                            class="absolute right-1.5 top-1/2 -translate-y-1/2 px-4 py-1.5 rounded-full bg-[#F66623] text-white text-sm font-semibold shadow-sm hover:bg-[#e55a1a] hover:shadow-md transition-all duration-200">
+                            Buscar
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Links de navegación - En móvil horizontal con scroll, en desktop normal -->
+                <ul id="menu" class="flex flex-row lg:flex-row items-center gap-1 w-full lg:w-auto order-2 justify-center flex-wrap">
                     <li>
-                        <form id="search-form-md" action="@Url.Action("Index", "Buscador")" method="get"
-                            class="flex w-fit">
-                            <div class="relative w-64 sm:w-80">
-                                <div class="pointer-events-none absolute inset-y-0 start-0 flex items-center ps-2">
-                                    <i class="fa fa-search text-sm text-gray-500 dark:text-gray-400"></i>
-                                </div>
-
-                                <input type="text" id="search-input-md" name="query"
-                                    value="@Context.Request.Query["query"]"
-                                    class="block w-full rounded-md border border-gray-300 bg-gray-50 py-2 ps-8 pe-24 text-sm text-gray-900 focus:border-blue-500 focus:ring-blue-500"
-                                    placeholder="Buscar producto..." required />
-
-                                <button type="submit"
-                                    class="absolute end-1 top-1 bottom-1 my-auto rounded-md bg-[#F66623] px-3 py-1.5 text-sm font-semibold text-white hover:bg-[#e75b1f] focus:outline-none focus:ring-2 focus:ring-blue-300">
-                                    Buscar
-                                </button>
-                            </div>
-                        </form>
-                    </li>
-
-                    <li class="flex-1 md:flex-none text-center">
                         <a href="@Url.Action("Listar", "Categorias")"
-                            class="block px-4 sm:px-1 lg:px-0 xl:px-2 py-2 whitespace-nowrap text-black hover:text-green-600">Proveedores</a>
+                            class="flex items-center gap-2 px-3 py-2 rounded-lg font-semibold text-sm no-underline hover:bg-[#23916A]/10 hover:text-[#23916A] transition-all duration-200 whitespace-nowrap" style="color: #374151;">
+                            <i class="fas fa-store text-xs opacity-70"></i>
+                            Proveedores
+                        </a>
                     </li>
-
-                    <li class="flex-1 md:flex-none text-center">
+                    <li>
                         <a href="/#ofertas-container"
-                            class="block px-4 md:px-1 lg:px-0 xl:px-2 py-2 whitespace-nowrap text-black hover:text-green-600">Ofertas
-                            flash</a>
+                            class="flex items-center gap-2 px-3 py-2 rounded-lg font-semibold text-sm no-underline hover:bg-[#F66623]/10 hover:text-[#F66623] transition-all duration-200 whitespace-nowrap" style="color: #374151;">
+                            <i class="fas fa-bolt text-xs opacity-70"></i>
+                            Ofertas
+                        </a>
                     </li>
-
-                    <li class="flex-1 md:flex-none text-center">
+                    <li>
                         <a href="/" id="open-contact-modal"
-                            class="block px-4 py-2 text-black hover:text-green-600 md:px-0 lg:px-0 xl:px-2 md:py-0">Contacto</a>
+                            class="flex items-center gap-2 px-3 py-2 rounded-lg font-semibold text-sm no-underline hover:bg-gray-200 transition-all duration-200 whitespace-nowrap" style="color: #374151;">
+                            <i class="fas fa-envelope text-xs opacity-70"></i>
+                            Contacto
+                        </a>
                     </li>
                 </ul>
 
-                <div class="flex items-center justify-center lg:justify-end flex-1">
+                <!-- Área de usuario -->
+                <div class="flex items-center gap-3 order-3 w-full lg:w-auto justify-center lg:justify-end mt-2 lg:mt-0">
                     @if (permisos != null)
                     {
-                        <div class="relative flex items-center">
+                        <div class="relative">
                             <button id="user-btn" title="Ver opciones de usuario"
-                                class="flex items-center gap-2 min-w-max rounded-full p-1 transition hover:bg-gray-100 focus:outline-none">
+                                class="flex items-center gap-2 px-3 py-2 rounded-full bg-white border border-gray-200 hover:border-[#23916A] hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#23916A]">
                                 <img src="~/css/Images/avatar.png" alt="Usuario"
-                                    class="h-10 w-10 rounded-full border border-gray-300 shadow-sm">
+                                    class="h-8 w-8 rounded-full border-2 border-[#23916A]/20">
+                                <i class="fas fa-chevron-down text-xs text-gray-500"></i>
                             </button>
-
                             <ul id="user-menu"
-                                class="absolute top-2 right-0 z-50 mt-2 hidden min-w-[180px] overflow-hidden rounded-lg border border-gray-200 bg-white text-sm shadow-xl md:min-w-[220px]">
-                                <li class="border-b px-5 py-3 transition duration-200 hover:bg-gray-100">
+                                class="absolute top-full right-0 z-50 mt-2 hidden min-w-[200px] overflow-hidden rounded-xl border border-gray-200 bg-white text-sm shadow-xl">
+                                <li class="border-b border-gray-100">
                                     <a href="@Url.Action("Actualizar", "Usuarios")"
-                                        class="block w-full text-left font-medium text-black">
-                                        ✏️ Editar perfil
+                                        class="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-[#23916A]/10 hover:text-[#23916A] transition-colors duration-150 no-underline">
+                                        <i class="fas fa-user-edit text-[#23916A]"></i>
+                                        <span class="font-medium">Editar perfil</span>
                                     </a>
-
                                 </li>
-                                <li class="px-5 py-3 transition duration-200 hover:bg-gray-100">
-                                    <a href="@Url.Action("Logout", "Login")" class="block font-semibold text-black">🚪
-                                        Cerrar Sesión</a>
+                                <li>
+                                    <a href="@Url.Action("Logout", "Login")"
+                                        class="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-red-50 hover:text-red-600 transition-colors duration-150 no-underline">
+                                        <i class="fas fa-sign-out-alt"></i>
+                                        <span class="font-medium">Cerrar Sesión</span>
+                                    </a>
                                 </li>
                             </ul>
                         </div>
@@ -110,118 +118,132 @@
                     else
                     {
                         <a href="@Url.Action("Login", "Login")"
-                            class="rounded-lg bg-green-600 px-4 lg:px-0 xl:px-4 py-2 text-sm font-medium text-white hover:bg-green-700 text-center md:py-3 md:text-base xl:text-lg">Únete
-                            a nosotros</a>
+                            class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#23916A] text-white font-semibold text-sm shadow-md hover:bg-[#1d7a59] hover:shadow-lg transition-all duration-200 no-underline">
+                            <i class="fas fa-user-plus text-xs"></i>
+                            Únete gratis
+                        </a>
                     }
                 </div>
             </div>
         </nav>
 
-        <button id="admin-menu-toggle" class="block w-full bg-gray-300 py-2 text-center font-bold text-black md:hidden">
-            Menú de Administración ⬇
+        <!-- Menú de administración móvil toggle -->
+        <button id="admin-menu-toggle" class="flex w-full items-center justify-center gap-2 py-2.5 text-center font-semibold text-gray-700 md:hidden hover:bg-[#e8e4db] transition-colors duration-200" style="background-color: #ebe7de;">
+            <i class="fas fa-cog text-sm"></i>
+            Menú de Administración
+            <i class="fas fa-chevron-down text-xs"></i>
         </button>
 
-        <div id="admin-menu" class="hidden justify-center bg-gray-200 py-2 md:flex">
-            <ul class="flex flex-col text-center text-sm md:flex-row md:space-x-6 md:text-left">
-
+        <!-- Menú de administración -->
+        <div id="admin-menu" class="hidden justify-center py-2.5 md:flex border-t border-[#d9d5cc]" style="background-color: #ebe7de;">
+            <ul class="flex flex-col text-center text-sm md:flex-row md:gap-1 lg:gap-2 md:text-left px-4 flex-wrap justify-center">
                 @if (permisos != null)
                 {
                     @if (RolPermisos.TienePermiso("Publica tu negocio", permisos))
                     {
-                        <li class="group">
-                            <a href="@Url.Action("Crear", "Negocios")" class="text-black group-hover:text-green-600">
+                        <li>
+                            <a href="@Url.Action("Crear", "Negocios")" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-gray-700 font-medium hover:bg-[#23916A]/10 hover:text-[#23916A] transition-all duration-200">
+                                <i class="fas fa-plus-circle text-xs"></i>
                                 Publica tu negocio
                             </a>
                         </li>
                     }
                     @if (RolPermisos.TienePermiso("Mi negocio", permisos))
                     {
-                        <li class="group">
-                            <a href="@Url.Action("ProductosNegocio", "Productos")"
-                                class="text-black group-hover:text-green-600">
+                        <li>
+                            <a href="@Url.Action("ProductosNegocio", "Productos")" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-gray-700 font-medium hover:bg-[#23916A]/10 hover:text-[#23916A] transition-all duration-200">
+                                <i class="fas fa-building text-xs"></i>
                                 Mi negocio
                             </a>
                         </li>
                     }
                     @if (RolPermisos.TienePermiso("Mi negocio", permisos) && !ocultarPublicarOferta)
                     {
-                        <li class="group">
-                            <a href="@Url.Action("Crear", "OfertasFlash")" class="text-black group-hover:text-green-600">
-                                Publicar oferta flash
+                        <li>
+                            <a href="@Url.Action("Crear", "OfertasFlash")" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-gray-700 font-medium hover:bg-[#F66623]/10 hover:text-[#F66623] transition-all duration-200">
+                                <i class="fas fa-bolt text-xs"></i>
+                                Publicar oferta
                             </a>
                         </li>
                     }
                     @if (RolPermisos.TienePermiso("Dejanos tu reseña", permisos))
                     {
-                        <li class="group">
-                            <a href="/#dejanos-tu-resenia" class="text-black group-hover:text-green-600">
-                                Dejanos tu reseña
+                        <li>
+                            <a href="/#dejanos-tu-resenia" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-gray-700 font-medium hover:bg-[#23916A]/10 hover:text-[#23916A] transition-all duration-200">
+                                <i class="fas fa-star text-xs"></i>
+                                Tu reseña
                             </a>
                         </li>
                     }
                     @if (RolPermisos.TienePermiso("Administrar Categorias", permisos))
                     {
-                        <li class="group">
-                            <a href="@Url.Action("Consultar", "Categorias")" class="text-black group-hover:text-green-600">
-                                Gestionar Categorías
+                        <li>
+                            <a href="@Url.Action("Consultar", "Categorias")" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-gray-700 font-medium hover:bg-[#23916A]/10 hover:text-[#23916A] transition-all duration-200">
+                                <i class="fas fa-tags text-xs"></i>
+                                Categorías
                             </a>
                         </li>
                     }
                     @if (RolPermisos.TienePermiso("Administrar Usuarios", permisos))
                     {
-                        <li class="group">
-                            <a href="@Url.Action("Consultar", "Usuarios")" class="text-black group-hover:text-green-600">
-                                Gestionar Usuarios
+                        <li>
+                            <a href="@Url.Action("Consultar", "Usuarios")" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-gray-700 font-medium hover:bg-[#23916A]/10 hover:text-[#23916A] transition-all duration-200">
+                                <i class="fas fa-users text-xs"></i>
+                                Usuarios
                             </a>
                         </li>
                     }
                     @if (RolPermisos.TienePermiso("Administrar Membresias", permisos))
                     {
-                        <li class="group">
-                            <a href="@Url.Action("Consultar", "Membresias")" class="text-black group-hover:text-green-600">
-                                Gestionar Membresias
+                        <li>
+                            <a href="@Url.Action("Consultar", "Membresias")" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-gray-700 font-medium hover:bg-[#23916A]/10 hover:text-[#23916A] transition-all duration-200">
+                                <i class="fas fa-id-card text-xs"></i>
+                                Membresías
                             </a>
                         </li>
                     }
                     @if (RolPermisos.TienePermiso("Administrar Roles", permisos))
                     {
-                        <li class="group">
-                            <a href="@Url.Action("Consultar", "Roles")" class="text-black group-hover:text-green-600">
-                                Gestionar Roles y permisos
+                        <li>
+                            <a href="@Url.Action("Consultar", "Roles")" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-gray-700 font-medium hover:bg-[#23916A]/10 hover:text-[#23916A] transition-all duration-200">
+                                <i class="fas fa-user-shield text-xs"></i>
+                                Roles
                             </a>
                         </li>
                     }
                     @if (RolPermisos.TienePermiso("Administrar Banners", permisos))
                     {
-                        <li class="group">
-                            <a href="@Url.Action("Editar", "Banners")" class="text-black group-hover:text-green-600">
-                                Gestionar Banners
+                        <li>
+                            <a href="@Url.Action("Editar", "Banners")" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-gray-700 font-medium hover:bg-[#23916A]/10 hover:text-[#23916A] transition-all duration-200">
+                                <i class="fas fa-images text-xs"></i>
+                                Banners
                             </a>
                         </li>
                     }
                     @if (RolPermisos.TienePermiso("Administrar Banners", permisos))
                     {
-                        <li class="group">
-                            <a href="@Url.Action("Gestionar", "OfertasFlash")" class="text-black group-hover:text-green-600">
-                                Gestionar Ofertas
+                        <li>
+                            <a href="@Url.Action("Gestionar", "OfertasFlash")" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-gray-700 font-medium hover:bg-[#F66623]/10 hover:text-[#F66623] transition-all duration-200">
+                                <i class="fas fa-percentage text-xs"></i>
+                                Ofertas
                             </a>
                         </li>
                     }
                 }
                 else
                 {
-                    <li class="group">
-                        <a href="@Url.Action("Login", "Login")" class="text-black group-hover:text-green-600">
-                            ¡Publica tu negocio o dejanos tu reseña!
+                    <li>
+                        <a href="@Url.Action("Login", "Login")" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#23916A]/10 font-semibold no-underline hover:bg-[#23916A] hover:text-white transition-all duration-200" style="color: #23916A;">
+                            <i class="fas fa-rocket text-sm" style="color: inherit;"></i>
+                            ¡Publica tu negocio o déjanos tu reseña!
                         </a>
                     </li>
                 }
             </ul>
         </div>
-
     </header>
 
-    <main role="main" class="pt-28">
+    <main role="main" class="pt-36 md:pt-40">
         @RenderBody()
     </main>
 

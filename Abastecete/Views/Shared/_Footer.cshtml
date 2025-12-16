@@ -1,85 +1,150 @@
-﻿<footer class="mt-10 bg-gray-900 px-5 py-10 text-white">
-    <div class="mx-auto grid max-w-7xl grid-cols-1 gap-8 md:gap-x-12 md:grid-cols-2 md:grid-rows-2">
-        <div class="md:row-span-2 md:col-start-1">
-            <h2 class="mb-4 text-lg font-semibold">Déjanos tu opinión</h2>
+<!-- Footer Modernizado -->
+<footer class="mt-10 bg-gray-900 text-white">
+    <!-- Sección principal -->
+    <div class="max-w-7xl mx-auto px-6 py-12">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
 
-            <form id="dejanos-tu-resenia" class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <input type="text" name="nombre" placeholder="Tu nombre completo"
-                    class="col-span-2 rounded-lg bg-gray-800 py-2 px-3 text-white placeholder-gray-400" required />
-                <input type="email" name="correo" placeholder="Tu correo electrónico"
-                    class="rounded-lg bg-gray-800 py-2 px-3 text-white placeholder-gray-400" required />
-                <input type="tel" name="telefono" placeholder="Tu número de teléfono"
-                    class="rounded-lg bg-gray-800 py-2 px-3 text-white placeholder-gray-400" required />
-                <textarea name="mensaje" placeholder="Tu opinión aquí" rows="2"
-                    class="col-span-2 rounded-lg bg-gray-800 p-3 text-white placeholder-gray-400" required></textarea>
-                <button type="submit"
-                    class="col-span-2 w-full rounded-lg bg-green-600 py-2 font-semibold text-white hover:bg-green-700 transition">
-                    ENVIAR
-                </button>
-            </form>
+            <!-- Columna 1: Formulario de opinión -->
+            <div class="lg:col-span-2">
+                <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+                    <i class="fas fa-comment-dots text-[#23916A]"></i>
+                    Déjanos tu opinión
+                </h2>
+                <p class="text-gray-400 text-sm mb-4">Tu feedback nos ayuda a mejorar cada día</p>
 
-            <p id="footer-opinion-success" class="mt-2 hidden text-sm text-green-400 font-semibold">✅ ¡Gracias por tu
-                opinión!</p>
-        </div>
+                <form id="dejanos-tu-resenia" class="space-y-3">
+                    <input type="text" name="nombre" placeholder="Tu nombre completo"
+                        class="w-full rounded-xl bg-gray-800/80 border border-gray-700 py-3 px-4 text-white placeholder-gray-400 focus:border-[#23916A] focus:ring-2 focus:ring-[#23916A]/20 focus:outline-none transition-all duration-200" required />
 
-        <div class="grid gitd-cols-1 sm:grid-cols-2 md:col-start-2 md:row-start-1 gap-4">
-            <ul class="space-y-2">
-                <li>
-                    <a href="@Url.Action("Listar", "Categorias")"
-                        class="flex items-center text-green-400 hover:underline">
-                        <span class="mr-2">➤</span> Tiendas
-                    </a>
-                </li>
-                <li>
-                    <a href="#ofertas-container" class="flex items-center text-green-400 hover:underline scroll-smooth">
-                        <span class="mr-2">➤</span> Ofertas hoy
-                    </a>
-                </li>
-                <li>
-                    <a href="#" class="flex items-center text-green-400 hover:underline">
-                        <span class="mr-2">➤</span> Nosotros
-                    </a>
-                </li>
-                <li>
-                    <a href="#promociones-container" class="flex items-center text-green-400 hover:underline">
-                        <span class="mr-2">➤</span> Promociones
-                    </a>
-                </li>
-                <li>
-                    <a href="#categorias-container"
-                        class="flex items-center text-green-400 hover:underline scroll-smooth">
-                        <span class="mr-2">➤</span> Categorías
-                    </a>
-                </li>
-            </ul>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <input type="email" name="correo" placeholder="Tu correo electrónico"
+                            class="rounded-xl bg-gray-800/80 border border-gray-700 py-3 px-4 text-white placeholder-gray-400 focus:border-[#23916A] focus:ring-2 focus:ring-[#23916A]/20 focus:outline-none transition-all duration-200" required />
+                        <input type="tel" name="telefono" placeholder="Tu número de teléfono"
+                            class="rounded-xl bg-gray-800/80 border border-gray-700 py-3 px-4 text-white placeholder-gray-400 focus:border-[#23916A] focus:ring-2 focus:ring-[#23916A]/20 focus:outline-none transition-all duration-200" required />
+                    </div>
 
-            <div class="grid grid-rows-3 gap-3">
-                <a href="https://web.facebook.com/people/Websen/61571549591292/" target="_blank"
-                    rel="noopener noreferrer" class="rounded-lg bg-green-600 px-4 py-2 text-center">FACEBOOK</a>
-                <a href="https://www.instagram.com/websencol/#" target="_blank" rel="noopener noreferrer"
-                    class="rounded-lg bg-orange-500 px-4 py-2 text-center">INSTAGRAM</a>
-                <a href="https://www.linkedin.com/in/websen-col-99459733b/" target="_blank" rel="noopener noreferrer"
-                    class="rounded-lg bg-gray-700 px-4 py-2 text-center">LINKEDIN</a>
+                    <textarea name="mensaje" placeholder="Escribe tu opinión aquí..." rows="3"
+                        class="w-full rounded-xl bg-gray-800/80 border border-gray-700 p-4 text-white placeholder-gray-400 resize-none focus:border-[#23916A] focus:ring-2 focus:ring-[#23916A]/20 focus:outline-none transition-all duration-200" required></textarea>
+
+                    <button type="submit"
+                        class="w-full rounded-xl bg-[#23916A] py-3 font-semibold text-white hover:bg-[#1d7a59] shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2">
+                        <i class="fas fa-paper-plane"></i>
+                        Enviar opinión
+                    </button>
+                </form>
+
+                <p id="footer-opinion-success" class="mt-3 hidden text-sm text-[#23916A] font-semibold flex items-center gap-2">
+                    <i class="fas fa-check-circle"></i>
+                    ¡Gracias por tu opinión!
+                </p>
             </div>
-        </div>
 
-        <div class="flex flex-col space-y-2 md:gap-y-6 md:col-start-2 md:row-start-2 h-full">
-            <h2 class="text-lg font-semibold">No te pierdas ninguna <span class="text-green-400">Oferta</span>
-            </h2>
+            <!-- Columna 2: Enlaces rápidos -->
+            <div>
+                <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+                    <i class="fas fa-link text-[#F66623]"></i>
+                    Enlaces rápidos
+                </h2>
+                <ul class="space-y-3">
+                    <li>
+                        <a href="@Url.Action("Listar", "Categorias")"
+                            class="flex items-center gap-2 text-gray-300 hover:text-[#23916A] transition-colors duration-200">
+                            <i class="fas fa-chevron-right text-xs text-[#23916A]"></i>
+                            Tiendas
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#ofertas-container" class="flex items-center gap-2 text-gray-300 hover:text-[#F66623] transition-colors duration-200 scroll-smooth">
+                            <i class="fas fa-chevron-right text-xs text-[#F66623]"></i>
+                            Ofertas hoy
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="flex items-center gap-2 text-gray-300 hover:text-[#23916A] transition-colors duration-200">
+                            <i class="fas fa-chevron-right text-xs text-[#23916A]"></i>
+                            Nosotros
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#promociones-container" class="flex items-center gap-2 text-gray-300 hover:text-[#F66623] transition-colors duration-200">
+                            <i class="fas fa-chevron-right text-xs text-[#F66623]"></i>
+                            Promociones
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#categorias-container" class="flex items-center gap-2 text-gray-300 hover:text-[#23916A] transition-colors duration-200 scroll-smooth">
+                            <i class="fas fa-chevron-right text-xs text-[#23916A]"></i>
+                            Categorías
+                        </a>
+                    </li>
+                </ul>
+            </div>
 
-            <div class="flex w-full">
-                <input type="email" class="flex-grow rounded-l-lg bg-gray-800 p-3 text-white" placeholder="Tu correo">
-                <a class="rounded-r-lg bg-orange-500 px-4 pt-3" href="@Url.Action("Login", "Login")">Suscribete</a>
+            <!-- Columna 3: Redes sociales y newsletter -->
+            <div>
+                <h2 class="text-xl font-bold mb-4 flex items-center gap-2">
+                    <i class="fas fa-share-alt text-[#23916A]"></i>
+                    Síguenos
+                </h2>
+
+                <!-- Redes sociales -->
+                <div class="flex flex-col gap-3 mb-6">
+                    <a href="https://web.facebook.com/people/Websen/61571549591292/" target="_blank" rel="noopener noreferrer"
+                        class="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-[#23916A] hover:bg-[#1d7a59] transition-all duration-200 shadow-md hover:shadow-lg">
+                        <i class="fab fa-facebook-f text-lg"></i>
+                        <span class="font-medium">Facebook</span>
+                    </a>
+                    <a href="https://www.instagram.com/websencol/#" target="_blank" rel="noopener noreferrer"
+                        class="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-[#F66623] hover:bg-[#e55a1a] transition-all duration-200 shadow-md hover:shadow-lg">
+                        <i class="fab fa-instagram text-lg"></i>
+                        <span class="font-medium">Instagram</span>
+                    </a>
+                    <a href="https://www.linkedin.com/in/websen-col-99459733b/" target="_blank" rel="noopener noreferrer"
+                        class="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-gray-700 hover:bg-gray-600 transition-all duration-200 shadow-md hover:shadow-lg">
+                        <i class="fab fa-linkedin-in text-lg"></i>
+                        <span class="font-medium">LinkedIn</span>
+                    </a>
+                </div>
+
+                <!-- Newsletter -->
+                <div class="bg-gray-800/50 rounded-xl p-4 border border-gray-700">
+                    <h3 class="font-semibold mb-2 flex items-center gap-2">
+                        <i class="fas fa-bell text-[#F66623]"></i>
+                        No te pierdas nada
+                    </h3>
+                    <p class="text-gray-400 text-sm mb-3">Recibe ofertas exclusivas</p>
+                    <div class="flex">
+                        <input type="email" placeholder="Tu correo"
+                            class="flex-1 rounded-l-lg bg-gray-700 border border-gray-600 px-3 py-2 text-sm text-white placeholder-gray-400 focus:outline-none focus:border-[#F66623]">
+                        <a href="@Url.Action("Login", "Login")"
+                            class="rounded-r-lg bg-[#F66623] hover:bg-[#e55a1a] px-4 py-2 text-sm font-semibold transition-colors duration-200">
+                            <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-    <div class="mt-8 flex flex-col items-center justify-between border-t border-gray-700 pt-5 text-sm md:flex-row">
-        <div class="flex items-center space-x-4">
-            <span>📞 310 3348519</span>
-            <span>📧 abastecetecol@gmail.com</span>
+    <!-- Barra inferior -->
+    <div class="border-t border-gray-800">
+        <div class="max-w-7xl mx-auto px-6 py-5">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+                <div class="flex flex-wrap items-center justify-center gap-4 text-sm text-gray-400">
+                    <a href="tel:3103348519" class="flex items-center gap-2 hover:text-[#23916A] transition-colors duration-200">
+                        <i class="fas fa-phone text-[#23916A]"></i>
+                        310 3348519
+                    </a>
+                    <a href="mailto:abastecetecol@gmail.com" class="flex items-center gap-2 hover:text-[#F66623] transition-colors duration-200">
+                        <i class="fas fa-envelope text-[#F66623]"></i>
+                        abastecetecol@gmail.com
+                    </a>
+                </div>
+                <p class="text-sm text-gray-400">
+                    © 2025 <span class="text-[#23916A] font-semibold">Abastecete</span>. Todos los derechos reservados.
+                </p>
+            </div>
         </div>
-        <p class="mt-3 md:mt-0">© <span class="text-green-400">Abastecete</span> All Rights Reserved.</p>
     </div>
 </footer>
 
@@ -88,16 +153,16 @@
         const form = document.getElementById("dejanos-tu-resenia");
         const successMsg = document.getElementById("footer-opinion-success");
         const submitBtn = form.querySelector("button[type='submit']");
-        const originalBtnText = submitBtn.innerText;
+        const originalBtnHTML = submitBtn.innerHTML;
 
         form.addEventListener("submit", async function (e) {
             e.preventDefault();
 
             const formData = new FormData(form);
 
-            // 🔒 Bloquear botón y mostrar "Enviando..."
+            // Bloquear botón y mostrar "Enviando..."
             submitBtn.disabled = true;
-            submitBtn.innerText = "Enviando...";
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
 
             try {
                 const response = await fetch("/api/contact/opinion", {
@@ -110,15 +175,16 @@
                 if (result.success) {
                     successMsg.classList.remove("hidden");
                     form.reset();
+                    // Ocultar mensaje después de 5 segundos
+                    setTimeout(() => successMsg.classList.add("hidden"), 5000);
                 } else {
                     alert("Error al enviar tu opinión.");
                 }
             } catch (err) {
                 alert("Hubo un error al procesar tu solicitud.");
             } finally {
-                // ✅ Rehabilitar el botón y restaurar texto
                 submitBtn.disabled = false;
-                submitBtn.innerText = originalBtnText;
+                submitBtn.innerHTML = originalBtnHTML;
             }
         });
     });
