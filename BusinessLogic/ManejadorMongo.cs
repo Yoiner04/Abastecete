@@ -17,7 +17,7 @@ namespace BusinessLogic
         public ManejadorMongo()
         {
             // Usar MongoDB local
-            var cliente = new MongoClient("mongodb://localhost:27017/");
+            var cliente = new MongoClient("mongodb+srv://websencol:%40WenSEN.Col_2024@websen.kgr8b.mongodb.net/WebSEN?retryWrites=true&w=majority");
             _db = cliente.GetDatabase("abastecete");
             _gridFS = new GridFSBucket(_db);
         }
