@@ -37,20 +37,20 @@
                 </div>
             }
 
-            @using (Html.BeginForm("Login", "Login", FormMethod.Post, new { id = "loginForm" }))
+            @using (Html.BeginForm("Login", "Login", FormMethod.Post, new { id = "loginForm", role = "form", aria_label = "Formulario de inicio de sesión" }))
             {
                 <div class="form-group mb-3">
-                    <label for="email">Correo Electrónico</label>
-                    @Html.TextBoxFor(m => m.Correo, new { @class = "form-control", @type = "email", @id = "email", @name = "email", @placeholder = "Ingresa tu correo" })
-                    <span id="correoError" class="text-danger hidden text-sm">El correo es obligatorio.</span>
+                    <label for="email" id="email-label">Correo Electrónico</label>
+                    @Html.TextBoxFor(m => m.Correo, new { @class = "form-control", @type = "email", @id = "email", @name = "email", @placeholder = "Ingresa tu correo", aria_labelledby = "email-label", aria_required = "true", autocomplete = "email" })
+                    <span id="correoError" class="text-danger hidden text-sm" role="alert" aria_live="polite">El correo es obligatorio.</span>
                 </div>
                 <div class="form-group mb-3">
-                    <label for="password">Contraseña</label>
-                    @Html.PasswordFor(m => m.Contrasenia, new { @class = "form-control", @id = "password", @name = "password", @placeholder = "Ingresa tu contraseña" })
-                    <span id="contraseniaError" class="text-danger hidden text-sm">La contraseña es obligatoria.</span>
+                    <label for="password" id="password-label">Contraseña</label>
+                    @Html.PasswordFor(m => m.Contrasenia, new { @class = "form-control", @id = "password", @name = "password", @placeholder = "Ingresa tu contraseña", aria_labelledby = "password-label", aria_required = "true", autocomplete = "current-password" })
+                    <span id="contraseniaError" class="text-danger hidden text-sm" role="alert" aria_live="polite">La contraseña es obligatoria.</span>
                 </div>
 
-                <button type="submit" class="btn-login">Iniciar Sesión</button>
+                <button type="submit" class="btn-login" aria-label="Iniciar sesión en tu cuenta">Iniciar Sesión</button>
 
                 <div class="forgot-password">
                     <a href="/Login/RecuperarContrasenia">¿Olvidaste tu contraseña?</a>
@@ -64,8 +64,8 @@
                         }
                         else
                         {
-                            <a asp-controller="Login" asp-action="LoginWithGoogle" class="btn btn-light">
-                                <img src="https://developers.google.com/identity/images/g-logo.png" width="20" />
+                            <a asp-controller="Login" asp-action="LoginWithGoogle" class="btn btn-light" aria-label="Iniciar sesión con tu cuenta de Google">
+                                <img src="https://developers.google.com/identity/images/g-logo.png" width="20" alt="Logo de Google" />
                                 Iniciar sesión con Google
                             </a>
 
@@ -78,7 +78,7 @@
             }
 
             <div class="back-button mb-3 text-center">
-                <a href="/" class="btn-back">Regresar</a>
+                <a href="/" class="btn-back" aria-label="Regresar a la página principal">Regresar</a>
             </div>
         </div>
         <div id="galeriaSesion" class="image-section">

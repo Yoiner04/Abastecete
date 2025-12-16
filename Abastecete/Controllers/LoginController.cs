@@ -1,5 +1,6 @@
 ﻿using BusinessLogic;
 using BusinessLogic.Models;
+using BusinessLogic.Utilidades;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
@@ -11,8 +12,6 @@ using Microsoft.AspNetCore.Authentication.Google;
 using System.Security.Claims;
 using System.Text.RegularExpressions;
 using Abastecete.Models;
-using System.Net.Mail;
-using System.Net;
 
 namespace ConnectionProject.Controllers
 {
@@ -20,12 +19,14 @@ namespace ConnectionProject.Controllers
     {
         private readonly ManejadorUsuario _manejadorUsuario;
         private readonly ManejadorMongo manejadorMongo;
+        private readonly EmailService _emailService;
         public static int rol = 0;
 
         public LoginController()
         {
             _manejadorUsuario = new ManejadorUsuario();
             manejadorMongo = new ManejadorMongo();
+            _emailService = new EmailService();
         }
 
         public IActionResult Login()
@@ -239,7 +240,7 @@ namespace ConnectionProject.Controllers
         }
 
         [HttpPost]
-        public IActionResult RecuperarContrasenia(string Correo)
+        public async Task<IActionResult> RecuperarContrasenia(string Correo)
         {
             if (string.IsNullOrEmpty(Correo))
             {
@@ -257,7 +258,6 @@ namespace ConnectionProject.Controllers
 
             int userId = Convert.ToInt32(data.Rows[0]["PK_ID_USUARIO"]);
 
-
             _manejadorUsuario.GenerarTokenRecuperacion(userId);
             string token = _manejadorUsuario.ObtenerTokenRecuperacion(userId);
 
@@ -270,9 +270,18 @@ namespace ConnectionProject.Controllers
             TempData["CorreoIngresado"] = Correo;
             TempData["MostrarCodigo"] = true;
 
-            EnviarCorreoRecuperacion(Correo, token);
+            // Enviar correo con plantilla profesional
+            var (success, message) = await _emailService.EnviarCodigoRecuperacion(Correo, "", token);
 
-            TempData["Success"] = "Se ha enviado un código a tu correo.";
+            if (success)
+            {
+                TempData["Success"] = "Se ha enviado un código a tu correo. Revisa tu bandeja de entrada.";
+            }
+            else
+            {
+                TempData["Error"] = "Hubo un problema al enviar el correo. Por favor intenta nuevamente.";
+            }
+
             return RedirectToAction("RecuperarContrasenia");
         }
 
@@ -337,64 +346,6 @@ namespace ConnectionProject.Controllers
             ViewData["Success"] = "¡Tu contraseña ha sido restablecida exitosamente!";
             TempData.Keep("Success");
             return RedirectToAction("Login");
-        }
-
-        private void EnviarCorreoRecuperacion(string correo, string token)
-        {
-            try
-            {
-                string asunto = "Código de recuperación de contraseña";
-                string cuerpo = $"Tu código de recuperación es: {token}\n\n" +
-                                $"Este código expirará en 5 minutos.\n\n" +
-                                $"Ingresa este código en la página de recuperación de contraseña para continuar.";
-
-                MailMessage mail = new MailMessage
-                {
-                    From = new MailAddress("abastecetecol@gmail.com"),
-                    Subject = asunto,
-                    Body = cuerpo,
-                    IsBodyHtml = false
-                };
-                mail.To.Add(correo);
-
-                string dominio = correo.Split('@')[1].ToLower();
-                SmtpClient smtp = new SmtpClient();
-
-                switch (dominio)
-                {
-                    case "gmail.com":
-                        smtp.Host = "smtp.gmail.com";
-                        break;
-                    case "outlook.com":
-                    case "hotmail.com":
-                    case "live.com":
-                        smtp.Host = "smtp.office365.com";
-                        break;
-                    case "yahoo.com":
-                        smtp.Host = "smtp.mail.yahoo.com";
-                        break;
-                    case "zoho.com":
-                        smtp.Host = "smtp.zoho.com";
-                        break;
-                    case "icloud.com":
-                        smtp.Host = "smtp.mail.me.com";
-                        break;
-                    default:
-                        smtp.Host = "smtp.tudominio.com";
-                        break;
-                }
-
-                smtp.Port = 587;
-                smtp.EnableSsl = true;
-                smtp.Credentials = new NetworkCredential("abastecetecol@gmail.com", "mvijnlfiegwohmsm");
-
-                smtp.Send(mail);
-                Console.WriteLine($"✅ Correo enviado a {correo} con éxito.");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"⚠️ Error al enviar el correo a {correo}: {ex.Message}");
-            }
         }
 
     }

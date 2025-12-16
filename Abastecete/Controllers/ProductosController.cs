@@ -51,7 +51,12 @@ namespace Abastecete.Controllers
 
         public IActionResult ProductosNegocio()
         {
-            var personaId = HttpContext.Session.GetInt32("PersonaId").Value;
+            var personaIdNullable = HttpContext.Session.GetInt32("PersonaId");
+            if (personaIdNullable == null)
+            {
+                return RedirectToAction("Login", "Login");
+            }
+            var personaId = personaIdNullable.Value;
 
             Negocio negocio = manejadorNegocios.ConsultarNegocio(personaId);
             if (negocio == null)

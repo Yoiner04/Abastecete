@@ -20,12 +20,12 @@ namespace Abastecete.Controllers
         {
             if (ModelState.IsValid)
             {
-                bool enviado = await _emailService.EnviarCorreoContacto(model.Email, model.Phone, model.Message);
-                if (enviado)
+                var (success, message) = await _emailService.EnviarCorreoContacto(model.Email, model.Phone, model.Message);
+                if (success)
                 {
                     return Ok(new { success = true, message = "Mensaje enviado correctamente." });
                 }
-                return BadRequest(new { success = false, message = "Error al enviar el mensaje." });
+                return BadRequest(new { success = false, message });
             }
             return BadRequest(new { success = false, message = "Datos inválidos." });
         }
@@ -38,12 +38,12 @@ namespace Abastecete.Controllers
                 string asunto = "Opinión desde el formulario de Abastecete";
                 string cuerpo = $"Nombre: {model.Nombre}\nCorreo: {model.Correo}\nTeléfono: {model.Telefono}\n\nOpinión:\n{model.Mensaje}";
 
-                bool enviado = await _emailService.EnviarCorreoOpinion(asunto, cuerpo);
+                var (success, message) = await _emailService.EnviarCorreoOpinion(asunto, cuerpo);
 
-                if (enviado)
+                if (success)
                     return Ok(new { success = true, message = "Opinión enviada correctamente." });
 
-                return BadRequest(new { success = false, message = "Error al enviar la opinión." });
+                return BadRequest(new { success = false, message });
             }
             return BadRequest(new { success = false, message = "Datos inválidos." });
         }
