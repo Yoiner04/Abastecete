@@ -19,11 +19,19 @@ namespace BusinessLogic
             manejadorMongo = new ManejadorMongo();
         }
 
-        // Consultar todas las categorías
+        // Consultar todas las categorías - Optimizado con batch de imágenes
         public List<Categoria> ConsultarCategorias()
         {
             DataTable datos = conexion.EjecutarConsulta("consultar_categoria");
             List<Categoria> categorias = new List<Categoria>();
+
+            if (datos == null || datos.Rows.Count == 0)
+            {
+                return categorias;
+            }
+
+            // Paso 1: Crear categorías sin imágenes y recolectar IDs
+            var imageIds = new List<string>();
 
             foreach (DataRow row in datos.Rows)
             {
@@ -37,10 +45,32 @@ namespace BusinessLogic
                     Estado = Convert.ToInt32(row["ESTADO_CATEGORIA"]),
                     ImagenId = imagenId,
                     BannerId = bannerId,
-                    Imagen = manejadorMongo.ObtenerImagen(imagenId),
-                    BannerImagen = manejadorMongo.ObtenerImagen(bannerId),
+                    // Imágenes se asignarán después del batch
+                    Imagen = null,
+                    BannerImagen = null,
                 });
+
+                // Recolectar IDs para batch
+                if (!string.IsNullOrEmpty(imagenId)) imageIds.Add(imagenId);
+                if (!string.IsNullOrEmpty(bannerId)) imageIds.Add(bannerId);
             }
+
+            // Paso 2: Obtener todas las imágenes en un solo batch (evita N+1 queries)
+            var imagenesBatch = manejadorMongo.ObtenerImagenesBatch(imageIds);
+
+            // Paso 3: Asignar imágenes a cada categoría
+            foreach (var categoria in categorias)
+            {
+                if (!string.IsNullOrEmpty(categoria.ImagenId) && imagenesBatch.ContainsKey(categoria.ImagenId))
+                {
+                    categoria.Imagen = imagenesBatch[categoria.ImagenId];
+                }
+                if (!string.IsNullOrEmpty(categoria.BannerId) && imagenesBatch.ContainsKey(categoria.BannerId))
+                {
+                    categoria.BannerImagen = imagenesBatch[categoria.BannerId];
+                }
+            }
+
             return categorias;
         }
 
@@ -83,30 +113,36 @@ namespace BusinessLogic
             return resultado ? mensaje.Valor?.ToString() ?? "Error desconocido" : "Error en la base de datos";
         }
 
-        // Obtener una categoría por ID
+        // Obtener una categoría por ID - Usa SP específico para mejor performance
         public Categoria ObtenerCategoria(int id)
         {
-            DataTable datos = conexion.EjecutarConsulta("consultar_categoria");
-            DataRow row = datos.AsEnumerable().FirstOrDefault(r => Convert.ToInt32(r["PK_ID_CATEGORIA"]) == id);
-
-            if (row != null)
+            List<Parametro> parametros = new List<Parametro>
             {
-                string imagenId = row["IMAGEN_CATEGORIA"] + "";
-                string bannerId = row["BANNER_CATEGORIA"] + "";
+                new Parametro("p_id_categoria", id)
+            };
 
-                return new Categoria
-                {
-                    Id = Convert.ToInt32(row["PK_ID_CATEGORIA"]),
-                    Nombre = row["NOMBRE_CATEGORIA"].ToString(),
-                    Estado = Convert.ToInt32(row["ESTADO_CATEGORIA"]),
-                    ImagenId = imagenId,
-                    BannerId = bannerId,
-                    Imagen = manejadorMongo.ObtenerImagen(imagenId),
-                    BannerImagen = manejadorMongo.ObtenerImagen(bannerId),
-                };
+            DataTable datos = conexion.EjecutarConsulta("consultar_categoria_por_id", parametros);
+
+            // Validar que existan datos antes de acceder
+            if (datos == null || datos.Rows.Count == 0)
+            {
+                return null;
             }
 
-            return null;
+            DataRow row = datos.Rows[0];
+            string imagenId = row["IMAGEN_CATEGORIA"] + "";
+            string bannerId = row["BANNER_CATEGORIA"] + "";
+
+            return new Categoria
+            {
+                Id = Convert.ToInt32(row["PK_ID_CATEGORIA"]),
+                Nombre = row["NOMBRE_CATEGORIA"].ToString(),
+                Estado = Convert.ToInt32(row["ESTADO_CATEGORIA"]),
+                ImagenId = imagenId,
+                BannerId = bannerId,
+                Imagen = manejadorMongo.ObtenerImagen(imagenId),
+                BannerImagen = manejadorMongo.ObtenerImagen(bannerId),
+            };
         }
     }
 }

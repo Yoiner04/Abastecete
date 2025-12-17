@@ -55,6 +55,75 @@ namespace BusinessLogic
             return null;
         }
 
+        /// <summary>
+        /// Obtiene múltiples imágenes en batch para evitar N+1 queries.
+        /// Mucho más eficiente que llamar ObtenerImagen N veces.
+        /// </summary>
+        /// <param name="imageIds">Lista de IDs de imágenes a obtener</param>
+        /// <returns>Diccionario con ID como clave e ImagenModel como valor</returns>
+        public Dictionary<string, ImagenModel> ObtenerImagenesBatch(IEnumerable<string> imageIds)
+        {
+            var resultado = new Dictionary<string, ImagenModel>();
+
+            if (imageIds == null) return resultado;
+
+            // Filtrar IDs válidos y únicos
+            var idsValidos = imageIds
+                .Where(id => !string.IsNullOrEmpty(id))
+                .Distinct()
+                .ToList();
+
+            if (!idsValidos.Any()) return resultado;
+
+            try
+            {
+                // Convertir a ObjectIds
+                var objectIds = idsValidos
+                    .Select(id =>
+                    {
+                        try { return ObjectId.Parse(id); }
+                        catch { return ObjectId.Empty; }
+                    })
+                    .Where(id => id != ObjectId.Empty)
+                    .ToList();
+
+                // Obtener info de todos los archivos en una sola consulta
+                var filter = Builders<GridFSFileInfo>.Filter.In(f => f.Id, objectIds);
+                var archivos = _gridFS.Find(filter).ToList();
+
+                // Procesar cada archivo
+                foreach (var fileInfo in archivos)
+                {
+                    try
+                    {
+                        using var stream = new MemoryStream();
+                        _gridFS.DownloadToStream(fileInfo.Id, stream);
+                        var base64 = Convert.ToBase64String(stream.ToArray());
+                        var tipo = fileInfo.Metadata?["ContentType"]?.AsString ?? "image/jpeg";
+
+                        var idString = fileInfo.Id.ToString();
+                        resultado[idString] = new ImagenModel
+                        {
+                            Id = idString,
+                            Imagen = fileInfo.Filename,
+                            Base64 = $"data:{tipo};base64,{base64}",
+                            Tipo = tipo
+                        };
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"⚠️ Error procesando imagen {fileInfo.Id}: {ex.Message}");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("❌ Error en batch de imágenes: " + ex.Message);
+            }
+
+            return resultado;
+        }
+
 
         public string SubirImagen(IFormFile archivo, int calidad = 75)
         {
