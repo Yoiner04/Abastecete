@@ -142,8 +142,8 @@
                     @if (RolPermisos.TienePermiso("Publica tu negocio", permisos))
                     {
                         <li>
-                            <a href="@Url.Action("Crear", "Negocios")" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-gray-700 font-medium hover:bg-[#23916A]/10 hover:text-[#23916A] transition-all duration-200">
-                                <i class="fas fa-plus-circle text-xs"></i>
+                            <a href="@Url.Action("Crear", "Negocios")" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium hover:bg-[#23916A]/10 hover:text-[#23916A] transition-all duration-200" style="color: #374151;">
+                                <i class="fas fa-plus-circle text-xs" style="color: #23916A;"></i>
                                 Publica tu negocio
                             </a>
                         </li>
@@ -151,8 +151,8 @@
                     @if (RolPermisos.TienePermiso("Mi negocio", permisos))
                     {
                         <li>
-                            <a href="@Url.Action("ProductosNegocio", "Productos")" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-gray-700 font-medium hover:bg-[#23916A]/10 hover:text-[#23916A] transition-all duration-200">
-                                <i class="fas fa-building text-xs"></i>
+                            <a href="@Url.Action("ProductosNegocio", "Productos")" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium hover:bg-[#23916A]/10 hover:text-[#23916A] transition-all duration-200" style="color: #374151;">
+                                <i class="fas fa-building text-xs" style="color: #23916A;"></i>
                                 Mi negocio
                             </a>
                         </li>
@@ -160,8 +160,8 @@
                     @if (RolPermisos.TienePermiso("Mi negocio", permisos) && !ocultarPublicarOferta)
                     {
                         <li>
-                            <a href="@Url.Action("Crear", "OfertasFlash")" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-gray-700 font-medium hover:bg-[#F66623]/10 hover:text-[#F66623] transition-all duration-200">
-                                <i class="fas fa-bolt text-xs"></i>
+                            <a href="@Url.Action("Crear", "OfertasFlash")" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium hover:bg-[#F66623]/10 hover:text-[#F66623] transition-all duration-200" style="color: #374151;">
+                                <i class="fas fa-bolt text-xs" style="color: #F66623;"></i>
                                 Publicar oferta
                             </a>
                         </li>
@@ -169,8 +169,8 @@
                     @if (RolPermisos.TienePermiso("Dejanos tu reseña", permisos))
                     {
                         <li>
-                            <a href="/#dejanos-tu-resenia" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-gray-700 font-medium hover:bg-[#23916A]/10 hover:text-[#23916A] transition-all duration-200">
-                                <i class="fas fa-star text-xs"></i>
+                            <a href="/#dejanos-tu-resenia" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium hover:bg-[#23916A]/10 hover:text-[#23916A] transition-all duration-200" style="color: #374151;">
+                                <i class="fas fa-star text-xs" style="color: #F66623;"></i>
                                 Tu reseña
                             </a>
                         </li>
@@ -178,8 +178,8 @@
                     @if (RolPermisos.TienePermiso("Administrar Categorias", permisos))
                     {
                         <li>
-                            <a href="@Url.Action("Consultar", "Categorias")" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-gray-700 font-medium hover:bg-[#23916A]/10 hover:text-[#23916A] transition-all duration-200">
-                                <i class="fas fa-tags text-xs"></i>
+                            <a href="@Url.Action("Consultar", "Categorias")" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium hover:bg-[#23916A]/10 hover:text-[#23916A] transition-all duration-200" style="color: #374151;">
+                                <i class="fas fa-tags text-xs" style="color: #23916A;"></i>
                                 Categorías
                             </a>
                         </li>
@@ -187,8 +187,8 @@
                     @if (RolPermisos.TienePermiso("Administrar Usuarios", permisos))
                     {
                         <li>
-                            <a href="@Url.Action("Consultar", "Usuarios")" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-gray-700 font-medium hover:bg-[#23916A]/10 hover:text-[#23916A] transition-all duration-200">
-                                <i class="fas fa-users text-xs"></i>
+                            <a href="@Url.Action("Consultar", "Usuarios")" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium hover:bg-[#23916A]/10 hover:text-[#23916A] transition-all duration-200" style="color: #374151;">
+                                <i class="fas fa-users text-xs" style="color: #23916A;"></i>
                                 Usuarios
                             </a>
                         </li>
@@ -196,8 +196,8 @@
                     @if (RolPermisos.TienePermiso("Administrar Membresias", permisos))
                     {
                         <li>
-                            <a href="@Url.Action("Consultar", "Membresias")" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-gray-700 font-medium hover:bg-[#23916A]/10 hover:text-[#23916A] transition-all duration-200">
-                                <i class="fas fa-id-card text-xs"></i>
+                            <a href="@Url.Action("Consultar", "Membresias")" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium hover:bg-[#23916A]/10 hover:text-[#23916A] transition-all duration-200" style="color: #374151;">
+                                <i class="fas fa-id-card text-xs" style="color: #23916A;"></i>
                                 Membresías
                             </a>
                         </li>
@@ -205,8 +205,8 @@
                     @if (RolPermisos.TienePermiso("Administrar Roles", permisos))
                     {
                         <li>
-                            <a href="@Url.Action("Consultar", "Roles")" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-gray-700 font-medium hover:bg-[#23916A]/10 hover:text-[#23916A] transition-all duration-200">
-                                <i class="fas fa-user-shield text-xs"></i>
+                            <a href="@Url.Action("Consultar", "Roles")" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium hover:bg-[#23916A]/10 hover:text-[#23916A] transition-all duration-200" style="color: #374151;">
+                                <i class="fas fa-user-shield text-xs" style="color: #23916A;"></i>
                                 Roles
                             </a>
                         </li>
@@ -214,8 +214,8 @@
                     @if (RolPermisos.TienePermiso("Administrar Banners", permisos))
                     {
                         <li>
-                            <a href="@Url.Action("Editar", "Banners")" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-gray-700 font-medium hover:bg-[#23916A]/10 hover:text-[#23916A] transition-all duration-200">
-                                <i class="fas fa-images text-xs"></i>
+                            <a href="@Url.Action("Editar", "Banners")" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium hover:bg-[#23916A]/10 hover:text-[#23916A] transition-all duration-200" style="color: #374151;">
+                                <i class="fas fa-images text-xs" style="color: #23916A;"></i>
                                 Banners
                             </a>
                         </li>
@@ -223,8 +223,8 @@
                     @if (RolPermisos.TienePermiso("Administrar Banners", permisos))
                     {
                         <li>
-                            <a href="@Url.Action("Gestionar", "OfertasFlash")" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-gray-700 font-medium hover:bg-[#F66623]/10 hover:text-[#F66623] transition-all duration-200">
-                                <i class="fas fa-percentage text-xs"></i>
+                            <a href="@Url.Action("Gestionar", "OfertasFlash")" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium hover:bg-[#F66623]/10 hover:text-[#F66623] transition-all duration-200" style="color: #374151;">
+                                <i class="fas fa-percentage text-xs" style="color: #F66623;"></i>
                                 Ofertas
                             </a>
                         </li>

@@ -1,6 +1,8 @@
 ﻿@model List<BusinessLogic.Models.Producto>
 @{
     var negocio = ViewBag.negocio as BusinessLogic.Models.Negocio;
+    var productCount = Model?.Count ?? 0;
+    var categoryCount = ViewBag.categorias?.Count ?? 0;
 }
 @Html.Partial("_ContactModal")
 <!DOCTYPE html>
@@ -9,16 +11,88 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@negocio?.Nombre</title>
+    <title>@negocio?.Nombre - Abastécete</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <style>
+        /* Animaciones personalizadas */
+        @@keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @@keyframes pulse-soft {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+
+        @@keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+
+        .animate-fadeInUp {
+            animation: fadeInUp 0.5s ease-out forwards;
+        }
+
+        .animation-delay-100 { animation-delay: 0.1s; }
+        .animation-delay-200 { animation-delay: 0.2s; }
+        .animation-delay-300 { animation-delay: 0.3s; }
+
+        /* Glassmorphism */
+        .glass {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .glass-dark {
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+
+        /* Producto card efectos */
+        .producto-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .producto-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+        }
+
+        .producto-card:hover .producto-image {
+            transform: scale(1.05);
+        }
+
+        .producto-card:hover .producto-overlay {
+            opacity: 1;
+        }
+
+        .producto-image {
+            transition: transform 0.4s ease;
+        }
+
+        .producto-overlay {
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        /* Range slider mejorado */
         .range-slider {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
-            height: 0.75rem;
+            height: 0.5rem;
             -webkit-appearance: none;
             background: transparent;
             pointer-events: auto;
@@ -26,270 +100,430 @@
 
         .range-slider::-webkit-slider-thumb {
             -webkit-appearance: none;
-            height: 1rem;
-            width: 1rem;
+            height: 1.25rem;
+            width: 1.25rem;
             border-radius: 50%;
-            background: #2563EB;
-            /* Azul */
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
             cursor: pointer;
             z-index: 3;
             position: relative;
+            box-shadow: 0 2px 8px rgba(34, 197, 94, 0.4);
+            transition: transform 0.2s ease;
+        }
+
+        .range-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
         }
 
         .range-slider::-moz-range-thumb {
-            height: 1rem;
-            width: 1rem;
+            height: 1.25rem;
+            width: 1.25rem;
             border-radius: 50%;
-            background: #2563EB;
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
             cursor: pointer;
             z-index: 3;
             position: relative;
+            border: none;
+            box-shadow: 0 2px 8px rgba(34, 197, 94, 0.4);
         }
 
         #rangeBar {
             top: 0;
-            height: 0.75rem;
+            height: 0.5rem;
             z-index: 1;
+            border-radius: 0.25rem;
+        }
+
+        /* Input de búsqueda */
+        .search-input:focus {
+            box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.2);
+        }
+
+        /* Badge animado */
+        .badge-new {
+            background: linear-gradient(90deg, #f97316, #fb923c, #f97316);
+            background-size: 200% auto;
+            animation: shimmer 2s linear infinite;
+        }
+
+        /* Filtro activo */
+        .filter-active {
+            border-color: #22c55e !important;
+            background: linear-gradient(to right, rgba(34, 197, 94, 0.05), rgba(34, 197, 94, 0.1));
+        }
+
+        /* Scrollbar personalizado */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #22c55e, #16a34a);
+            border-radius: 4px;
+        }
+
+        /* Floating action */
+        .fab {
+            transition: all 0.3s ease;
+        }
+
+        .fab:hover {
+            transform: scale(1.1) rotate(5deg);
         }
     </style>
-
 </head>
 
-<body class="bg-gray-100">
-    <header class="relative z-0 w-full overflow-hidden bg-[#F5EFE4] shadow-md">
-        <div class="relative h-56 w-full md:h-72">
+<body class="bg-gradient-to-br from-gray-50 via-white to-gray-100 min-h-screen">
+    <!-- HEADER HERO MODERNIZADO -->
+    <header class="relative w-full overflow-hidden">
+        <!-- Banner con overlay gradiente -->
+        <div class="relative h-64 sm:h-80 lg:h-96 w-full">
             @if (!string.IsNullOrWhiteSpace(negocio?.BannerImagen?.Base64))
             {
                 <img src="@negocio.BannerImagen.Base64"
-                     alt="Fondo"
+                     alt="Banner @negocio?.Nombre"
                      class="absolute inset-0 h-full w-full object-cover" />
             }
-            <div class="absolute inset-0 bg-black/40"></div>
+            else
+            {
+                <div class="absolute inset-0 bg-gradient-to-br from-green-600 via-green-500 to-emerald-400"></div>
+            }
+            <!-- Overlay con gradiente -->
+            <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent"></div>
 
-            <div class="relative z-10 flex h-full items-end">
-                <div class="w-full px-4 pb-4 md:px-10">
-                    <div class="mx-auto flex items-center justify-center sm:mx-0 sm:justify-start">
-                        <div class="size-28 overflow-hidden rounded-xl border bg-white shadow-lg sm:size-40 md:size-56">
-                            @if (!string.IsNullOrWhiteSpace(negocio?.imagen?.Base64))
+            <!-- Patrón decorativo -->
+            <div class="absolute inset-0 opacity-10" style="background-image: url('data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23ffffff\' fill-opacity=\'0.4\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E');"></div>
+
+            <!-- Contenido del header -->
+            <div class="relative z-10 h-full flex flex-col justify-end pb-20 sm:pb-24">
+                <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                    <div class="flex flex-col sm:flex-row items-center sm:items-end gap-6">
+                        <!-- Logo del negocio con efecto glass -->
+                        <div class="relative group">
+                            <div class="absolute -inset-2 bg-gradient-to-r from-green-400 to-emerald-500 rounded-2xl blur-lg opacity-50 group-hover:opacity-75 transition-opacity"></div>
+                            <div class="relative size-32 sm:size-40 lg:size-48 rounded-2xl overflow-hidden bg-white shadow-2xl ring-4 ring-white/50">
+                                @if (!string.IsNullOrWhiteSpace(negocio?.imagen?.Base64))
+                                {
+                                    <img src="@negocio.imagen.Base64" alt="Logo @negocio?.Nombre" class="h-full w-full object-cover" />
+                                }
+                                else
+                                {
+                                    <div class="h-full w-full bg-gradient-to-br from-green-100 to-emerald-100 flex items-center justify-center">
+                                        <i class="fas fa-store text-4xl text-green-600"></i>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tarjeta de información flotante -->
+        <div class="relative z-20 -mt-16 container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="bg-white rounded-2xl shadow-xl p-6 sm:p-8 border border-gray-100">
+                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+                    <!-- Info principal -->
+                    <div class="text-center lg:text-left">
+                        <div class="flex items-center justify-center lg:justify-start gap-3 mb-2">
+                            <h1 class="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900">
+                                @negocio?.Nombre
+                            </h1>
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">
+                                <i class="fas fa-check-circle mr-1"></i> Verificado
+                            </span>
+                        </div>
+                        <p class="text-gray-600 text-base sm:text-lg max-w-xl">
+                            @(negocio?.Descripcion ?? "Tu proveedor de confianza")
+                        </p>
+
+                        <!-- Stats rápidas -->
+                        <div class="flex items-center justify-center lg:justify-start gap-6 mt-4">
+                            <div class="flex items-center gap-2 text-sm text-gray-500">
+                                <i class="fas fa-box text-green-500"></i>
+                                <span><strong class="text-gray-900">@productCount</strong> productos</span>
+                            </div>
+                            <div class="flex items-center gap-2 text-sm text-gray-500">
+                                <i class="fas fa-tags text-orange-500"></i>
+                                <span><strong class="text-gray-900">@categoryCount</strong> categorías</span>
+                            </div>
+                            @if (negocio?.Telefono != null)
                             {
-                                <img src="@negocio.imagen.Base64" alt="Logo negocio" class="h-full w-full object-cover" />
+                                <div class="flex items-center gap-2 text-sm text-gray-500">
+                                    <i class="fas fa-phone text-blue-500"></i>
+                                    <span>@negocio.Telefono</span>
+                                </div>
                             }
                         </div>
+                    </div>
+
+                    <!-- Acciones -->
+                    <div class="flex flex-col sm:flex-row items-center gap-3">
+                        @{
+                            var telefonoWpp = negocio?.Telefono.ToString()
+                                .Replace(" ", "")
+                                .Replace("(", "")
+                                .Replace(")", "")
+                                .Replace("-", "")
+                                .Replace("+", "") ?? "";
+
+                            var mensaje = Uri.EscapeDataString($"Hola {negocio?.Nombre}, me gustaría obtener más información.");
+                            var waUrl = $"https://wa.me/{telefonoWpp}?text={mensaje}";
+                        }
+                        <a href="@waUrl"
+                           target="_blank" rel="noopener"
+                           class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 text-white font-semibold shadow-lg shadow-green-500/30 hover:shadow-xl hover:shadow-green-500/40 hover:-translate-y-0.5 transition-all duration-300">
+                            <i class="fab fa-whatsapp text-xl"></i>
+                            <span>Contactar por WhatsApp</span>
+                        </a>
+                        <button onclick="document.getElementById('filtros').scrollIntoView({behavior: 'smooth'})"
+                                class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gray-100 text-gray-700 font-semibold hover:bg-gray-200 transition-colors">
+                            <i class="fas fa-filter"></i>
+                            <span>Ver productos</span>
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
     </header>
 
-    <section class="relative z-20 w-full bg-white px-4 py-4">
-        <div class="mx-auto grid max-w-6xl grid-cols-1 items-center sm:grid-cols-3">
-            <div class="hidden sm:block"></div>
+    <!-- MAIN CONTENT -->
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Barra de búsqueda y ordenamiento -->
+        <div class="mb-8 animate-fadeInUp">
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6">
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <!-- Búsqueda -->
+                    <div class="flex-1 relative">
+                        <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                        <input type="text"
+                               id="searchInput"
+                               placeholder="Buscar productos..."
+                               class="search-input w-full pl-12 pr-4 py-3 rounded-xl border border-gray-200 focus:border-green-500 focus:outline-none transition-all">
+                    </div>
 
-            <div class="text-center">
-                <h1 class="text-3xl font-extrabold tracking-tight text-gray-800 sm:text-4xl">
-                    @negocio?.Nombre
-                </h1>
-                <p class="mt-2 text-base font-semibold tracking-wide text-[#15803D] uppercase sm:text-lg">
-                    @negocio?.Descripcion
-                </p>
-            </div>
+                    <!-- Ordenamiento -->
+                    <div class="flex gap-3">
+                        <select id="sortOrder" class="px-4 py-3 rounded-xl border border-gray-200 focus:border-green-500 focus:outline-none bg-white min-w-[160px]">
+                            <option value="">Ordenar por</option>
+                            <option value="price-asc">Precio: Menor a Mayor</option>
+                            <option value="price-desc">Precio: Mayor a Menor</option>
+                            <option value="name-asc">Nombre: A-Z</option>
+                            <option value="name-desc">Nombre: Z-A</option>
+                        </select>
 
-            <!-- Botón derecha en desktop / centrado en móvil -->
-            <div class="mt-4 justify-self-center sm:mt-0 sm:justify-self-end">
-                @{
-                    var telefonoWpp = negocio?.Telefono.ToString()
-                    .Replace(" ", "")
-                    .Replace("(", "")
-                    .Replace(")", "")
-                    .Replace("-", "")
-                    .Replace("+", "");
+                        <!-- Vista grid/list -->
+                        <div class="hidden sm:flex items-center bg-gray-100 rounded-xl p-1">
+                            <button id="viewGrid" class="p-2 rounded-lg bg-white shadow-sm text-green-600">
+                                <i class="fas fa-th-large"></i>
+                            </button>
+                            <button id="viewList" class="p-2 rounded-lg text-gray-400 hover:text-gray-600 transition-colors">
+                                <i class="fas fa-list"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
 
-                    var mensaje = Uri.EscapeDataString($"Hola {negocio?.Nombre}, me gustaría obtener más información.");
-                    var waUrl = $"https://wa.me/{telefonoWpp}?text={mensaje}";
-                }
-                <a href="@waUrl"
-                   target="_blank" rel="noopener"
-                   class="inline-flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 font-semibold text-white shadow transition hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:outline-none">
-                    <svg class="h-5 w-5" viewBox="0 0 24 24" aria-hidden="true">
-                        <path fill="currentColor" d="M12.004 2.002a9.953 9.953 0 0 0-8.682 14.85l-1.318 4.81 4.932-1.294a9.95 9.95 0 0 0 5.068 1.385h.004c5.523 0 10-4.478 10-10s-4.477-10-10.004-10zm0 18.182h-.004a8.185 8.185 0 0 1-4.168-1.139l-.298-.177-2.923.767.781-2.847-.192-.293a8.18 8.18 0 0 1 6.804-12.56c4.522 0 8.197 3.676 8.197 8.198s-3.675 8.198-8.197 8.198z" />
-                    </svg>
-                    Escribir a WhatsApp
-                </a>
+                <!-- Filtros rápidos (tags) -->
+                <div class="flex flex-wrap gap-2 mt-4" id="quickFilters">
+                    <button class="quick-filter active px-4 py-2 rounded-full text-sm font-medium bg-green-100 text-green-700 hover:bg-green-200 transition-colors" data-filter="all">
+                        Todos
+                    </button>
+                    @if (ViewBag.categorias != null)
+                    {
+                        @foreach (var cat in ViewBag.categorias)
+                        {
+                            <button class="quick-filter px-4 py-2 rounded-full text-sm font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors" data-filter="@cat.Id">
+                                @cat.Nombre
+                            </button>
+                        }
+                    }
+                </div>
             </div>
         </div>
-    </section>
 
+        <div class="flex flex-col lg:flex-row gap-8">
+            <!-- SIDEBAR DE FILTROS -->
+            <aside id="filtros" class="w-full lg:w-72 xl:w-80 flex-shrink-0 animate-fadeInUp animation-delay-100">
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sticky top-4">
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="text-xl font-bold text-gray-900 flex items-center gap-2">
+                            <i class="fas fa-sliders-h text-green-500"></i>
+                            Filtros
+                        </h2>
+                        <button id="filter" class="text-sm text-green-600 hover:text-green-700 font-medium flex items-center gap-1">
+                            <i class="fas fa-redo text-xs"></i>
+                            Limpiar
+                        </button>
+                    </div>
 
+                    <!-- Categoría -->
+                    <div class="mb-6">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            <i class="fas fa-folder text-orange-500 mr-2"></i>Categoría
+                        </label>
+                        <select id="category" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-green-500 focus:outline-none transition-all bg-white">
+                            <option value="">Todas las categorías</option>
+                            @foreach (var cat in ViewBag.categorias)
+                            {
+                                <option value="@cat.Id">@cat.Nombre</option>
+                            }
+                        </select>
+                    </div>
 
+                    <!-- Subcategoría -->
+                    <div class="mb-6">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            <i class="fas fa-folder-open text-blue-500 mr-2"></i>Subcategoría
+                        </label>
+                        <select id="subcategory" class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-green-500 focus:outline-none transition-all bg-white disabled:bg-gray-50 disabled:text-gray-400" disabled>
+                            <option value="">Todas las subcategorías</option>
+                        </select>
+                    </div>
 
-    <main class="flex w-full flex-col gap-6 p-4 md:flex-row">
-        <!-- FILTROS -->
-        <aside id="filtros" class="w-full space-y-6 md:w-1/5">
-            <div>
-                <h2 class="mb-2 text-xl font-bold text-green-600">Filtros</h2>
-            </div>
-            <div class="rounded-lg bg-white p-4 shadow-md">
-                <label class="mb-1 block font-semibold text-orange-600">Categoría</label>
-                <select id="category" class="w-full rounded border-gray-300 p-2">
-                    <option value="">Todas</option>
-                    @foreach (var cat in ViewBag.categorias)
+                    <!-- Rango de precio -->
+                    <div class="mb-6">
+                        <label class="block text-sm font-semibold text-gray-700 mb-4">
+                            <i class="fas fa-dollar-sign text-green-500 mr-2"></i>Rango de precio
+                        </label>
+                        <div class="px-2">
+                            <div class="relative h-2 bg-gray-200 rounded-full">
+                                <input id="minPriceRange" type="range" class="range-slider" />
+                                <input id="maxPriceRange" type="range" class="range-slider" />
+                                <div id="rangeBar" class="pointer-events-none absolute h-2 rounded-full bg-gradient-to-r from-green-400 to-emerald-500"></div>
+                            </div>
+                        </div>
+                        <div class="flex justify-between mt-4">
+                            <div class="bg-gray-50 px-3 py-2 rounded-lg">
+                                <span class="text-xs text-gray-500">Mín</span>
+                                <p id="minPriceValue" class="font-bold text-gray-900"></p>
+                            </div>
+                            <div class="bg-gray-50 px-3 py-2 rounded-lg text-right">
+                                <span class="text-xs text-gray-500">Máx</span>
+                                <p id="maxPriceValue" class="font-bold text-gray-900"></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Contador de resultados -->
+                    <div class="pt-4 border-t border-gray-100">
+                        <p class="text-sm text-gray-500 text-center">
+                            Mostrando <span id="resultCount" class="font-bold text-green-600">@productCount</span> productos
+                        </p>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- GRID DE PRODUCTOS -->
+            <section id="productosWrapper" class="flex-1 animate-fadeInUp animation-delay-200">
+                <div id="productosContainer" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+                    @{ var index = 0; }
+                    @foreach (var producto in Model)
                     {
-                        <option value="@cat.Id">@cat.Nombre</option>
+                        <div id="producto-@producto.Id"
+                             class="producto producto-card group bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100"
+                             data-categoria-id="@producto.Categoria"
+                             data-subcategoria-id="@producto.IdSubCategoria"
+                             data-precio="@producto.Precio"
+                             data-nombre="@producto.Nombre?.ToLower()"
+                             style="animation-delay: @(index * 50)ms">
+
+                            <!-- Imagen del producto -->
+                            <div class="relative aspect-square overflow-hidden bg-gray-50">
+                                <img src="@producto.ImagenUrl"
+                                     alt="@producto.Nombre"
+                                     class="producto-image h-full w-full object-contain p-4"
+                                     loading="lazy" />
+
+                                <!-- Overlay con acciones -->
+                                <div class="producto-overlay absolute inset-0 bg-black/40 flex items-center justify-center gap-3">
+                                    <a href="@Url.Action("ProductDetailLocal", "Productos", new { idlocal = negocio?.Id, idProducto = producto.Id })"
+                                       class="w-12 h-12 rounded-full bg-white flex items-center justify-center text-gray-900 hover:bg-green-500 hover:text-white transition-colors shadow-lg">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="@waUrl"
+                                       target="_blank"
+                                       class="w-12 h-12 rounded-full bg-white flex items-center justify-center text-gray-900 hover:bg-green-500 hover:text-white transition-colors shadow-lg">
+                                        <i class="fab fa-whatsapp"></i>
+                                    </a>
+                                </div>
+
+                            </div>
+
+                            <!-- Info del producto -->
+                            <div class="p-5">
+                                <h3 class="font-semibold text-gray-900 text-lg mb-2 line-clamp-2 group-hover:text-green-600 transition-colors">
+                                    @producto.Nombre
+                                </h3>
+
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <p class="text-2xl font-bold text-green-600">
+                                            $@producto.Precio
+                                        </p>
+                                        @if (producto.Unidad?.Nombre != null)
+                                        {
+                                            <p class="text-sm text-gray-500">por @producto.Unidad.Nombre</p>
+                                        }
+                                    </div>
+
+                                    <a href="@Url.Action("ProductDetailLocal", "Productos", new { idlocal = negocio?.Id, idProducto = producto.Id })"
+                                       class="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-gray-900 to-gray-800 text-white text-sm font-medium hover:from-green-600 hover:to-emerald-600 transition-all duration-300 shadow-md hover:shadow-lg">
+                                        Ver más
+                                        <i class="fas fa-arrow-right text-xs"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        index++;
                     }
-                </select>
-            </div>
-            <div class="rounded-lg bg-white p-4 shadow-md">
-                <label class="mb-1 block font-semibold text-orange-600">Subcategoría</label>
-                <select id="subcategory" class="w-full rounded border-gray-300 p-2" disabled>
-                    <option value="">Todas</option>
-                </select>
-            </div>
-            <div class="rounded-lg bg-white p-4 shadow-md">
-                <label class="mb-2 block font-semibold text-orange-600">Precio</label>
-                <div class="relative h-3">
-                    <input id="minPriceRange" type="range" class="range-slider" />
-                    <input id="maxPriceRange" type="range" class="range-slider" />
-                    <div id="rangeBar" class="pointer-events-none absolute h-3 rounded bg-green-500"></div>
                 </div>
 
-                <div class="mt-2 flex justify-between text-sm text-gray-600">
-                    <span id="minPriceValue"></span>
-                    <span id="maxPriceValue"></span>
+                <!-- Estado vacío -->
+                <div id="emptyState" class="hidden py-16 text-center">
+                    <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gray-100 mb-6">
+                        <i class="fas fa-search text-3xl text-gray-400"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold text-gray-900 mb-2">No se encontraron productos</h3>
+                    <p class="text-gray-500 mb-6">Intenta ajustar los filtros o buscar algo diferente</p>
+                    <button onclick="document.getElementById('filter').click()"
+                            class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-green-600 text-white font-medium hover:bg-green-700 transition-colors">
+                        <i class="fas fa-redo"></i>
+                        Limpiar filtros
+                    </button>
                 </div>
-            </div>
-            <button id="filter"
-                class="w-full rounded-full bg-green-700 py-2 text-white hover:bg-green-800">Restablecer</button>
-        </aside>
-
-        <!-- LISTA DE PRODUCTOS -->
-        <section id="productosWrapper" class="w-full md:w-4/5">
-            <h2 class="mb-4 text-lg font-semibold text-green-600">Productos disponibles</h2>
-            <div id="productosContainer" class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-                @foreach (var producto in Model)
-                {
-                    <div id="producto-@producto.Id" class="producto flex flex-col rounded-lg bg-white p-4 shadow-md"
-                        data-categoria-id="@producto.Categoria" data-subcategoria-id="@producto.IdSubCategoria"
-                        data-precio="@producto.Precio">
-                        <img src="@producto.ImagenUrl" alt="@producto.Nombre" class="mb-4 h-40 w-full object-contain" />
-                        <h3 class="font-semibold text-gray-800">@producto.Nombre</h3>
-                        <p class="mt-2 font-bold text-orange-500">$@producto.Precio - @producto.Unidad.Nombre</p>
-                        <a href="@Url.Action(
-                                                                                                                                                                                                                                             "ProductDetailLocal",
-                                                                                                                                                                                                                                             "Productos",
-                                                                                                                                                                                                                                             new { idlocal = negocio?.Id, idProducto = producto.Id }
-                                                                                                                                                                                                                                         )"
-                        class="mx-auto mt-3 block w-1/2 rounded-lg bg-[#1A2D3D] px-2 py-1 text-center text-sm text-white hover:bg-[#162331]">
-                        Ver
-                    </a>
-                </div>
-                                }
-            </div>
-        </section>
+            </section>
+        </div>
     </main>
+
+    <!-- Botón flotante de WhatsApp -->
+    <a href="@waUrl"
+       target="_blank"
+       class="fab fixed bottom-6 right-6 w-16 h-16 rounded-full bg-gradient-to-r from-green-500 to-emerald-600 text-white flex items-center justify-center shadow-lg shadow-green-500/40 z-50">
+        <i class="fab fa-whatsapp text-3xl"></i>
+    </a>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
         $(document).ready(function () {
-
-            // --- Subcategorías ---
-            $('#category').on('change', function () {
-                const idCategoria = $(this).val();
-                const subcatSelect = $('#subcategory');
-
-                // Limpia y deshabilita el select de subcategorías
-                subcatSelect.prop('disabled', true).empty().append('<option value="">Todas</option>');
-
-                if (idCategoria) {
-                    $.get("/Productos/ObtenerSubCategorias", { idCategoria: idCategoria })
-                        .done(function (data) {
-                            if (data.length > 0) {
-                                data.forEach(function (sub) {
-                                    subcatSelect.append(`<option value="${sub.id}">${sub.nombre}</option>`);
-                                });
-                                subcatSelect.prop('disabled', false);
-                            }
-                            // Aplica el filtro cuando se cambie la categoría
-                            aplicarFiltros();
-                        })
-                        .fail(function () {
-                            alert("No se pudieron cargar las subcategorías.");
-                        });
-                } else {
-                    aplicarFiltros();
-                }
-            });
-
-            // --- Rango de Precio ---
+            // Variables globales
             const minPriceRange = $('#minPriceRange');
             const maxPriceRange = $('#maxPriceRange');
             const minPriceValue = $('#minPriceValue');
             const maxPriceValue = $('#maxPriceValue');
-
-            // Define valores mínimos y máximos (ajusta según tus necesidades)
-            minPriceRange.attr('min', 0).attr('max', 100000).val(0);
-            maxPriceRange.attr('min', 0).attr('max', 100000).val(100000);
-            minPriceValue.text('$0');
-            maxPriceValue.text('$100,000');
-
-            // --- Función Combinada para aplicar filtros ---
-            function aplicarFiltros() {
-                const selectedCategory = $('#category').val();
-                const selectedSubcat = $('#subcategory').val();
-                const minPrice = parseFloat(minPriceRange.val());
-                const maxPrice = parseFloat(maxPriceRange.val());
-
-                // Actualizar los textos de precio
-                minPriceValue.text('$' + parseInt(minPrice).toLocaleString());
-                maxPriceValue.text('$' + parseInt(maxPrice).toLocaleString());
-
-                $('.producto').each(function () {
-                    const prodCat = $(this).data('categoria-id');
-                    const prodSub = $(this).data('subcategoria-id');
-                    const precio = parseFloat($(this).data('precio'));
-
-                    // Verifica si el producto coincide con cada filtro
-                    const coincideCategoria = !selectedCategory || prodCat == selectedCategory;
-                    const coincideSubcat = !selectedSubcat || prodSub == selectedSubcat;
-                    const coincidePrecio = precio >= minPrice && precio <= maxPrice;
-
-                    if (coincideCategoria && coincideSubcat && coincidePrecio) {
-                        $(this).show();
-                    } else {
-                        $(this).hide();
-                    }
-                });
-            }
-
-            // Aplica filtros al cambiar el rango de precio
-            minPriceRange.on('input', aplicarFiltros);
-            maxPriceRange.on('input', aplicarFiltros);
-            // Aplica filtros al cambiar subcategoría (ya aplicado en category change, pero también individualmente)
-            $('#subcategory').on('change', aplicarFiltros);
-
-            // --- Botón de Restablecer ---
-            $('#filter').on('click', function () {
-                // Reinicia los selectores
-                $('#category').val('');
-                $('#subcategory').empty().append('<option value="">Todas</option>').prop('disabled', true);
-                // Reinicia los rangos de precio
-                minPriceRange.val(0);
-                maxPriceRange.val(100000);
-                // Muestra todos los productos
-                $('.producto').show();
-                // Actualiza los valores mostrados
-                minPriceValue.text('$0');
-                maxPriceValue.text('$100,000');
-            });
-        });
-    </script>
-    <script>
-        $(document).ready(function () {
-            const minInput = $('#minPriceRange');
-            const maxInput = $('#maxPriceRange');
-            const minLabel = $('#minPriceValue');
-            const maxLabel = $('#maxPriceValue');
             const rangeBar = $('#rangeBar');
+            const searchInput = $('#searchInput');
+            const sortOrder = $('#sortOrder');
+            const resultCount = $('#resultCount');
+            const emptyState = $('#emptyState');
+            const productosContainer = $('#productosContainer');
 
+            // Obtener precios de productos
             let precios = [];
             $('.producto').each(function () {
                 const precio = parseFloat($(this).data('precio'));
@@ -301,26 +535,129 @@
             const precioMin = Math.min(...precios);
             const precioMax = Math.max(...precios);
 
-            // Configura sliders
-            minInput.attr({ min: precioMin, max: precioMax, value: precioMin });
-            maxInput.attr({ min: precioMin, max: precioMax, value: precioMax });
-            minLabel.text(`$${precioMin.toLocaleString()}`);
-            maxLabel.text(`$${precioMax.toLocaleString()}`);
+            // Configurar sliders
+            minPriceRange.attr({ min: precioMin, max: precioMax, value: precioMin });
+            maxPriceRange.attr({ min: precioMin, max: precioMax, value: precioMax });
+            minPriceValue.text(`$${precioMin.toLocaleString('es-CO')}`);
+            maxPriceValue.text(`$${precioMax.toLocaleString('es-CO')}`);
 
+            // --- Subcategorías ---
+            $('#category').on('change', function () {
+                const idCategoria = $(this).val();
+                const subcatSelect = $('#subcategory');
+
+                subcatSelect.prop('disabled', true).empty().append('<option value="">Todas las subcategorías</option>');
+
+                if (idCategoria) {
+                    $.get("/Productos/ObtenerSubCategorias", { idCategoria: idCategoria })
+                        .done(function (data) {
+                            if (data.length > 0) {
+                                data.forEach(function (sub) {
+                                    subcatSelect.append(`<option value="${sub.id}">${sub.nombre}</option>`);
+                                });
+                                subcatSelect.prop('disabled', false);
+                            }
+                            aplicarFiltros();
+                        })
+                        .fail(function () {
+                            console.error("No se pudieron cargar las subcategorías.");
+                        });
+                } else {
+                    aplicarFiltros();
+                }
+            });
+
+            // --- Función para aplicar todos los filtros ---
+            function aplicarFiltros() {
+                const selectedCategory = $('#category').val();
+                const selectedSubcat = $('#subcategory').val();
+                const minPrice = parseFloat(minPriceRange.val());
+                const maxPrice = parseFloat(maxPriceRange.val());
+                const searchTerm = searchInput.val().toLowerCase().trim();
+
+                let visibleCount = 0;
+
+                $('.producto').each(function () {
+                    const prodCat = $(this).data('categoria-id');
+                    const prodSub = $(this).data('subcategoria-id');
+                    const precio = parseFloat($(this).data('precio'));
+                    const nombre = $(this).data('nombre') || '';
+
+                    const coincideCategoria = !selectedCategory || prodCat == selectedCategory;
+                    const coincideSubcat = !selectedSubcat || prodSub == selectedSubcat;
+                    const coincidePrecio = precio >= minPrice && precio <= maxPrice;
+                    const coincideBusqueda = !searchTerm || nombre.includes(searchTerm);
+
+                    if (coincideCategoria && coincideSubcat && coincidePrecio && coincideBusqueda) {
+                        $(this).show();
+                        visibleCount++;
+                    } else {
+                        $(this).hide();
+                    }
+                });
+
+                // Actualizar contador
+                resultCount.text(visibleCount);
+
+                // Mostrar/ocultar estado vacío
+                if (visibleCount === 0) {
+                    emptyState.removeClass('hidden');
+                    productosContainer.addClass('hidden');
+                } else {
+                    emptyState.addClass('hidden');
+                    productosContainer.removeClass('hidden');
+                }
+
+                // Aplicar ordenamiento
+                aplicarOrdenamiento();
+            }
+
+            // --- Función para ordenar productos ---
+            function aplicarOrdenamiento() {
+                const order = sortOrder.val();
+                if (!order) return;
+
+                const productos = $('.producto:visible').get();
+
+                productos.sort(function(a, b) {
+                    const precioA = parseFloat($(a).data('precio'));
+                    const precioB = parseFloat($(b).data('precio'));
+                    const nombreA = $(a).data('nombre') || '';
+                    const nombreB = $(b).data('nombre') || '';
+
+                    switch(order) {
+                        case 'price-asc':
+                            return precioA - precioB;
+                        case 'price-desc':
+                            return precioB - precioA;
+                        case 'name-asc':
+                            return nombreA.localeCompare(nombreB);
+                        case 'name-desc':
+                            return nombreB.localeCompare(nombreA);
+                        default:
+                            return 0;
+                    }
+                });
+
+                $.each(productos, function(idx, itm) {
+                    productosContainer.append(itm);
+                });
+            }
+
+            // --- Actualizar rango visual ---
             function actualizarRango() {
-                let min = parseFloat(minInput.val());
-                let max = parseFloat(maxInput.val());
+                let min = parseFloat(minPriceRange.val());
+                let max = parseFloat(maxPriceRange.val());
 
                 if (min > max) {
                     [min, max] = [max, min];
-                    minInput.val(min);
-                    maxInput.val(max);
+                    minPriceRange.val(min);
+                    maxPriceRange.val(max);
                 }
 
-                minLabel.text(`$${min.toLocaleString()}`);
-                maxLabel.text(`$${max.toLocaleString()}`);
+                minPriceValue.text(`$${min.toLocaleString('es-CO')}`);
+                maxPriceValue.text(`$${max.toLocaleString('es-CO')}`);
 
-                // Calcular posición del rango visual
                 const percentMin = ((min - precioMin) / (precioMax - precioMin)) * 100;
                 const percentMax = ((max - precioMin) / (precioMax - precioMin)) * 100;
 
@@ -329,17 +666,69 @@
                     width: `${percentMax - percentMin}%`
                 });
 
-                if (typeof aplicarFiltros === 'function') aplicarFiltros();
+                aplicarFiltros();
             }
 
-            minInput.on('input', actualizarRango);
-            maxInput.on('input', actualizarRango);
+            // --- Event listeners ---
+            minPriceRange.on('input', actualizarRango);
+            maxPriceRange.on('input', actualizarRango);
+            $('#subcategory').on('change', aplicarFiltros);
+            searchInput.on('input', aplicarFiltros);
+            sortOrder.on('change', aplicarFiltros);
+
+            // Quick filters
+            $('.quick-filter').on('click', function() {
+                const filter = $(this).data('filter');
+
+                $('.quick-filter').removeClass('active bg-green-100 text-green-700').addClass('bg-gray-100 text-gray-600');
+                $(this).addClass('active bg-green-100 text-green-700').removeClass('bg-gray-100 text-gray-600');
+
+                if (filter === 'all') {
+                    $('#category').val('');
+                } else {
+                    $('#category').val(filter);
+                }
+                $('#category').trigger('change');
+            });
+
+            // Vista grid/lista
+            $('#viewGrid').on('click', function() {
+                $(this).addClass('bg-white shadow-sm text-green-600').siblings().removeClass('bg-white shadow-sm text-green-600');
+                productosContainer.removeClass('grid-cols-1').addClass('sm:grid-cols-2 xl:grid-cols-3');
+            });
+
+            $('#viewList').on('click', function() {
+                $(this).addClass('bg-white shadow-sm text-green-600').siblings().removeClass('bg-white shadow-sm text-green-600');
+                productosContainer.addClass('grid-cols-1').removeClass('sm:grid-cols-2 xl:grid-cols-3');
+            });
+
+            // --- Botón de Restablecer ---
+            $('#filter').on('click', function () {
+                $('#category').val('');
+                $('#subcategory').empty().append('<option value="">Todas las subcategorías</option>').prop('disabled', true);
+                minPriceRange.val(precioMin);
+                maxPriceRange.val(precioMax);
+                searchInput.val('');
+                sortOrder.val('');
+
+                $('.quick-filter').removeClass('active bg-green-100 text-green-700').addClass('bg-gray-100 text-gray-600');
+                $('.quick-filter[data-filter="all"]').addClass('active bg-green-100 text-green-700').removeClass('bg-gray-100 text-gray-600');
+
+                $('.producto').show();
+                resultCount.text($('.producto').length);
+                emptyState.addClass('hidden');
+                productosContainer.removeClass('hidden');
+
+                minPriceValue.text(`$${precioMin.toLocaleString('es-CO')}`);
+                maxPriceValue.text(`$${precioMax.toLocaleString('es-CO')}`);
+
+                actualizarRango();
+            });
+
+            // Inicializar
             actualizarRango();
         });
     </script>
-
-
-
 </body>
 
 </html>
