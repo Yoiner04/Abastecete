@@ -13,27 +13,67 @@
     <link rel="stylesheet" href="~/css/styles.css" asp-append-version="true" />
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
+        /* Animaciones de entrada */
+        @@keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        @@keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        @@keyframes pulse-gentle {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+        .animate-fadeInUp {
+            animation: fadeInUp 0.5s ease-out forwards;
+            opacity: 0;
+        }
+        .animate-slideInRight {
+            animation: slideInRight 0.4s ease-out forwards;
+        }
+        /* Delays escalonados */
+        .delay-100 { animation-delay: 0.1s; }
+        .delay-200 { animation-delay: 0.2s; }
+        .delay-300 { animation-delay: 0.3s; }
+        .delay-400 { animation-delay: 0.4s; }
+        .delay-500 { animation-delay: 0.5s; }
+
         /* Card hover effects */
         .producto-card {
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .producto-card:hover {
-            transform: translateY(-6px);
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.12);
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
         }
         .producto-card:hover .producto-image {
-            transform: scale(1.05);
+            transform: scale(1.08);
         }
         .producto-card:hover .producto-overlay {
             opacity: 1;
         }
         .producto-image {
-            transition: transform 0.4s ease;
+            transition: transform 0.5s ease;
         }
         .producto-overlay {
             opacity: 0;
             transition: opacity 0.3s ease;
         }
+
         /* Panel detalle */
         .panel-detalle {
             transition: transform 0.3s ease, opacity 0.3s ease;
@@ -46,41 +86,142 @@
             transform: translateX(0);
             opacity: 1;
         }
+
+        /* Botones de acción con tooltip */
+        .action-btn {
+            position: relative;
+            transition: all 0.2s ease;
+        }
+        .action-btn:hover {
+            transform: translateY(-2px);
+        }
+        .action-btn::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 6px 12px;
+            background: #1f2937;
+            color: white;
+            font-size: 12px;
+            border-radius: 6px;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s ease;
+            margin-bottom: 8px;
+        }
+        .action-btn:hover::after {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Gradiente del header */
+        .header-gradient {
+            background: linear-gradient(135deg, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.6) 100%);
+        }
+
+        /* Badge animado */
+        .badge-pulse {
+            animation: pulse-gentle 2s ease-in-out infinite;
+        }
+
+        /* WhatsApp button glow */
+        .whatsapp-btn:hover {
+            box-shadow: 0 0 20px rgba(37, 211, 102, 0.5);
+        }
+
+        /* Contador de productos */
+        .products-counter {
+            background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+        }
     </style>
 </head>
 
-<body class="bg-white">
-    <header class="relative w-full bg-[#F5EFE4] shadow-md">
-        <div class="relative h-56 w-full">
+<body class="bg-gray-50">
+    <!-- Header mejorado con gradiente -->
+    <header class="relative w-full overflow-hidden">
+        <!-- Banner con gradiente overlay -->
+        <div class="relative h-64 sm:h-72 w-full">
             @if (!string.IsNullOrWhiteSpace(Model.Negocio?.BannerImagen?.Base64))
             {
                 <img src="@Model.Negocio.BannerImagen.Base64" alt="Fondo"
-                    class="absolute inset-0 h-full w-full object-contain brightness-50" />
+                    class="absolute inset-0 h-full w-full object-cover" />
+                <div class="header-gradient absolute inset-0"></div>
             }
-            <div class="relative z-10 flex flex-row items-start gap-4 px-4 sm:top-24 md:items-start md:gap-6 md:px-10">
-                <div
-                    class="flex size-32 items-center justify-center overflow-hidden rounded-xl border bg-white shadow-lg sm:size-60">
-                    @if (!string.IsNullOrWhiteSpace(Model.Negocio?.imagen?.Base64))
+            else
+            {
+                <div class="absolute inset-0 bg-gradient-to-br from-green-600 via-green-500 to-emerald-400"></div>
+            }
+
+            <!-- Contenido del header -->
+            <div class="relative z-10 h-full flex flex-col justify-end pb-6 px-4 sm:px-8 lg:px-12">
+                <div class="flex items-end gap-4 sm:gap-6">
+                    <!-- Logo del negocio -->
+                    <div class="animate-fadeInUp flex-shrink-0 w-24 h-24 sm:w-32 sm:h-32 rounded-2xl border-4 border-white bg-white shadow-xl overflow-hidden">
+                        @if (!string.IsNullOrWhiteSpace(Model.Negocio?.imagen?.Base64))
+                        {
+                            <img src="@Model.Negocio.imagen.Base64" alt="Logo negocio" class="h-full w-full object-cover" />
+                        }
+                        else
+                        {
+                            <div class="h-full w-full flex items-center justify-center bg-gray-100">
+                                <i class="fas fa-store text-3xl text-gray-400"></i>
+                            </div>
+                        }
+                    </div>
+
+                    <!-- Info del negocio sobre el banner -->
+                    <div class="animate-fadeInUp delay-100 flex-1 text-white pb-2">
+                        <h1 class="text-2xl sm:text-3xl lg:text-4xl font-bold drop-shadow-lg">
+                            @Model.Negocio?.Nombre
+                        </h1>
+                        @if (!string.IsNullOrWhiteSpace(Model.Negocio?.Descripcion))
+                        {
+                            <p class="mt-1 text-sm sm:text-base text-white/90 drop-shadow line-clamp-2">
+                                @Model.Negocio?.Descripcion
+                            </p>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Barra de info debajo del header -->
+        <div class="bg-white border-b border-gray-100 shadow-sm">
+            <div class="px-4 sm:px-8 lg:px-12 py-3">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <!-- Info de contacto -->
+                    <div class="flex flex-wrap items-center gap-4 text-sm text-gray-600">
+                        @if (Model.Negocio?.Telefono != null)
+                        {
+                            <a href="tel:@Model.Negocio.Telefono" class="flex items-center gap-2 hover:text-green-600 transition-colors">
+                                <i class="fas fa-phone text-green-500"></i>
+                                <span>@Model.Negocio.Telefono</span>
+                            </a>
+                        }
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-box text-orange-500"></i>
+                            <span id="productos-count" class="font-medium">@(((IEnumerable<dynamic>)ViewBag.productos).Count()) productos</span>
+                        </div>
+                    </div>
+
+                    <!-- Botón de WhatsApp destacado -->
+                    @if (Model.Negocio?.Telefono != null)
                     {
-                        <img src="@Model.Negocio.imagen.Base64" alt="Logo negocio" class="h-full w-full object-cover" />
+                        <a href="https://wa.me/57@Model.Negocio.Telefono?text=Hola, vi tu negocio en Abastecete"
+                           target="_blank"
+                           class="whatsapp-btn flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-full text-sm font-medium hover:bg-green-600 transition-all">
+                            <i class="fab fa-whatsapp text-lg"></i>
+                            <span class="hidden sm:inline">Contactar por WhatsApp</span>
+                            <span class="sm:hidden">WhatsApp</span>
+                        </a>
                     }
                 </div>
             </div>
         </div>
     </header>
-
-    <!-- NUEVO BLOQUE DE INFORMACIÓN CENTRADO -->
-    <section class="w-full bg-white px-4 py-4 text-center">
-        <h1 class="text-3xl font-extrabold tracking-tight text-gray-800 sm:text-4xl">
-            @Model.Negocio?.Nombre
-        </h1>
-        <p class="mt-2 text-base font-semibold tracking-wide text-[#15803D] uppercase sm:text-lg">
-            @Model.Negocio?.Descripcion
-        </p>
-        <p class="text-base font-semibold tracking-wide text-[#15803D] uppercase sm:text-lg">
-            @Model.Negocio?.Telefono
-        </p>
-    </section>
 
     <div id="mensaje-modal" class="fixed inset-0 z-50 hidden bg-black/50 transition-opacity duration-300">
         <div class="flex min-h-screen items-center justify-center">
@@ -119,38 +260,55 @@
         </div>
     </div>
 
-    <main class="mt-10 w-full px-4 sm:px-6 lg:px-10">
+    <main class="w-full px-4 sm:px-6 lg:px-12 py-6">
 
         <div class="w-full transition-all">
             <div id="productosWrapper"
-                class="w-full rounded-lg border border-gray-300 bg-white p-4 shadow-md transition-all duration-300 sm:p-6">
+                class="w-full rounded-2xl bg-white p-4 shadow-sm border border-gray-100 transition-all duration-300 sm:p-6">
 
-                <div class="flex items-center gap-2">
+                <!-- Barra de acciones mejorada -->
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+                    <div class="flex items-center gap-2">
+                        <h2 class="text-lg sm:text-xl font-bold text-gray-800">Mis Productos</h2>
+                        <span class="products-counter px-2 py-0.5 text-xs font-bold text-white rounded-full">
+                            @(((IEnumerable<dynamic>)ViewBag.productos).Count())
+                        </span>
+                    </div>
 
-                    <a href="#" onclick="openMensajeModal()" title="Enviar solicitud"
-                        class="flex h-10 w-10 items-center justify-center rounded-md bg-gray-600 text-white transition hover:bg-gray-700">
-                        <i class="fas fa-comment-dots text-sm"></i>
-                    </a>
+                    <div class="flex items-center gap-2 sm:gap-3">
+                        <a href="#" onclick="openMensajeModal(); return false;"
+                           class="action-btn flex items-center gap-2 h-10 px-3 sm:px-4 rounded-xl bg-gray-100 text-gray-700 hover:bg-gray-200 transition-all"
+                           data-tooltip="Enviar solicitud">
+                            <i class="fas fa-comment-dots"></i>
+                            <span class="hidden sm:inline text-sm font-medium">Solicitud</span>
+                        </a>
 
+                        <a href="@Url.Action("AgregarProductNegocio", "Productos")"
+                           class="action-btn flex items-center gap-2 h-10 px-3 sm:px-4 rounded-xl bg-orange-500 text-white hover:bg-orange-600 transition-all shadow-sm hover:shadow-md"
+                           data-tooltip="Agregar producto">
+                            <i class="fas fa-plus"></i>
+                            <span class="hidden sm:inline text-sm font-medium">Agregar</span>
+                        </a>
 
-                    <a href="@Url.Action("AgregarProductNegocio", "Productos")" title="Agregar producto"
-                        class="flex h-10 w-10 items-center justify-center rounded-md bg-orange-500 text-white transition hover:bg-orange-600">
-                        <i class="fas fa-plus text-sm"></i>
-                    </a>
-
-
-                    <a href="@Url.Action("EditarNegocio", "Negocios")" title="Editar negocio"
-                        class="flex h-10 w-10 items-center justify-center rounded-md bg-orange-500 text-white transition hover:bg-orange-600">
-                        <i class="fas fa-pen-to-square text-sm"></i>
-                    </a>
+                        <a href="@Url.Action("EditarNegocio", "Negocios")"
+                           class="action-btn flex items-center gap-2 h-10 px-3 sm:px-4 rounded-xl bg-green-500 text-white hover:bg-green-600 transition-all shadow-sm hover:shadow-md"
+                           data-tooltip="Editar negocio">
+                            <i class="fas fa-pen-to-square"></i>
+                            <span class="hidden sm:inline text-sm font-medium">Editar</span>
+                        </a>
+                    </div>
                 </div>
-                <div id="productosContainer"
-                    class="mt-5 grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
 
+                <!-- Grid de productos -->
+                <div id="productosContainer"
+                    class="grid grid-cols-2 gap-3 sm:gap-4 md:gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+
+                    @{ var index = 0; }
                     @foreach (var producto in ViewBag.productos)
                     {
+                        var delayClass = $"delay-{Math.Min(index * 100, 500)}";
                         <div id="producto-@producto.Id"
-                            class="producto producto-card group relative flex flex-col rounded-xl border border-gray-100 bg-white overflow-hidden shadow-sm"
+                            class="producto producto-card animate-fadeInUp @delayClass group relative flex flex-col rounded-xl border border-gray-100 bg-white overflow-hidden shadow-sm"
                             data-categoria-id="@producto.IdSubCategoria"
                             data-precio="@producto.Precio"
                             data-nombre="@producto.Nombre"
@@ -160,38 +318,63 @@
                             <div class="relative aspect-square overflow-hidden bg-gray-50">
                                 <img src="@producto.ImagenUrl"
                                      alt="@producto.Nombre"
-                                     class="producto-image h-full w-full object-contain p-3" />
+                                     class="producto-image h-full w-full object-contain p-2 sm:p-3"
+                                     loading="lazy" />
 
                                 <!-- Overlay con acciones -->
-                                <div class="producto-overlay absolute inset-0 bg-black/40 flex items-center justify-center gap-3">
-                                    <button onclick="mostrarDetalle('@producto.Nombre', '@producto.Precio', '@producto.ImagenUrl', @producto.Id)"
-                                            class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-gray-700 hover:bg-green-500 hover:text-white transition-colors shadow-lg"
+                                <div class="producto-overlay absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent flex items-center justify-center gap-2 sm:gap-3">
+                                    <button onclick="mostrarDetalle('@producto.Nombre.Replace("'", "\\'"))', '@producto.Precio', '@producto.ImagenUrl', @producto.Id)"
+                                            class="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/95 backdrop-blur-sm flex items-center justify-center text-gray-700 hover:bg-green-500 hover:text-white transition-all shadow-lg hover:scale-110"
                                             title="Ver detalle">
-                                        <i class="fas fa-eye"></i>
+                                        <i class="fas fa-eye text-sm"></i>
                                     </button>
-                                    <button onclick="abrirModalEditar(@producto.Id, '@producto.Nombre', '@producto.Precio', '@producto.ImagenUrl')"
-                                            class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-gray-700 hover:bg-orange-500 hover:text-white transition-colors shadow-lg"
+                                    <button onclick="abrirModalEditar(@producto.Id, '@producto.Nombre.Replace("'", "\\'")', '@producto.Precio', '@producto.ImagenUrl')"
+                                            class="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/95 backdrop-blur-sm flex items-center justify-center text-gray-700 hover:bg-orange-500 hover:text-white transition-all shadow-lg hover:scale-110"
                                             title="Editar producto">
-                                        <i class="fas fa-pen"></i>
+                                        <i class="fas fa-pen text-sm"></i>
                                     </button>
-                                    <button onclick="confirmarEliminar(@producto.Id, '@producto.Nombre')"
-                                            class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-gray-700 hover:bg-red-500 hover:text-white transition-colors shadow-lg"
+                                    <button onclick="confirmarEliminar(@producto.Id, '@producto.Nombre.Replace("'", "\\'")')"
+                                            class="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/95 backdrop-blur-sm flex items-center justify-center text-gray-700 hover:bg-red-500 hover:text-white transition-all shadow-lg hover:scale-110"
                                             title="Eliminar producto">
-                                        <i class="fas fa-trash"></i>
+                                        <i class="fas fa-trash text-sm"></i>
                                     </button>
                                 </div>
                             </div>
 
                             <!-- Info del producto -->
-                            <div class="p-4">
-                                <h3 class="text-base font-semibold text-gray-800 line-clamp-2 group-hover:text-green-600 transition-colors">
+                            <div class="p-3 sm:p-4">
+                                <h3 class="text-sm sm:text-base font-semibold text-gray-800 line-clamp-2 group-hover:text-green-600 transition-colors leading-tight">
                                     @producto.Nombre
                                 </h3>
-                                <p class="mt-2 text-xl font-bold text-orange-500">$@producto.Precio</p>
+                                <div class="mt-2 flex items-center justify-between">
+                                    <p class="text-lg sm:text-xl font-bold text-orange-500">$@producto.Precio</p>
+                                    @if (producto.Unidad?.Nombre != null)
+                                    {
+                                        <span class="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">@producto.Unidad.Nombre</span>
+                                    }
+                                </div>
                             </div>
                         </div>
+                        index++;
                     }
                 </div>
+
+                <!-- Estado vacío -->
+                @if (!((IEnumerable<dynamic>)ViewBag.productos).Any())
+                {
+                    <div class="flex flex-col items-center justify-center py-16 text-center">
+                        <div class="w-24 h-24 rounded-full bg-gray-100 flex items-center justify-center mb-4">
+                            <i class="fas fa-box-open text-4xl text-gray-300"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold text-gray-700 mb-2">No hay productos aún</h3>
+                        <p class="text-gray-500 mb-6 max-w-sm">Comienza agregando tu primer producto para que tus clientes puedan verlo</p>
+                        <a href="@Url.Action("AgregarProductNegocio", "Productos")"
+                           class="inline-flex items-center gap-2 px-6 py-3 bg-orange-500 text-white rounded-xl font-medium hover:bg-orange-600 transition-colors shadow-lg hover:shadow-xl">
+                            <i class="fas fa-plus"></i>
+                            Agregar mi primer producto
+                        </a>
+                    </div>
+                }
             </div>
         </div>
 
