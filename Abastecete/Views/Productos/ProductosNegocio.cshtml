@@ -12,7 +12,41 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <link rel="stylesheet" href="~/css/styles.css" asp-append-version="true" />
     <script src="https://cdn.tailwindcss.com"></script>
-
+    <style>
+        /* Card hover effects */
+        .producto-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .producto-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.12);
+        }
+        .producto-card:hover .producto-image {
+            transform: scale(1.05);
+        }
+        .producto-card:hover .producto-overlay {
+            opacity: 1;
+        }
+        .producto-image {
+            transition: transform 0.4s ease;
+        }
+        .producto-overlay {
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        /* Panel detalle */
+        .panel-detalle {
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+        .panel-detalle.hidden {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        .panel-detalle.visible {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    </style>
 </head>
 
 <body class="bg-white">
@@ -116,18 +150,181 @@
                     @foreach (var producto in ViewBag.productos)
                     {
                         <div id="producto-@producto.Id"
-                            class="producto relative flex flex-col rounded-lg border bg-white p-4 shadow-md"
-                            data-categoria-id="@producto.IdSubCategoria" data-precio="@producto.Precio">
-                            <img src="@producto.ImagenUrl" alt="@producto.Nombre" class="mb-4 h-40 w-full object-contain" />
-                            <h3 class="text-lg font-semibold">@producto.Nombre</h3>
-                            <p class="text-xl font-bold text-orange-500">$@producto.Precio</p>
+                            class="producto producto-card group relative flex flex-col rounded-xl border border-gray-100 bg-white overflow-hidden shadow-sm"
+                            data-categoria-id="@producto.IdSubCategoria"
+                            data-precio="@producto.Precio"
+                            data-nombre="@producto.Nombre"
+                            data-imagen="@producto.ImagenUrl">
+
+                            <!-- Contenedor de imagen con overlay -->
+                            <div class="relative aspect-square overflow-hidden bg-gray-50">
+                                <img src="@producto.ImagenUrl"
+                                     alt="@producto.Nombre"
+                                     class="producto-image h-full w-full object-contain p-3" />
+
+                                <!-- Overlay con acciones -->
+                                <div class="producto-overlay absolute inset-0 bg-black/40 flex items-center justify-center gap-3">
+                                    <button onclick="mostrarDetalle('@producto.Nombre', '@producto.Precio', '@producto.ImagenUrl', @producto.Id)"
+                                            class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-gray-700 hover:bg-green-500 hover:text-white transition-colors shadow-lg"
+                                            title="Ver detalle">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                    <button onclick="abrirModalEditar(@producto.Id, '@producto.Nombre', '@producto.Precio', '@producto.ImagenUrl')"
+                                            class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-gray-700 hover:bg-orange-500 hover:text-white transition-colors shadow-lg"
+                                            title="Editar producto">
+                                        <i class="fas fa-pen"></i>
+                                    </button>
+                                    <button onclick="confirmarEliminar(@producto.Id, '@producto.Nombre')"
+                                            class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-gray-700 hover:bg-red-500 hover:text-white transition-colors shadow-lg"
+                                            title="Eliminar producto">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Info del producto -->
+                            <div class="p-4">
+                                <h3 class="text-base font-semibold text-gray-800 line-clamp-2 group-hover:text-green-600 transition-colors">
+                                    @producto.Nombre
+                                </h3>
+                                <p class="mt-2 text-xl font-bold text-orange-500">$@producto.Precio</p>
+                            </div>
                         </div>
                     }
                 </div>
             </div>
         </div>
+
+        <!-- Panel lateral de detalle -->
+        <div id="detalleProducto"
+             class="panel-detalle hidden fixed right-0 top-0 h-full w-80 bg-white shadow-2xl z-40 overflow-y-auto border-l border-gray-200">
+
+            <!-- Header del panel -->
+            <div class="sticky top-0 bg-white border-b border-gray-100 p-4 flex items-center justify-between">
+                <h3 class="text-lg font-bold text-gray-800">Detalle del Producto</h3>
+                <button onclick="ocultarDetalle()"
+                        class="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 transition-colors">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <!-- Contenido del panel -->
+            <div class="p-4">
+                <!-- Imagen -->
+                <div class="aspect-square rounded-xl overflow-hidden bg-gray-50 mb-4">
+                    <img id="detalleImagen" src="" alt="Producto" class="w-full h-full object-contain p-2" />
+                </div>
+
+                <!-- Info -->
+                <h4 id="detalleNombre" class="text-xl font-bold text-gray-800 mb-2"></h4>
+                <p id="detallePrecio" class="text-2xl font-bold text-orange-500 mb-4"></p>
+
+                <!-- Acciones -->
+                <div class="space-y-3">
+                    <button id="btnEditarDetalle"
+                            class="w-full py-3 rounded-xl bg-orange-500 text-white font-semibold hover:bg-orange-600 transition-colors flex items-center justify-center gap-2">
+                        <i class="fas fa-pen"></i>
+                        Editar producto
+                    </button>
+                    <button id="btnEliminarDetalle"
+                            class="w-full py-3 rounded-xl bg-red-500 text-white font-semibold hover:bg-red-600 transition-colors flex items-center justify-center gap-2">
+                        <i class="fas fa-trash"></i>
+                        Eliminar producto
+                    </button>
+                </div>
+            </div>
+        </div>
     </main>
 
+    <!-- Modal de edición de producto -->
+    <div id="editar-modal" class="fixed inset-0 z-50 hidden bg-black/50 transition-opacity duration-300">
+        <div class="flex min-h-screen items-center justify-center p-4">
+            <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-bold text-gray-800">Editar Producto</h2>
+                    <button onclick="cerrarModalEditar()"
+                            class="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 transition-colors">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <form id="editar-form" enctype="multipart/form-data">
+                    <input type="hidden" id="editar-id" />
+
+                    <!-- Vista previa de imagen actual -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Imagen actual</label>
+                        <div class="w-full h-40 rounded-xl overflow-hidden bg-gray-50 flex items-center justify-center">
+                            <img id="editar-imagen-preview" src="" alt="Preview" class="max-h-full object-contain" />
+                        </div>
+                    </div>
+
+                    <!-- Nueva imagen -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Nueva imagen (opcional)</label>
+                        <input type="file" id="editar-imagen" name="Imagen" accept="image/*"
+                               class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-orange-50 file:text-orange-600 hover:file:bg-orange-100" />
+                    </div>
+
+                    <!-- Nombre -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Nombre</label>
+                        <input type="text" id="editar-nombre" name="Nombre" required
+                               class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 outline-none transition-all" />
+                    </div>
+
+                    <!-- Precio -->
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Precio</label>
+                        <div class="relative">
+                            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium">$</span>
+                            <input type="number" id="editar-precio" name="Precio" required
+                                   class="w-full pl-8 pr-4 py-3 rounded-xl border border-gray-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 outline-none transition-all" />
+                        </div>
+                    </div>
+
+                    <!-- Botones -->
+                    <div class="flex gap-3">
+                        <button type="button" onclick="cerrarModalEditar()"
+                                class="flex-1 py-3 rounded-xl border border-gray-200 text-gray-700 font-semibold hover:bg-gray-50 transition-colors">
+                            Cancelar
+                        </button>
+                        <button type="submit"
+                                class="flex-1 py-3 rounded-xl bg-green-500 text-white font-semibold hover:bg-green-600 transition-colors flex items-center justify-center gap-2">
+                            <i class="fas fa-save"></i>
+                            Guardar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de confirmación de eliminación -->
+    <div id="eliminar-modal" class="fixed inset-0 z-50 hidden bg-black/50 transition-opacity duration-300">
+        <div class="flex min-h-screen items-center justify-center p-4">
+            <div class="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl text-center">
+                <div class="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-trash text-2xl text-red-500"></i>
+                </div>
+                <h2 class="text-xl font-bold text-gray-800 mb-2">¿Eliminar producto?</h2>
+                <p id="eliminar-nombre-producto" class="text-gray-600 mb-6"></p>
+
+                <input type="hidden" id="eliminar-id" />
+
+                <div class="flex gap-3">
+                    <button onclick="cerrarModalEliminar()"
+                            class="flex-1 py-3 rounded-xl border border-gray-200 text-gray-700 font-semibold hover:bg-gray-50 transition-colors">
+                        Cancelar
+                    </button>
+                    <button onclick="ejecutarEliminar()"
+                            class="flex-1 py-3 rounded-xl bg-red-500 text-white font-semibold hover:bg-red-600 transition-colors">
+                        Eliminar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script>
         // Definir la función en el ámbito global
@@ -196,62 +393,238 @@
 
     </script>
     <script>
-        // Definir las variables en el ámbito global
+        // Variables globales
         let productoSeleccionado = null;
+        let productoIdActual = null;
         let detalleAbierto = false;
 
+        // ==========================================
+        // PANEL DE DETALLE
+        // ==========================================
         function mostrarDetalle(nombre, precio, imagen, id) {
             const detalleProducto = document.getElementById('detalleProducto');
-            const productosWrapper = document.getElementById('productosWrapper');
-            const productosContainer = document.getElementById('productosContainer');
 
-            // Mostrar el detalle del producto
-            detalleProducto.classList.remove('hidden', 'translate-x-full');
-            detalleProducto.classList.add('w-1/5', 'translate-x-0');
+            // Mostrar panel
+            detalleProducto.classList.remove('hidden');
+            detalleProducto.classList.add('visible');
 
-            productosWrapper.classList.remove('w-5/5');
-            productosWrapper.classList.add('w-4/5');
-
-            productosContainer.classList.remove('lg:grid-cols-4');
-            productosContainer.classList.add('lg:grid-cols-3');
-
+            // Actualizar contenido
             document.getElementById('detalleNombre').textContent = nombre;
             document.getElementById('detallePrecio').textContent = `$${precio}`;
             document.getElementById('detalleImagen').src = imagen;
 
-            // Ocultar el producto seleccionado antes de mostrar el detalle
-            if (productoSeleccionado) {
-                productoSeleccionado.classList.remove('hidden');
-            }
+            // Guardar ID actual
+            productoIdActual = id;
 
-            productoSeleccionado = document.getElementById(`producto-${id}`);
-            productoSeleccionado.classList.add('hidden');
+            // Configurar botones del panel
+            document.getElementById('btnEditarDetalle').onclick = function() {
+                abrirModalEditar(id, nombre, precio, imagen);
+            };
+            document.getElementById('btnEliminarDetalle').onclick = function() {
+                confirmarEliminar(id, nombre);
+            };
 
             detalleAbierto = true;
         }
 
         function ocultarDetalle() {
             const detalleProducto = document.getElementById('detalleProducto');
-            const productosWrapper = document.getElementById('productosWrapper');
-            const productosContainer = document.getElementById('productosContainer');
 
-            // Ocultar el detalle del producto
-            detalleProducto.classList.add('hidden', 'translate-x-full');
-            detalleProducto.classList.remove('w-1/5', 'translate-x-0');
+            detalleProducto.classList.add('hidden');
+            detalleProducto.classList.remove('visible');
 
-            productosWrapper.classList.remove('w-4/5');
-            productosWrapper.classList.add('w-5/5');
-
-            productosContainer.classList.remove('lg:grid-cols-3');
-            productosContainer.classList.add('lg:grid-cols-4');
-
-            if (productoSeleccionado) {
-                productoSeleccionado.classList.remove('hidden');
-                productoSeleccionado = null;
-            }
-
+            productoIdActual = null;
             detalleAbierto = false;
         }
+
+        // ==========================================
+        // MODAL DE EDICIÓN
+        // ==========================================
+        function abrirModalEditar(id, nombre, precio, imagen) {
+            const modal = document.getElementById('editar-modal');
+
+            document.getElementById('editar-id').value = id;
+            document.getElementById('editar-nombre').value = nombre;
+            document.getElementById('editar-precio').value = precio;
+            document.getElementById('editar-imagen-preview').src = imagen;
+
+            modal.classList.remove('hidden');
+            document.body.classList.add('overflow-hidden');
+        }
+
+        function cerrarModalEditar() {
+            const modal = document.getElementById('editar-modal');
+            modal.classList.add('hidden');
+            document.body.classList.remove('overflow-hidden');
+            document.getElementById('editar-form').reset();
+        }
+
+        // Manejar envío del formulario de edición
+        document.getElementById('editar-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const id = document.getElementById('editar-id').value;
+            const formData = new FormData();
+            formData.append('Id', id);
+            formData.append('Nombre', document.getElementById('editar-nombre').value);
+            formData.append('Precio', document.getElementById('editar-precio').value);
+
+            const imagenInput = document.getElementById('editar-imagen');
+            if (imagenInput.files.length > 0) {
+                formData.append('Imagen', imagenInput.files[0]);
+            }
+
+            try {
+                const response = await fetch('/Productos/EditarProducto', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.mensaje.includes('exitosamente') || result.mensaje.includes('actualizado')) {
+                    // Actualizar la card en el DOM
+                    const card = document.getElementById(`producto-${id}`);
+                    if (card) {
+                        card.querySelector('h3').textContent = document.getElementById('editar-nombre').value;
+                        card.querySelector('p.text-orange-500').textContent = `$${document.getElementById('editar-precio').value}`;
+
+                        // Si hay nueva imagen, actualizar
+                        if (imagenInput.files.length > 0) {
+                            const reader = new FileReader();
+                            reader.onload = function(e) {
+                                card.querySelector('.producto-image').src = e.target.result;
+                            };
+                            reader.readAsDataURL(imagenInput.files[0]);
+                        }
+                    }
+
+                    cerrarModalEditar();
+                    mostrarNotificacion('Producto actualizado correctamente', 'success');
+                } else {
+                    mostrarNotificacion(result.mensaje || 'Error al actualizar', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarNotificacion('Error al actualizar el producto', 'error');
+            }
+        });
+
+        // ==========================================
+        // MODAL DE ELIMINACIÓN
+        // ==========================================
+        function confirmarEliminar(id, nombre) {
+            const modal = document.getElementById('eliminar-modal');
+            document.getElementById('eliminar-id').value = id;
+            document.getElementById('eliminar-nombre-producto').textContent = `"${nombre}" será eliminado permanentemente.`;
+
+            modal.classList.remove('hidden');
+            document.body.classList.add('overflow-hidden');
+        }
+
+        function cerrarModalEliminar() {
+            const modal = document.getElementById('eliminar-modal');
+            modal.classList.add('hidden');
+            document.body.classList.remove('overflow-hidden');
+        }
+
+        async function ejecutarEliminar() {
+            const id = document.getElementById('eliminar-id').value;
+
+            try {
+                const response = await fetch('/Productos/EliminarProducto', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `Id=${id}`
+                });
+
+                const result = await response.json();
+
+                if (result.mensaje.includes('eliminado')) {
+                    // Remover la card del DOM con animación
+                    const card = document.getElementById(`producto-${id}`);
+                    if (card) {
+                        card.style.transition = 'all 0.3s ease';
+                        card.style.transform = 'scale(0.8)';
+                        card.style.opacity = '0';
+                        setTimeout(() => card.remove(), 300);
+                    }
+
+                    // Cerrar panel de detalle si estaba abierto
+                    if (productoIdActual == id) {
+                        ocultarDetalle();
+                    }
+
+                    cerrarModalEliminar();
+                    mostrarNotificacion('Producto eliminado correctamente', 'success');
+                } else {
+                    mostrarNotificacion(result.mensaje || 'Error al eliminar', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarNotificacion('Error al eliminar el producto', 'error');
+            }
+        }
+
+        // ==========================================
+        // NOTIFICACIONES
+        // ==========================================
+        function mostrarNotificacion(mensaje, tipo) {
+            // Crear elemento de notificación
+            const notif = document.createElement('div');
+            notif.className = `fixed top-4 right-4 z-50 px-6 py-4 rounded-xl shadow-lg text-white font-medium transform transition-all duration-300 translate-x-full`;
+
+            if (tipo === 'success') {
+                notif.classList.add('bg-green-500');
+            } else {
+                notif.classList.add('bg-red-500');
+            }
+
+            notif.innerHTML = `
+                <div class="flex items-center gap-3">
+                    <i class="fas ${tipo === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i>
+                    <span>${mensaje}</span>
+                </div>
+            `;
+
+            document.body.appendChild(notif);
+
+            // Animar entrada
+            setTimeout(() => {
+                notif.classList.remove('translate-x-full');
+            }, 10);
+
+            // Remover después de 3 segundos
+            setTimeout(() => {
+                notif.classList.add('translate-x-full');
+                setTimeout(() => notif.remove(), 300);
+            }, 3000);
+        }
+
+        // ==========================================
+        // CERRAR MODALES AL HACER CLIC FUERA
+        // ==========================================
+        document.getElementById('editar-modal').addEventListener('click', function(e) {
+            if (e.target === this) cerrarModalEditar();
+        });
+
+        document.getElementById('eliminar-modal').addEventListener('click', function(e) {
+            if (e.target === this) cerrarModalEliminar();
+        });
+
+        // Preview de imagen al seleccionar archivo
+        document.getElementById('editar-imagen').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('editar-imagen-preview').src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
     </script>
 
 

@@ -550,6 +550,34 @@ BEGIN
 END//
 DELIMITER ;
 
+-- Volcando estructura para procedimiento abastecete.consultar_categoria_por_id
+DELIMITER //
+CREATE PROCEDURE `consultar_categoria_por_id`(
+    IN `p_id_categoria` INT,
+    OUT `mensaje` VARCHAR(255),
+    OUT `resultado` INT
+)
+BEGIN
+    DECLARE categoria_existe INT DEFAULT 0;
+
+    -- Verificar si la categoría existe
+    SELECT COUNT(*) INTO categoria_existe
+    FROM categoria
+    WHERE PK_ID_CATEGORIA = p_id_categoria;
+
+    IF categoria_existe > 0 THEN
+        SELECT * FROM categoria WHERE PK_ID_CATEGORIA = p_id_categoria;
+        SET mensaje = 'Categoría encontrada';
+        SET resultado = 1;
+    ELSE
+        SET mensaje = 'Categoría no encontrada';
+        SET resultado = 0;
+        -- Retornar conjunto vacío con la estructura correcta
+        SELECT * FROM categoria WHERE 1 = 0;
+    END IF;
+END//
+DELIMITER ;
+
 -- Volcando estructura para procedimiento abastecete.consultar_estado
 DELIMITER //
 CREATE PROCEDURE `consultar_estado`()
@@ -627,6 +655,62 @@ CREATE PROCEDURE `consultar_local_por_id`(
 BEGIN
 	SELECT * FROM local
 	WHERE local.PK_ID_LOCAL =  idlocal;
+END//
+DELIMITER ;
+
+-- Volcando estructura para procedimiento abastecete.consultar_local_por_id_seguro
+DELIMITER //
+CREATE PROCEDURE `consultar_local_por_id_seguro`(
+    IN `p_id_local` INT,
+    OUT `mensaje` VARCHAR(255),
+    OUT `resultado` INT
+)
+BEGIN
+    DECLARE local_existe INT DEFAULT 0;
+
+    -- Verificar si existe el local
+    SELECT COUNT(*) INTO local_existe
+    FROM local
+    WHERE PK_ID_LOCAL = p_id_local;
+
+    IF local_existe > 0 THEN
+        SELECT * FROM local WHERE PK_ID_LOCAL = p_id_local;
+        SET mensaje = 'Local encontrado';
+        SET resultado = 1;
+    ELSE
+        SET mensaje = 'Local no encontrado';
+        SET resultado = 0;
+        -- Retornar conjunto vacío con la estructura correcta
+        SELECT * FROM local WHERE 1 = 0;
+    END IF;
+END//
+DELIMITER ;
+
+-- Volcando estructura para procedimiento abastecete.consultar_local_por_persona_seguro
+DELIMITER //
+CREATE PROCEDURE `consultar_local_por_persona_seguro`(
+    IN `p_id_persona` INT,
+    OUT `mensaje` VARCHAR(255),
+    OUT `resultado` INT
+)
+BEGIN
+    DECLARE local_existe INT DEFAULT 0;
+
+    -- Verificar si existe un local para esta persona
+    SELECT COUNT(*) INTO local_existe
+    FROM local
+    WHERE FK_ID_PERSONA = p_id_persona;
+
+    IF local_existe > 0 THEN
+        SELECT * FROM local WHERE FK_ID_PERSONA = p_id_persona LIMIT 1;
+        SET mensaje = 'Local encontrado';
+        SET resultado = 1;
+    ELSE
+        SET mensaje = 'No se encontró local para esta persona';
+        SET resultado = 0;
+        -- Retornar conjunto vacío con la estructura correcta
+        SELECT * FROM local WHERE 1 = 0;
+    END IF;
 END//
 DELIMITER ;
 
@@ -751,6 +835,48 @@ BEGIN
  	INNER JOIN productoslocal ON productoslocal.FK_ID_PRODUCTO = producto.PK_ID_PRODUCTO
  	INNER JOIN unidad ON productoslocal.FK_ID_UNIDAD = unidad.ID_UNIDAD
  	WHERE productoslocal.FK_ID_PRODUCTO = idproducto AND productoslocal.FK_ID_LOCAL= idlocal;
+END//
+DELIMITER ;
+
+-- Volcando estructura para procedimiento abastecete.consultar_producto_negocio_seguro
+DELIMITER //
+CREATE PROCEDURE `consultar_producto_negocio_seguro`(
+    IN `p_id_producto` INT,
+    IN `p_id_local` INT,
+    OUT `mensaje` VARCHAR(255),
+    OUT `resultado` INT
+)
+BEGIN
+    DECLARE producto_existe INT DEFAULT 0;
+
+    -- Verificar si existe el producto en ese local
+    SELECT COUNT(*) INTO producto_existe
+    FROM productoslocal pl
+    INNER JOIN producto p ON pl.FK_ID_PRODUCTO = p.PK_ID_PRODUCTO
+    WHERE pl.FK_ID_PRODUCTO = p_id_producto
+      AND pl.FK_ID_LOCAL = p_id_local;
+
+    IF producto_existe > 0 THEN
+        SELECT
+            p.NOMBRE_PRODUCTO,
+            pl.VALOR_PRODUCTS_LOCAL,
+            p.IMAGEN_URL,
+            u.NOMBRE_UNIDAD
+        FROM productoslocal pl
+        INNER JOIN producto p ON pl.FK_ID_PRODUCTO = p.PK_ID_PRODUCTO
+        INNER JOIN unidad u ON p.FK_ID_UNIDAD = u.PK_ID_UNIDAD
+        WHERE pl.FK_ID_PRODUCTO = p_id_producto
+          AND pl.FK_ID_LOCAL = p_id_local;
+        SET mensaje = 'Producto encontrado';
+        SET resultado = 1;
+    ELSE
+        SET mensaje = 'Producto no encontrado en este local';
+        SET resultado = 0;
+        -- Retornar conjunto vacío
+        SELECT NULL AS NOMBRE_PRODUCTO, NULL AS VALOR_PRODUCTS_LOCAL,
+               NULL AS IMAGEN_URL, NULL AS NOMBRE_UNIDAD
+        WHERE 1 = 0;
+    END IF;
 END//
 DELIMITER ;
 
@@ -1246,118 +1372,291 @@ DELIMITER ;
 -- Volcando estructura para procedimiento abastecete.crear_usuario_google
 DELIMITER //
 CREATE PROCEDURE `crear_usuario_google`(
-	IN `p_full_name` VARCHAR(255),
-	IN `p_correo` VARCHAR(255),
-	IN `p_fk_id_metodo_autenticacion` INT,
-	IN `p_fk_id_rol` INT
+    IN `p_full_name` VARCHAR(255),
+    IN `p_correo` VARCHAR(255),
+    IN `p_fk_id_metodo_autenticacion` INT,
+    IN `p_fk_id_rol` INT
 )
 BEGIN
-    DECLARE first_name VARCHAR(40);
-    DECLARE last_name VARCHAR(40);
-    DECLARE persona_id INT;
-    DECLARE default_telefono VARCHAR(15);
-    DECLARE default_documento INT;
-    DECLARE default_tipo_documento INT DEFAULT 1; -- Tipo de documento predeterminado
-    DECLARE default_estado TINYINT DEFAULT 1; -- Estado activo
-    DECLARE default_password VARCHAR(255) DEFAULT 'stCAUXlvlTCDOFCW3+AFGw=='; -- Contraseña por defecto
+    DECLARE v_first_name VARCHAR(100);
+    DECLARE v_last_name VARCHAR(100);
+    DECLARE v_persona_id INT;
+    DECLARE v_usuario_id INT;
+    DECLARE v_resultado INT DEFAULT 0;
+    DECLARE v_mensaje VARCHAR(255);
+    DECLARE v_codigo_referido VARCHAR(20);
+    DECLARE v_codigo_existe INT DEFAULT 1;
+    DECLARE v_intentos INT DEFAULT 0;
 
-    -- Separar el primer nombre (primer palabra de la cadena)
-    SET first_name = SUBSTRING_INDEX(p_full_name, ' ', 1);
+    -- Handler para errores
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SET v_resultado = -99;
+        SET v_mensaje = 'Error interno al crear el usuario.';
+        SELECT v_resultado AS resultado, v_mensaje AS mensaje, NULL AS id_usuario;
+    END;
 
-    -- Separar los apellidos (todo después del primer espacio)
-    SET last_name = TRIM(SUBSTRING(p_full_name, LOCATE(' ', p_full_name) + 1));
+    -- Iniciar transacción
+    START TRANSACTION;
 
-    -- Si no hay apellidos, asignar un valor predeterminado
-    IF last_name = '' THEN
-        SET last_name = 'N/A';
+    -- Validar correo
+    IF p_correo IS NULL OR TRIM(p_correo) = '' THEN
+        SET v_resultado = -1;
+        SET v_mensaje = 'El correo es requerido.';
+    ELSEIF p_correo NOT REGEXP '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$' THEN
+        SET v_resultado = -2;
+        SET v_mensaje = 'El correo no es válido.';
+    ELSEIF EXISTS (SELECT 1 FROM usuario WHERE NOMBRE_USUARIO = LOWER(TRIM(p_correo))) THEN
+        SET v_resultado = -3;
+        SET v_mensaje = 'Ya existe un usuario con este correo.';
+    ELSEIF EXISTS (SELECT 1 FROM persona WHERE CORREO = LOWER(TRIM(p_correo))) THEN
+        SET v_resultado = -4;
+        SET v_mensaje = 'Este correo ya está registrado.';
+    ELSE
+        -- Separar nombre y apellido
+        IF p_full_name IS NULL OR TRIM(p_full_name) = '' THEN
+            SET v_first_name = 'Usuario';
+            SET v_last_name = 'Google';
+        ELSE
+            SET v_first_name = TRIM(SUBSTRING_INDEX(p_full_name, ' ', 1));
+            SET v_last_name = TRIM(SUBSTRING(p_full_name, LOCATE(' ', p_full_name) + 1));
+
+            IF v_last_name = '' OR v_last_name = v_first_name THEN
+                SET v_last_name = 'Usuario';
+            END IF;
+        END IF;
+
+        -- Generar código de referido único
+        WHILE v_codigo_existe = 1 AND v_intentos < 10 DO
+            SET v_codigo_referido = CONCAT('GOO', LPAD(FLOOR(RAND() * 10000000), 7, '0'));
+            SET v_codigo_existe = (SELECT COUNT(*) FROM persona WHERE CODIGO_REFERIDO = v_codigo_referido);
+            SET v_intentos = v_intentos + 1;
+        END WHILE;
+
+        IF v_codigo_existe = 1 THEN
+            SET v_resultado = -5;
+            SET v_mensaje = 'Error al generar código de referido.';
+        ELSE
+            -- Insertar persona (sin teléfono ni documento - se completará después)
+            INSERT INTO persona (
+                NOMBRES,
+                APELLIDOS,
+                TELEFONO,
+                CORREO,
+                DOCUMENTO_IDENTIDAD,
+                ESTADO,
+                FK_ID_TIPO_DOCUMENTO,
+                CODIGO_REFERIDO,
+                CODIGO_REFERIDO_USUARIO
+            ) VALUES (
+                v_first_name,
+                v_last_name,
+                NULL,  -- Teléfono pendiente de completar
+                LOWER(TRIM(p_correo)),
+                NULL,  -- Documento pendiente de completar
+                1,
+                1,     -- Tipo documento por defecto
+                v_codigo_referido,
+                NULL
+            );
+
+            SET v_persona_id = LAST_INSERT_ID();
+
+            -- Insertar usuario (sin contraseña para usuarios de Google)
+            INSERT INTO usuario (
+                FK_ID_PERSONA,
+                NOMBRE_USUARIO,
+                CONTRASENIA,
+                TIPO_AUTENTICACION,
+                FK_ID_ROL,
+                ESTADO,
+                INTENTOS_FALLIDOS
+            ) VALUES (
+                v_persona_id,
+                LOWER(TRIM(p_correo)),
+                NULL,  -- Sin contraseña para auth con Google
+                p_fk_id_metodo_autenticacion,
+                IFNULL(p_fk_id_rol, 3),  -- Rol 3 por defecto
+                1,
+                0
+            );
+
+            SET v_usuario_id = LAST_INSERT_ID();
+
+            COMMIT;
+
+            SET v_resultado = 1;
+            SET v_mensaje = 'Usuario creado exitosamente.';
+        END IF;
     END IF;
 
-    -- Generar un número de teléfono único
-    SELECT IFNULL(MAX(CAST(TELEFONO AS UNSIGNED)), 3000000000) + 1 INTO default_telefono FROM persona;
+    -- Si hubo error, hacer rollback
+    IF v_resultado < 0 THEN
+        ROLLBACK;
+    END IF;
 
-    -- Generar un documento de identidad único
-    SELECT IFNULL(MAX(DOCUMENTO_IDENTIDAD), 1000000000) + 1 INTO default_documento FROM persona;
-
-    -- Insertar en la tabla persona
-    INSERT INTO persona (
-        NOMBRES, APELLIDOS, TELEFONO, CORREO, DOCUMENTO_IDENTIDAD, ESTADO, FK_ID_TIPO_DOCUMENTO, CODIGO_REFERIDO, CODIGO_REFERIDO_USUARIO
-    ) 
-    VALUES (
-        first_name, last_name, default_telefono, p_correo, default_documento, default_estado, default_tipo_documento, NULL, NULL
-    );
-
-    SET persona_id = LAST_INSERT_ID(); -- Obtener el ID generado
-
-    -- Insertar en la tabla usuario con la membresía por defecto (1)
-    INSERT INTO usuario (FK_ID_PERSONA, NOMBRE_USUARIO, CONTRASENIA, TIPO_AUTENTICACION, FK_ID_ROL, ESTADO) 
-    VALUES (persona_id, p_correo, default_password, p_fk_id_metodo_autenticacion, p_fk_id_rol, 1);
-
-    COMMIT; -- Confirmar la transacción si es necesario
+    SELECT v_resultado AS resultado, v_mensaje AS mensaje, v_usuario_id AS id_usuario;
 END//
 DELIMITER ;
 
 -- Volcando estructura para procedimiento abastecete.crear_usuario_persona
 DELIMITER //
 CREATE PROCEDURE `crear_usuario_persona`(
-	IN `p_nombre` VARCHAR(40),
-	IN `p_apellido` VARCHAR(40),
-	IN `p_documento` INT,
-	IN `p_fk_tipo_documento` INT,
-	IN `p_telefono` VARCHAR(40),
-	IN `p_correo` VARCHAR(50),
-	IN `p_contrasenia` MEDIUMTEXT,
-	IN `p_codigo_referido_usuario` VARCHAR(20),
-	IN `p_fk_id_metodo_autenticacion` INT
+    IN `p_nombre` VARCHAR(40),
+    IN `p_apellido` VARCHAR(40),
+    IN `p_documento` INT,
+    IN `p_fk_tipo_documento` INT,
+    IN `p_telefono` VARCHAR(40),
+    IN `p_correo` VARCHAR(50),
+    IN `p_contrasenia` MEDIUMTEXT,
+    IN `p_codigo_referido_usuario` VARCHAR(20),
+    IN `p_fk_id_metodo_autenticacion` INT
 )
 BEGIN
-	DECLARE mensaje VARCHAR(500);
-	DECLARE resultado INT;
-	DECLARE idpersona INT;
-	
-  SET resultado = 0;
+    DECLARE v_mensaje VARCHAR(500);
+    DECLARE v_resultado INT DEFAULT 0;
+    DECLARE v_idpersona INT;
+    DECLARE v_idusuario INT;
+    DECLARE v_codigo_nuevo VARCHAR(20);
+    DECLARE v_intentos INT DEFAULT 0;
+    DECLARE v_codigo_existe INT DEFAULT 1;
 
+    -- Declarar handler para errores
+    DECLARE EXIT HANDLER FOR SQLEXCEPTION
+    BEGIN
+        ROLLBACK;
+        SET v_mensaje = 'Error interno al crear el usuario. Por favor intente nuevamente.';
+        SET v_resultado = -99;
+        SELECT v_resultado AS resultado, v_mensaje AS mensaje;
+    END;
 
-  IF EXISTS (SELECT 1 FROM persona WHERE DOCUMENTO_IDENTIDAD = p_documento AND FK_ID_TIPO_DOCUMENTO = p_fk_tipo_documento) THEN
-    SET mensaje = 'El documento de identidad ya está registrado con otra persona.';
-    SET resultado = -1; 
+    -- Iniciar transacción
+    START TRANSACTION;
 
-  ELSEIF EXISTS (SELECT 1 FROM persona WHERE CORREO = p_correo) THEN
-    SET mensaje = 'El correo electrónico ya está registrado con otra persona.';
-    SET resultado = -1;  
-
-  ELSEIF NOT EXISTS (SELECT 1 FROM metodo_autenticacion WHERE PK_ID_METODO_AUTENTICACION = p_fk_id_metodo_autenticacion) THEN
-    SET mensaje = 'El método de autenticación especificado no existe.';
-    SET resultado = -1; 
-
-  ELSE
-    SET @codigo_nuevo_usuario = CONCAT('COD', LPAD(FLOOR(RAND() * 1000000), 6, '0'));
-
-    IF p_codigo_referido_usuario IS NOT NULL AND EXISTS (SELECT 1 FROM persona WHERE CODIGO_REFERIDO = p_codigo_referido_usuario) THEN
-
-      INSERT INTO persona (NOMBRES, APELLIDOS, TELEFONO, DOCUMENTO_IDENTIDAD, FK_ID_TIPO_DOCUMENTO, CORREO, ESTADO, CODIGO_REFERIDO, CODIGO_REFERIDO_USUARIO)
-      VALUES (p_nombre, p_apellido, p_telefono, p_documento, p_fk_tipo_documento, p_correo, 1, @codigo_nuevo_usuario, p_codigo_referido_usuario);
-
-      SET mensaje = 'Usuario y persona creados exitosamente. Código de referido válido.';
-
+    -- Validar campos requeridos
+    IF p_nombre IS NULL OR TRIM(p_nombre) = '' THEN
+        SET v_mensaje = 'El nombre es requerido.';
+        SET v_resultado = -1;
+    ELSEIF p_apellido IS NULL OR TRIM(p_apellido) = '' THEN
+        SET v_mensaje = 'El apellido es requerido.';
+        SET v_resultado = -1;
+    ELSEIF p_documento IS NULL OR p_documento <= 0 THEN
+        SET v_mensaje = 'El documento de identidad no es válido.';
+        SET v_resultado = -1;
+    ELSEIF p_correo IS NULL OR TRIM(p_correo) = '' OR p_correo NOT REGEXP '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$' THEN
+        SET v_mensaje = 'El correo electrónico no es válido.';
+        SET v_resultado = -1;
+    ELSEIF p_contrasenia IS NULL OR LENGTH(p_contrasenia) < 8 THEN
+        SET v_mensaje = 'La contraseña debe tener al menos 8 caracteres.';
+        SET v_resultado = -1;
+    ELSEIF EXISTS (SELECT 1 FROM persona WHERE DOCUMENTO_IDENTIDAD = p_documento AND FK_ID_TIPO_DOCUMENTO = p_fk_tipo_documento) THEN
+        SET v_mensaje = 'El documento de identidad ya está registrado con otra persona.';
+        SET v_resultado = -2;
+    ELSEIF EXISTS (SELECT 1 FROM persona WHERE CORREO = p_correo) THEN
+        SET v_mensaje = 'El correo electrónico ya está registrado con otra persona.';
+        SET v_resultado = -3;
+    ELSEIF EXISTS (SELECT 1 FROM usuario WHERE NOMBRE_USUARIO = p_correo) THEN
+        SET v_mensaje = 'Ya existe un usuario con este correo electrónico.';
+        SET v_resultado = -4;
+    ELSEIF NOT EXISTS (SELECT 1 FROM metodo_autenticacion WHERE PK_ID_METODO_AUTENTICACION = p_fk_id_metodo_autenticacion) THEN
+        SET v_mensaje = 'El método de autenticación especificado no existe.';
+        SET v_resultado = -5;
     ELSE
+        -- Generar código de referido único (con reintentos para evitar colisiones)
+        WHILE v_codigo_existe = 1 AND v_intentos < 10 DO
+            SET v_codigo_nuevo = CONCAT('COD', LPAD(FLOOR(RAND() * 10000000), 7, '0'));
+            SET v_codigo_existe = (SELECT COUNT(*) FROM persona WHERE CODIGO_REFERIDO = v_codigo_nuevo);
+            SET v_intentos = v_intentos + 1;
+        END WHILE;
 
-      INSERT INTO persona (NOMBRES, APELLIDOS, TELEFONO, DOCUMENTO_IDENTIDAD, FK_ID_TIPO_DOCUMENTO, CORREO, ESTADO, CODIGO_REFERIDO, CODIGO_REFERIDO_USUARIO)
-      VALUES (p_nombre, p_apellido, p_telefono, p_documento, p_fk_tipo_documento, p_correo, 1, @codigo_nuevo_usuario, NULL);
+        IF v_codigo_existe = 1 THEN
+            SET v_mensaje = 'Error al generar código de referido. Intente nuevamente.';
+            SET v_resultado = -6;
+        ELSE
+            -- Validar código de referido del usuario (si se proporcionó)
+            IF p_codigo_referido_usuario IS NOT NULL
+               AND TRIM(p_codigo_referido_usuario) != ''
+               AND NOT EXISTS (SELECT 1 FROM persona WHERE CODIGO_REFERIDO = p_codigo_referido_usuario) THEN
+                -- El código de referido no existe, lo ignoramos pero continuamos
+                SET p_codigo_referido_usuario = NULL;
+            END IF;
 
-      SET mensaje = 'Usuario y persona creados exitosamente. No se utilizó un código de referido.';
+            -- Insertar persona
+            INSERT INTO persona (
+                NOMBRES,
+                APELLIDOS,
+                TELEFONO,
+                DOCUMENTO_IDENTIDAD,
+                FK_ID_TIPO_DOCUMENTO,
+                CORREO,
+                ESTADO,
+                CODIGO_REFERIDO,
+                CODIGO_REFERIDO_USUARIO
+            ) VALUES (
+                TRIM(p_nombre),
+                TRIM(p_apellido),
+                p_telefono,
+                p_documento,
+                p_fk_tipo_documento,
+                LOWER(TRIM(p_correo)),
+                1,
+                v_codigo_nuevo,
+                p_codigo_referido_usuario
+            );
+
+            -- Obtener el ID de persona recién insertado (CORRECTO: usar LAST_INSERT_ID)
+            SET v_idpersona = LAST_INSERT_ID();
+
+            -- Insertar usuario
+            INSERT INTO usuario (
+                FK_ID_PERSONA,
+                FK_ID_ROL,
+                NOMBRE_USUARIO,
+                CONTRASENIA,
+                INTENTOS_FALLIDOS,
+                TIPO_AUTENTICACION,
+                ESTADO
+            ) VALUES (
+                v_idpersona,
+                3, -- Rol por defecto (usuario normal)
+                LOWER(TRIM(p_correo)),
+                p_contrasenia,
+                0,
+                p_fk_id_metodo_autenticacion,
+                1
+            );
+
+            SET v_idusuario = LAST_INSERT_ID();
+
+            -- Registrar referencia si se usó código válido
+            IF p_codigo_referido_usuario IS NOT NULL THEN
+                INSERT INTO referencias (FK_ID_DUENO_CODIGO, FK_ID_CLIENTE_REFERIDO, MEMBRESIA_COMPRADA, FECHA_REFERENCIA)
+                SELECT
+                    u.PK_ID_USUARIO,
+                    v_idusuario,
+                    0,
+                    NOW()
+                FROM persona p
+                INNER JOIN usuario u ON u.FK_ID_PERSONA = p.PK_ID_PERSONA
+                WHERE p.CODIGO_REFERIDO = p_codigo_referido_usuario
+                LIMIT 1;
+            END IF;
+
+            COMMIT;
+
+            SET v_resultado = 1;
+            SET v_mensaje = 'Usuario creado exitosamente.';
+        END IF;
     END IF;
 
-    	SELECT PK_ID_PERSONA INTO idpersona
-		FROM persona 
-		ORDER BY PK_ID_PERSONA DESC 
-		LIMIT 1;
+    -- Si hubo error, hacer rollback
+    IF v_resultado < 0 THEN
+        ROLLBACK;
+    END IF;
 
-    INSERT INTO usuario (FK_ID_PERSONA, FK_ID_ROL, NOMBRE_USUARIO, CONTRASENIA, INTENTOS_FALLIDOS, TIPO_AUTENTICACION)
-    VALUES (idpersona, 3, p_correo, p_contrasenia, 0,  p_fk_id_metodo_autenticacion);
-
-    SET resultado = 1;
-    SET mensaje = 'Usuario, cuenta, membresía gratuita y método de autenticación creados exitosamente.';
-  END IF;
+    -- Retornar resultado
+    SELECT v_resultado AS resultado, v_mensaje AS mensaje, v_idusuario AS id_usuario;
 END//
 DELIMITER ;
 
@@ -2167,19 +2466,43 @@ DELIMITER ;
 DELIMITER //
 CREATE PROCEDURE `generar_token_recuperacion`(IN p_fk_id_usuario INT)
 BEGIN
-  DECLARE nuevo_token VARCHAR(255);
+    DECLARE v_nuevo_token VARCHAR(6);
+    DECLARE v_intentos_hoy INT DEFAULT 0;
+    DECLARE v_resultado INT DEFAULT 0;
+    DECLARE v_mensaje VARCHAR(255);
 
-  -- Verificar si el usuario existe
-  IF EXISTS (SELECT 1 FROM usuario WHERE PK_ID_USUARIO = p_fk_id_usuario) THEN
-    -- Generar un nuevo token único
-    SET nuevo_token = UUID();
+    -- Verificar si el usuario existe
+    IF NOT EXISTS (SELECT 1 FROM usuario WHERE PK_ID_USUARIO = p_fk_id_usuario) THEN
+        SET v_resultado = -1;
+        SET v_mensaje = 'Usuario no encontrado.';
+    ELSE
+        -- Verificar intentos de recuperación en las últimas 24 horas
+        SELECT IFNULL(INTENTOS_RECUPERACION, 0) INTO v_intentos_hoy
+        FROM usuario
+        WHERE PK_ID_USUARIO = p_fk_id_usuario
+        AND FECHA_ULTIMO_INTENTO_RECUPERACION > NOW() - INTERVAL 24 HOUR;
 
-    -- Actualizar el token y la fecha de expiración en la base de datos
-    UPDATE usuario
-    SET TOKEN_RECUPERACION = nuevo_token,
-        FECHA_EXPIRACION_TOKEN = NOW() + INTERVAL 5 MINUTE
-    WHERE PK_ID_USUARIO = p_fk_id_usuario;
-  END IF;
+        IF v_intentos_hoy >= 5 THEN
+            SET v_resultado = -2;
+            SET v_mensaje = 'Has excedido el límite de intentos de recuperación. Intenta en 24 horas.';
+        ELSE
+            -- Generar código de 6 dígitos
+            SET v_nuevo_token = LPAD(FLOOR(RAND() * 1000000), 6, '0');
+
+            -- Actualizar el token y la fecha de expiración
+            UPDATE usuario
+            SET TOKEN_RECUPERACION = v_nuevo_token,
+                FECHA_EXPIRACION_TOKEN = NOW() + INTERVAL 5 MINUTE,
+                INTENTOS_RECUPERACION = IFNULL(INTENTOS_RECUPERACION, 0) + 1,
+                FECHA_ULTIMO_INTENTO_RECUPERACION = NOW()
+            WHERE PK_ID_USUARIO = p_fk_id_usuario;
+
+            SET v_resultado = 1;
+            SET v_mensaje = 'Token generado exitosamente.';
+        END IF;
+    END IF;
+
+    SELECT v_resultado AS resultado, v_mensaje AS mensaje;
 END//
 DELIMITER ;
 
@@ -2243,12 +2566,14 @@ CREATE TABLE IF NOT EXISTS `local` (
   KEY `FK_local_persona` (`FK_ID_PERSONA`),
   KEY `FK_local_estado_local` (`FK_ID_ESTADO_LOCAL`),
   KEY `FK_local_membresia` (`FK_ID_TIPOMEMBRESIA`) USING BTREE,
+  KEY `idx_local_persona` (`FK_ID_PERSONA`),
+  KEY `idx_local_membresia` (`FK_ID_TIPOMEMBRESIA`),
   CONSTRAINT `FK_local_estado` FOREIGN KEY (`FK_ID_ESTADO_LOCAL`) REFERENCES `estado` (`PK_ID_ESTADO`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `FK_local_persona` FOREIGN KEY (`FK_ID_PERSONA`) REFERENCES `persona` (`PK_ID_PERSONA`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `FK_local_tipomembresia` FOREIGN KEY (`FK_ID_TIPOMEMBRESIA`) REFERENCES `tipo_membresia` (`PK_ID_TIPO_MEMBRESIA`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=38 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla abastecete.local: ~13 rows (aproximadamente)
+-- Volcando datos para la tabla abastecete.local: ~14 rows (aproximadamente)
 INSERT INTO `local` (`PK_ID_LOCAL`, `FK_ID_PERSONA`, `FK_ID_ESTADO_LOCAL`, `FK_ID_TIPOMEMBRESIA`, `NOMBRE_LOCAL`, `LOCALIZACION`, `DIRECCION_LOCAL`, `TELEFONO_LOCAL`, `FOTOS_LOCAL`, `BANNER_LOCAL`, `IMAGENES_LOCAL`, `DESCRIPCION_LOCAL`) VALUES
 	(1, 6, 1, 12, 'Verduras don pepe', 'Pablo VI', 'Calle 12', '3123687285', '', NULL, NULL, NULL),
 	(3, 6, 1, 18, 'pepito', 'abbas', 'calle 24', '21414', '', NULL, NULL, NULL),
@@ -2273,11 +2598,13 @@ CREATE TABLE IF NOT EXISTS `localcategoria` (
   PRIMARY KEY (`PK_ID_LOCALCATEGORIA`),
   KEY `FK_ID_LOCAL` (`FK_ID_LOCAL`),
   KEY `FK_ID_CATEGORIA` (`FK_ID_CATEGORIA`),
+  KEY `idx_localcategoria_local` (`FK_ID_LOCAL`),
+  KEY `idx_localcategoria_categoria` (`FK_ID_CATEGORIA`),
   CONSTRAINT `FK1` FOREIGN KEY (`FK_ID_LOCAL`) REFERENCES `local` (`PK_ID_LOCAL`),
   CONSTRAINT `FK2` FOREIGN KEY (`FK_ID_CATEGORIA`) REFERENCES `categoria` (`PK_ID_CATEGORIA`)
 ) ENGINE=InnoDB AUTO_INCREMENT=38 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla abastecete.localcategoria: ~15 rows (aproximadamente)
+-- Volcando datos para la tabla abastecete.localcategoria: ~16 rows (aproximadamente)
 INSERT INTO `localcategoria` (`PK_ID_LOCALCATEGORIA`, `FK_ID_LOCAL`, `FK_ID_CATEGORIA`) VALUES
 	(22, 28, 4),
 	(23, 34, 7),
@@ -2299,23 +2626,28 @@ INSERT INTO `localcategoria` (`PK_ID_LOCALCATEGORIA`, `FK_ID_LOCAL`, `FK_ID_CATE
 -- Volcando estructura para procedimiento abastecete.login_usuario
 DELIMITER //
 CREATE PROCEDURE `login_usuario`(
-	IN `p_nombre_usuario` VARCHAR(50),
-	IN `p_contrasenia` MEDIUMTEXT
+    IN `p_nombre_usuario` VARCHAR(50),
+    IN `p_contrasenia` MEDIUMTEXT
 )
 BEGIN
     DECLARE id_usuario INT DEFAULT NULL;
-    DECLARE estado_usuario INT;
-    DECLARE fecha_bloqueo DATETIME;
-    DECLARE intentos_actuales INT;
+    DECLARE estado_usuario INT DEFAULT NULL;
+    DECLARE fecha_bloqueo DATETIME DEFAULT NULL;
+    DECLARE intentos_actuales INT DEFAULT 0;
     DECLARE contrasenia_correcta BOOLEAN DEFAULT FALSE;
     DECLARE id_tipo_membresia INT DEFAULT NULL;
+    DECLARE usuario_inhabilitado INT DEFAULT 0;
 
     -- Iniciar una transacción
     START TRANSACTION;
 
     -- Obtener datos del usuario y bloquear la fila para evitar modificaciones simultáneas
-    SELECT PK_ID_USUARIO, ESTADO, FECHA_BLOQUEO, INTENTOS_FALLIDOS,
-           (CONTRASENIA = p_contrasenia) AS contrasenia_correcta
+    SELECT
+        PK_ID_USUARIO,
+        ESTADO,
+        FECHA_BLOQUEO,
+        IFNULL(INTENTOS_FALLIDOS, 0),
+        (CONTRASENIA = p_contrasenia) AS contrasenia_correcta
     INTO id_usuario, estado_usuario, fecha_bloqueo, intentos_actuales, contrasenia_correcta
     FROM usuario
     WHERE NOMBRE_USUARIO = p_nombre_usuario
@@ -2324,69 +2656,82 @@ BEGIN
     -- Si el usuario no existe, cancelar transacción y devolver código de error
     IF id_usuario IS NULL THEN
         ROLLBACK;
-        SELECT 98 AS FK_ID_ROL;
+        SELECT 98 AS FK_ID_ROL, NULL AS FK_ID_PERSONA, NULL AS PK_ID_USUARIO, NULL AS FK_ID_TIPOMEMBRESIA, NULL AS NOMBRE_USUARIO;
+
+    -- Verificar si el usuario está inhabilitado permanentemente (estado = 97)
+    ELSEIF estado_usuario = 97 THEN
+        ROLLBACK;
+        SELECT 97 AS FK_ID_ROL, NULL AS FK_ID_PERSONA, NULL AS PK_ID_USUARIO, NULL AS FK_ID_TIPOMEMBRESIA, NULL AS NOMBRE_USUARIO;
+
+    -- Verificar si el usuario está bloqueado temporalmente
+    ELSEIF estado_usuario = 0 AND fecha_bloqueo IS NOT NULL AND fecha_bloqueo > NOW() THEN
+        ROLLBACK;
+        SELECT 0 AS FK_ID_ROL, NULL AS FK_ID_PERSONA, NULL AS PK_ID_USUARIO, NULL AS FK_ID_TIPOMEMBRESIA, NULL AS NOMBRE_USUARIO;
+
     ELSE
-        -- Verificar si el usuario está bloqueado
-        IF estado_usuario = 0 AND fecha_bloqueo IS NOT NULL AND fecha_bloqueo > NOW() THEN
-            ROLLBACK;
-            SELECT 0 AS FK_ID_ROL;  -- Usuario sigue bloqueado
-        ELSE
-            -- Si la fecha de bloqueo ya pasó, desbloquear usuario
-            IF estado_usuario = 0 THEN
+        -- Si la fecha de bloqueo ya pasó, desbloquear usuario
+        IF estado_usuario = 0 AND (fecha_bloqueo IS NULL OR fecha_bloqueo <= NOW()) THEN
+            UPDATE usuario
+            SET ESTADO = 1, INTENTOS_FALLIDOS = 0, FECHA_BLOQUEO = NULL
+            WHERE PK_ID_USUARIO = id_usuario;
+            SET estado_usuario = 1;
+            SET intentos_actuales = 0;
+        END IF;
+
+        -- Si el usuario está activo
+        IF estado_usuario = 1 THEN
+            IF contrasenia_correcta THEN
+                -- Si la contraseña es correcta, reiniciar intentos fallidos
                 UPDATE usuario
-                SET ESTADO = 1, INTENTOS_FALLIDOS = 0, FECHA_BLOQUEO = NULL
+                SET INTENTOS_FALLIDOS = 0
                 WHERE PK_ID_USUARIO = id_usuario;
-                SET estado_usuario = 1;
-            END IF;
 
-            -- Si el usuario sigue activo después de las verificaciones
-            IF estado_usuario = 1 THEN
-                IF contrasenia_correcta THEN
-                    -- Si la contraseña es correcta, reiniciar intentos fallidos
+                -- Obtener el tipo de membresía (usando LEFT JOIN para manejar usuarios sin local)
+                SELECT l.FK_ID_TIPOMEMBRESIA
+                INTO id_tipo_membresia
+                FROM usuario u
+                INNER JOIN persona p ON u.FK_ID_PERSONA = p.PK_ID_PERSONA
+                LEFT JOIN local l ON l.FK_ID_PERSONA = p.PK_ID_PERSONA
+                WHERE u.PK_ID_USUARIO = id_usuario
+                LIMIT 1;
+
+                COMMIT;
+
+                -- Retornar datos del usuario
+                SELECT
+                    u.NOMBRE_USUARIO,
+                    u.FK_ID_ROL,
+                    u.FK_ID_PERSONA,
+                    u.PK_ID_USUARIO,
+                    IFNULL(id_tipo_membresia, 0) AS FK_ID_TIPOMEMBRESIA
+                FROM usuario u
+                WHERE u.PK_ID_USUARIO = id_usuario;
+
+            ELSE
+                -- Incrementar intentos fallidos
+                SET intentos_actuales = intentos_actuales + 1;
+
+                UPDATE usuario
+                SET INTENTOS_FALLIDOS = intentos_actuales
+                WHERE PK_ID_USUARIO = id_usuario;
+
+                -- Si alcanza 5 intentos, bloquear usuario por 1 hora
+                IF intentos_actuales >= 5 THEN
                     UPDATE usuario
-                    SET INTENTOS_FALLIDOS = 0
+                    SET ESTADO = 0, FECHA_BLOQUEO = NOW() + INTERVAL 1 HOUR
                     WHERE PK_ID_USUARIO = id_usuario;
-
-                    -- Obtener el tipo de membresía
-                    SELECT l.FK_ID_TIPOMEMBRESIA
-							INTO id_tipo_membresia
-							FROM usuario u
-							INNER JOIN persona p ON u.FK_ID_PERSONA = p.PK_ID_PERSONA
-							INNER JOIN local l ON l.FK_ID_PERSONA = p.PK_ID_PERSONA
-							WHERE u.PK_ID_USUARIO = id_usuario;
 
                     COMMIT;
-                    -- Retornar datos del usuario
-                    SELECT NOMBRE_USUARIO, FK_ID_ROL, FK_ID_PERSONA, PK_ID_USUARIO, id_tipo_membresia AS FK_ID_TIPOMEMBRESIA
-                    FROM usuario
-                    WHERE PK_ID_USUARIO = id_usuario;
-
+                    SELECT 0 AS FK_ID_ROL, NULL AS FK_ID_PERSONA, NULL AS PK_ID_USUARIO, NULL AS FK_ID_TIPOMEMBRESIA, NULL AS NOMBRE_USUARIO;
                 ELSE
-                    -- Incrementar intentos fallidos correctamente
-                    UPDATE usuario
-                    SET INTENTOS_FALLIDOS = intentos_actuales + 1
-                    WHERE PK_ID_USUARIO = id_usuario;
-
-                    -- Obtener el número actualizado de intentos fallidos
-                    SELECT INTENTOS_FALLIDOS 
-                    INTO intentos_actuales
-                    FROM usuario
-                    WHERE PK_ID_USUARIO = id_usuario;
-
-                    -- Si alcanza 5 intentos, bloquear usuario por 1 hora
-                    IF intentos_actuales >= 5 THEN
-                        UPDATE usuario
-                        SET ESTADO = 0, FECHA_BLOQUEO = NOW() + INTERVAL 1 HOUR
-                        WHERE PK_ID_USUARIO = id_usuario;
-
-                        COMMIT;
-                        SELECT 0 AS FK_ID_ROL; -- Cuenta bloqueada
-                    ELSE
-                        COMMIT;
-                        SELECT 99 AS FK_ID_ROL; -- Contraseña incorrecta
-                    END IF;
+                    COMMIT;
+                    SELECT 99 AS FK_ID_ROL, NULL AS FK_ID_PERSONA, NULL AS PK_ID_USUARIO, NULL AS FK_ID_TIPOMEMBRESIA, NULL AS NOMBRE_USUARIO;
                 END IF;
             END IF;
+        ELSE
+            -- Estado desconocido - retornar error genérico
+            ROLLBACK;
+            SELECT 98 AS FK_ID_ROL, NULL AS FK_ID_PERSONA, NULL AS PK_ID_USUARIO, NULL AS FK_ID_TIPOMEMBRESIA, NULL AS NOMBRE_USUARIO;
         END IF;
     END IF;
 END//
@@ -2395,25 +2740,80 @@ DELIMITER ;
 -- Volcando estructura para procedimiento abastecete.login_usuario_google
 DELIMITER //
 CREATE PROCEDURE `login_usuario_google`(
-	IN `p_correo` VARCHAR(255)
+    IN `p_correo` VARCHAR(255)
 )
 BEGIN
-    DECLARE user_count INT;
-    
-    -- Verificar si el usuario existe en la tabla usuario
-    SELECT COUNT(*) INTO user_count FROM usuario WHERE NOMBRE_USUARIO = p_correo;
+    DECLARE v_user_count INT DEFAULT 0;
+    DECLARE v_estado INT DEFAULT 0;
+    DECLARE v_id_usuario INT DEFAULT NULL;
+    DECLARE v_fecha_bloqueo DATETIME DEFAULT NULL;
 
-    -- Si el usuario existe, devolver los datos normales
-    IF user_count > 0 THEN
-        SELECT u.NOMBRE_USUARIO, u.FK_ID_ROL, u.FK_ID_PERSONA, u.PK_ID_USUARIO,
-      			 l.FK_ID_TIPOMEMBRESIA AS FK_ID_TIPOMEMBRESIA
-			FROM usuario u
-			LEFT JOIN persona p ON u.FK_ID_PERSONA = p.PK_ID_PERSONA
-			LEFT JOIN local l ON l.FK_ID_PERSONA = p.PK_ID_PERSONA
-			WHERE u.NOMBRE_USUARIO = p_correo;
+    -- Verificar si el usuario existe
+    SELECT
+        COUNT(*),
+        MAX(PK_ID_USUARIO),
+        MAX(ESTADO),
+        MAX(FECHA_BLOQUEO)
+    INTO v_user_count, v_id_usuario, v_estado, v_fecha_bloqueo
+    FROM usuario
+    WHERE NOMBRE_USUARIO = LOWER(TRIM(p_correo));
+
+    IF v_user_count = 0 THEN
+        -- Usuario no existe - retornar código para registro
+        SELECT
+            NULL AS PK_ID_USUARIO,
+            0 AS FK_ID_ROL,
+            NULL AS FK_ID_PERSONA,
+            NULL AS NOMBRE_USUARIO,
+            NULL AS FK_ID_TIPOMEMBRESIA,
+            'NO_EXISTE' AS estado_login;
+
+    ELSEIF v_estado = 97 THEN
+        -- Usuario inhabilitado permanentemente
+        SELECT
+            NULL AS PK_ID_USUARIO,
+            97 AS FK_ID_ROL,
+            NULL AS FK_ID_PERSONA,
+            NULL AS NOMBRE_USUARIO,
+            NULL AS FK_ID_TIPOMEMBRESIA,
+            'INHABILITADO' AS estado_login;
+
+    ELSEIF v_estado = 0 AND v_fecha_bloqueo IS NOT NULL AND v_fecha_bloqueo > NOW() THEN
+        -- Usuario bloqueado temporalmente
+        SELECT
+            NULL AS PK_ID_USUARIO,
+            0 AS FK_ID_ROL,
+            NULL AS FK_ID_PERSONA,
+            NULL AS NOMBRE_USUARIO,
+            NULL AS FK_ID_TIPOMEMBRESIA,
+            'BLOQUEADO' AS estado_login;
+
     ELSE
-        -- Si el usuario no existe, devolver FK_ID_ROL = 0
-        SELECT 0 AS PK_ID_USUARIO, 0 AS FK_ID_ROL;
+        -- Desbloquear si el tiempo de bloqueo ya pasó
+        IF v_estado = 0 AND (v_fecha_bloqueo IS NULL OR v_fecha_bloqueo <= NOW()) THEN
+            UPDATE usuario
+            SET ESTADO = 1,
+                INTENTOS_FALLIDOS = 0,
+                FECHA_BLOQUEO = NULL
+            WHERE PK_ID_USUARIO = v_id_usuario;
+        END IF;
+
+        -- Login exitoso - retornar datos del usuario
+        SELECT
+            u.PK_ID_USUARIO,
+            u.FK_ID_ROL,
+            u.FK_ID_PERSONA,
+            u.NOMBRE_USUARIO,
+            l.FK_ID_TIPOMEMBRESIA,
+            'OK' AS estado_login
+        FROM usuario u
+        LEFT JOIN persona p ON u.FK_ID_PERSONA = p.PK_ID_PERSONA
+        LEFT JOIN local l ON l.FK_ID_PERSONA = p.PK_ID_PERSONA
+        WHERE u.PK_ID_USUARIO = v_id_usuario
+        LIMIT 1;
+
+        -- Actualizar último acceso (opcional - agregar columna si se desea)
+        -- UPDATE usuario SET ULTIMO_ACCESO = NOW() WHERE PK_ID_USUARIO = v_id_usuario;
     END IF;
 END//
 DELIMITER ;
@@ -2466,7 +2866,7 @@ CREATE TABLE IF NOT EXISTS `membresia_local` (
   CONSTRAINT `FK_membresia_local` FOREIGN KEY (`FK_ID_LOCAL`) REFERENCES `local` (`PK_ID_LOCAL`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=37 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla abastecete.membresia_local: ~12 rows (aproximadamente)
+-- Volcando datos para la tabla abastecete.membresia_local: ~13 rows (aproximadamente)
 INSERT INTO `membresia_local` (`PK_ID_MEMBRESIA`, `FK_ID_LOCAL`, `ESTADO`, `FECHA_INICIO`, `FECHA_FIN`) VALUES
 	(2, 1, 1, '2025-02-20 10:05:41', '2025-03-20 10:05:41'),
 	(3, 3, 1, '2025-02-20 10:43:17', '2025-03-20 10:43:17'),
@@ -2526,8 +2926,14 @@ DELIMITER ;
 DELIMITER //
 CREATE PROCEDURE `obtener_token_recuperacion`(IN p_fk_id_usuario INT)
 BEGIN
-    -- Devolver el token de recuperación y su fecha de expiración
-    SELECT TOKEN_RECUPERACION, FECHA_EXPIRACION_TOKEN
+    SELECT
+        TOKEN_RECUPERACION,
+        FECHA_EXPIRACION_TOKEN,
+        CASE
+            WHEN TOKEN_RECUPERACION IS NULL THEN 0
+            WHEN FECHA_EXPIRACION_TOKEN <= NOW() THEN -1
+            ELSE 1
+        END AS estado_token
     FROM usuario
     WHERE PK_ID_USUARIO = p_fk_id_usuario;
 END//
@@ -2698,19 +3104,22 @@ CREATE TABLE IF NOT EXISTS `persona` (
   `PK_ID_PERSONA` int NOT NULL AUTO_INCREMENT,
   `NOMBRES` varchar(40) NOT NULL,
   `APELLIDOS` varchar(40) NOT NULL,
-  `TELEFONO` varchar(15) NOT NULL,
+  `TELEFONO` varchar(40) DEFAULT NULL,
   `CORREO` varchar(100) NOT NULL,
-  `DOCUMENTO_IDENTIDAD` int NOT NULL,
+  `DOCUMENTO_IDENTIDAD` int DEFAULT NULL,
   `ESTADO` tinyint NOT NULL,
   `FK_ID_TIPO_DOCUMENTO` int NOT NULL,
   `CODIGO_REFERIDO` varchar(20) DEFAULT NULL,
   `CODIGO_REFERIDO_USUARIO` varchar(20) DEFAULT NULL,
   PRIMARY KEY (`PK_ID_PERSONA`),
   KEY `FK_persona_tipo_documento` (`FK_ID_TIPO_DOCUMENTO`),
+  KEY `idx_persona_correo` (`CORREO`),
+  KEY `idx_persona_documento` (`DOCUMENTO_IDENTIDAD`,`FK_ID_TIPO_DOCUMENTO`),
+  KEY `idx_persona_codigo_referido` (`CODIGO_REFERIDO`),
   CONSTRAINT `FK_persona_tipo_documento` FOREIGN KEY (`FK_ID_TIPO_DOCUMENTO`) REFERENCES `tipo_documento` (`PK_ID_TIPO_DOCUMENTO`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=53 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=54 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla abastecete.persona: ~28 rows (aproximadamente)
+-- Volcando datos para la tabla abastecete.persona: ~29 rows (aproximadamente)
 INSERT INTO `persona` (`PK_ID_PERSONA`, `NOMBRES`, `APELLIDOS`, `TELEFONO`, `CORREO`, `DOCUMENTO_IDENTIDAD`, `ESTADO`, `FK_ID_TIPO_DOCUMENTO`, `CODIGO_REFERIDO`, `CODIGO_REFERIDO_USUARIO`) VALUES
 	(2, 'Kevin', 'Benavidez', '3123687284', 'kevin12@gmail.com', 1080360, 1, 1, 'COD659438', NULL),
 	(3, 'Sebastian', 'Sierra', '312361', 'sierra@gmail.com', 1020, 1, 1, 'COD638751', NULL),
@@ -3343,6 +3752,8 @@ CREATE TABLE IF NOT EXISTS `productoslocal` (
   KEY `fk_estado` (`FK_ESTADO`),
   KEY `FK_ID_UNIDAD` (`FK_ID_UNIDAD`),
   KEY `FK_ID_PRODUCTO` (`FK_ID_PRODUCTO`),
+  KEY `idx_productoslocal_producto` (`FK_ID_PRODUCTO`),
+  KEY `idx_productoslocal_local` (`FK_ID_LOCAL`),
   CONSTRAINT `fk3` FOREIGN KEY (`FK_ID_PRODUCTO`) REFERENCES `producto` (`PK_ID_PRODUCTO`),
   CONSTRAINT `fk4` FOREIGN KEY (`FK_ID_UNIDAD`) REFERENCES `unidad` (`ID_UNIDAD`),
   CONSTRAINT `fk_estado` FOREIGN KEY (`FK_ESTADO`) REFERENCES `estado` (`PK_ID_ESTADO`),
@@ -3525,17 +3936,37 @@ DELIMITER ;
 -- Volcando estructura para procedimiento abastecete.recuperar_contrasenia
 DELIMITER //
 CREATE PROCEDURE `recuperar_contrasenia`(
-  IN `p_id_usuario` INT,
-  IN `p_nueva_contrasenia` MEDIUMTEXT
+    IN `p_id_usuario` INT,
+    IN `p_nueva_contrasenia` MEDIUMTEXT
 )
 BEGIN
-  -- Verificar si el usuario existe
-  IF EXISTS (SELECT 1 FROM usuario WHERE PK_ID_USUARIO = p_id_usuario) THEN
-    -- Actualizar la contraseña del usuario
-    UPDATE usuario
-    SET CONTRASENIA = p_nueva_contrasenia
-    WHERE PK_ID_USUARIO = p_id_usuario;
-  END IF;
+    DECLARE v_resultado INT DEFAULT 0;
+    DECLARE v_mensaje VARCHAR(255);
+
+    -- Verificar si el usuario existe
+    IF NOT EXISTS (SELECT 1 FROM usuario WHERE PK_ID_USUARIO = p_id_usuario) THEN
+        SET v_resultado = -1;
+        SET v_mensaje = 'Usuario no encontrado.';
+    ELSEIF p_nueva_contrasenia IS NULL OR LENGTH(p_nueva_contrasenia) < 8 THEN
+        SET v_resultado = -2;
+        SET v_mensaje = 'La contraseña debe tener al menos 8 caracteres.';
+    ELSE
+        -- Actualizar la contraseña e invalidar el token
+        UPDATE usuario
+        SET CONTRASENIA = p_nueva_contrasenia,
+            TOKEN_RECUPERACION = NULL,
+            FECHA_EXPIRACION_TOKEN = NULL,
+            INTENTOS_RECUPERACION = 0,
+            INTENTOS_FALLIDOS = 0,
+            ESTADO = 1,
+            FECHA_BLOQUEO = NULL
+        WHERE PK_ID_USUARIO = p_id_usuario;
+
+        SET v_resultado = 1;
+        SET v_mensaje = 'Contraseña actualizada exitosamente.';
+    END IF;
+
+    SELECT v_resultado AS resultado, v_mensaje AS mensaje;
 END//
 DELIMITER ;
 
@@ -3849,7 +4280,9 @@ CREATE TABLE IF NOT EXISTS `unidad` (
   `ESTADO_UNIDAD` tinyint NOT NULL DEFAULT (1),
   `FK_ID_TIPOUNIDAD` int DEFAULT NULL,
   PRIMARY KEY (`ID_UNIDAD`),
-  KEY `FK_Unidad_TipoUnidad` (`FK_ID_TIPOUNIDAD`),
+  KEY `idx_unidad_tipo` (`FK_ID_TIPOUNIDAD`),
+  KEY `idx_unidad_estado` (`ESTADO_UNIDAD`),
+  KEY `idx_unidad_nombre` (`NOMBRE_UNIDAD`),
   CONSTRAINT `FK_Unidad_TipoUnidad` FOREIGN KEY (`FK_ID_TIPOUNIDAD`) REFERENCES `tipo_unidad` (`ID_TIPOUNIDAD`)
 ) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
@@ -3881,12 +4314,17 @@ CREATE TABLE IF NOT EXISTS `usuario` (
   `CORREO_VERIFICADO` tinyint unsigned DEFAULT '0',
   `ESTADO` tinyint NOT NULL DEFAULT '1' COMMENT '1 = Activo, 0 = Inactivo',
   `CLIENTES_REFERIDOS_TOTAL` int DEFAULT '0',
+  `INTENTOS_RECUPERACION` int DEFAULT '0',
+  `FECHA_ULTIMO_INTENTO_RECUPERACION` datetime DEFAULT NULL,
   PRIMARY KEY (`PK_ID_USUARIO`),
   UNIQUE KEY `UQ_NOMBRE_USUARIO` (`NOMBRE_USUARIO`),
   KEY `FK_usuario_persona` (`FK_ID_PERSONA`),
   KEY `FK_usuario_rol` (`FK_ID_ROL`),
   KEY `FK_usuario_membresia` (`FK_ID_MEMBRESIA`),
   KEY `FK_usuario_tipo_autenticacion` (`TIPO_AUTENTICACION`),
+  KEY `idx_usuario_nombre_usuario` (`NOMBRE_USUARIO`),
+  KEY `idx_usuario_token` (`TOKEN_RECUPERACION`),
+  KEY `idx_usuario_bloqueo` (`ESTADO`,`FECHA_BLOQUEO`),
   CONSTRAINT `FK_usuario_membresia` FOREIGN KEY (`FK_ID_MEMBRESIA`) REFERENCES `membresia_local` (`PK_ID_MEMBRESIA`),
   CONSTRAINT `FK_usuario_persona` FOREIGN KEY (`FK_ID_PERSONA`) REFERENCES `persona` (`PK_ID_PERSONA`),
   CONSTRAINT `FK_usuario_rol` FOREIGN KEY (`FK_ID_ROL`) REFERENCES `rol` (`PK_ID_ROL`),
@@ -3894,49 +4332,69 @@ CREATE TABLE IF NOT EXISTS `usuario` (
 ) ENGINE=InnoDB AUTO_INCREMENT=53 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Volcando datos para la tabla abastecete.usuario: ~26 rows (aproximadamente)
-INSERT INTO `usuario` (`PK_ID_USUARIO`, `FK_ID_PERSONA`, `FK_ID_ROL`, `FK_ID_MEMBRESIA`, `NOMBRE_USUARIO`, `CONTRASENIA`, `TOKEN_RECUPERACION`, `FECHA_EXPIRACION_TOKEN`, `TIPO_AUTENTICACION`, `INTENTOS_FALLIDOS`, `FECHA_BLOQUEO`, `CORREO_VERIFICADO`, `ESTADO`, `CLIENTES_REFERIDOS_TOTAL`) VALUES
-	(2, 2, 1, 2, 'kevin12@gmail.com', 'stCAUXlvlTCDOFCW3+AFGw==', NULL, NULL, 1, 0, NULL, 0, 1, 0),
-	(4, 4, 1, 2, 'sebastian@gmail.com', 'MApNL/Xu9KjSguqWMlk1aA==', NULL, NULL, 1, 0, NULL, 0, 1, 0),
-	(5, 5, 3, 2, 'yoiner@gmail.com', 'k61Us9qfNYtvCy6F/XOgoA==', NULL, NULL, 1, 0, NULL, 0, 1, 0),
-	(6, 6, 3, 2, 'ledes@gmail.com', 'urhs6MFsrUJFRJwthrYYcQ==', NULL, NULL, 1, 0, NULL, 0, 1, 0),
-	(7, 7, 1, 2, 'andres@gmail.com', 'kzWvH2roKKCxJWi2nOZhvQ==', NULL, NULL, 1, 0, NULL, 0, 1, 0),
-	(12, 12, 2, 2, 'yoiner.mh04@gmail.com', 'xOBcl5JnPT+4p9sI5fpiGQ==', 'f7917a01-efcf-11ef-8a42-00155d007000', '2025-02-20 16:21:36', 2, 0, NULL, 0, 1, 0),
-	(23, 23, 1, NULL, 'johans.ramirez@udla.edu.co', 'BGpwluhHTW0TzB09JfYwqw==', NULL, NULL, 1, 0, NULL, 0, 1, 0),
-	(24, 24, 3, NULL, 'da.navia@udla.edu.co', 'BGpwluhHTW0TzB09JfYwqw==', 'dc9ff21a-0687-11f0-806b-d843ae9e6717', '2025-03-21 14:13:24', 1, 0, NULL, 0, 1, 0),
-	(25, 25, 2, 2, 'johan05182002.com@gmail.com', 'BGpwluhHTW0TzB09JfYwqw==', NULL, NULL, 1, 0, NULL, 0, 1, 0),
-	(26, 26, 3, NULL, 'armuca@gmail.com', 'BGpwluhHTW0TzB09JfYwqw==', NULL, NULL, 1, 0, NULL, 0, 1, 0),
-	(27, 27, 3, NULL, 'c@gmail.com', 'BGpwluhHTW0TzB09JfYwqw==', NULL, NULL, 1, 0, NULL, 0, 1, 0),
-	(30, 30, 2, NULL, 'may13xd@gmail.com', 'zTLp/d8kn9F+qgWExhUrfA==', NULL, NULL, 1, 0, NULL, 0, 1, 0),
-	(31, 31, 3, NULL, 'juandavidloquendero@gmail.com', 'QhuouUOvL0DiHxB8XrQeUg==', NULL, NULL, 1, 0, NULL, 0, 1, 0),
-	(32, 32, 3, NULL, 'h@gmail.com', 'zTLp/d8kn9F+qgWExhUrfA==', NULL, NULL, 1, 0, NULL, 0, 1, 0),
-	(33, 33, 3, NULL, 'osnidio@yopmail.com', 'HJjNmQMNUaeX2PxRK2lTPg==', '6964cb39-15b9-11f0-9953-e688b28ab077', '2025-04-10 03:15:52', 1, 0, NULL, 0, 1, 0),
-	(34, 34, 2, NULL, 'l@gmail.com', 'zTLp/d8kn9F+qgWExhUrfA==', NULL, NULL, 1, 0, NULL, 0, 1, 0),
-	(35, 35, 3, NULL, 'sdfdsfsdf@d', 'bzmmZWxCrQlFMzRWXnqfTA==', '781dfc63-1026-11f0-9953-e688b28ab077', '2025-04-03 01:01:25', 1, 0, NULL, 0, 1, 0),
-	(36, 36, 2, NULL, 'andrestrujillo20166@gmail.com', '7CP2YJdKY1Z9UU+Bb+ESMQ==', NULL, NULL, 1, 0, NULL, 0, 1, 0),
-	(37, 37, 2, NULL, 'hola@gmail.com', 'y3rFyft55CWVYwszuPNHUA==', NULL, NULL, 1, 0, NULL, 0, 1, 0),
-	(38, 38, 2, NULL, 'hola1@gmail.com', 'y3rFyft55CWVYwszuPNHUA==', NULL, NULL, 1, 0, NULL, 0, 1, 0),
-	(39, 39, 3, NULL, 'hola2@gmail.com', 'y3rFyft55CWVYwszuPNHUA==', NULL, NULL, 1, 0, NULL, 0, 1, 0),
-	(40, 40, 2, NULL, 'hola4@gmail.com', 'YQn/NzNFobs1CxYU0g9iTQ==', NULL, NULL, 1, 0, NULL, 0, 1, 0),
-	(49, 49, 3, NULL, 'atekegran@gmail.com', 'stCAUXlvlTCDOFCW3+AFGw==', NULL, NULL, 2, 0, NULL, 0, 1, 0),
-	(50, 50, 2, 34, 'sebsirra13@gmail.com', 'stCAUXlvlTCDOFCW3+AFGw==', NULL, NULL, 2, 0, NULL, 0, 1, 0),
-	(51, 51, 2, NULL, 'websencol@gmail.com', 'stCAUXlvlTCDOFCW3+AFGw==', NULL, NULL, 2, 0, NULL, 0, 1, 0),
-	(52, 52, 3, NULL, 'dananabia2000@gmail.com', 'stCAUXlvlTCDOFCW3+AFGw==', NULL, NULL, 2, 0, NULL, 0, 1, 0);
+INSERT INTO `usuario` (`PK_ID_USUARIO`, `FK_ID_PERSONA`, `FK_ID_ROL`, `FK_ID_MEMBRESIA`, `NOMBRE_USUARIO`, `CONTRASENIA`, `TOKEN_RECUPERACION`, `FECHA_EXPIRACION_TOKEN`, `TIPO_AUTENTICACION`, `INTENTOS_FALLIDOS`, `FECHA_BLOQUEO`, `CORREO_VERIFICADO`, `ESTADO`, `CLIENTES_REFERIDOS_TOTAL`, `INTENTOS_RECUPERACION`, `FECHA_ULTIMO_INTENTO_RECUPERACION`) VALUES
+	(2, 2, 1, 2, 'kevin12@gmail.com', 'stCAUXlvlTCDOFCW3+AFGw==', NULL, NULL, 1, 0, NULL, 0, 1, 0, 0, NULL),
+	(4, 4, 1, 2, 'sebastian@gmail.com', 'MApNL/Xu9KjSguqWMlk1aA==', NULL, NULL, 1, 0, NULL, 0, 1, 0, 0, NULL),
+	(5, 5, 3, 2, 'yoiner@gmail.com', 'k61Us9qfNYtvCy6F/XOgoA==', NULL, NULL, 1, 0, NULL, 0, 1, 0, 0, NULL),
+	(6, 6, 3, 2, 'ledes@gmail.com', 'urhs6MFsrUJFRJwthrYYcQ==', NULL, NULL, 1, 0, NULL, 0, 1, 0, 0, NULL),
+	(7, 7, 1, 2, 'andres@gmail.com', 'kzWvH2roKKCxJWi2nOZhvQ==', NULL, NULL, 1, 0, NULL, 0, 1, 0, 0, NULL),
+	(12, 12, 2, 2, 'yoiner.mh04@gmail.com', 'xOBcl5JnPT+4p9sI5fpiGQ==', 'f7917a01-efcf-11ef-8a42-00155d007000', '2025-02-20 16:21:36', 2, 0, NULL, 0, 1, 0, 0, NULL),
+	(23, 23, 1, NULL, 'johans.ramirez@udla.edu.co', 'BGpwluhHTW0TzB09JfYwqw==', NULL, NULL, 1, 0, NULL, 0, 1, 0, 0, NULL),
+	(24, 24, 3, NULL, 'da.navia@udla.edu.co', 'BGpwluhHTW0TzB09JfYwqw==', 'dc9ff21a-0687-11f0-806b-d843ae9e6717', '2025-03-21 14:13:24', 1, 0, NULL, 0, 1, 0, 0, NULL),
+	(25, 25, 2, 2, 'johan05182002.com@gmail.com', 'BGpwluhHTW0TzB09JfYwqw==', NULL, NULL, 1, 0, NULL, 0, 1, 0, 0, NULL),
+	(26, 26, 3, NULL, 'armuca@gmail.com', 'BGpwluhHTW0TzB09JfYwqw==', NULL, NULL, 1, 0, NULL, 0, 1, 0, 0, NULL),
+	(27, 27, 3, NULL, 'c@gmail.com', 'BGpwluhHTW0TzB09JfYwqw==', NULL, NULL, 1, 0, NULL, 0, 1, 0, 0, NULL),
+	(30, 30, 2, NULL, 'may13xd@gmail.com', 'zTLp/d8kn9F+qgWExhUrfA==', NULL, NULL, 1, 0, NULL, 0, 1, 0, 0, NULL),
+	(31, 31, 3, NULL, 'juandavidloquendero@gmail.com', 'QhuouUOvL0DiHxB8XrQeUg==', NULL, NULL, 1, 0, NULL, 0, 1, 0, 0, NULL),
+	(32, 32, 3, NULL, 'h@gmail.com', 'zTLp/d8kn9F+qgWExhUrfA==', NULL, NULL, 1, 0, NULL, 0, 1, 0, 0, NULL),
+	(33, 33, 3, NULL, 'osnidio@yopmail.com', 'HJjNmQMNUaeX2PxRK2lTPg==', '6964cb39-15b9-11f0-9953-e688b28ab077', '2025-04-10 03:15:52', 1, 0, NULL, 0, 1, 0, 0, NULL),
+	(34, 34, 2, NULL, 'l@gmail.com', 'zTLp/d8kn9F+qgWExhUrfA==', NULL, NULL, 1, 0, NULL, 0, 1, 0, 0, NULL),
+	(35, 35, 3, NULL, 'sdfdsfsdf@d', 'bzmmZWxCrQlFMzRWXnqfTA==', '781dfc63-1026-11f0-9953-e688b28ab077', '2025-04-03 01:01:25', 1, 0, NULL, 0, 1, 0, 0, NULL),
+	(36, 36, 2, NULL, 'andrestrujillo20166@gmail.com', '7CP2YJdKY1Z9UU+Bb+ESMQ==', NULL, NULL, 1, 0, NULL, 0, 1, 0, 0, NULL),
+	(37, 37, 2, NULL, 'hola@gmail.com', 'y3rFyft55CWVYwszuPNHUA==', NULL, NULL, 1, 0, NULL, 0, 1, 0, 0, NULL),
+	(38, 38, 2, NULL, 'hola1@gmail.com', 'y3rFyft55CWVYwszuPNHUA==', NULL, NULL, 1, 0, NULL, 0, 1, 0, 0, NULL),
+	(39, 39, 3, NULL, 'hola2@gmail.com', 'y3rFyft55CWVYwszuPNHUA==', NULL, NULL, 1, 0, NULL, 0, 1, 0, 0, NULL),
+	(40, 40, 2, NULL, 'hola4@gmail.com', 'YQn/NzNFobs1CxYU0g9iTQ==', NULL, NULL, 1, 0, NULL, 0, 1, 0, 0, NULL),
+	(49, 49, 3, NULL, 'atekegran@gmail.com', 'stCAUXlvlTCDOFCW3+AFGw==', NULL, NULL, 2, 0, NULL, 0, 1, 0, 0, NULL),
+	(50, 50, 2, 34, 'sebsirra13@gmail.com', 'stCAUXlvlTCDOFCW3+AFGw==', NULL, NULL, 2, 0, NULL, 0, 1, 0, 0, NULL),
+	(51, 51, 2, NULL, 'websencol@gmail.com', 'stCAUXlvlTCDOFCW3+AFGw==', NULL, NULL, 2, 0, NULL, 0, 1, 0, 0, NULL),
+	(52, 52, 3, NULL, 'dananabia2000@gmail.com', 'stCAUXlvlTCDOFCW3+AFGw==', NULL, NULL, 2, 0, NULL, 0, 1, 0, 0, NULL);
 
 -- Volcando estructura para procedimiento abastecete.validar_token_recuperacion
 DELIMITER //
 CREATE PROCEDURE `validar_token_recuperacion`(IN p_token VARCHAR(255))
 BEGIN
-    DECLARE id_usuario INT;
+    DECLARE v_id_usuario INT DEFAULT NULL;
+    DECLARE v_fecha_expiracion DATETIME;
 
     -- Buscar el usuario por token
-    SELECT PK_ID_USUARIO INTO id_usuario
+    SELECT PK_ID_USUARIO, FECHA_EXPIRACION_TOKEN
+    INTO v_id_usuario, v_fecha_expiracion
     FROM usuario
     WHERE TOKEN_RECUPERACION = p_token
-    AND FECHA_EXPIRACION_TOKEN > NOW(); -- Verifica que el token no haya expirado
+    LIMIT 1;
 
-    -- Si el token es válido, devuelve el ID del usuario
-    IF id_usuario IS NOT NULL THEN
-        SELECT PK_ID_USUARIO FROM usuario WHERE PK_ID_USUARIO = id_usuario;
+    -- Verificar si el token existe y no ha expirado
+    IF v_id_usuario IS NULL THEN
+        SELECT
+            NULL AS PK_ID_USUARIO,
+            -1 AS resultado,
+            'Token no encontrado.' AS mensaje;
+    ELSEIF v_fecha_expiracion <= NOW() THEN
+        -- Limpiar token expirado
+        UPDATE usuario
+        SET TOKEN_RECUPERACION = NULL, FECHA_EXPIRACION_TOKEN = NULL
+        WHERE PK_ID_USUARIO = v_id_usuario;
+
+        SELECT
+            NULL AS PK_ID_USUARIO,
+            -2 AS resultado,
+            'El código ha expirado. Solicita uno nuevo.' AS mensaje;
+    ELSE
+        SELECT
+            v_id_usuario AS PK_ID_USUARIO,
+            1 AS resultado,
+            'Token válido.' AS mensaje;
     END IF;
 END//
 DELIMITER ;
