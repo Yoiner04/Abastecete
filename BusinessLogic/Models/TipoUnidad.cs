@@ -6,12 +6,9 @@ using System.Threading.Tasks;
 
 namespace BusinessLogic.Models
 {
-    public class Unidad
+    public class TipoUnidad
     {
         public int Id { get; set; }
         public string Nombre { get; set; }
-        public int Estado { get; set; }
-        public int? IdTipoUnidad { get; set; }
-        public string NombreTipoUnidad { get; set; }
     }
 }
