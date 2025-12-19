@@ -40,12 +40,12 @@
             {
                 <div class="form-group mb-3">
                     <label for="email" id="email-label">Correo Electrónico</label>
-                    @Html.TextBoxFor(m => m.Correo, new { @class = "form-control", @type = "email", @id = "email", @name = "email", @placeholder = "Ingresa tu correo", aria_labelledby = "email-label", aria_required = "true", autocomplete = "email" })
+                    @Html.TextBoxFor(m => m.Correo, new { @class = "form-control", @type = "email", @id = "email", @placeholder = "Ingresa tu correo", aria_labelledby = "email-label", aria_required = "true", autocomplete = "email" })
                     <span id="correoError" class="text-danger hidden text-sm" role="alert" aria_live="polite">El correo es obligatorio.</span>
                 </div>
                 <div class="form-group mb-3">
                     <label for="password" id="password-label">Contraseña</label>
-                    @Html.PasswordFor(m => m.Contrasenia, new { @class = "form-control", @id = "password", @name = "password", @placeholder = "Ingresa tu contraseña", aria_labelledby = "password-label", aria_required = "true", autocomplete = "current-password" })
+                    @Html.PasswordFor(m => m.Contrasenia, new { @class = "form-control", @id = "password", @placeholder = "Ingresa tu contraseña", aria_labelledby = "password-label", aria_required = "true", autocomplete = "current-password" })
                     <span id="contraseniaError" class="text-danger hidden text-sm" role="alert" aria_live="polite">La contraseña es obligatoria.</span>
                 </div>
 
@@ -87,20 +87,24 @@
 
     <script>
         function cargarBannersSesion() {
-        fetch("/Banners/ListarBannersSesion")
-            .then(response => response.json())
-            .then(banners => {
-                const galeria = document.getElementById("galeriaSesion");
-                galeria.innerHTML = "";
-
-                banners.forEach(banner => {
-                    galeria.innerHTML += `
-                            <img src="${banner.base64}" alt="${banner.nombre}" style="width: 100%; height: auto;">
-                    `;
-                });
-            })
-            .catch(error => console.error("Error cargando banners:", error));
-    }
+            // Cargar banners de forma asíncrona para no bloquear el formulario de login
+            fetch("/Login/ObtenerBannersSesion")
+                .then(response => response.json())
+                .then(banners => {
+                    const galeria = document.getElementById("galeriaSesion");
+                    if (banners && banners.length > 0) {
+                        galeria.innerHTML = "";
+                        banners.forEach(banner => {
+                            if (banner.url) {
+                                galeria.innerHTML += `
+                                    <img src="${banner.url}" alt="${banner.nombre || 'Banner'}" style="width: 100%; height: auto; object-fit: cover;">
+                                `;
+                            }
+                        });
+                    }
+                })
+                .catch(error => console.error("Error cargando banners:", error));
+        }
     </script>
     <script>
         document.addEventListener("DOMContentLoaded", function () {

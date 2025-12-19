@@ -14,20 +14,22 @@ namespace BusinessLogic
     {
         private Connection conexion;
         private readonly ManejadorImagenes _manejadorMongo;
+        private readonly ManejadorSuscripciones _manejadorSuscripciones;
 
         public ManejadorNegocios()
         {
             _manejadorMongo = new ManejadorImagenes();
+            _manejadorSuscripciones = new ManejadorSuscripciones();
             conexion = new Connection();
         }
 
-        public bool CrearNegocio(Negocio negocio)
+        public bool CrearNegocio(Negocio negocio, int idTipoMembresia = 1)
         {
             List<Parametro> parametros = new List<Parametro>
             {
                 new Parametro("p_fk_id_persona", negocio.Persona.Id),
                 new Parametro("p_fk_id_estado_local", 1),
-                new Parametro("p_fk_id_tipomembresia", negocio.TipoMembresia),
+                new Parametro("p_fk_id_tipomembresia", idTipoMembresia),
                 new Parametro("p_localizacion", negocio.Localizacion),
                 new Parametro("p_nombre_local", negocio.Nombre),
                 new Parametro("p_direccion_local", negocio.Direccion),
@@ -368,6 +370,47 @@ namespace BusinessLogic
             return conexion.EjecutarTransaccion("registrar_pago", parametros);
         }
 
+        /// <summary>
+        /// Consulta un negocio por ID incluyendo su suscripción activa
+        /// </summary>
+        public Negocio ConsultarNegocioConSuscripcion(int idLocal)
+        {
+            var negocio = ConsultarNegocioPoId(idLocal);
+            if (negocio != null)
+            {
+                negocio.SuscripcionActiva = _manejadorSuscripciones.ObtenerSuscripcionActiva(idLocal);
+            }
+            return negocio;
+        }
+
+        /// <summary>
+        /// Consulta un negocio por persona incluyendo su suscripción activa
+        /// </summary>
+        public Negocio ConsultarNegocioPersonaConSuscripcion(int idPersona)
+        {
+            var negocio = ConsultarNegocio(idPersona);
+            if (negocio != null)
+            {
+                negocio.SuscripcionActiva = _manejadorSuscripciones.ObtenerSuscripcionActiva(negocio.Id);
+            }
+            return negocio;
+        }
+
+        /// <summary>
+        /// Obtiene la suscripción activa de un local
+        /// </summary>
+        public Models.Suscripcion ObtenerSuscripcionActiva(int idLocal)
+        {
+            return _manejadorSuscripciones.ObtenerSuscripcionActiva(idLocal);
+        }
+
+        /// <summary>
+        /// Obtiene el historial de membresías de un local
+        /// </summary>
+        public List<Models.HistorialMembresia> ObtenerHistorialMembresia(int idLocal)
+        {
+            return _manejadorSuscripciones.ObtenerHistorial(idLocal);
+        }
 
     }
 }

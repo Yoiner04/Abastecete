@@ -11,6 +11,7 @@ namespace ConnectionProject.Controllers
         ManejadorPermisos manejadorP = new ManejadorPermisos();
         ManejadorRoles manejadorR = new ManejadorRoles();
 
+        [RequierePermiso("Administrar Roles")]
         public IActionResult Consultar([FromQuery] int idRol=0)
         {
             ViewBag.idRol = idRol;
@@ -31,13 +32,14 @@ namespace ConnectionProject.Controllers
         }
 
         [HttpPost]
+        [RequierePermiso("Administrar Roles")]
         public IActionResult CrearRol(Rol rol)
         {
             bool result = manejadorR.CrearRol(rol);
             return RedirectToAction("Consultar");
         }
 
-       
+        [RequierePermiso("Administrar Roles")]
         public IActionResult AsignarPermisoRol([FromQuery] int idRol, [FromQuery] int idPermiso)
         {
             bool result = manejadorP.AsignarPermiso(idRol, idPermiso);
@@ -45,6 +47,7 @@ namespace ConnectionProject.Controllers
         }
 
         [HttpPost]
+        [RequierePermiso("Administrar Roles")]
         public IActionResult AsignarRol(PermisosViewModel e)
         {
             bool result = manejadorR.AsignarRol(e.Rol.Id, e.Usuario.Id);

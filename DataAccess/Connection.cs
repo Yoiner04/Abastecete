@@ -5,7 +5,20 @@ namespace DataAccess
 {
     public class Connection
     {
-        private static readonly string _connectionString = "server=167.71.91.199; database=abastecete; user=bd_abastecete; password=root_abastecete; port=3306";
+        // Connection string optimizada con pooling y timeouts
+        private static readonly string _connectionString =
+            "server=167.71.91.199; " +
+            "database=abastecete; " +
+            "user=bd_abastecete; " +
+            "password=root_abastecete; " +
+            "port=3306; " +
+            "Pooling=true; " +                    // Habilitar connection pooling
+            "Min Pool Size=5; " +                 // Mantener 5 conexiones listas
+            "Max Pool Size=100; " +               // Máximo 100 conexiones simultáneas
+            "Connection Timeout=10; " +           // Timeout de conexión 10 segundos
+            "Command Timeout=30; " +              // Timeout de comandos 30 segundos
+            "Connection Lifetime=300; " +         // Reciclar conexiones cada 5 minutos
+            "Connection Reset=false";             // No resetear conexión al devolverla al pool
 
         private MySqlConnection CrearConexion()
         {

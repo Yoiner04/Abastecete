@@ -1,103 +1,299 @@
-﻿@model BusinessLogic.Models.PermisosViewModel;
+@model BusinessLogic.Models.PermisosViewModel
+@using BusinessLogic.Utilidades
+@{
+    ViewData["Title"] = "Gestión de Roles y Permisos";
+    var permisos = Context.Session.GetString("permisos");
+    var puedeAdministrar = RolPermisos.TienePermiso("Administrar Roles", permisos);
 
-<!DOCTYPE html>
-<html lang="es">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Abastecete</title>
-        <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-        <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-        <link rel="stylesheet" href="~/Abastecete.styles.css" asp-append-version="true" />
-        <link rel="icon" type="image/x-icon" href="~/css/Images/Logo A naranja.png" />
-        <link rel="stylesheet" href="styles.css" />
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
-        <link rel="stylesheet" href="~/css/styles.css" asp-append-version="true" />
-    </head>
+    var roles = ViewBag.roles as List<BusinessLogic.Models.Rol> ?? new List<BusinessLogic.Models.Rol>();
+    var usuarios = ViewBag.usuarios as List<BusinessLogic.Models.Usuario> ?? new List<BusinessLogic.Models.Usuario>();
+    var permisosLista = ViewBag.permisos as List<BusinessLogic.Models.Permiso> ?? new List<BusinessLogic.Models.Permiso>();
+    var idRolSeleccionado = ViewBag.idRol ?? 0;
+    var rolSeleccionado = roles.FirstOrDefault(r => r.Id == idRolSeleccionado);
+}
 
-<body class="mt-10 bg-gray-100 p-4 md:p-10">
-    <div class="mx-auto max-w-5xl rounded-xl bg-white p-4 shadow-lg md:p-8">
-
-        @using (Html.BeginForm("AsignarRol", "Roles", FormMethod.Post))
-        {
-            <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
-                <!-- Roles -->
+<!-- Header a ancho completo -->
+<div class="bg-white border-b border-gray-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div class="flex items-center gap-4">
+                <a href="@Url.Action("Principal", "Home")"
+                   class="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors">
+                    <i class="fas fa-arrow-left text-gray-600"></i>
+                </a>
                 <div>
-                    <h2 class="mb-2 text-xl font-semibold text-gray-700">Roles</h2>
-                    <select asp-for="Rol.Id"
-                            class="w-full rounded-lg border border-gray-300 p-3 focus:ring-2 focus:ring-green-500"
-                            onchange="window.location.href = '@Url.Action("Consultar", "Roles")' + '?idRol=' + this.value">
-                        <option value="">Seleccionar rol</option>
-                        @foreach (var tipo in ViewBag.roles)
-                        {
-                            <option value="@tipo.Id" selected="@(ViewBag.idRol == tipo.Id ? "selected" : null)">
-                                @tipo.Nombre
-                            </option>
-                        }
-                    </select>
-                </div>
-
-                <!-- Usuarios -->
-                <div>
-                    <h2 class="mb-2 text-xl font-semibold text-gray-700">Usuarios</h2>
-                    <select class="w-full rounded-lg border border-gray-300 p-3 focus:ring-2 focus:ring-green-500" asp-for="Usuario.Id">
-                        <option>Seleccionar usuario</option>
-                        @foreach (var usuario in ViewBag.usuarios)
-                        {
-                            <option value="@usuario.Id">@usuario.Persona.Nombre @usuario.Persona.Apellido</option>
-                        }
-                    </select>
-                </div>
-
-                <!-- Botón -->
-                <div class="flex items-end">
-                    <button class="w-full rounded-lg bg-green-600 px-6 py-3 font-bold text-white hover:bg-green-700">
-                        Asignar rol
-                    </button>
+                    <h1 class="text-2xl font-bold text-gray-900">Gestión de Roles y Permisos</h1>
+                    <p class="text-sm text-gray-500 mt-1">Administra roles, permisos y asignaciones de usuarios</p>
                 </div>
             </div>
-        }
+        </div>
+    </div>
+</div>
 
-        <!-- Crear nuevo rol -->
-        <div class="mt-8 border-t pt-6">
-            @using (Html.BeginForm("CrearRol", "Roles", FormMethod.Post))
-            {
-                <h2 class="mb-4 text-xl font-semibold text-gray-700">Crear nuevo rol</h2>
-                <div class="flex flex-col gap-4 md:flex-row">
-                    @Html.TextBoxFor(m => m.Rol.Nombre, new
-                        {
-                            @type = "text",
-                            @class = "w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500",
-                            @placeholder = "Nombre del rol"
-                        })
-                    <button class="rounded-lg bg-green-600 px-6 py-3 font-bold text-white hover:bg-green-700">
-                        Crear
-                    </button>
+<!-- Contenido con contenedor -->
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+<!-- Stats Cards -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+    <div class="bg-white rounded-xl border border-gray-200 p-4 flex items-center gap-4">
+        <div class="w-12 h-12 rounded-lg bg-purple-100 flex items-center justify-center">
+            <i class="fas fa-user-shield text-purple-600 text-xl"></i>
+        </div>
+        <div>
+            <p class="text-2xl font-bold text-gray-900">@roles.Count</p>
+            <p class="text-sm text-gray-500">Total Roles</p>
+        </div>
+    </div>
+    <div class="bg-white rounded-xl border border-gray-200 p-4 flex items-center gap-4">
+        <div class="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center">
+            <i class="fas fa-key text-blue-600 text-xl"></i>
+        </div>
+        <div>
+            <p class="text-2xl font-bold text-gray-900">@permisosLista.Count</p>
+            <p class="text-sm text-gray-500">Permisos Disponibles</p>
+        </div>
+    </div>
+    <div class="bg-white rounded-xl border border-gray-200 p-4 flex items-center gap-4">
+        <div class="w-12 h-12 rounded-lg bg-green-100 flex items-center justify-center">
+            <i class="fas fa-users text-green-600 text-xl"></i>
+        </div>
+        <div>
+            <p class="text-2xl font-bold text-gray-900">@usuarios.Count</p>
+            <p class="text-sm text-gray-500">Usuarios</p>
+        </div>
+    </div>
+</div>
+
+<div class="space-y-6">
+    <!-- Main Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Panel de Roles -->
+        <div class="lg:col-span-1">
+            <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                <div class="px-4 py-3 border-b border-gray-200 bg-gray-50">
+                    <h3 class="font-semibold text-gray-900 flex items-center gap-2">
+                        <i class="fas fa-user-shield text-purple-600"></i>
+                        Roles del Sistema
+                    </h3>
                 </div>
-                <div class="mt-2 text-sm text-red-500">
-                    @Html.ValidationMessageFor(m => m.Rol.Nombre)
+                <div class="p-4 space-y-2 max-h-96 overflow-y-auto">
+                    @foreach (var rol in roles)
+                    {
+                        var isSelected = rol.Id == idRolSeleccionado;
+                        <a href="@Url.Action("Consultar", "Roles", new { idRol = rol.Id })"
+                           class="flex items-center justify-between p-3 rounded-lg transition-all @(isSelected ? "bg-[#23916A] text-white" : "bg-gray-50 hover:bg-gray-100 text-gray-700")">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-full @(isSelected ? "bg-white/20" : "bg-purple-100") flex items-center justify-center">
+                                    <i class="fas fa-user-tag text-sm @(isSelected ? "text-white" : "text-purple-600")"></i>
+                                </div>
+                                <span class="font-medium">@rol.Nombre</span>
+                            </div>
+                            @if (isSelected)
+                            {
+                                <i class="fas fa-check"></i>
+                            }
+                        </a>
+                    }
                 </div>
-            }
+
+                @if (puedeAdministrar)
+                {
+                    <!-- Crear Nuevo Rol -->
+                    <div class="p-4 border-t border-gray-200 bg-gray-50">
+                        <form asp-action="CrearRol" asp-controller="Roles" method="post" class="space-y-3">
+                            <label class="block text-sm font-medium text-gray-700">Crear nuevo rol</label>
+                            <div class="flex gap-2">
+                                <input type="text"
+                                       name="Nombre"
+                                       placeholder="Nombre del rol"
+                                       required
+                                       class="flex-1 px-3 py-2 rounded-lg border border-gray-300 focus:border-[#23916A] focus:ring-2 focus:ring-[#23916A]/20 transition-all text-sm">
+                                <button type="submit"
+                                        class="px-4 py-2 rounded-lg bg-[#23916A] text-white font-medium hover:bg-[#1a6b4f] transition-colors">
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                }
+            </div>
         </div>
 
-        <!-- Permisos asignados -->
-        <div class="mt-8 border-t pt-6">
-            <h2 class="mb-4 text-xl font-semibold text-gray-700">Permisos asignados</h2>
-            <div class="grid grid-cols-1 gap-4 rounded-lg bg-gray-50 p-4 sm:grid-cols-2 md:grid-cols-3">
-                @foreach (var permiso in ViewBag.permisos)
+        <!-- Panel de Permisos -->
+        <div class="lg:col-span-2">
+            <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                <div class="px-4 py-3 border-b border-gray-200 bg-gray-50 flex items-center justify-between">
+                    <h3 class="font-semibold text-gray-900 flex items-center gap-2">
+                        <i class="fas fa-key text-blue-600"></i>
+                        Permisos del Rol
+                    </h3>
+                    @if (rolSeleccionado != null)
+                    {
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700">
+                            <i class="fas fa-user-shield"></i>
+                            @rolSeleccionado.Nombre
+                        </span>
+                    }
+                </div>
+
+                @if (idRolSeleccionado > 0)
                 {
-                    <label class="flex items-center">
-                        <input type="checkbox"
-                               class="mr-2"
-                        @(permiso.Estado ? "checked" : "")
-                               onclick="window.location.href = '@Url.Action("AsignarPermisoRol", "Roles")' + '?idRol=@ViewBag.idRol&idPermiso=@permiso.Id'">
-                        @permiso.Nombre
-                    </label>
+                    <div class="p-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            @foreach (var permiso in permisosLista)
+                            {
+                                var isChecked = permiso.Estado;
+                                <label class="relative group">
+                                    <input type="checkbox"
+                                           class="peer sr-only"
+                                           @(isChecked ? "checked" : "")
+                                           @(puedeAdministrar ? "" : "disabled")
+                                           onchange="togglePermiso(@idRolSeleccionado, @permiso.Id)">
+                                    <div class="p-3 rounded-xl border-2 transition-all cursor-pointer
+                                                @(isChecked ? "border-green-500 bg-green-50" : "border-gray-200 bg-gray-50 hover:border-gray-300")
+                                                @(!puedeAdministrar ? "opacity-60 cursor-not-allowed" : "")">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-8 h-8 rounded-lg flex items-center justify-center transition-all
+                                                        @(isChecked ? "bg-green-500 text-white" : "bg-gray-200 text-gray-400")">
+                                                <i class="fas @(isChecked ? "fa-check" : "fa-lock") text-sm"></i>
+                                            </div>
+                                            <span class="font-medium text-gray-900 text-sm">@permiso.Nombre</span>
+                                        </div>
+                                    </div>
+                                </label>
+                            }
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="p-8 text-center">
+                        <div class="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-hand-pointer text-gray-400 text-2xl"></i>
+                        </div>
+                        <h3 class="text-lg font-medium text-gray-900 mb-1">Selecciona un rol</h3>
+                        <p class="text-gray-500">Elige un rol de la lista para ver y gestionar sus permisos</p>
+                    </div>
                 }
             </div>
         </div>
     </div>
-</body>
 
+    <!-- Panel de Asignación de Rol a Usuario -->
+    @if (puedeAdministrar)
+    {
+        <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+            <div class="px-4 py-3 border-b border-gray-200 bg-gray-50">
+                <h3 class="font-semibold text-gray-900 flex items-center gap-2">
+                    <i class="fas fa-user-plus text-green-600"></i>
+                    Asignar Rol a Usuario
+                </h3>
+            </div>
+            <div class="p-4">
+                <form asp-action="AsignarRol" asp-controller="Roles" method="post">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <!-- Selector de Rol -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Rol a asignar</label>
+                            <div class="relative">
+                                <select name="Rol.Id"
+                                        required
+                                        class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 focus:border-[#23916A] focus:ring-2 focus:ring-[#23916A]/20 transition-all appearance-none">
+                                    <option value="">Seleccionar rol...</option>
+                                    @foreach (var rol in roles)
+                                    {
+                                        <option value="@rol.Id">@rol.Nombre</option>
+                                    }
+                                </select>
+                                <i class="fas fa-user-shield absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                                <i class="fas fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                            </div>
+                        </div>
 
-</html>
+                        <!-- Selector de Usuario -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Usuario</label>
+                            <div class="relative">
+                                <select name="Usuario.Id"
+                                        required
+                                        class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 focus:border-[#23916A] focus:ring-2 focus:ring-[#23916A]/20 transition-all appearance-none">
+                                    <option value="">Seleccionar usuario...</option>
+                                    @foreach (var usuario in usuarios)
+                                    {
+                                        <option value="@usuario.Id">@usuario.Persona?.Nombre @usuario.Persona?.Apellido</option>
+                                    }
+                                </select>
+                                <i class="fas fa-user absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                                <i class="fas fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                            </div>
+                        </div>
+
+                        <!-- Botón -->
+                        <div class="flex items-end">
+                            <button type="submit"
+                                    class="w-full px-6 py-2.5 rounded-lg bg-[#23916A] text-white font-medium hover:bg-[#1a6b4f] transition-colors flex items-center justify-center gap-2">
+                                <i class="fas fa-user-plus"></i>
+                                Asignar Rol
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Toast Notification -->
+<div id="toast" class="fixed bottom-4 right-4 z-50 transform translate-y-full opacity-0 transition-all duration-300">
+    <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-4 flex items-center gap-3 max-w-sm">
+        <div id="toast-icon" class="w-10 h-10 rounded-full flex items-center justify-center">
+            <i class="fas fa-check"></i>
+        </div>
+        <div>
+            <p id="toast-title" class="font-medium text-gray-900">Éxito</p>
+            <p id="toast-message" class="text-sm text-gray-500">Operación completada</p>
+        </div>
+    </div>
+</div>
+
+</div> <!-- Cierre del contenedor principal -->
+
+@section Scripts {
+<script>
+    function togglePermiso(idRol, idPermiso) {
+        // Redirect to toggle permission
+        window.location.href = '@Url.Action("AsignarPermisoRol", "Roles")' + '?idRol=' + idRol + '&idPermiso=' + idPermiso;
+    }
+
+    // Toast notification
+    function showToast(type, title, message) {
+        const toast = document.getElementById('toast');
+        const icon = document.getElementById('toast-icon');
+        const titleEl = document.getElementById('toast-title');
+        const messageEl = document.getElementById('toast-message');
+
+        titleEl.textContent = title;
+        messageEl.textContent = message;
+
+        if (type === 'success') {
+            icon.className = 'w-10 h-10 rounded-full flex items-center justify-center bg-green-100 text-green-600';
+            icon.innerHTML = '<i class="fas fa-check"></i>';
+        } else {
+            icon.className = 'w-10 h-10 rounded-full flex items-center justify-center bg-red-100 text-red-600';
+            icon.innerHTML = '<i class="fas fa-times"></i>';
+        }
+
+        toast.classList.remove('translate-y-full', 'opacity-0');
+
+        setTimeout(() => {
+            toast.classList.add('translate-y-full', 'opacity-0');
+        }, 3000);
+    }
+
+    // Check for success message in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('success')) {
+        showToast('success', 'Éxito', 'Operación realizada correctamente');
+    }
+</script>
+}

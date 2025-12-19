@@ -109,8 +109,7 @@ namespace BusinessLogic
                         Nombre = row["NOMBRE_ROL"].ToString()
                     },
                     Correo = row["CORREO"].ToString(),
-                    CodigoReferido = 0,
-                    Membresia = row["NOMBRE"].ToString() // Aquí va el nombre de la membresía directamente
+                    CodigoReferido = 0
                 });
             }
             return usuarios;
@@ -287,6 +286,34 @@ namespace BusinessLogic
             };
             bool act = conexion.EjecutarTransaccion("editar_usuario_persona", parametros);
             return act;
+        }
+
+        /// <summary>
+        /// Obtiene usuarios con información de su local y suscripción
+        /// </summary>
+        public List<UsuarioConLocalViewModel> ConsultarUsuariosConLocal(int idUsuario)
+        {
+            var usuarios = ConsultarUsuarios(idUsuario);
+            var manejadorNegocios = new ManejadorNegocios();
+            var resultado = new List<UsuarioConLocalViewModel>();
+
+            foreach (var usuario in usuarios)
+            {
+                var viewModel = new UsuarioConLocalViewModel
+                {
+                    Usuario = usuario
+                };
+
+                // Intentar obtener el local del usuario (por persona)
+                if (usuario.Persona?.Id > 0)
+                {
+                    viewModel.Local = manejadorNegocios.ConsultarNegocioPersonaConSuscripcion(usuario.Persona.Id);
+                }
+
+                resultado.Add(viewModel);
+            }
+
+            return resultado;
         }
 
     }

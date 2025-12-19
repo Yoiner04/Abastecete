@@ -145,10 +145,8 @@ namespace Abastecete.Controllers
             }
 
             Negocio negocio = JsonConvert.DeserializeObject<Negocio>(negocioJson);
-            negocio.TipoMembresia = tipoMembresiaId;
 
-
-            bool registrado = _manejadorNegocios.CrearNegocio(negocio);
+            bool registrado = _manejadorNegocios.CrearNegocio(negocio, tipoMembresiaId);
 
             HttpContext.Session.Remove("NegocioTemporal");
 

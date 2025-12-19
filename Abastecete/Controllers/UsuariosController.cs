@@ -16,21 +16,16 @@ namespace Abastecete.Controllers
 
         }
 
+        [RequierePermiso("Administrar Usuarios")]
         public IActionResult Consultar()
         {
             var idUsuario = HttpContext.Session.GetInt32("idUsuario");
 
-            var usuario = manejadorU.ConsultarUsuarios(idUsuario.Value).FirstOrDefault();
-            if (usuario != null)
-            {
-                HttpContext.Session.SetString("membresia", usuario.Membresia); // Guarda la membresía en la sesión
-            }
-
             ViewBag.rol = LoginController.rol;
             ViewBag.administrar = RolPermisos.TienePermiso("Administrar Usuarios", HttpContext.Session.GetString("permisos"));
 
-            // Si el usuario es administrador, obtiene todos los usuarios, de lo contrario, solo el suyo
-            List<Usuario> usuarios = manejadorU.ConsultarUsuarios(idUsuario == 2 ? 0 : idUsuario.Value);
+            // Si el usuario es administrador, obtiene todos los usuarios con sus locales y suscripciones
+            var usuarios = manejadorU.ConsultarUsuariosConLocal(idUsuario == 2 ? 0 : idUsuario.Value);
 
             return View(usuarios);
         }
@@ -42,6 +37,7 @@ namespace Abastecete.Controllers
         }
 
         [HttpPost]
+        [RequierePermiso("Administrar Usuarios")]
         public IActionResult EditarEstado([FromBody] EditarEstadoRequest data)
         {
             try

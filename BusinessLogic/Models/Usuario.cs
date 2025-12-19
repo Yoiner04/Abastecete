@@ -15,7 +15,5 @@
 
         public Persona Persona { get; set; }
 
-        public string Membresia { get; set; }
-
     }
 }

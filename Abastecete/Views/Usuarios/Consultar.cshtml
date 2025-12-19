@@ -1,139 +1,626 @@
-﻿@model List<BusinessLogic.Models.Usuario>
+@model List<BusinessLogic.Models.UsuarioConLocalViewModel>
+@using BusinessLogic.Utilidades
+@{
+    ViewData["Title"] = "Gestión de Usuarios";
+    var permisos = Context.Session.GetString("permisos");
+    var puedeAdministrar = RolPermisos.TienePermiso("Administrar Usuarios", permisos);
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Abastecete</title>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/Abastecete.styles.css" asp-append-version="true" />
-    <link rel="icon" type="image/x-icon" href="~/css/Images/Logo A naranja.png" />
-    <link rel="stylesheet" href="styles.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
-    <link rel="stylesheet" href="~/css/styles.css" asp-append-version="true" />
-</head>
+    var totalUsuarios = Model.Count;
+    var usuariosActivos = Model.Count(u => u.Usuario.Persona?.Estado == "Activo");
+    var usuariosInactivos = totalUsuarios - usuariosActivos;
+    var usuariosConLocal = Model.Count(u => u.TieneLocal);
+    var suscripcionesActivas = Model.Count(u => u.SuscripcionActiva);
+}
 
-<body>
-    <section class="mt-12 px-6 md:px-16 lg:px-36">
-        <div class="flex flex-col md:flex-row justify-between items-center mb-6 space-y-4 md:space-y-0">
-            <h2 class="text-lg font-bold text-gray-800 text-center md:text-left">Gestión de Usuarios</h2>
-            <input type="text" id="user-search" placeholder="Buscar usuario..." class="w-full md:w-1/3 p-3 rounded-lg bg-gray-100 border border-gray-300 text-black">
+<!-- Header a ancho completo -->
+<div class="bg-white border-b border-gray-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div class="flex items-center gap-4">
+                <a href="@Url.Action("Principal", "Home")"
+                   class="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors">
+                    <i class="fas fa-arrow-left text-gray-600"></i>
+                </a>
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900">Gestión de Usuarios</h1>
+                    <p class="text-sm text-gray-500 mt-1">Administra los usuarios del sistema</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Contenido con contenedor -->
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+<!-- Stats Cards -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+    <div class="bg-white rounded-xl border border-gray-200 p-4 flex items-center gap-4">
+        <div class="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center">
+            <i class="fas fa-users text-blue-600 text-xl"></i>
+        </div>
+        <div>
+            <p class="text-2xl font-bold text-gray-900">@totalUsuarios</p>
+            <p class="text-sm text-gray-500">Total Usuarios</p>
+        </div>
+    </div>
+    <div class="bg-white rounded-xl border border-gray-200 p-4 flex items-center gap-4">
+        <div class="w-12 h-12 rounded-lg bg-green-100 flex items-center justify-center">
+            <i class="fas fa-user-check text-green-600 text-xl"></i>
+        </div>
+        <div>
+            <p class="text-2xl font-bold text-gray-900">@usuariosActivos</p>
+            <p class="text-sm text-gray-500">Activos</p>
+        </div>
+    </div>
+    <div class="bg-white rounded-xl border border-gray-200 p-4 flex items-center gap-4">
+        <div class="w-12 h-12 rounded-lg bg-purple-100 flex items-center justify-center">
+            <i class="fas fa-store text-purple-600 text-xl"></i>
+        </div>
+        <div>
+            <p class="text-2xl font-bold text-gray-900">@usuariosConLocal</p>
+            <p class="text-sm text-gray-500">Con Local</p>
+        </div>
+    </div>
+    <div class="bg-white rounded-xl border border-gray-200 p-4 flex items-center gap-4">
+        <div class="w-12 h-12 rounded-lg bg-yellow-100 flex items-center justify-center">
+            <i class="fas fa-crown text-yellow-600 text-xl"></i>
+        </div>
+        <div>
+            <p class="text-2xl font-bold text-gray-900">@suscripcionesActivas</p>
+            <p class="text-sm text-gray-500">Suscripciones</p>
+        </div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="bg-white rounded-xl border border-gray-200 p-4 mb-6">
+    <div class="flex flex-col lg:flex-row gap-4">
+        <!-- Search -->
+        <div class="flex-1">
+            <div class="relative">
+                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                <input type="text"
+                       id="searchInput"
+                       placeholder="Buscar por nombre, correo, local..."
+                       class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 focus:border-[#23916A] focus:ring-2 focus:ring-[#23916A]/20 transition-all">
+            </div>
         </div>
 
-        <div class="overflow-x-auto">
-            <table class="w-full bg-white rounded-lg shadow-md overflow-hidden">
-                <thead class="bg-gray-200">
-                    <tr>
-                        <th class="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Nombre</th>
-                        <th class="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Rol</th>
-                        <th class="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Correo</th>
-                        <th class="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Membresía</th>
-                        <th class="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Teléfono</th>
-                        <th class="px-4 md:px-6 py-3 text-center text-xs font-medium text-gray-700 uppercase">Estado</th>
-                        <th class="px-4 md:px-6 py-3 text-center text-xs font-medium text-gray-700 uppercase">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody id="user-table-body">
-                    @foreach (var usuario in Model)
+        <!-- Filters -->
+        <div class="flex flex-wrap gap-3">
+            <select id="filterRol" class="px-4 py-2.5 rounded-lg border border-gray-300 focus:border-[#23916A] focus:ring-2 focus:ring-[#23916A]/20 transition-all">
+                <option value="">Todos los roles</option>
+                @{
+                    var roles = Model.Select(u => u.Usuario.Rol?.Nombre).Distinct().Where(r => !string.IsNullOrEmpty(r)).ToList();
+                    foreach (var rol in roles)
                     {
-                        <tr class="hover:bg-gray-100">
-                            <td class="px-4 py-3 text-gray-700">@usuario.Persona.Nombre @usuario.Persona.Apellido</td>
-                            <td class="px-4 py-3 text-gray-700">@usuario.Rol.Nombre</td>
-                            <td class="px-4 py-3 text-gray-700">@usuario.Correo</td>
-                            <td class="px-4 py-3 text-gray-700">@usuario.Membresia</td>
-                            <td class="px-4 py-3 text-gray-700">@usuario.Persona.Telefono</td>
-                            <td class="px-4 py-3 text-center">
-                                <span id="estado-@usuario.Id" class="@(usuario.Persona.Estado == "Activo" ? "text-green-600" : "text-red-600")">
-                                    @(usuario.Persona.Estado == "Activo" ? "🟢 Activo" : "🔴 Inactivo")
-                                </span>
-                            </td>
-                            <td class="px-4 py-3 text-center">
-                                <button class="text-blue-600 hover:text-blue-800" onclick="abrirModal(@usuario.Id, '@usuario.Persona.Estado')">
-                                    ✏ Editar
-                                </button>
-                            </td>
-                        </tr>
+                        <option value="@rol">@rol</option>
                     }
-                </tbody>
-            </table>
+                }
+            </select>
+
+            <select id="filterEstado" class="px-4 py-2.5 rounded-lg border border-gray-300 focus:border-[#23916A] focus:ring-2 focus:ring-[#23916A]/20 transition-all">
+                <option value="">Todos los estados</option>
+                <option value="Activo">Activos</option>
+                <option value="Inactivo">Inactivos</option>
+            </select>
+
+            <select id="filterSuscripcion" class="px-4 py-2.5 rounded-lg border border-gray-300 focus:border-[#23916A] focus:ring-2 focus:ring-[#23916A]/20 transition-all">
+                <option value="">Todas las suscripciones</option>
+                <option value="activa">Con suscripción activa</option>
+                <option value="vencida">Sin suscripción</option>
+                <option value="proxima">Próxima a vencer</option>
+            </select>
         </div>
-    </section>
+    </div>
+</div>
 
-    <!-- Modal Editar Estado -->
-    <div id="modal-editar" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div class="p-6 rounded-lg shadow-lg bg-white w-full max-w-md mx-4">
-            <h2 class="text-center text-xl font-bold text-gray-800">Editar Estado</h2>
-            <form id="form-editar-estado" class="mt-4">
-                <input type="hidden" id="usuario-id">
-
-                <label class="block text-gray-700 font-medium">Estado</label>
-                <select id="estado-usuario" class="w-full p-3 rounded-lg bg-gray-100 border border-gray-300 text-black mb-3" required>
-                    <option value="1">🟢 Activo</option>
-                    <option value="0">🔴 Inactivo</option>
-                </select>
-
-                <button type="submit" class="w-full bg-green-600 text-white py-3 rounded-lg font-bold hover:bg-green-700">
-                    Guardar Cambios
-                </button>
-            </form>
-            <button id="cerrar-modal" class="block w-full text-center mt-3 text-gray-600 hover:text-gray-800">
-                Cerrar
-            </button>
+<!-- Table -->
+<div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+    <!-- Pagination Header -->
+    <div class="px-4 py-3 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div class="flex items-center gap-2">
+            <span class="text-sm text-gray-500">Mostrar</span>
+            <select id="itemsPerPage" class="px-3 py-1.5 rounded-lg border border-gray-300 text-sm focus:border-[#23916A] focus:ring-2 focus:ring-[#23916A]/20">
+                <option value="10">10</option>
+                <option value="25" selected>25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+            </select>
+            <span class="text-sm text-gray-500">registros</span>
+        </div>
+        <div class="text-sm text-gray-500">
+            Mostrando <span id="showingStart">1</span> - <span id="showingEnd">@Math.Min(25, totalUsuarios)</span> de <span id="totalFiltered">@totalUsuarios</span> usuarios
         </div>
     </div>
 
+    <div class="overflow-x-auto">
+        <table class="w-full">
+            <thead class="bg-gray-50 border-b border-gray-200">
+                <tr>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Usuario</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Rol</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Local</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Suscripción</th>
+                    <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Estado</th>
+                    @if (puedeAdministrar)
+                    {
+                        <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Acciones</th>
+                    }
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200">
+                @foreach (var item in Model)
+                {
+                    var usuario = item.Usuario;
+                    var nombreCompleto = $"{usuario.Persona?.Nombre} {usuario.Persona?.Apellido}";
+                    var estado = usuario.Persona?.Estado ?? "Inactivo";
+                    var esActivo = estado == "Activo";
+                    var suscripcionEstado = item.SuscripcionActiva ? "activa" : (item.TieneLocal ? "vencida" : "sin-local");
+                    if (item.ProximaAVencer) suscripcionEstado = "proxima";
 
-    <script>
-        document.getElementById("user-search").addEventListener("input", function () {
-            let query = this.value.toLowerCase();
-            let rows = document.querySelectorAll("#user-table-body tr");
+                    <tr class="usuario-row hover:bg-gray-50 transition-colors"
+                        data-nombre="@nombreCompleto.ToLower()"
+                        data-correo="@usuario.Correo?.ToLower()"
+                        data-local="@item.Local?.Nombre?.ToLower()"
+                        data-rol="@usuario.Rol?.Nombre"
+                        data-estado="@estado"
+                        data-suscripcion="@suscripcionEstado">
+                        <td class="px-4 py-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-[#23916A] to-[#1a6b4f] flex items-center justify-center text-white font-semibold text-sm">
+                                    @(usuario.Persona?.Nombre?.Substring(0, 1).ToUpper())@(usuario.Persona?.Apellido?.Substring(0, 1).ToUpper())
+                                </div>
+                                <div>
+                                    <p class="font-medium text-gray-900">@nombreCompleto</p>
+                                    <p class="text-sm text-gray-500">@usuario.Correo</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-4 py-4">
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700">
+                                <i class="fas fa-user-tag"></i>
+                                @usuario.Rol?.Nombre
+                            </span>
+                        </td>
+                        <td class="px-4 py-4">
+                            @if (item.TieneLocal)
+                            {
+                                <div class="space-y-1">
+                                    <p class="text-sm font-medium text-gray-900 flex items-center gap-2">
+                                        <i class="fas fa-store text-purple-500 text-xs"></i>
+                                        @item.Local.Nombre
+                                    </p>
+                                    @if (!string.IsNullOrEmpty(item.Local.Telefono.ToString()) && item.Local.Telefono > 0)
+                                    {
+                                        <p class="text-xs text-gray-500 flex items-center gap-2">
+                                            <i class="fas fa-phone text-gray-400"></i>
+                                            @item.Local.Telefono
+                                        </p>
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                <span class="text-gray-400 text-sm flex items-center gap-2">
+                                    <i class="fas fa-store-slash text-gray-300"></i>
+                                    Sin local
+                                </span>
+                            }
+                        </td>
+                        <td class="px-4 py-4">
+                            @if (item.TieneSuscripcion)
+                            {
+                                var diasRestantes = item.DiasRestantes;
+                                var colorClass = diasRestantes > 7 ? "bg-green-100 text-green-700" :
+                                                 diasRestantes > 0 ? "bg-yellow-100 text-yellow-700" :
+                                                 "bg-red-100 text-red-700";
+                                var iconClass = diasRestantes > 7 ? "text-green-500" :
+                                               diasRestantes > 0 ? "text-yellow-500" :
+                                               "text-red-500";
 
-            rows.forEach(row => {
-                let text = row.textContent.toLowerCase();
-                row.style.display = text.includes(query) ? "" : "none";
-            });
+                                <div class="space-y-1">
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium @colorClass">
+                                        <i class="fas fa-crown"></i>
+                                        @item.NombreMembresia
+                                    </span>
+                                    <p class="text-xs flex items-center gap-1.5">
+                                        <i class="fas fa-clock @iconClass"></i>
+                                        @if (diasRestantes > 0)
+                                        {
+                                            <span class="@(diasRestantes <= 7 ? "text-yellow-600 font-medium" : "text-gray-500")">
+                                                @diasRestantes días restantes
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-red-600 font-medium">Vencida</span>
+                                        }
+                                    </p>
+                                </div>
+                            }
+                            else if (item.TieneLocal)
+                            {
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+                                    <i class="fas fa-times-circle"></i>
+                                    Sin suscripción
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="text-gray-400 text-sm">-</span>
+                            }
+                        </td>
+                        <td class="px-4 py-4 text-center">
+                            <span id="estado-badge-@usuario.Id"
+                                  class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium @(esActivo ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700")">
+                                <span class="w-1.5 h-1.5 rounded-full @(esActivo ? "bg-green-500" : "bg-red-500")"></span>
+                                @estado
+                            </span>
+                        </td>
+                        @if (puedeAdministrar)
+                        {
+                            <td class="px-4 py-4 text-center">
+                                <button onclick="abrirModal(@usuario.Id, '@estado')"
+                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-blue-600 hover:bg-blue-50 transition-colors">
+                                    <i class="fas fa-edit"></i>
+                                    Editar
+                                </button>
+                            </td>
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    @if (Model.Count == 0)
+    {
+        <div class="px-4 py-12 text-center">
+            <div class="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-users text-gray-400 text-2xl"></i>
+            </div>
+            <h3 class="text-lg font-medium text-gray-900 mb-1">No hay usuarios</h3>
+            <p class="text-gray-500">No se encontraron usuarios en el sistema.</p>
+        </div>
+    }
+
+    <!-- Empty state for filtered results -->
+    <div id="noResultsMessage" class="hidden px-4 py-12 text-center">
+        <div class="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+            <i class="fas fa-search text-gray-400 text-2xl"></i>
+        </div>
+        <h3 class="text-lg font-medium text-gray-900 mb-1">Sin resultados</h3>
+        <p class="text-gray-500">No se encontraron usuarios con los filtros aplicados.</p>
+    </div>
+
+    <!-- Pagination Footer -->
+    <div class="px-4 py-3 border-t border-gray-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div class="text-sm text-gray-500">
+            Página <span id="currentPageDisplay">1</span> de <span id="totalPagesDisplay">1</span>
+        </div>
+        <div class="flex items-center gap-2">
+            <button id="btnFirst" onclick="goToPage(1)"
+                    class="px-3 py-1.5 rounded-lg border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                <i class="fas fa-angle-double-left"></i>
+            </button>
+            <button id="btnPrev" onclick="goToPage(currentPage - 1)"
+                    class="px-3 py-1.5 rounded-lg border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                <i class="fas fa-angle-left"></i>
+            </button>
+            <div id="pageNumbers" class="flex items-center gap-1">
+                <!-- Page numbers will be inserted here -->
+            </div>
+            <button id="btnNext" onclick="goToPage(currentPage + 1)"
+                    class="px-3 py-1.5 rounded-lg border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                <i class="fas fa-angle-right"></i>
+            </button>
+            <button id="btnLast" onclick="goToPage(totalPages)"
+                    class="px-3 py-1.5 rounded-lg border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+                <i class="fas fa-angle-double-right"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Editar Estado -->
+<div id="modal-editar" class="hidden fixed inset-0 z-50 overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:p-0">
+        <div class="fixed inset-0 bg-gray-900/50 transition-opacity" onclick="cerrarModal()"></div>
+
+        <div class="relative bg-white rounded-2xl shadow-xl transform transition-all sm:max-w-lg w-full mx-4">
+            <!-- Header -->
+            <div class="px-6 py-4 border-b border-gray-200">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-lg font-semibold text-gray-900">Editar Estado de Usuario</h3>
+                    <button onclick="cerrarModal()" class="w-8 h-8 rounded-lg hover:bg-gray-100 flex items-center justify-center transition-colors">
+                        <i class="fas fa-times text-gray-500"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Body -->
+            <div class="px-6 py-6">
+                <form id="form-editar-estado">
+                    <input type="hidden" id="usuario-id">
+
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Estado del Usuario</label>
+                        <div class="grid grid-cols-2 gap-3">
+                            <label class="relative">
+                                <input type="radio" name="estado" value="1" class="peer sr-only" checked>
+                                <div class="p-4 rounded-xl border-2 border-gray-200 cursor-pointer transition-all peer-checked:border-green-500 peer-checked:bg-green-50">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+                                            <i class="fas fa-user-check text-green-600"></i>
+                                        </div>
+                                        <div class="text-left">
+                                            <p class="font-medium text-gray-900">Activo</p>
+                                            <p class="text-xs text-gray-500">Usuario habilitado</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </label>
+                            <label class="relative">
+                                <input type="radio" name="estado" value="0" class="peer sr-only">
+                                <div class="p-4 rounded-xl border-2 border-gray-200 cursor-pointer transition-all peer-checked:border-red-500 peer-checked:bg-red-50">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+                                            <i class="fas fa-user-times text-red-600"></i>
+                                        </div>
+                                        <div class="text-left">
+                                            <p class="font-medium text-gray-900">Inactivo</p>
+                                            <p class="text-xs text-gray-500">Usuario deshabilitado</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-3">
+                        <button type="button" onclick="cerrarModal()"
+                                class="flex-1 px-4 py-2.5 rounded-xl border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition-colors">
+                            Cancelar
+                        </button>
+                        <button type="submit"
+                                class="flex-1 px-4 py-2.5 rounded-xl bg-[#23916A] text-white font-medium hover:bg-[#1a6b4f] transition-colors">
+                            Guardar Cambios
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Notification -->
+<div id="toast" class="fixed bottom-4 right-4 z-50 transform translate-y-full opacity-0 transition-all duration-300">
+    <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-4 flex items-center gap-3 max-w-sm">
+        <div id="toast-icon" class="w-10 h-10 rounded-full flex items-center justify-center">
+            <i class="fas fa-check"></i>
+        </div>
+        <div>
+            <p id="toast-title" class="font-medium text-gray-900">Éxito</p>
+            <p id="toast-message" class="text-sm text-gray-500">Operación completada</p>
+        </div>
+    </div>
+</div>
+
+</div> <!-- Cierre del contenedor principal -->
+
+@section Scripts {
+<script>
+    // Pagination variables
+    let currentPage = 1;
+    let itemsPerPage = 25;
+    let totalPages = 1;
+    const allRows = Array.from(document.querySelectorAll('.usuario-row'));
+    let filteredRows = [...allRows];
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+        updatePagination();
+
+        // Event listeners for filters
+        document.getElementById('searchInput').addEventListener('input', applyFilters);
+        document.getElementById('filterRol').addEventListener('change', applyFilters);
+        document.getElementById('filterEstado').addEventListener('change', applyFilters);
+        document.getElementById('filterSuscripcion').addEventListener('change', applyFilters);
+        document.getElementById('itemsPerPage').addEventListener('change', function() {
+            itemsPerPage = parseInt(this.value);
+            currentPage = 1;
+            updatePagination();
         });
-    </script>
+    });
 
-    <script>
-        function abrirModal(idUsuario, estadoActual) {
-            document.getElementById("usuario-id").value = idUsuario;
-            document.getElementById("estado-usuario").value = estadoActual === "Activo" ? "1" : "0";
-            document.getElementById("modal-editar").classList.remove("hidden");
+    function applyFilters() {
+        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+        const rolFilter = document.getElementById('filterRol').value;
+        const estadoFilter = document.getElementById('filterEstado').value;
+        const suscripcionFilter = document.getElementById('filterSuscripcion').value;
+
+        filteredRows = allRows.filter(row => {
+            const nombre = row.dataset.nombre || '';
+            const correo = row.dataset.correo || '';
+            const local = row.dataset.local || '';
+            const rol = row.dataset.rol || '';
+            const estado = row.dataset.estado || '';
+            const suscripcion = row.dataset.suscripcion || '';
+
+            const matchesSearch = !searchTerm ||
+                nombre.includes(searchTerm) ||
+                correo.includes(searchTerm) ||
+                local.includes(searchTerm);
+            const matchesRol = !rolFilter || rol === rolFilter;
+            const matchesEstado = !estadoFilter || estado === estadoFilter;
+            const matchesSuscripcion = !suscripcionFilter || suscripcion === suscripcionFilter;
+
+            return matchesSearch && matchesRol && matchesEstado && matchesSuscripcion;
+        });
+
+        currentPage = 1;
+        updatePagination();
+    }
+
+    function updatePagination() {
+        const totalItems = filteredRows.length;
+        totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
+
+        if (currentPage > totalPages) currentPage = totalPages;
+
+        const start = (currentPage - 1) * itemsPerPage;
+        const end = Math.min(start + itemsPerPage, totalItems);
+
+        // Hide all rows first
+        allRows.forEach(row => row.style.display = 'none');
+
+        // Show only current page rows
+        filteredRows.slice(start, end).forEach(row => row.style.display = '');
+
+        // Update info text
+        document.getElementById('showingStart').textContent = totalItems > 0 ? start + 1 : 0;
+        document.getElementById('showingEnd').textContent = end;
+        document.getElementById('totalFiltered').textContent = totalItems;
+        document.getElementById('currentPageDisplay').textContent = currentPage;
+        document.getElementById('totalPagesDisplay').textContent = totalPages;
+
+        // Show/hide no results message
+        const noResultsMsg = document.getElementById('noResultsMessage');
+        const tbody = document.querySelector('tbody');
+        if (totalItems === 0 && allRows.length > 0) {
+            noResultsMsg.classList.remove('hidden');
+            tbody.classList.add('hidden');
+        } else {
+            noResultsMsg.classList.add('hidden');
+            tbody.classList.remove('hidden');
         }
 
-        document.getElementById("cerrar-modal").addEventListener("click", function () {
-            document.getElementById("modal-editar").classList.add("hidden");
+        // Update button states
+        document.getElementById('btnFirst').disabled = currentPage === 1;
+        document.getElementById('btnPrev').disabled = currentPage === 1;
+        document.getElementById('btnNext').disabled = currentPage === totalPages;
+        document.getElementById('btnLast').disabled = currentPage === totalPages;
+
+        // Update page numbers
+        updatePageNumbers();
+    }
+
+    function updatePageNumbers() {
+        const container = document.getElementById('pageNumbers');
+        container.innerHTML = '';
+
+        let startPage = Math.max(1, currentPage - 2);
+        let endPage = Math.min(totalPages, startPage + 4);
+
+        if (endPage - startPage < 4) {
+            startPage = Math.max(1, endPage - 4);
+        }
+
+        for (let i = startPage; i <= endPage; i++) {
+            const btn = document.createElement('button');
+            btn.textContent = i;
+            btn.onclick = () => goToPage(i);
+            btn.className = i === currentPage
+                ? 'px-3 py-1.5 rounded-lg text-sm font-medium bg-[#23916A] text-white'
+                : 'px-3 py-1.5 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors';
+            container.appendChild(btn);
+        }
+    }
+
+    function goToPage(page) {
+        if (page < 1 || page > totalPages) return;
+        currentPage = page;
+        updatePagination();
+    }
+
+    // Modal functions
+    function abrirModal(idUsuario, estadoActual) {
+        document.getElementById('usuario-id').value = idUsuario;
+        const radios = document.querySelectorAll('input[name="estado"]');
+        radios.forEach(radio => {
+            radio.checked = (estadoActual === "Activo" && radio.value === "1") ||
+                           (estadoActual !== "Activo" && radio.value === "0");
         });
+        document.getElementById('modal-editar').classList.remove('hidden');
+    }
 
-        document.getElementById("form-editar-estado").addEventListener("submit", function (event) {
-            event.preventDefault();
+    function cerrarModal() {
+        document.getElementById('modal-editar').classList.add('hidden');
+    }
 
-            let idUsuario = document.getElementById("usuario-id").value;
-            let nuevoEstado = document.getElementById("estado-usuario").value;
+    // Form submission
+    document.getElementById('form-editar-estado').addEventListener('submit', function(event) {
+        event.preventDefault();
 
-            console.log(`Enviando petición: ID Usuario: ${idUsuario}, Nuevo Estado: ${nuevoEstado}`);
+        const idUsuario = document.getElementById('usuario-id').value;
+        const nuevoEstado = document.querySelector('input[name="estado"]:checked').value;
 
-            fetch("/Usuarios/EditarEstado", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    IdUsuario: parseInt(idUsuario),
-                    NuevoEstado: parseInt(nuevoEstado)
-                })
+        fetch('/Usuarios/EditarEstado', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                IdUsuario: parseInt(idUsuario),
+                NuevoEstado: parseInt(nuevoEstado)
             })
-                .then(response => response.json())
-                .then(data => {
-                    console.log("Respuesta del servidor:", data);
-                    alert(data.mensaje);
-                    document.getElementById("modal-editar").classList.add("hidden");
+        })
+        .then(response => response.json())
+        .then(data => {
+            cerrarModal();
 
-                    let estadoElemento = document.getElementById(`estado-${idUsuario}`);
-                    estadoElemento.textContent = nuevoEstado == "1" ? "🟢 Activo" : "🔴 Inactivo";
-                    estadoElemento.className = nuevoEstado == "1" ? "text-green-600" : "text-red-600";
-                })
-                .catch(error => console.error("Error en fetch:", error));
+            // Update the badge
+            const badge = document.getElementById(`estado-badge-${idUsuario}`);
+            const row = badge.closest('.usuario-row');
+
+            if (nuevoEstado === "1") {
+                badge.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700';
+                badge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>Activo';
+                row.dataset.estado = 'Activo';
+            } else {
+                badge.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700';
+                badge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>Inactivo';
+                row.dataset.estado = 'Inactivo';
+            }
+
+            showToast('success', 'Estado actualizado', data.mensaje);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('error', 'Error', 'No se pudo actualizar el estado');
         });
+    });
 
-    </script>
-</body>
+    // Toast notification
+    function showToast(type, title, message) {
+        const toast = document.getElementById('toast');
+        const icon = document.getElementById('toast-icon');
+        const titleEl = document.getElementById('toast-title');
+        const messageEl = document.getElementById('toast-message');
+
+        titleEl.textContent = title;
+        messageEl.textContent = message;
+
+        if (type === 'success') {
+            icon.className = 'w-10 h-10 rounded-full flex items-center justify-center bg-green-100 text-green-600';
+            icon.innerHTML = '<i class="fas fa-check"></i>';
+        } else {
+            icon.className = 'w-10 h-10 rounded-full flex items-center justify-center bg-red-100 text-red-600';
+            icon.innerHTML = '<i class="fas fa-times"></i>';
+        }
+
+        toast.classList.remove('translate-y-full', 'opacity-0');
+
+        setTimeout(() => {
+            toast.classList.add('translate-y-full', 'opacity-0');
+        }, 3000);
+    }
+
+    // Close modal on escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            cerrarModal();
+        }
+    });
+</script>
+}

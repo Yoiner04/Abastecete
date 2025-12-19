@@ -35,24 +35,47 @@ namespace ConnectionProject.Controllers
             Response.Headers["Pragma"] = "no-cache";
             Response.Headers["Expires"] = "0";
 
-            // Obtener banners de sesión con URLs de Cloudinary
-            var bannersSesion = manejadorImagenes.ListarBannersSesion();
-            var bannerSesion = bannersSesion.Select(b => new {
-                Id = b.Id,
-                Nombre = b.Nombre ?? "",
-                Url = b.CloudinaryUrl,
-                Formato = b.Formato
-            }).ToList();
-
-            ViewBag.BannerSesion = bannerSesion;
+            // Los banners se cargan via AJAX para no bloquear el renderizado de la página
+            ViewBag.BannerSesion = new List<object>();
             return View();
+        }
+
+        /// <summary>
+        /// Endpoint para cargar banners de sesión de forma asíncrona (no bloquea el login)
+        /// </summary>
+        [HttpGet]
+        public IActionResult ObtenerBannersSesion()
+        {
+            try
+            {
+                var bannersSesion = manejadorImagenes.ListarBannersSesion();
+                var bannerSesion = bannersSesion.Select(b => new {
+                    Id = b.Id,
+                    Nombre = b.Nombre ?? "",
+                    Url = b.CloudinaryUrl,
+                    Formato = b.Formato
+                }).ToList();
+
+                return Json(bannerSesion);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error al obtener banners: {ex.Message}");
+                return Json(new List<object>());
+            }
         }
 
         [HttpPost]
         public IActionResult Login(Usuario usuario)
         {
-            ManejadorUsuario manejador = new ManejadorUsuario();
-            DataTable data = manejador.Login(usuario.Correo, usuario.Contrasenia);
+            var swTotal = System.Diagnostics.Stopwatch.StartNew();
+            var sw = System.Diagnostics.Stopwatch.StartNew();
+
+            // Reutilizar el manejador existente en lugar de crear uno nuevo
+            DataTable data = _manejadorUsuario.Login(usuario.Correo, usuario.Contrasenia);
+
+            Console.WriteLine($"[LOGIN TIMING] Login DB query: {sw.ElapsedMilliseconds}ms");
+            sw.Restart();
 
             if (data.Rows.Count == 0)
             {
@@ -63,25 +86,8 @@ namespace ConnectionProject.Controllers
             try
             {
                 int idRol = Convert.ToInt32(data.Rows[0]["FK_ID_ROL"]);
-                int idPersona = Convert.ToInt32(data.Rows[0]["FK_ID_PERSONA"]);
-                int idUsuario = Convert.ToInt32(data.Rows[0]["PK_ID_USUARIO"]);
-                int idTipoMembresia = 0;
-                if (data.Rows[0]["FK_ID_TIPOMEMBRESIA"] == "")
-                {
-                    idTipoMembresia = Convert.ToInt32(data.Rows[0]["FK_ID_TIPOMEMBRESIA"]);
 
-                }
-
-                HttpContext.Session.SetInt32("PersonaId", idPersona);
-                HttpContext.Session.SetInt32("idUsuario", idUsuario);
-                HttpContext.Session.SetString("membresia", ((data.Rows[0]["FK_ID_TIPOMEMBRESIA"] == "") ? "sin membresia" : idTipoMembresia.ToString()));
-
-                if (HttpContext.Session.GetString("LastLoginError") == usuario.Correo)
-                {
-                    TempData["Error"] = "Contraseña incorrecta. Si fallas 5 veces, tu cuenta será bloqueada.";
-                    return View(usuario);
-                }
-
+                // Primero verificar errores de login antes de acceder a otros campos
                 switch (idRol)
                 {
                     case 97:
@@ -97,12 +103,39 @@ namespace ConnectionProject.Controllers
                     case 0:
                         TempData["Error"] = "Tu cuenta ha sido bloqueada por demasiados intentos fallidos. Inténtalo en una hora.";
                         return View(usuario);
-                    default:
-                        HttpContext.Session.Remove("LastLoginError");
-
-                        GuardarPermisosRol(idRol);
-                        return Redirect("~/Home/Principal");
                 }
+
+                // Solo si el login fue exitoso, obtener los demás datos
+                int idPersona = Convert.ToInt32(data.Rows[0]["FK_ID_PERSONA"]);
+                int idUsuario = Convert.ToInt32(data.Rows[0]["PK_ID_USUARIO"]);
+
+                // Obtener tipo de membresía de forma segura
+                int idTipoMembresia = 0;
+                var membresiaValue = data.Rows[0]["FK_ID_TIPOMEMBRESIA"];
+                if (membresiaValue != DBNull.Value && membresiaValue != null)
+                {
+                    idTipoMembresia = Convert.ToInt32(membresiaValue);
+                }
+
+                HttpContext.Session.SetInt32("PersonaId", idPersona);
+                HttpContext.Session.SetInt32("idUsuario", idUsuario);
+                HttpContext.Session.SetString("membresia", idTipoMembresia > 0 ? idTipoMembresia.ToString() : "sin membresia");
+
+                Console.WriteLine($"[LOGIN TIMING] Session setup: {sw.ElapsedMilliseconds}ms");
+                sw.Restart();
+
+                if (HttpContext.Session.GetString("LastLoginError") == usuario.Correo)
+                {
+                    TempData["Error"] = "Contraseña incorrecta. Si fallas 5 veces, tu cuenta será bloqueada.";
+                    return View(usuario);
+                }
+
+                // Login exitoso
+                HttpContext.Session.Remove("LastLoginError");
+                GuardarPermisosRol(idRol);
+                Console.WriteLine($"[LOGIN TIMING] Permisos loaded: {sw.ElapsedMilliseconds}ms");
+                Console.WriteLine($"[LOGIN TIMING] TOTAL: {swTotal.ElapsedMilliseconds}ms");
+                return Redirect("~/Home/Principal");
             }
             catch (Exception ex)
             {
