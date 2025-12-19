@@ -98,6 +98,7 @@ namespace BusinessLogic
                     Id = Convert.ToInt32(row["PK_ID_USUARIO"]),
                     Persona = new Persona
                     {
+                        Id = row["PK_ID_PERSONA"] != DBNull.Value ? Convert.ToInt32(row["PK_ID_PERSONA"]) : 0,
                         Nombre = row["NOMBRES"].ToString(),
                         Apellido = row["APELLIDOS"].ToString(),
                         Telefono = row["TELEFONO"].ToString(),
