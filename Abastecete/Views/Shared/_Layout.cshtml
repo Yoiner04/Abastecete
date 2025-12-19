@@ -235,6 +235,21 @@
                             </a>
                         </li>
                     }
+                    @if (RolPermisos.TienePermiso("Administrar Productos", permisos))
+                    {
+                        <li>
+                            <a href="@Url.Action("AdminProductos", "Productos")" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium hover:bg-[#23916A]/10 hover:text-[#23916A] transition-all duration-200" style="color: #374151;">
+                                <i class="fas fa-box text-xs" style="color: #23916A;"></i>
+                                Productos
+                            </a>
+                        </li>
+                        <li>
+                            <a href="@Url.Action("Index", "Marcas")" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium hover:bg-[#23916A]/10 hover:text-[#23916A] transition-all duration-200" style="color: #374151;">
+                                <i class="fas fa-trademark text-xs" style="color: #23916A;"></i>
+                                Marcas
+                            </a>
+                        </li>
+                    }
                 }
                 else
                 {

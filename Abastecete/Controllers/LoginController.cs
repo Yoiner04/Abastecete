@@ -1,4 +1,4 @@
-﻿using BusinessLogic;
+using BusinessLogic;
 using BusinessLogic.Models;
 using BusinessLogic.Utilidades;
 using Microsoft.AspNetCore.Http;
@@ -18,14 +18,14 @@ namespace ConnectionProject.Controllers
     public class LoginController : Controller
     {
         private readonly ManejadorUsuario _manejadorUsuario;
-        private readonly ManejadorMongo manejadorMongo;
+        private readonly ManejadorImagenes manejadorImagenes;
         private readonly EmailService _emailService;
         public static int rol = 0;
 
         public LoginController()
         {
             _manejadorUsuario = new ManejadorUsuario();
-            manejadorMongo = new ManejadorMongo();
+            manejadorImagenes = new ManejadorImagenes();
             _emailService = new EmailService();
         }
 
@@ -35,13 +35,15 @@ namespace ConnectionProject.Controllers
             Response.Headers["Pragma"] = "no-cache";
             Response.Headers["Expires"] = "0";
 
-            var bannerSesion= new List<(BannerModel, ImagenModel)>();
-            var bannersSesion = manejadorMongo.ListarBannersSesion();
-            foreach (var banner in bannersSesion)
-            {
-                var imagen = manejadorMongo.ObtenerImagen(banner.FileId);
-                bannerSesion.Add((banner, imagen));
-            }
+            // Obtener banners de sesión con URLs de Cloudinary
+            var bannersSesion = manejadorImagenes.ListarBannersSesion();
+            var bannerSesion = bannersSesion.Select(b => new {
+                Id = b.Id,
+                Nombre = b.Nombre ?? "",
+                Url = b.CloudinaryUrl,
+                Formato = b.Formato
+            }).ToList();
+
             ViewBag.BannerSesion = bannerSesion;
             return View();
         }
@@ -188,7 +190,6 @@ namespace ConnectionProject.Controllers
 
                 int rol = data.Rows.Count > 0 ? Convert.ToInt32(data.Rows[0]["FK_ID_ROL"]) : 0;
 
-                // Si no existe, registrar nuevo usuario
                 if (rol == 0)
                 {
                     int userId = manejador.RegistrarUsuarioGoogle(email, name);
@@ -270,7 +271,6 @@ namespace ConnectionProject.Controllers
             TempData["CorreoIngresado"] = Correo;
             TempData["MostrarCodigo"] = true;
 
-            // Enviar correo con plantilla profesional
             var (success, message) = await _emailService.EnviarCodigoRecuperacion(Correo, "", token);
 
             if (success)

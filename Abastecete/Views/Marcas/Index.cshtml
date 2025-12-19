@@ -1,0 +1,583 @@
+@model List<BusinessLogic.Models.Marca>
+@{
+    ViewData["Title"] = "Gestión de Marcas";
+}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"] - Abastécete</title>
+    <link rel="icon" type="image/x-icon" href="~/css/Images/Logo A naranja.png" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <style>
+        .modal { transition: opacity 0.2s ease, visibility 0.2s ease; }
+        .modal.hidden { opacity: 0; visibility: hidden; }
+        .modal:not(.hidden) { opacity: 1; visibility: visible; }
+    </style>
+</head>
+
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <a href="/" class="flex items-center gap-2 text-gray-600 hover:text-green-600 transition-colors">
+                        <i class="fas fa-arrow-left"></i>
+                        <span class="hidden sm:inline">Inicio</span>
+                    </a>
+                    <div class="h-6 w-px bg-gray-200"></div>
+                    <h1 class="text-xl sm:text-2xl font-bold text-gray-900">
+                        <i class="fas fa-trademark text-blue-500 mr-2"></i>
+                        Gestión de Marcas
+                    </h1>
+                </div>
+                <button onclick="abrirModalMarca()"
+                        class="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                    <i class="fas fa-plus"></i>
+                    <span class="hidden sm:inline">Nueva Marca</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex items-center gap-4">
+                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-trademark text-blue-600 text-xl"></i>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500">Total Marcas</p>
+                    <p class="text-2xl font-bold text-gray-900">@Model.Count</p>
+                </div>
+            </div>
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex items-center gap-4">
+                <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-check-circle text-green-600 text-xl"></i>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500">Activas</p>
+                    <p class="text-2xl font-bold text-gray-900">@Model.Count(m => m.Activo)</p>
+                </div>
+            </div>
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex items-center gap-4">
+                <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-times-circle text-red-600 text-xl"></i>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500">Inactivas</p>
+                    <p class="text-2xl font-bold text-gray-900">@Model.Count(m => !m.Activo)</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filtro de búsqueda -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 mb-6 p-4">
+            <div class="flex flex-col sm:flex-row gap-4">
+                <div class="flex-1 relative">
+                    <input type="text" id="filtro-buscar" placeholder="Buscar marca por nombre..."
+                           class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                </div>
+                <select id="filtro-estado" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    <option value="">Todos los estados</option>
+                    <option value="1">Activas</option>
+                    <option value="0">Inactivas</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Tabla de Marcas -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Marca</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Descripción</th>
+                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Estado</th>
+                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabla-marcas" class="bg-white divide-y divide-gray-200">
+                        @foreach (var marca in Model)
+                        {
+                            <tr class="hover:bg-gray-50 marca-row" data-id="@marca.Id"
+                                data-nombre="@marca.Nombre.ToLower()"
+                                data-activo="@(marca.Activo ? "1" : "0")">
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center gap-4">
+                                        @if (!string.IsNullOrEmpty(marca.LogoUrl))
+                                        {
+                                            <img src="@marca.LogoUrl" alt="@marca.Nombre"
+                                                 class="w-14 h-14 rounded-xl object-cover border border-gray-200">
+                                        }
+                                        else
+                                        {
+                                            <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
+                                                <span class="text-2xl font-bold text-white">@marca.Nombre.Substring(0, 1).ToUpper()</span>
+                                            </div>
+                                        }
+                                        <div>
+                                            <p class="font-semibold text-gray-900">@marca.Nombre</p>
+                                            @if (marca.Id == 1)
+                                            {
+                                                <span class="text-xs text-gray-400">Marca por defecto</span>
+                                            }
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <p class="text-sm text-gray-600 max-w-xs">
+                                        @(string.IsNullOrEmpty(marca.Descripcion) ? "-" : (marca.Descripcion.Length > 60 ? marca.Descripcion.Substring(0, 60) + "..." : marca.Descripcion))
+                                    </p>
+                                </td>
+                                <td class="px-6 py-4 text-center">
+                                    @if (marca.Activo)
+                                    {
+                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                            <i class="fas fa-check-circle mr-1"></i> Activa
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                            <i class="fas fa-times-circle mr-1"></i> Inactiva
+                                        </span>
+                                    }
+                                </td>
+                                <td class="px-6 py-4 text-center">
+                                    @if (marca.Id != 1)
+                                    {
+                                        <div class="flex items-center justify-center gap-2">
+                                            <button onclick="editarMarca(@marca.Id)"
+                                                    class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Editar">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            @if (marca.Activo)
+                                            {
+                                                <button onclick="desactivarMarca(@marca.Id, '@marca.Nombre.Replace("'", "\\'")')"
+                                                        class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Desactivar">
+                                                    <i class="fas fa-ban"></i>
+                                                </button>
+                                            }
+                                            else
+                                            {
+                                                <button onclick="activarMarca(@marca.Id)"
+                                                        class="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors" title="Activar">
+                                                    <i class="fas fa-check"></i>
+                                                </button>
+                                            }
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-xs text-gray-400">-</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            @if (!Model.Any())
+            {
+                <div class="text-center py-12">
+                    <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
+                        <i class="fas fa-trademark text-2xl text-gray-400"></i>
+                    </div>
+                    <p class="text-gray-500 mb-2">No hay marcas registradas</p>
+                    <p class="text-sm text-gray-400">Haz clic en "Nueva Marca" para agregar una</p>
+                </div>
+            }
+
+            <!-- Paginación -->
+            @if (Model.Any())
+            {
+                <div class="px-4 py-3 bg-gray-50 border-t border-gray-200">
+                    <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+                        <div class="flex items-center gap-2">
+                            <span class="text-sm text-gray-700">Mostrar</span>
+                            <select id="items-per-page" class="px-2 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+                                <option value="10">10</option>
+                                <option value="25" selected>25</option>
+                                <option value="50">50</option>
+                            </select>
+                            <span class="text-sm text-gray-700">por página</span>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <button id="btn-prev" class="px-3 py-1 rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <div id="pagination-numbers" class="flex items-center gap-1"></div>
+                            <button id="btn-next" class="px-3 py-1 rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
+                        <p id="pagination-info" class="text-sm text-gray-500"></p>
+                    </div>
+                </div>
+            }
+        </div>
+    </main>
+
+    <!-- Modal Crear/Editar Marca -->
+    <div id="modal-marca" class="modal hidden fixed inset-0 z-50 overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen px-4 py-8">
+            <div class="fixed inset-0 bg-black/50" onclick="cerrarModal()"></div>
+            <div class="relative bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 id="modal-titulo" class="text-lg font-semibold text-gray-900">
+                        <i class="fas fa-trademark text-blue-500 mr-2"></i>
+                        Nueva Marca
+                    </h3>
+                    <button onclick="cerrarModal()" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+
+                <form id="form-marca" onsubmit="guardarMarca(event)">
+                    <input type="hidden" id="marca-id" value="0">
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Nombre de la marca *</label>
+                            <input type="text" id="marca-nombre" placeholder="Ej: Coca-Cola, Nestlé, P&G"
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                   required maxlength="100">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
+                            <textarea id="marca-descripcion" rows="3" placeholder="Descripción breve de la marca..."
+                                      class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                      maxlength="255"></textarea>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Logo de la marca</label>
+                            <div class="flex items-start gap-4">
+                                <div class="flex-1">
+                                    <input id="marca-logo" type="file" accept="image/*"
+                                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm">
+                                    <p class="mt-1 text-xs text-gray-500">Formatos: JPG, PNG, GIF. Se subirá a Cloudinary.</p>
+                                </div>
+                                <img id="logo-preview" src="" alt="Vista previa"
+                                     class="hidden w-16 h-16 rounded-lg border object-cover">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="error-mensaje" class="hidden mt-4 p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-700">
+                        <i class="fas fa-exclamation-circle mr-2"></i>
+                        <span id="error-texto"></span>
+                    </div>
+
+                    <div class="flex gap-3 mt-6 pt-4 border-t border-gray-200">
+                        <button type="button" onclick="cerrarModal()"
+                                class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
+                            Cancelar
+                        </button>
+                        <button type="submit" id="btn-guardar"
+                                class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                            <i class="fas fa-save mr-2"></i>Guardar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Confirmación -->
+    <div id="modal-confirmar" class="modal hidden fixed inset-0 z-50 overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen px-4">
+            <div class="fixed inset-0 bg-black/50" onclick="cerrarModalConfirmar()"></div>
+            <div class="relative bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 text-center">
+                <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-red-100 flex items-center justify-center">
+                    <i class="fas fa-exclamation-triangle text-2xl text-red-600"></i>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">Confirmar Desactivación</h3>
+                <p id="confirmar-mensaje" class="text-gray-500 mb-6"></p>
+                <input type="hidden" id="confirmar-id">
+                <div class="flex gap-3">
+                    <button onclick="cerrarModalConfirmar()"
+                            class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">
+                        Cancelar
+                    </button>
+                    <button id="btn-confirmar"
+                            class="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
+                        <i class="fas fa-ban mr-2"></i>Desactivar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="fixed bottom-4 right-4 transform translate-y-20 opacity-0 transition-all duration-300 z-50">
+        <div class="bg-gray-900 text-white px-6 py-3 rounded-xl shadow-lg flex items-center gap-3">
+            <i id="toastIcon" class="fas fa-check-circle text-green-400"></i>
+            <span id="toastMessage"></span>
+        </div>
+    </div>
+
+    <script>
+        // =============== PAGINACIÓN ===============
+        let currentPage = 1;
+        let itemsPerPage = 25;
+        const allRows = Array.from(document.querySelectorAll('.marca-row'));
+        let filteredRows = [...allRows];
+
+        function updatePagination() {
+            const totalItems = filteredRows.length;
+            const totalPages = Math.ceil(totalItems / itemsPerPage);
+            const start = (currentPage - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+
+            allRows.forEach(row => row.style.display = 'none');
+            filteredRows.slice(start, end).forEach(row => row.style.display = '');
+
+            const showing = Math.min(end, totalItems);
+            document.getElementById('pagination-info').textContent =
+                totalItems > 0 ? `Mostrando ${start + 1}-${showing} de ${totalItems} marcas` : 'Sin resultados';
+
+            document.getElementById('btn-prev').disabled = currentPage === 1;
+            document.getElementById('btn-next').disabled = currentPage === totalPages || totalPages === 0;
+
+            const numbersContainer = document.getElementById('pagination-numbers');
+            numbersContainer.innerHTML = '';
+
+            const maxButtons = 5;
+            let startPage = Math.max(1, currentPage - Math.floor(maxButtons / 2));
+            let endPage = Math.min(totalPages, startPage + maxButtons - 1);
+
+            if (endPage - startPage + 1 < maxButtons) {
+                startPage = Math.max(1, endPage - maxButtons + 1);
+            }
+
+            for (let i = startPage; i <= endPage; i++) {
+                const btn = document.createElement('button');
+                btn.textContent = i;
+                btn.className = `px-3 py-1 rounded-lg text-sm ${i === currentPage
+                    ? 'bg-blue-600 text-white'
+                    : 'border border-gray-300 text-gray-600 hover:bg-gray-100'}`;
+                btn.onclick = () => { currentPage = i; updatePagination(); };
+                numbersContainer.appendChild(btn);
+            }
+        }
+
+        document.getElementById('items-per-page')?.addEventListener('change', function() {
+            itemsPerPage = parseInt(this.value);
+            currentPage = 1;
+            updatePagination();
+        });
+
+        document.getElementById('btn-prev')?.addEventListener('click', () => {
+            if (currentPage > 1) { currentPage--; updatePagination(); }
+        });
+
+        document.getElementById('btn-next')?.addEventListener('click', () => {
+            const totalPages = Math.ceil(filteredRows.length / itemsPerPage);
+            if (currentPage < totalPages) { currentPage++; updatePagination(); }
+        });
+
+        // =============== FILTROS ===============
+        document.getElementById('filtro-buscar').addEventListener('input', aplicarFiltros);
+        document.getElementById('filtro-estado').addEventListener('change', aplicarFiltros);
+
+        function aplicarFiltros() {
+            const termino = document.getElementById('filtro-buscar').value.toLowerCase();
+            const estado = document.getElementById('filtro-estado').value;
+
+            filteredRows = allRows.filter(row => {
+                const nombre = row.dataset.nombre || '';
+                const activo = row.dataset.activo;
+
+                const matchNombre = nombre.includes(termino);
+                const matchEstado = !estado || activo === estado;
+
+                return matchNombre && matchEstado;
+            });
+
+            currentPage = 1;
+            updatePagination();
+        }
+
+        // =============== MODAL MARCA ===============
+        function abrirModalMarca() {
+            limpiarFormulario();
+            document.getElementById('modal-titulo').innerHTML = '<i class="fas fa-trademark text-blue-500 mr-2"></i>Nueva Marca';
+            document.getElementById('modal-marca').classList.remove('hidden');
+        }
+
+        function cerrarModal() {
+            document.getElementById('modal-marca').classList.add('hidden');
+        }
+
+        function limpiarFormulario() {
+            document.getElementById('marca-id').value = '0';
+            document.getElementById('marca-nombre').value = '';
+            document.getElementById('marca-descripcion').value = '';
+            document.getElementById('marca-logo').value = '';
+            document.getElementById('logo-preview').classList.add('hidden');
+            document.getElementById('error-mensaje').classList.add('hidden');
+        }
+
+        // Preview de logo
+        document.getElementById('marca-logo').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const preview = document.getElementById('logo-preview');
+                    preview.src = e.target.result;
+                    preview.classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Editar marca
+        function editarMarca(id) {
+            fetch(`/Marcas/ObtenerMarca?id=${id}`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('marca-id').value = data.id;
+                    document.getElementById('marca-nombre').value = data.nombre;
+                    document.getElementById('marca-descripcion').value = data.descripcion || '';
+
+                    if (data.logoUrl) {
+                        const preview = document.getElementById('logo-preview');
+                        preview.src = data.logoUrl;
+                        preview.classList.remove('hidden');
+                    } else {
+                        document.getElementById('logo-preview').classList.add('hidden');
+                    }
+
+                    document.getElementById('modal-titulo').innerHTML = '<i class="fas fa-edit text-blue-500 mr-2"></i>Editar Marca';
+                    document.getElementById('modal-marca').classList.remove('hidden');
+                })
+                .catch(() => showToast('Error al cargar la marca', 'error'));
+        }
+
+        // Guardar marca
+        function guardarMarca(e) {
+            e.preventDefault();
+
+            const id = document.getElementById('marca-id').value;
+            const nombre = document.getElementById('marca-nombre').value.trim();
+            const descripcion = document.getElementById('marca-descripcion').value.trim();
+            const logoInput = document.getElementById('marca-logo').files[0];
+
+            if (!nombre) {
+                mostrarError('El nombre de la marca es obligatorio');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('nombre', nombre);
+            formData.append('descripcion', descripcion);
+            if (logoInput) formData.append('logo', logoInput);
+
+            const url = id && id !== '0' ? `/Marcas/Editar?id=${id}` : '/Marcas/Crear';
+
+            const btnGuardar = document.getElementById('btn-guardar');
+            btnGuardar.disabled = true;
+            btnGuardar.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Guardando...';
+
+            fetch(url, { method: 'POST', body: formData })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        cerrarModal();
+                        showToast(data.mensaje || 'Marca guardada correctamente');
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        mostrarError(data.mensaje || 'Error al guardar la marca');
+                    }
+                })
+                .catch(() => mostrarError('Error de conexión al guardar'))
+                .finally(() => {
+                    btnGuardar.disabled = false;
+                    btnGuardar.innerHTML = '<i class="fas fa-save mr-2"></i>Guardar';
+                });
+        }
+
+        function mostrarError(mensaje) {
+            document.getElementById('error-texto').textContent = mensaje;
+            document.getElementById('error-mensaje').classList.remove('hidden');
+        }
+
+        // =============== DESACTIVAR/ACTIVAR MARCA ===============
+        function desactivarMarca(id, nombre) {
+            document.getElementById('confirmar-id').value = id;
+            document.getElementById('confirmar-mensaje').textContent =
+                `¿Estás seguro de que deseas desactivar la marca "${nombre}"? Los productos asociados se moverán a "Sin Marca".`;
+            document.getElementById('modal-confirmar').classList.remove('hidden');
+        }
+
+        function cerrarModalConfirmar() {
+            document.getElementById('modal-confirmar').classList.add('hidden');
+        }
+
+        document.getElementById('btn-confirmar').addEventListener('click', function() {
+            const id = document.getElementById('confirmar-id').value;
+
+            fetch(`/Marcas/Eliminar?id=${id}`, { method: 'DELETE' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        cerrarModalConfirmar();
+                        showToast(data.mensaje || 'Marca desactivada correctamente');
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        showToast(data.mensaje || 'Error al desactivar', 'error');
+                    }
+                })
+                .catch(() => showToast('Error de conexión', 'error'));
+        });
+
+        function activarMarca(id) {
+            fetch(`/Marcas/Activar?id=${id}`, { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showToast(data.mensaje || 'Marca activada correctamente');
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        showToast(data.mensaje || 'Error al activar', 'error');
+                    }
+                })
+                .catch(() => showToast('Error de conexión', 'error'));
+        }
+
+        // =============== TOAST ===============
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const icon = document.getElementById('toastIcon');
+            const msg = document.getElementById('toastMessage');
+
+            msg.textContent = message;
+            icon.className = type === 'success'
+                ? 'fas fa-check-circle text-green-400'
+                : 'fas fa-exclamation-circle text-red-400';
+
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        // Inicializar paginación
+        if (allRows.length > 0) {
+            updatePagination();
+        }
+    </script>
+</body>
+</html>

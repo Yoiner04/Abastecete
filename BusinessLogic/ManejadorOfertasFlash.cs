@@ -10,12 +10,12 @@ namespace BusinessLogic
     public class ManejadorOfertasFlash
     {
         private Connection conexion;
-        private readonly ManejadorMongo _manejadorMongo;
+        private readonly ManejadorImagenes _manejadorMongo;
         private readonly EmailService _emailService;
 
         public ManejadorOfertasFlash()
         {
-            _manejadorMongo = new ManejadorMongo();
+            _manejadorMongo = new ManejadorImagenes();
             conexion = new Connection();
             _emailService = new EmailService();
         }

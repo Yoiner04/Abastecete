@@ -12,11 +12,11 @@ namespace BusinessLogic
     public class ManejadorBuscador
     {
         private Connection conexion;
-        private readonly ManejadorMongo _manejadorMongo;
+        private readonly ManejadorImagenes _manejadorMongo;
 
         public ManejadorBuscador()
         {
-            _manejadorMongo = new ManejadorMongo();
+            _manejadorMongo = new ManejadorImagenes();
             conexion = new Connection();
         }
 

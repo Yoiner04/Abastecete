@@ -17,8 +17,7 @@
 
 <body>
     @{
-       var bannerSesion = ViewBag.BannerSesion as List<(BusinessLogic.Models.BannerModel, BusinessLogic.Models.ImagenModel)> ?? new();
-
+       var bannerSesion = ViewBag.BannerSesion as IEnumerable<dynamic> ?? new List<object>();
     }
     <div class="login-container">
         <div class="login-box">

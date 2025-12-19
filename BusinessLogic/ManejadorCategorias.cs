@@ -11,12 +11,12 @@ namespace BusinessLogic
     public class ManejadorCategorias
     {
         private readonly Connection conexion;
-        private readonly ManejadorMongo manejadorMongo;
+        private readonly ManejadorImagenes manejadorMongo;
 
         public ManejadorCategorias()
         {
             conexion = new Connection();
-            manejadorMongo = new ManejadorMongo();
+            manejadorMongo = new ManejadorImagenes();
         }
 
         // Consultar todas las categorías - Optimizado con batch de imágenes

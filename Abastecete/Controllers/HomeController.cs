@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using Abastecete.Models;
 using BusinessLogic;
 using BusinessLogic.Models;
@@ -17,12 +17,12 @@ namespace Abastecete.Controllers
         private readonly ManejadorCategorias manejadorCategorias;
         private readonly ManejadorNegocios manejadorNegocios;
         private readonly ManejadorOfertasFlash manejadorOfertasFlash;
-        private readonly ManejadorMongo manejadorMongo;
+        private readonly ManejadorImagenes manejadorImagenes;
 
         public HomeController(ILogger<HomeController> logger)
         {
             _logger = logger;
-            manejadorMongo = new ManejadorMongo();
+            manejadorImagenes = new ManejadorImagenes();
             manejadorCategorias = new ManejadorCategorias();
             manejadorNegocios = new ManejadorNegocios();
             manejadorOfertasFlash = new ManejadorOfertasFlash();
@@ -43,17 +43,17 @@ namespace Abastecete.Controllers
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
+
         public IActionResult Principal()
         {
-            var bannersPorCategoria = new Dictionary<string, List<(BannerModel Banner, ImagenModel Imagen)>>();
-            var bannerInicio = new List<(BannerModel, ImagenModel)>();
-            var bannersInicio = manejadorMongo.ListarBannersInicio();
-
-            foreach (var banner in bannersInicio)
-            {
-                var imagen = manejadorMongo.ObtenerImagen(banner.FileId);
-                bannerInicio.Add((banner, imagen));
-            }
+            // Banners de inicio con URLs de Cloudinary
+            var bannersInicio = manejadorImagenes.ListarBannersInicio();
+            var bannerInicio = bannersInicio.Select(b => new {
+                Id = b.Id,
+                Nombre = b.Nombre ?? "",
+                Url = b.CloudinaryUrl,
+                Formato = b.Formato
+            }).ToList();
             ViewBag.BannerInicio = bannerInicio;
 
             List<Categoria> categorias = manejadorCategorias.ConsultarCategorias();
@@ -61,19 +61,17 @@ namespace Abastecete.Controllers
             List<Negocio> localesAleatorios = manejadorNegocios.ObtenerLocalesAleatorios();
             List<OfertaFlash> ofertasFlash = manejadorOfertasFlash.ConsultarOfertasFlash();
 
-
-
-
+            // Banners por categoría con URLs de Cloudinary
+            var bannersPorCategoria = new Dictionary<string, List<object>>();
             foreach (var categoria in categorias)
             {
-                var banners = manejadorMongo.ListarBannersPorCategoria(categoria.Nombre);
-                var lista = new List<(BannerModel, ImagenModel)>();
-
-                foreach (var banner in banners)
-                {
-                    var imagen = manejadorMongo.ObtenerImagen(banner.FileId);
-                    lista.Add((banner, imagen));
-                }
+                var banners = manejadorImagenes.ListarBannersPorCategoria(categoria.Id);
+                var lista = banners.Select(b => new {
+                    Id = b.Id,
+                    Nombre = b.Nombre ?? "",
+                    Url = b.CloudinaryUrl,
+                    Formato = b.Formato
+                }).Cast<object>().ToList();
 
                 bannersPorCategoria[categoria.Nombre] = lista;
             }

@@ -1,5 +1,6 @@
-﻿using BusinessLogic;
+using BusinessLogic;
 using BusinessLogic.Models;
+using BusinessLogic.Utilidades;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using System.Collections.Generic;
@@ -8,11 +9,12 @@ namespace Abastecete.Controllers
 {
     public class ProductosController : Controller
     {
-
         private readonly ManejadorNegocios manejadorNegocios;
         private readonly ManejadorProductos manejadorProductos;
         private readonly ManejadorCategorias manejadorCategorias;
         private readonly ManejadorPersonas manejadorPersonas;
+        private readonly ManejadorMarcas manejadorMarcas;
+        private readonly ManejadorImagenes manejadorImagenes;
 
         public ProductosController()
         {
@@ -20,6 +22,8 @@ namespace Abastecete.Controllers
             manejadorProductos = new ManejadorProductos();
             manejadorCategorias = new ManejadorCategorias();
             manejadorPersonas = new ManejadorPersonas();
+            manejadorMarcas = new ManejadorMarcas();
+            manejadorImagenes = new ManejadorImagenes();
         }
 
         public IActionResult Consultar()
@@ -153,8 +157,8 @@ namespace Abastecete.Controllers
         {
             string imagenUrl = GuardarImagen(Imagen);
             var producto = new Producto { IdSubCategoria = IdSubCategoria, Nombre = Nombre, Precio = Precio, ImagenUrl = imagenUrl };
-            string mensaje = manejadorProductos.CrearProducto(producto);
-            return Json(new { mensaje });
+            var (id, mensaje) = manejadorProductos.CrearProducto(producto);
+            return Json(new { mensaje, id });
         }
 
         [HttpPost]
@@ -163,8 +167,8 @@ namespace Abastecete.Controllers
             string imagenUrl = Imagen != null ? GuardarImagen(Imagen) : manejadorProductos.ConsultarProductos().FirstOrDefault(p => p.Id == Id)?.ImagenUrl;
 
             var producto = new Producto { Id = Id, IdSubCategoria = IdSubCategoria, Nombre = Nombre, Precio = Precio, ImagenUrl = imagenUrl };
-            string mensaje = manejadorProductos.EditarProducto(producto);
-            return Json(new { mensaje });
+            var (success, mensaje) = manejadorProductos.EditarProducto(producto);
+            return Json(new { mensaje, success });
         }
 
         private string GuardarImagen(IFormFile imagen)
@@ -193,8 +197,8 @@ namespace Abastecete.Controllers
         [HttpPost]
         public IActionResult EliminarProducto(int Id)
         {
-            bool resultado = manejadorProductos.EliminarProducto(Id);
-            return Json(new { mensaje = resultado ? "Producto eliminado" : "Error al eliminar" });
+            var (success, mensaje) = manejadorProductos.EliminarProducto(Id);
+            return Json(new { mensaje, success });
         }
 
         [HttpGet]
@@ -203,5 +207,211 @@ namespace Abastecete.Controllers
             List<Producto> productos = manejadorProductos.ObtenerProductosSubCategoria(subCategoriaId);
             return Json(productos);
         }
+
+        #region Admin Productos (SuperAdmin)
+
+        /// <summary>
+        /// Vista de administracion de productos (solo SuperAdmin)
+        /// </summary>
+        [RequierePermiso("Administrar Productos")]
+        public IActionResult AdminProductos(string termino, int? idCategoria, int? idSubCategoria, int? idMarca)
+        {
+            List<Producto> productos;
+
+            // Si hay filtros, buscar con filtros
+            if (!string.IsNullOrEmpty(termino) || idCategoria.HasValue || idSubCategoria.HasValue || idMarca.HasValue)
+            {
+                productos = manejadorProductos.BuscarProductos(termino, idCategoria, idSubCategoria, idMarca);
+            }
+            else
+            {
+                productos = manejadorProductos.ConsultarProductosTodos();
+            }
+
+            ViewBag.Categorias = manejadorCategorias.ConsultarCategorias();
+            ViewBag.Marcas = manejadorMarcas.ConsultarMarcas();
+
+            return View(productos);
+        }
+
+        /// <summary>
+        /// Obtiene un producto por ID (para edicion)
+        /// </summary>
+        [HttpGet]
+        [RequierePermiso("Administrar Productos")]
+        public IActionResult ObtenerProducto(int id)
+        {
+            try
+            {
+                var producto = manejadorProductos.ObtenerProducto(id);
+                if (producto == null)
+                    return NotFound(new { mensaje = "Producto no encontrado" });
+
+                return Json(new
+                {
+                    id = producto.Id,
+                    nombre = producto.Nombre,
+                    descripcion = producto.Descripcion,
+                    sku = producto.SKU,
+                    imagenUrl = producto.ImagenUrl,
+                    cloudinaryPublicId = producto.CloudinaryPublicId,
+                    idSubCategoria = producto.IdSubCategoria,
+                    idMarca = producto.IdMarca,
+                    categoria = producto.Categoria
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error al obtener producto: {ex.Message}");
+                return BadRequest(new { mensaje = "Error al obtener producto" });
+            }
+        }
+
+        /// <summary>
+        /// Crea un nuevo producto (admin)
+        /// </summary>
+        [HttpPost]
+        [RequierePermiso("Administrar Productos")]
+        public IActionResult CrearProductoAdmin(string nombre, string descripcion, string sku, int idSubCategoria, int idMarca, IFormFile imagen)
+        {
+            if (string.IsNullOrWhiteSpace(nombre))
+                return BadRequest(new { success = false, mensaje = "El nombre es requerido" });
+
+            if (idSubCategoria <= 0)
+                return BadRequest(new { success = false, mensaje = "Debe seleccionar una subcategoria" });
+
+            try
+            {
+                string imagenUrl = null;
+                string cloudinaryPublicId = null;
+
+                // Subir imagen a Cloudinary si se proporciono
+                if (imagen != null && imagen.Length > 0)
+                {
+                    var resultado = manejadorImagenes.SubirImagenCompleto(imagen, "productos");
+                    if (resultado.Success)
+                    {
+                        imagenUrl = resultado.SecureUrl;
+                        cloudinaryPublicId = resultado.PublicId;
+                    }
+                }
+
+                var producto = new Producto
+                {
+                    Nombre = nombre,
+                    Descripcion = descripcion,
+                    SKU = sku,
+                    IdSubCategoria = idSubCategoria,
+                    IdMarca = idMarca > 0 ? idMarca : 1,
+                    ImagenUrl = imagenUrl,
+                    CloudinaryPublicId = cloudinaryPublicId
+                };
+
+                var (id, mensaje) = manejadorProductos.CrearProducto(producto);
+
+                if (id > 0)
+                    return Json(new { success = true, mensaje, id });
+
+                return BadRequest(new { success = false, mensaje });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error al crear producto: {ex.Message}");
+                return BadRequest(new { success = false, mensaje = "Error al crear producto" });
+            }
+        }
+
+        /// <summary>
+        /// Edita un producto existente (admin)
+        /// </summary>
+        [HttpPost]
+        [RequierePermiso("Administrar Productos")]
+        public IActionResult EditarProductoAdmin(int id, string nombre, string descripcion, string sku, int idSubCategoria, int idMarca, IFormFile imagen, string cloudinaryPublicId)
+        {
+            if (id <= 0)
+                return BadRequest(new { success = false, mensaje = "ID invalido" });
+
+            if (string.IsNullOrWhiteSpace(nombre))
+                return BadRequest(new { success = false, mensaje = "El nombre es requerido" });
+
+            try
+            {
+                var productoActual = manejadorProductos.ObtenerProducto(id);
+                if (productoActual == null)
+                    return NotFound(new { success = false, mensaje = "Producto no encontrado" });
+
+                string imagenUrl = productoActual.ImagenUrl;
+                string nuevoCloudinaryPublicId = productoActual.CloudinaryPublicId;
+
+                // Subir nueva imagen si se proporciono
+                if (imagen != null && imagen.Length > 0)
+                {
+                    // Eliminar imagen anterior de Cloudinary
+                    if (!string.IsNullOrEmpty(productoActual.CloudinaryPublicId))
+                    {
+                        manejadorImagenes.EliminarImagenCloudinary(productoActual.CloudinaryPublicId);
+                    }
+
+                    var resultado = manejadorImagenes.SubirImagenCompleto(imagen, "productos");
+                    if (resultado.Success)
+                    {
+                        imagenUrl = resultado.SecureUrl;
+                        nuevoCloudinaryPublicId = resultado.PublicId;
+                    }
+                }
+
+                var producto = new Producto
+                {
+                    Id = id,
+                    Nombre = nombre,
+                    Descripcion = descripcion,
+                    SKU = sku,
+                    IdSubCategoria = idSubCategoria,
+                    IdMarca = idMarca > 0 ? idMarca : 1,
+                    ImagenUrl = imagenUrl,
+                    CloudinaryPublicId = nuevoCloudinaryPublicId
+                };
+
+                var (success, mensaje) = manejadorProductos.EditarProducto(producto);
+
+                if (success)
+                    return Json(new { success = true, mensaje });
+
+                return BadRequest(new { success = false, mensaje });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error al editar producto: {ex.Message}");
+                return BadRequest(new { success = false, mensaje = "Error al editar producto" });
+            }
+        }
+
+        /// <summary>
+        /// Elimina un producto (admin)
+        /// </summary>
+        [HttpDelete]
+        [RequierePermiso("Administrar Productos")]
+        public IActionResult EliminarProductoAdmin(int id)
+        {
+            if (id <= 0)
+                return BadRequest(new { success = false, mensaje = "ID invalido" });
+
+            try
+            {
+                var (success, mensaje) = manejadorProductos.EliminarProducto(id);
+
+                if (success)
+                    return Json(new { success = true, mensaje });
+
+                return BadRequest(new { success = false, mensaje });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error al eliminar producto: {ex.Message}");
+                return BadRequest(new { success = false, mensaje = "Error al eliminar producto" });
+            }
+        }
+
+        #endregion
     }
 }

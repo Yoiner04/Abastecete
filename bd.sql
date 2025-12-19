@@ -900,6 +900,18 @@ BEGIN
 END//
 DELIMITER ;
 
+-- Volcando estructura para procedimiento abastecete.consultar_tipos_unidad
+DELIMITER //
+CREATE PROCEDURE `consultar_tipos_unidad`()
+BEGIN
+    SELECT
+        ID_TIPOUNIDAD,
+        NOMBRE_TIPOUNIDAD
+    FROM tipo_unidad
+    ORDER BY NOMBRE_TIPOUNIDAD;
+END//
+DELIMITER ;
+
 -- Volcando estructura para procedimiento abastecete.consultar_tipo_documento
 DELIMITER //
 CREATE PROCEDURE `consultar_tipo_documento`()
@@ -948,6 +960,36 @@ BEGIN
 END//
 DELIMITER ;
 
+-- Volcando estructura para procedimiento abastecete.consultar_tipo_unidad_por_id
+DELIMITER //
+CREATE PROCEDURE `consultar_tipo_unidad_por_id`(
+    IN `p_id` INT
+)
+BEGIN
+    SELECT
+        ID_TIPOUNIDAD,
+        NOMBRE_TIPOUNIDAD
+    FROM tipo_unidad
+    WHERE ID_TIPOUNIDAD = p_id;
+END//
+DELIMITER ;
+
+-- Volcando estructura para procedimiento abastecete.consultar_todas_unidades
+DELIMITER //
+CREATE PROCEDURE `consultar_todas_unidades`()
+BEGIN
+    SELECT
+        u.ID_UNIDAD,
+        u.NOMBRE_UNIDAD,
+        u.ESTADO_UNIDAD,
+        u.FK_ID_TIPOUNIDAD,
+        tu.NOMBRE_TIPOUNIDAD
+    FROM unidad u
+    LEFT JOIN tipo_unidad tu ON u.FK_ID_TIPOUNIDAD = tu.ID_TIPOUNIDAD
+    ORDER BY tu.NOMBRE_TIPOUNIDAD, u.NOMBRE_UNIDAD;
+END//
+DELIMITER ;
+
 -- Volcando estructura para procedimiento abastecete.consultar_unidad
 DELIMITER //
 CREATE PROCEDURE `consultar_unidad`(
@@ -961,6 +1003,44 @@ BEGIN
         FROM producto p
         WHERE p.PK_ID_PRODUCTO = id_producto
     );
+END//
+DELIMITER ;
+
+-- Volcando estructura para procedimiento abastecete.consultar_unidades_por_tipo
+DELIMITER //
+CREATE PROCEDURE `consultar_unidades_por_tipo`(
+    IN `p_tipo_unidad_id` INT
+)
+BEGIN
+    SELECT
+        u.ID_UNIDAD,
+        u.NOMBRE_UNIDAD,
+        u.ESTADO_UNIDAD,
+        u.FK_ID_TIPOUNIDAD,
+        tu.NOMBRE_TIPOUNIDAD
+    FROM unidad u
+    LEFT JOIN tipo_unidad tu ON u.FK_ID_TIPOUNIDAD = tu.ID_TIPOUNIDAD
+    WHERE u.FK_ID_TIPOUNIDAD = p_tipo_unidad_id
+    AND u.ESTADO_UNIDAD = 1
+    ORDER BY u.NOMBRE_UNIDAD;
+END//
+DELIMITER ;
+
+-- Volcando estructura para procedimiento abastecete.consultar_unidad_por_id
+DELIMITER //
+CREATE PROCEDURE `consultar_unidad_por_id`(
+    IN `p_id` INT
+)
+BEGIN
+    SELECT
+        u.ID_UNIDAD,
+        u.NOMBRE_UNIDAD,
+        u.ESTADO_UNIDAD,
+        u.FK_ID_TIPOUNIDAD,
+        tu.NOMBRE_TIPOUNIDAD
+    FROM unidad u
+    LEFT JOIN tipo_unidad tu ON u.FK_ID_TIPOUNIDAD = tu.ID_TIPOUNIDAD
+    WHERE u.ID_UNIDAD = p_id;
 END//
 DELIMITER ;
 
@@ -1366,6 +1446,78 @@ BEGIN
   VALUES (p_nombre, p_descripcion, p_costo);
   
   SET mensaje = 'Tipo de membresía creado con éxito.';
+END//
+DELIMITER ;
+
+-- Volcando estructura para procedimiento abastecete.crear_tipo_unidad
+DELIMITER //
+CREATE PROCEDURE `crear_tipo_unidad`(
+    IN `p_nombre` VARCHAR(50),
+    OUT `mensaje` VARCHAR(255),
+    OUT `resultado` INT
+)
+BEGIN
+    DECLARE existe INT DEFAULT 0;
+
+    -- Verificar si ya existe
+    SELECT COUNT(*) INTO existe
+    FROM tipo_unidad
+    WHERE LOWER(NOMBRE_TIPOUNIDAD) = LOWER(p_nombre);
+
+    IF existe > 0 THEN
+        SET mensaje = 'Ya existe un tipo de unidad con ese nombre';
+        SET resultado = 0;
+    ELSE
+        INSERT INTO tipo_unidad (NOMBRE_TIPOUNIDAD)
+        VALUES (p_nombre);
+
+        SET mensaje = 'Tipo de unidad creado exitosamente';
+        SET resultado = LAST_INSERT_ID();
+    END IF;
+END//
+DELIMITER ;
+
+-- Volcando estructura para procedimiento abastecete.crear_unidad
+DELIMITER //
+CREATE PROCEDURE `crear_unidad`(
+    IN `p_nombre` VARCHAR(50),
+    IN `p_estado` TINYINT,
+    IN `p_tipo_unidad_id` INT,
+    OUT `mensaje` VARCHAR(255),
+    OUT `resultado` INT
+)
+BEGIN
+    DECLARE existe INT DEFAULT 0;
+    DECLARE tipo_existe INT DEFAULT 1;
+
+    -- Verificar si existe el tipo de unidad (solo si se especificó uno)
+    IF p_tipo_unidad_id IS NOT NULL THEN
+        SELECT COUNT(*) INTO tipo_existe
+        FROM tipo_unidad
+        WHERE ID_TIPOUNIDAD = p_tipo_unidad_id;
+    END IF;
+
+    IF tipo_existe = 0 THEN
+        SET mensaje = 'El tipo de unidad especificado no existe';
+        SET resultado = 0;
+    ELSE
+        -- Verificar si ya existe una unidad con ese nombre en el mismo tipo
+        SELECT COUNT(*) INTO existe
+        FROM unidad
+        WHERE LOWER(NOMBRE_UNIDAD) = LOWER(p_nombre)
+        AND (FK_ID_TIPOUNIDAD = p_tipo_unidad_id OR (FK_ID_TIPOUNIDAD IS NULL AND p_tipo_unidad_id IS NULL));
+
+        IF existe > 0 THEN
+            SET mensaje = 'Ya existe una unidad con ese nombre en este tipo';
+            SET resultado = 0;
+        ELSE
+            INSERT INTO unidad (NOMBRE_UNIDAD, ESTADO_UNIDAD, FK_ID_TIPOUNIDAD)
+            VALUES (p_nombre, p_estado, p_tipo_unidad_id);
+
+            SET mensaje = 'Unidad creada exitosamente';
+            SET resultado = LAST_INSERT_ID();
+        END IF;
+    END IF;
 END//
 DELIMITER ;
 
@@ -2067,6 +2219,95 @@ BEGIN
 END//
 DELIMITER ;
 
+-- Volcando estructura para procedimiento abastecete.editar_tipo_unidad
+DELIMITER //
+CREATE PROCEDURE `editar_tipo_unidad`(
+    IN `p_id` INT,
+    IN `p_nombre` VARCHAR(50),
+    OUT `mensaje` VARCHAR(255),
+    OUT `resultado` INT
+)
+BEGIN
+    DECLARE existe INT DEFAULT 0;
+    DECLARE duplicado INT DEFAULT 0;
+
+    -- Verificar si existe el tipo
+    SELECT COUNT(*) INTO existe
+    FROM tipo_unidad
+    WHERE ID_TIPOUNIDAD = p_id;
+
+    IF existe = 0 THEN
+        SET mensaje = 'Tipo de unidad no encontrado';
+        SET resultado = 0;
+    ELSE
+        -- Verificar nombre duplicado (excluyendo el actual)
+        SELECT COUNT(*) INTO duplicado
+        FROM tipo_unidad
+        WHERE LOWER(NOMBRE_TIPOUNIDAD) = LOWER(p_nombre)
+        AND ID_TIPOUNIDAD != p_id;
+
+        IF duplicado > 0 THEN
+            SET mensaje = 'Ya existe otro tipo de unidad con ese nombre';
+            SET resultado = 0;
+        ELSE
+            UPDATE tipo_unidad
+            SET NOMBRE_TIPOUNIDAD = p_nombre
+            WHERE ID_TIPOUNIDAD = p_id;
+
+            SET mensaje = 'Tipo de unidad actualizado exitosamente';
+            SET resultado = 1;
+        END IF;
+    END IF;
+END//
+DELIMITER ;
+
+-- Volcando estructura para procedimiento abastecete.editar_unidad
+DELIMITER //
+CREATE PROCEDURE `editar_unidad`(
+    IN `p_id` INT,
+    IN `p_nombre` VARCHAR(50),
+    IN `p_estado` TINYINT,
+    IN `p_tipo_unidad_id` INT,
+    OUT `mensaje` VARCHAR(255),
+    OUT `resultado` INT
+)
+BEGIN
+    DECLARE existe INT DEFAULT 0;
+    DECLARE duplicado INT DEFAULT 0;
+
+    -- Verificar si existe la unidad
+    SELECT COUNT(*) INTO existe
+    FROM unidad
+    WHERE ID_UNIDAD = p_id;
+
+    IF existe = 0 THEN
+        SET mensaje = 'Unidad no encontrada';
+        SET resultado = 0;
+    ELSE
+        -- Verificar nombre duplicado (excluyendo la actual)
+        SELECT COUNT(*) INTO duplicado
+        FROM unidad
+        WHERE LOWER(NOMBRE_UNIDAD) = LOWER(p_nombre)
+        AND ID_UNIDAD != p_id
+        AND (FK_ID_TIPOUNIDAD = p_tipo_unidad_id OR (FK_ID_TIPOUNIDAD IS NULL AND p_tipo_unidad_id IS NULL));
+
+        IF duplicado > 0 THEN
+            SET mensaje = 'Ya existe otra unidad con ese nombre en este tipo';
+            SET resultado = 0;
+        ELSE
+            UPDATE unidad
+            SET NOMBRE_UNIDAD = p_nombre,
+                ESTADO_UNIDAD = p_estado,
+                FK_ID_TIPOUNIDAD = p_tipo_unidad_id
+            WHERE ID_UNIDAD = p_id;
+
+            SET mensaje = 'Unidad actualizada exitosamente';
+            SET resultado = 1;
+        END IF;
+    END IF;
+END//
+DELIMITER ;
+
 -- Volcando estructura para procedimiento abastecete.editar_usuario_persona
 DELIMITER //
 CREATE PROCEDURE `editar_usuario_persona`(
@@ -2376,6 +2617,80 @@ BEGIN
 END//
 DELIMITER ;
 
+-- Volcando estructura para procedimiento abastecete.eliminar_tipo_unidad
+DELIMITER //
+CREATE PROCEDURE `eliminar_tipo_unidad`(
+    IN `p_id` INT,
+    OUT `mensaje` VARCHAR(255),
+    OUT `resultado` INT
+)
+BEGIN
+    DECLARE existe INT DEFAULT 0;
+    DECLARE tiene_unidades INT DEFAULT 0;
+
+    -- Verificar si existe
+    SELECT COUNT(*) INTO existe
+    FROM tipo_unidad
+    WHERE ID_TIPOUNIDAD = p_id;
+
+    IF existe = 0 THEN
+        SET mensaje = 'Tipo de unidad no encontrado';
+        SET resultado = 0;
+    ELSE
+        -- Verificar si tiene unidades asociadas
+        SELECT COUNT(*) INTO tiene_unidades
+        FROM unidad
+        WHERE FK_ID_TIPOUNIDAD = p_id;
+
+        IF tiene_unidades > 0 THEN
+            SET mensaje = CONCAT('No se puede eliminar. Tiene ', tiene_unidades, ' unidades asociadas');
+            SET resultado = 0;
+        ELSE
+            DELETE FROM tipo_unidad WHERE ID_TIPOUNIDAD = p_id;
+            SET mensaje = 'Tipo de unidad eliminado exitosamente';
+            SET resultado = 1;
+        END IF;
+    END IF;
+END//
+DELIMITER ;
+
+-- Volcando estructura para procedimiento abastecete.eliminar_unidad
+DELIMITER //
+CREATE PROCEDURE `eliminar_unidad`(
+    IN `p_id` INT,
+    OUT `mensaje` VARCHAR(255),
+    OUT `resultado` INT
+)
+BEGIN
+    DECLARE existe INT DEFAULT 0;
+    DECLARE en_uso INT DEFAULT 0;
+
+    -- Verificar si existe
+    SELECT COUNT(*) INTO existe
+    FROM unidad
+    WHERE ID_UNIDAD = p_id;
+
+    IF existe = 0 THEN
+        SET mensaje = 'Unidad no encontrada';
+        SET resultado = 0;
+    ELSE
+        -- Verificar si está en uso en productoslocal
+        SELECT COUNT(*) INTO en_uso
+        FROM productoslocal
+        WHERE FK_ID_UNIDAD = p_id;
+
+        IF en_uso > 0 THEN
+            SET mensaje = CONCAT('No se puede eliminar. La unidad está siendo usada en ', en_uso, ' productos');
+            SET resultado = 0;
+        ELSE
+            DELETE FROM unidad WHERE ID_UNIDAD = p_id;
+            SET mensaje = 'Unidad eliminada exitosamente';
+            SET resultado = 1;
+        END IF;
+    END IF;
+END//
+DELIMITER ;
+
 -- Volcando estructura para procedimiento abastecete.eliminar_usuario_persona
 DELIMITER //
 CREATE PROCEDURE `eliminar_usuario_persona`(
@@ -2573,7 +2888,7 @@ CREATE TABLE IF NOT EXISTS `local` (
   CONSTRAINT `FK_local_tipomembresia` FOREIGN KEY (`FK_ID_TIPOMEMBRESIA`) REFERENCES `tipo_membresia` (`PK_ID_TIPO_MEMBRESIA`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=38 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla abastecete.local: ~14 rows (aproximadamente)
+-- Volcando datos para la tabla abastecete.local: ~13 rows (aproximadamente)
 INSERT INTO `local` (`PK_ID_LOCAL`, `FK_ID_PERSONA`, `FK_ID_ESTADO_LOCAL`, `FK_ID_TIPOMEMBRESIA`, `NOMBRE_LOCAL`, `LOCALIZACION`, `DIRECCION_LOCAL`, `TELEFONO_LOCAL`, `FOTOS_LOCAL`, `BANNER_LOCAL`, `IMAGENES_LOCAL`, `DESCRIPCION_LOCAL`) VALUES
 	(1, 6, 1, 12, 'Verduras don pepe', 'Pablo VI', 'Calle 12', '3123687285', '', NULL, NULL, NULL),
 	(3, 6, 1, 18, 'pepito', 'abbas', 'calle 24', '21414', '', NULL, NULL, NULL),
@@ -2602,7 +2917,7 @@ CREATE TABLE IF NOT EXISTS `localcategoria` (
   KEY `idx_localcategoria_categoria` (`FK_ID_CATEGORIA`),
   CONSTRAINT `FK1` FOREIGN KEY (`FK_ID_LOCAL`) REFERENCES `local` (`PK_ID_LOCAL`),
   CONSTRAINT `FK2` FOREIGN KEY (`FK_ID_CATEGORIA`) REFERENCES `categoria` (`PK_ID_CATEGORIA`)
-) ENGINE=InnoDB AUTO_INCREMENT=38 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=39 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Volcando datos para la tabla abastecete.localcategoria: ~16 rows (aproximadamente)
 INSERT INTO `localcategoria` (`PK_ID_LOCALCATEGORIA`, `FK_ID_LOCAL`, `FK_ID_CATEGORIA`) VALUES
@@ -2621,7 +2936,8 @@ INSERT INTO `localcategoria` (`PK_ID_LOCALCATEGORIA`, `FK_ID_LOCAL`, `FK_ID_CATE
 	(34, 27, 5),
 	(35, 27, 10),
 	(36, 27, 12),
-	(37, 27, 16);
+	(37, 27, 16),
+	(38, 28, 6);
 
 -- Volcando estructura para procedimiento abastecete.login_usuario
 DELIMITER //
@@ -2866,7 +3182,7 @@ CREATE TABLE IF NOT EXISTS `membresia_local` (
   CONSTRAINT `FK_membresia_local` FOREIGN KEY (`FK_ID_LOCAL`) REFERENCES `local` (`PK_ID_LOCAL`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=37 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla abastecete.membresia_local: ~13 rows (aproximadamente)
+-- Volcando datos para la tabla abastecete.membresia_local: ~12 rows (aproximadamente)
 INSERT INTO `membresia_local` (`PK_ID_MEMBRESIA`, `FK_ID_LOCAL`, `ESTADO`, `FECHA_INICIO`, `FECHA_FIN`) VALUES
 	(2, 1, 1, '2025-02-20 10:05:41', '2025-03-20 10:05:41'),
 	(3, 3, 1, '2025-02-20 10:43:17', '2025-03-20 10:43:17'),
@@ -2950,13 +3266,16 @@ DELIMITER ;
 -- Volcando estructura para procedimiento abastecete.ofertas_actuales
 DELIMITER //
 CREATE PROCEDURE `ofertas_actuales`(
-	IN `p_id_local` INT
+    IN `p_id_local` INT
 )
 BEGIN
-	SELECT COUNT(*)
-	FROM oferta_flash
-	INNER JOIN `local` ON oferta_flash.FK_ID_LOCAL = `local`.PK_ID_LOCAL
-	WHERE local.PK_ID_LOCAL = p_id_local AND oferta_flash.ESTADO_OFERTA_FLASH = 1;
+    -- Cuenta ofertas activas: pendientes (0) y aprobadas (1)
+    -- Excluye eliminadas/expiradas (2)
+    SELECT COUNT(*)
+    FROM oferta_flash
+    INNER JOIN `local` ON oferta_flash.FK_ID_LOCAL = `local`.PK_ID_LOCAL
+    WHERE local.PK_ID_LOCAL = p_id_local
+    AND oferta_flash.ESTADO_OFERTA_FLASH IN (0, 1);
 END//
 DELIMITER ;
 
@@ -3758,9 +4077,9 @@ CREATE TABLE IF NOT EXISTS `productoslocal` (
   CONSTRAINT `fk4` FOREIGN KEY (`FK_ID_UNIDAD`) REFERENCES `unidad` (`ID_UNIDAD`),
   CONSTRAINT `fk_estado` FOREIGN KEY (`FK_ESTADO`) REFERENCES `estado` (`PK_ID_ESTADO`),
   CONSTRAINT `fk_local` FOREIGN KEY (`FK_ID_LOCAL`) REFERENCES `local` (`PK_ID_LOCAL`)
-) ENGINE=InnoDB AUTO_INCREMENT=130 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=131 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla abastecete.productoslocal: ~26 rows (aproximadamente)
+-- Volcando datos para la tabla abastecete.productoslocal: ~27 rows (aproximadamente)
 INSERT INTO `productoslocal` (`PK_ID_PRODUCTS_LOCAL`, `FK_ID_PRODUCTO`, `FK_ID_UNIDAD`, `VALOR_PRODUCTS_LOCAL`, `FK_ID_LOCAL`, `FK_ESTADO`) VALUES
 	(104, 1, 6, 5000, 28, 1),
 	(105, 5, 6, 7000, 28, 1),
@@ -3787,7 +4106,8 @@ INSERT INTO `productoslocal` (`PK_ID_PRODUCTS_LOCAL`, `FK_ID_PRODUCTO`, `FK_ID_U
 	(126, 355, 4, 7000, 27, 1),
 	(127, 410, 10, 2000, 27, 1),
 	(128, 535, 5, 8000, 27, 1),
-	(129, 143, 1, 6000, 27, 1);
+	(129, 143, 1, 6000, 27, 1),
+	(130, 205, 1, 5000, 28, 1);
 
 -- Volcando estructura para procedimiento abastecete.productos_local
 DELIMITER //

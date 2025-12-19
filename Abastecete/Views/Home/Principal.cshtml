@@ -30,17 +30,16 @@
     @{
         string permisos = HttpContextAccessor.HttpContext.Session.GetString("permisos");
 
-        var bannerInicio = ViewBag.BannerInicio as List<(BusinessLogic.Models.BannerModel,
-        BusinessLogic.Models.ImagenModel)> ?? new();
+        var bannerInicio = ViewBag.BannerInicio as IEnumerable<dynamic> ?? new List<object>();
 
         var horizontales = bannerInicio
-        .Where(b => b.Item1.Formato == "16:9")
-        .Select(b => b.Item2?.Base64 ?? "/images/default.webp")
+        .Where(b => (string)b.Formato == "16:9")
+        .Select(b => (string)b.Url ?? "/images/default.webp")
         .ToList();
 
         var cuadrados = bannerInicio
-        .Where(b => b.Item1.Formato == "1:1")
-        .Select(b => b.Item2?.Base64 ?? "/images/default.webp")
+        .Where(b => (string)b.Formato == "1:1")
+        .Select(b => (string)b.Url ?? "/images/default.webp")
         .Take(2)
         .ToList();
 
@@ -656,18 +655,17 @@
         @foreach (var categoria in Model)
         {
             var categoriaNombre = categoria.Nombre;
-            var banners = ViewBag.BannersPorCategoria[categoriaNombre] as List<(BusinessLogic.Models.BannerModel Banner,
-            BusinessLogic.Models.ImagenModel Imagen)> ?? new();
+            var bannersCat = ViewBag.BannersPorCategoria[categoriaNombre] as IEnumerable<dynamic> ?? new List<object>();
 
-            var horizontal = banners.Where(b => b.Banner.Formato == "16:9").Select(b => b.Imagen).ToList();
-            var cuadrado = banners.Where(b => b.Banner.Formato == "1:1").Select(b => b.Imagen).ToList();
+            var horizontal = bannersCat.Where(b => (string)b.Formato == "16:9").Select(b => (string)b.Url ?? imagenPorDefecto).ToList();
+            var cuadrado = bannersCat.Where(b => (string)b.Formato == "1:1").Select(b => (string)b.Url ?? imagenPorDefecto).ToList();
 
             // Asegurar siempre 2 horizontales y 4 cuadrados
             while (horizontal.Count < 2)
-                horizontal.Add(new BusinessLogic.Models.ImagenModel { Base64 = imagenPorDefecto });
+                horizontal.Add(imagenPorDefecto);
 
             while (cuadrado.Count < 4)
-                cuadrado.Add(new BusinessLogic.Models.ImagenModel { Base64 = imagenPorDefecto });
+                cuadrado.Add(imagenPorDefecto);
 
 
             <div class="mb-10 rounded-xl bg-white p-5 shadow-md">
@@ -692,40 +690,40 @@
                 <!-- Rejilla de imágenes -->
                 <div class="grid grid-cols-1 gap-4 lg:grid-cols-5">
 
-                    <img src="@horizontal[0].Base64"
+                    <img src="@horizontal[0]"
                         class="col-span-3 hidden h-60 w-full rounded-tl-3xl object-cover lg:block">
-                    <img src="@cuadrado[3].Base64"
+                    <img src="@cuadrado[3]"
                         class="col-span-1 hidden h-60 w-full rounded-tl-3xl rounded-br-3xl object-cover lg:block">
-                    <img src="@cuadrado[2].Base64"
+                    <img src="@cuadrado[2]"
                         class="col-span-1 hidden h-60 w-full rounded-tl-3xl rounded-br-3xl object-cover lg:block">
-                    <img src="@cuadrado[0].Base64" class="col-span-1 hidden h-60 w-full object-cover lg:block">
-                    <img src="@cuadrado[1].Base64" class="col-span-1 hidden h-60 w-full object-cover lg:block">
-                    <img src="@horizontal[1].Base64" class="col-span-3 hidden h-60 w-full object-cover lg:block">
+                    <img src="@cuadrado[0]" class="col-span-1 hidden h-60 w-full object-cover lg:block">
+                    <img src="@cuadrado[1]" class="col-span-1 hidden h-60 w-full object-cover lg:block">
+                    <img src="@horizontal[1]" class="col-span-3 hidden h-60 w-full object-cover lg:block">
 
                     <div class="flex flex-col gap-2 lg:hidden">
                         <div class="aspect-[16/9] w-full overflow-hidden rounded-tl-3xl">
-                            <img src="@horizontal[0].Base64" class="h-full w-full object-cover" alt="..." />
+                            <img src="@horizontal[0]" class="h-full w-full object-cover" alt="..." />
                         </div>
 
                         <div class="grid grid-cols-2 gap-2">
                             <div class="aspect-square overflow-hidden rounded-tl-3xl">
-                                <img src="@cuadrado[0].Base64" class="h-full w-full object-cover" alt="..." />
+                                <img src="@cuadrado[0]" class="h-full w-full object-cover" alt="..." />
                             </div>
                             <div class="aspect-square overflow-hidden rounded-br-3xl">
-                                <img src="@cuadrado[1].Base64" class="h-full w-full object-cover" alt="..." />
+                                <img src="@cuadrado[1]" class="h-full w-full object-cover" alt="..." />
                             </div>
                         </div>
 
                         <div class="aspect-[16/9] w-full overflow-hidden rounded-br-3xl">
-                            <img src="@horizontal[1].Base64" class="h-full w-full object-cover" alt="..." />
+                            <img src="@horizontal[1]" class="h-full w-full object-cover" alt="..." />
                         </div>
 
                         <div class="grid grid-cols-2 gap-2">
                             <div class="aspect-square overflow-hidden rounded-tl-3xl">
-                                <img src="@cuadrado[2].Base64" class="h-full w-full object-cover" alt="..." />
+                                <img src="@cuadrado[2]" class="h-full w-full object-cover" alt="..." />
                             </div>
                             <div class="aspect-square overflow-hidden rounded-br-3xl">
-                                <img src="@cuadrado[3].Base64" class="h-full w-full object-cover" alt="..." />
+                                <img src="@cuadrado[3]" class="h-full w-full object-cover" alt="..." />
                             </div>
                         </div>
 

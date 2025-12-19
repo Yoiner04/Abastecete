@@ -4,8 +4,6 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using MongoDB.Bson;
-using MongoDB.Driver.GridFS;
 using Newtonsoft.Json;
 
 namespace Abastecete.Controllers
@@ -16,7 +14,7 @@ namespace Abastecete.Controllers
         private readonly ManejadorMembresias _manejadorMembresias;
         private readonly ManejadorProductos _manejadorProductos;
         private readonly ManejadorCategorias _manejadorCategorias;
-        private readonly ManejadorMongo _manejadorMongo;
+        private readonly ManejadorImagenes _manejadorImagenes;
 
 
         public NegociosController()
@@ -25,7 +23,7 @@ namespace Abastecete.Controllers
             _manejadorMembresias = new ManejadorMembresias();
             _manejadorProductos = new ManejadorProductos();
             _manejadorCategorias = new ManejadorCategorias();
-            _manejadorMongo = new ManejadorMongo();
+            _manejadorImagenes = new ManejadorImagenes();
         }
 
         [HttpGet]
@@ -82,15 +80,16 @@ namespace Abastecete.Controllers
         {
             var personaId = HttpContext.Session.GetInt32("PersonaId").Value;
             Negocio ne = _manejadorNegocios.ConsultarNegocio(personaId);
-            var proveedores = new List<(BannerModel, ImagenModel)>();
 
-            List<BannerModel> banners = _manejadorMongo.ListarBannersProveedores();
+            // Obtener banners de proveedores como lista de objetos con URL directa
+            var banners = _manejadorImagenes.ListarBannersProveedores();
+            var proveedores = banners.Select(b => new {
+                Id = b.Id,
+                Nombre = b.Nombre ?? "",
+                Url = b.CloudinaryUrl,
+                Formato = b.Formato
+            }).ToList();
 
-            foreach (var banner in banners)
-            {
-                var imagen = _manejadorMongo.ObtenerImagen(banner.FileId);
-                proveedores.Add((banner, imagen));
-            }
             ViewBag.banner = proveedores;
             return View(ne);
         }
@@ -102,7 +101,7 @@ namespace Abastecete.Controllers
             Negocio actual = _manejadorNegocios.ConsultarNegocio(personaId);
             if (a.logotipoArchivo != null && a.logotipoArchivo.Length > 0)
             {
-                a.LogotipoId = _manejadorMongo.updateImage(a.logotipoArchivo, actual.LogotipoId + "");
+                a.LogotipoId = _manejadorImagenes.updateImage(a.logotipoArchivo, actual.LogotipoId + "");
             }
             _manejadorNegocios.EditarNegocio(a, actual);
             return RedirectToAction("ProductosNegocio", "Productos");
@@ -115,7 +114,7 @@ namespace Abastecete.Controllers
 
             if (!personaId.HasValue)
             {
-                Console.WriteLine("⚠️ No se encontró PersonaId en la sesión.");
+                Console.WriteLine("No se encontró PersonaId en la sesión.");
                 return RedirectToAction("Login", "Login");
             }
 
@@ -128,8 +127,7 @@ namespace Abastecete.Controllers
 
             if (logo_archivo != null && logo_archivo.Length > 0)
             {
-
-                negocio.LogotipoId = _manejadorMongo.SubirImagen(logo_archivo);
+                negocio.LogotipoId = _manejadorImagenes.SubirImagen(logo_archivo);
             }
 
             HttpContext.Session.SetString("NegocioTemporal", JsonConvert.SerializeObject(negocio));
@@ -140,7 +138,6 @@ namespace Abastecete.Controllers
         [HttpGet]
         public async Task<IActionResult> CompletarRegistro(int tipoMembresiaId)
         {
-            // Recuperar los datos del negocio desde la sesión
             var negocioJson = HttpContext.Session.GetString("NegocioTemporal");
             if (string.IsNullOrEmpty(negocioJson))
             {
@@ -159,12 +156,12 @@ namespace Abastecete.Controllers
 
             if (registrado)
             {
-                Console.WriteLine("✅ Negocio registrado con éxito!");
+                Console.WriteLine("Negocio registrado con éxito!");
 
                 ManejadorRoles manejadorRoles = new ManejadorRoles();
                 bool rolAsignado = manejadorRoles.AsignarRol(2, usuarioId.Value);
 
-                await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme); // Cierra autenticación
+                await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
                 HttpContext.Session.Clear();
                 Response.Cookies.Delete(".AspNetCore.Session");
                 Response.Cookies.Delete(".AspNetCore.Cookies");
@@ -174,7 +171,7 @@ namespace Abastecete.Controllers
             }
             else
             {
-                return RedirectToAction("Error"); // Redirigir a una vista de error si algo falla
+                return RedirectToAction("Error");
             }
         }
 
@@ -189,7 +186,6 @@ namespace Abastecete.Controllers
 
             factura.UsuarioId = usuarioId.Value;
 
-            // Llamar al procedimiento almacenado usando el manejador
             var registrado = _manejadorNegocios.RegistrarFacturacion(factura);
 
             if (registrado)

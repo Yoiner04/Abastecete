@@ -17,6 +17,17 @@ namespace BusinessLogic.Models
         public string ImagenUrl { get; set; }
         public int Categoria { get; set; }
 
+        // Nuevos campos
+        public int IdMarca { get; set; }
+        public string NombreMarca { get; set; }
+        public string Descripcion { get; set; }
+        public string SKU { get; set; }
+        public string CloudinaryPublicId { get; set; }
+
+        // Campos para navegacion
+        public string NombreSubCategoria { get; set; }
+        public string NombreCategoria { get; set; }
+
         // para el buscador
         public string NombreLocal { get; set; }
         public string DireccionLocal { get; set; }
