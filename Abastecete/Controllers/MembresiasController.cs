@@ -44,9 +44,22 @@ namespace Abastecete.Controllers
         }
 
         [HttpPost]
-        public IActionResult Editar(int Id, string Nombre, string Descripcion, float Costo, float Costo_trimestral, float Costo_semestral, float Costo_anual, int Duracion, int Cantidad, int Estado)
+        public IActionResult Editar(int Id, string Nombre, float Costo, float Costo_trimestral, float Costo_semestral, float Costo_anual, int Duracion, int Cantidad, int OfertasFlashSimultaneas, int OfertasFlashTotal, int Estado)
         {
-            var membresia = new Membresia { Id = Id, Nombre = Nombre, Descripcion = Descripcion, Costo = Costo, Estado = Estado, Cantidad = Cantidad, Duracion = Duracion, Costo_trimestral = Costo_trimestral, Costo_semestral = Costo_semestral, Costo_anual = Costo_anual };
+            var membresia = new Membresia
+            {
+                Id = Id,
+                Nombre = Nombre,
+                Costo = Costo,
+                Estado = Estado,
+                Cantidad = Cantidad,
+                Duracion = Duracion,
+                OfertasFlashSimultaneas = OfertasFlashSimultaneas,
+                OfertasFlashTotal = OfertasFlashTotal,
+                Costo_trimestral = Costo_trimestral,
+                Costo_semestral = Costo_semestral,
+                Costo_anual = Costo_anual
+            };
             string mensaje = manejadorMembresias.EditarMembresia(membresia);
             return Json(new { mensaje });
         }

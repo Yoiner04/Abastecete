@@ -1,15 +1,12 @@
-@model List<BusinessLogic.Models.UsuarioConLocalViewModel>
+@model BusinessLogic.Models.ResultadoPaginado<BusinessLogic.Models.UsuarioConLocalViewModel>
 @using BusinessLogic.Utilidades
 @{
     ViewData["Title"] = "Gestión de Usuarios";
     var permisos = Context.Session.GetString("permisos");
     var puedeAdministrar = RolPermisos.TienePermiso("Administrar Usuarios", permisos);
 
-    var totalUsuarios = Model.Count;
-    var usuariosActivos = Model.Count(u => u.Usuario.Persona?.Estado == "Activo");
-    var usuariosInactivos = totalUsuarios - usuariosActivos;
-    var usuariosConLocal = Model.Count(u => u.TieneLocal);
-    var suscripcionesActivas = Model.Count(u => u.SuscripcionActiva);
+    var totalUsuarios = Model.TotalRegistros;
+    var busquedaActual = ViewBag.Busqueda as string ?? "";
 }
 
 <!-- Header a ancho completo -->
@@ -49,8 +46,8 @@
             <i class="fas fa-user-check text-green-600 text-xl"></i>
         </div>
         <div>
-            <p class="text-2xl font-bold text-gray-900">@usuariosActivos</p>
-            <p class="text-sm text-gray-500">Activos</p>
+            <p class="text-2xl font-bold text-gray-900">@Model.Items.Count(u => u.Usuario.Persona?.Estado == "Activo")</p>
+            <p class="text-sm text-gray-500">Activos (página)</p>
         </div>
     </div>
     <div class="bg-white rounded-xl border border-gray-200 p-4 flex items-center gap-4">
@@ -58,8 +55,8 @@
             <i class="fas fa-store text-purple-600 text-xl"></i>
         </div>
         <div>
-            <p class="text-2xl font-bold text-gray-900">@usuariosConLocal</p>
-            <p class="text-sm text-gray-500">Con Local</p>
+            <p class="text-2xl font-bold text-gray-900">@Model.Items.Count(u => u.TieneLocal)</p>
+            <p class="text-sm text-gray-500">Con Local (página)</p>
         </div>
     </div>
     <div class="bg-white rounded-xl border border-gray-200 p-4 flex items-center gap-4">
@@ -67,53 +64,40 @@
             <i class="fas fa-crown text-yellow-600 text-xl"></i>
         </div>
         <div>
-            <p class="text-2xl font-bold text-gray-900">@suscripcionesActivas</p>
-            <p class="text-sm text-gray-500">Suscripciones</p>
+            <p class="text-2xl font-bold text-gray-900">@Model.Items.Count(u => u.SuscripcionActiva)</p>
+            <p class="text-sm text-gray-500">Suscripciones (página)</p>
         </div>
     </div>
 </div>
 
 <!-- Filters -->
 <div class="bg-white rounded-xl border border-gray-200 p-4 mb-6">
-    <div class="flex flex-col lg:flex-row gap-4">
+    <form method="get" action="@Url.Action("Consultar", "Usuarios")" class="flex flex-col lg:flex-row gap-4">
         <!-- Search -->
         <div class="flex-1">
             <div class="relative">
                 <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
                 <input type="text"
-                       id="searchInput"
+                       name="busqueda"
+                       value="@busquedaActual"
                        placeholder="Buscar por nombre, correo, local..."
                        class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 focus:border-[#23916A] focus:ring-2 focus:ring-[#23916A]/20 transition-all">
             </div>
         </div>
 
-        <!-- Filters -->
-        <div class="flex flex-wrap gap-3">
-            <select id="filterRol" class="px-4 py-2.5 rounded-lg border border-gray-300 focus:border-[#23916A] focus:ring-2 focus:ring-[#23916A]/20 transition-all">
-                <option value="">Todos los roles</option>
-                @{
-                    var roles = Model.Select(u => u.Usuario.Rol?.Nombre).Distinct().Where(r => !string.IsNullOrEmpty(r)).ToList();
-                    foreach (var rol in roles)
-                    {
-                        <option value="@rol">@rol</option>
-                    }
-                }
-            </select>
-
-            <select id="filterEstado" class="px-4 py-2.5 rounded-lg border border-gray-300 focus:border-[#23916A] focus:ring-2 focus:ring-[#23916A]/20 transition-all">
-                <option value="">Todos los estados</option>
-                <option value="Activo">Activos</option>
-                <option value="Inactivo">Inactivos</option>
-            </select>
-
-            <select id="filterSuscripcion" class="px-4 py-2.5 rounded-lg border border-gray-300 focus:border-[#23916A] focus:ring-2 focus:ring-[#23916A]/20 transition-all">
-                <option value="">Todas las suscripciones</option>
-                <option value="activa">Con suscripción activa</option>
-                <option value="vencida">Sin suscripción</option>
-                <option value="proxima">Próxima a vencer</option>
-            </select>
+        <!-- Submit Button -->
+        <div class="flex gap-3">
+            <button type="submit" class="px-6 py-2.5 rounded-lg bg-[#23916A] text-white font-medium hover:bg-[#1a6b4f] transition-colors">
+                <i class="fas fa-search mr-2"></i>Buscar
+            </button>
+            @if (!string.IsNullOrEmpty(busquedaActual))
+            {
+                <a href="@Url.Action("Consultar", "Usuarios")" class="px-4 py-2.5 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition-colors">
+                    <i class="fas fa-times mr-2"></i>Limpiar
+                </a>
+            }
         </div>
-    </div>
+    </form>
 </div>
 
 <!-- Table -->
@@ -121,17 +105,32 @@
     <!-- Pagination Header -->
     <div class="px-4 py-3 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div class="flex items-center gap-2">
-            <span class="text-sm text-gray-500">Mostrar</span>
-            <select id="itemsPerPage" class="px-3 py-1.5 rounded-lg border border-gray-300 text-sm focus:border-[#23916A] focus:ring-2 focus:ring-[#23916A]/20">
-                <option value="10">10</option>
-                <option value="25" selected>25</option>
-                <option value="50">50</option>
-                <option value="100">100</option>
+            <span class="text-sm text-gray-500">Mostrando</span>
+            <select id="itemsPerPage" onchange="cambiarRegistrosPorPagina(this.value)" class="px-3 py-1.5 rounded-lg border border-gray-300 text-sm focus:border-[#23916A] focus:ring-2 focus:ring-[#23916A]/20">
+                @{
+                    var sizes = new[] { 10, 25, 50, 100 };
+                    foreach (var size in sizes)
+                    {
+                        if (Model.RegistrosPorPagina == size)
+                        {
+                            <option value="@size" selected>@size</option>
+                        }
+                        else
+                        {
+                            <option value="@size">@size</option>
+                        }
+                    }
+                }
             </select>
             <span class="text-sm text-gray-500">registros</span>
         </div>
         <div class="text-sm text-gray-500">
-            Mostrando <span id="showingStart">1</span> - <span id="showingEnd">@Math.Min(25, totalUsuarios)</span> de <span id="totalFiltered">@totalUsuarios</span> usuarios
+            @{
+                var inicio = (Model.PaginaActual - 1) * Model.RegistrosPorPagina + 1;
+                var fin = Math.Min(Model.PaginaActual * Model.RegistrosPorPagina, Model.TotalRegistros);
+                if (Model.TotalRegistros == 0) inicio = 0;
+            }
+            Mostrando @inicio - @fin de @Model.TotalRegistros usuarios
         </div>
     </div>
 
@@ -151,26 +150,18 @@
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-200">
-                @foreach (var item in Model)
+                @foreach (var item in Model.Items)
                 {
                     var usuario = item.Usuario;
                     var nombreCompleto = $"{usuario.Persona?.Nombre} {usuario.Persona?.Apellido}";
                     var estado = usuario.Persona?.Estado ?? "Inactivo";
                     var esActivo = estado == "Activo";
-                    var suscripcionEstado = item.SuscripcionActiva ? "activa" : (item.TieneLocal ? "vencida" : "sin-local");
-                    if (item.ProximaAVencer) suscripcionEstado = "proxima";
 
-                    <tr class="usuario-row hover:bg-gray-50 transition-colors"
-                        data-nombre="@nombreCompleto.ToLower()"
-                        data-correo="@usuario.Correo?.ToLower()"
-                        data-local="@item.Local?.Nombre?.ToLower()"
-                        data-rol="@usuario.Rol?.Nombre"
-                        data-estado="@estado"
-                        data-suscripcion="@suscripcionEstado">
+                    <tr class="usuario-row hover:bg-gray-50 transition-colors">
                         <td class="px-4 py-4">
                             <div class="flex items-center gap-3">
                                 <div class="w-10 h-10 rounded-full bg-gradient-to-br from-[#23916A] to-[#1a6b4f] flex items-center justify-center text-white font-semibold text-sm">
-                                    @(usuario.Persona?.Nombre?.Substring(0, 1).ToUpper())@(usuario.Persona?.Apellido?.Substring(0, 1).ToUpper())
+                                    @(usuario.Persona?.Nombre?.Length > 0 ? usuario.Persona.Nombre.Substring(0, 1).ToUpper() : "?")@(usuario.Persona?.Apellido?.Length > 0 ? usuario.Persona.Apellido.Substring(0, 1).ToUpper() : "")
                                 </div>
                                 <div>
                                     <p class="font-medium text-gray-900">@nombreCompleto</p>
@@ -192,13 +183,6 @@
                                         <i class="fas fa-store text-purple-500 text-xs"></i>
                                         @item.Local.Nombre
                                     </p>
-                                    @if (!string.IsNullOrEmpty(item.Local.Telefono.ToString()) && item.Local.Telefono > 0)
-                                    {
-                                        <p class="text-xs text-gray-500 flex items-center gap-2">
-                                            <i class="fas fa-phone text-gray-400"></i>
-                                            @item.Local.Telefono
-                                        </p>
-                                    }
                                 </div>
                             }
                             else
@@ -275,53 +259,100 @@
         </table>
     </div>
 
-    @if (Model.Count == 0)
+    @if (Model.Items.Count == 0)
     {
         <div class="px-4 py-12 text-center">
             <div class="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
                 <i class="fas fa-users text-gray-400 text-2xl"></i>
             </div>
             <h3 class="text-lg font-medium text-gray-900 mb-1">No hay usuarios</h3>
-            <p class="text-gray-500">No se encontraron usuarios en el sistema.</p>
+            <p class="text-gray-500">
+                @if (!string.IsNullOrEmpty(busquedaActual))
+                {
+                    <span>No se encontraron usuarios con el término "@busquedaActual".</span>
+                }
+                else
+                {
+                    <span>No se encontraron usuarios en el sistema.</span>
+                }
+            </p>
         </div>
     }
 
-    <!-- Empty state for filtered results -->
-    <div id="noResultsMessage" class="hidden px-4 py-12 text-center">
-        <div class="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
-            <i class="fas fa-search text-gray-400 text-2xl"></i>
-        </div>
-        <h3 class="text-lg font-medium text-gray-900 mb-1">Sin resultados</h3>
-        <p class="text-gray-500">No se encontraron usuarios con los filtros aplicados.</p>
-    </div>
-
     <!-- Pagination Footer -->
-    <div class="px-4 py-3 border-t border-gray-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div class="text-sm text-gray-500">
-            Página <span id="currentPageDisplay">1</span> de <span id="totalPagesDisplay">1</span>
-        </div>
-        <div class="flex items-center gap-2">
-            <button id="btnFirst" onclick="goToPage(1)"
-                    class="px-3 py-1.5 rounded-lg border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
-                <i class="fas fa-angle-double-left"></i>
-            </button>
-            <button id="btnPrev" onclick="goToPage(currentPage - 1)"
-                    class="px-3 py-1.5 rounded-lg border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
-                <i class="fas fa-angle-left"></i>
-            </button>
-            <div id="pageNumbers" class="flex items-center gap-1">
-                <!-- Page numbers will be inserted here -->
+    @if (Model.TotalPaginas > 1)
+    {
+        <div class="px-4 py-3 border-t border-gray-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div class="text-sm text-gray-500">
+                Página @Model.PaginaActual de @Model.TotalPaginas
             </div>
-            <button id="btnNext" onclick="goToPage(currentPage + 1)"
-                    class="px-3 py-1.5 rounded-lg border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
-                <i class="fas fa-angle-right"></i>
-            </button>
-            <button id="btnLast" onclick="goToPage(totalPages)"
-                    class="px-3 py-1.5 rounded-lg border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
-                <i class="fas fa-angle-double-right"></i>
-            </button>
+            <div class="flex items-center gap-2">
+                @if (Model.TienePaginaAnterior)
+                {
+                    <a href="@Url.Action("Consultar", "Usuarios", new { pagina = 1, registrosPorPagina = Model.RegistrosPorPagina, busqueda = busquedaActual })"
+                       class="px-3 py-1.5 rounded-lg border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+                        <i class="fas fa-angle-double-left"></i>
+                    </a>
+                    <a href="@Url.Action("Consultar", "Usuarios", new { pagina = Model.PaginaActual - 1, registrosPorPagina = Model.RegistrosPorPagina, busqueda = busquedaActual })"
+                       class="px-3 py-1.5 rounded-lg border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+                        <i class="fas fa-angle-left"></i>
+                    </a>
+                }
+                else
+                {
+                    <span class="px-3 py-1.5 rounded-lg border border-gray-300 text-sm font-medium text-gray-400 opacity-50">
+                        <i class="fas fa-angle-double-left"></i>
+                    </span>
+                    <span class="px-3 py-1.5 rounded-lg border border-gray-300 text-sm font-medium text-gray-400 opacity-50">
+                        <i class="fas fa-angle-left"></i>
+                    </span>
+                }
+
+                @{
+                    var startPage = Math.Max(1, Model.PaginaActual - 2);
+                    var endPage = Math.Min(Model.TotalPaginas, startPage + 4);
+                    if (endPage - startPage < 4)
+                    {
+                        startPage = Math.Max(1, endPage - 4);
+                    }
+                }
+
+                @for (int i = startPage; i <= endPage; i++)
+                {
+                    if (i == Model.PaginaActual)
+                    {
+                        <span class="px-3 py-1.5 rounded-lg text-sm font-medium bg-[#23916A] text-white">@i</span>
+                    }
+                    else
+                    {
+                        <a href="@Url.Action("Consultar", "Usuarios", new { pagina = i, registrosPorPagina = Model.RegistrosPorPagina, busqueda = busquedaActual })"
+                           class="px-3 py-1.5 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors">@i</a>
+                    }
+                }
+
+                @if (Model.TienePaginaSiguiente)
+                {
+                    <a href="@Url.Action("Consultar", "Usuarios", new { pagina = Model.PaginaActual + 1, registrosPorPagina = Model.RegistrosPorPagina, busqueda = busquedaActual })"
+                       class="px-3 py-1.5 rounded-lg border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+                        <i class="fas fa-angle-right"></i>
+                    </a>
+                    <a href="@Url.Action("Consultar", "Usuarios", new { pagina = Model.TotalPaginas, registrosPorPagina = Model.RegistrosPorPagina, busqueda = busquedaActual })"
+                       class="px-3 py-1.5 rounded-lg border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+                        <i class="fas fa-angle-double-right"></i>
+                    </a>
+                }
+                else
+                {
+                    <span class="px-3 py-1.5 rounded-lg border border-gray-300 text-sm font-medium text-gray-400 opacity-50">
+                        <i class="fas fa-angle-right"></i>
+                    </span>
+                    <span class="px-3 py-1.5 rounded-lg border border-gray-300 text-sm font-medium text-gray-400 opacity-50">
+                        <i class="fas fa-angle-double-right"></i>
+                    </span>
+                }
+            </div>
         </div>
-    </div>
+    }
 </div>
 
 <!-- Modal Editar Estado -->
@@ -412,127 +443,11 @@
 
 @section Scripts {
 <script>
-    // Pagination variables
-    let currentPage = 1;
-    let itemsPerPage = 25;
-    let totalPages = 1;
-    const allRows = Array.from(document.querySelectorAll('.usuario-row'));
-    let filteredRows = [...allRows];
-
-    // Initialize
-    document.addEventListener('DOMContentLoaded', function() {
-        updatePagination();
-
-        // Event listeners for filters
-        document.getElementById('searchInput').addEventListener('input', applyFilters);
-        document.getElementById('filterRol').addEventListener('change', applyFilters);
-        document.getElementById('filterEstado').addEventListener('change', applyFilters);
-        document.getElementById('filterSuscripcion').addEventListener('change', applyFilters);
-        document.getElementById('itemsPerPage').addEventListener('change', function() {
-            itemsPerPage = parseInt(this.value);
-            currentPage = 1;
-            updatePagination();
-        });
-    });
-
-    function applyFilters() {
-        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-        const rolFilter = document.getElementById('filterRol').value;
-        const estadoFilter = document.getElementById('filterEstado').value;
-        const suscripcionFilter = document.getElementById('filterSuscripcion').value;
-
-        filteredRows = allRows.filter(row => {
-            const nombre = row.dataset.nombre || '';
-            const correo = row.dataset.correo || '';
-            const local = row.dataset.local || '';
-            const rol = row.dataset.rol || '';
-            const estado = row.dataset.estado || '';
-            const suscripcion = row.dataset.suscripcion || '';
-
-            const matchesSearch = !searchTerm ||
-                nombre.includes(searchTerm) ||
-                correo.includes(searchTerm) ||
-                local.includes(searchTerm);
-            const matchesRol = !rolFilter || rol === rolFilter;
-            const matchesEstado = !estadoFilter || estado === estadoFilter;
-            const matchesSuscripcion = !suscripcionFilter || suscripcion === suscripcionFilter;
-
-            return matchesSearch && matchesRol && matchesEstado && matchesSuscripcion;
-        });
-
-        currentPage = 1;
-        updatePagination();
-    }
-
-    function updatePagination() {
-        const totalItems = filteredRows.length;
-        totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
-
-        if (currentPage > totalPages) currentPage = totalPages;
-
-        const start = (currentPage - 1) * itemsPerPage;
-        const end = Math.min(start + itemsPerPage, totalItems);
-
-        // Hide all rows first
-        allRows.forEach(row => row.style.display = 'none');
-
-        // Show only current page rows
-        filteredRows.slice(start, end).forEach(row => row.style.display = '');
-
-        // Update info text
-        document.getElementById('showingStart').textContent = totalItems > 0 ? start + 1 : 0;
-        document.getElementById('showingEnd').textContent = end;
-        document.getElementById('totalFiltered').textContent = totalItems;
-        document.getElementById('currentPageDisplay').textContent = currentPage;
-        document.getElementById('totalPagesDisplay').textContent = totalPages;
-
-        // Show/hide no results message
-        const noResultsMsg = document.getElementById('noResultsMessage');
-        const tbody = document.querySelector('tbody');
-        if (totalItems === 0 && allRows.length > 0) {
-            noResultsMsg.classList.remove('hidden');
-            tbody.classList.add('hidden');
-        } else {
-            noResultsMsg.classList.add('hidden');
-            tbody.classList.remove('hidden');
-        }
-
-        // Update button states
-        document.getElementById('btnFirst').disabled = currentPage === 1;
-        document.getElementById('btnPrev').disabled = currentPage === 1;
-        document.getElementById('btnNext').disabled = currentPage === totalPages;
-        document.getElementById('btnLast').disabled = currentPage === totalPages;
-
-        // Update page numbers
-        updatePageNumbers();
-    }
-
-    function updatePageNumbers() {
-        const container = document.getElementById('pageNumbers');
-        container.innerHTML = '';
-
-        let startPage = Math.max(1, currentPage - 2);
-        let endPage = Math.min(totalPages, startPage + 4);
-
-        if (endPage - startPage < 4) {
-            startPage = Math.max(1, endPage - 4);
-        }
-
-        for (let i = startPage; i <= endPage; i++) {
-            const btn = document.createElement('button');
-            btn.textContent = i;
-            btn.onclick = () => goToPage(i);
-            btn.className = i === currentPage
-                ? 'px-3 py-1.5 rounded-lg text-sm font-medium bg-[#23916A] text-white'
-                : 'px-3 py-1.5 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors';
-            container.appendChild(btn);
-        }
-    }
-
-    function goToPage(page) {
-        if (page < 1 || page > totalPages) return;
-        currentPage = page;
-        updatePagination();
+    function cambiarRegistrosPorPagina(valor) {
+        const url = new URL(window.location.href);
+        url.searchParams.set('registrosPorPagina', valor);
+        url.searchParams.set('pagina', '1');
+        window.location.href = url.toString();
     }
 
     // Modal functions
@@ -571,16 +486,13 @@
 
             // Update the badge
             const badge = document.getElementById(`estado-badge-${idUsuario}`);
-            const row = badge.closest('.usuario-row');
 
             if (nuevoEstado === "1") {
                 badge.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700';
                 badge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>Activo';
-                row.dataset.estado = 'Activo';
             } else {
                 badge.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700';
                 badge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>Inactivo';
-                row.dataset.estado = 'Inactivo';
             }
 
             showToast('success', 'Estado actualizado', data.mensaje);

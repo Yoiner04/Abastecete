@@ -17,17 +17,17 @@ namespace Abastecete.Controllers
         }
 
         [RequierePermiso("Administrar Usuarios")]
-        public IActionResult Consultar()
+        public IActionResult Consultar(int pagina = 1, int registrosPorPagina = 10, string busqueda = null)
         {
-            var idUsuario = HttpContext.Session.GetInt32("idUsuario");
-
             ViewBag.rol = LoginController.rol;
             ViewBag.administrar = RolPermisos.TienePermiso("Administrar Usuarios", HttpContext.Session.GetString("permisos"));
 
-            // Si el usuario es administrador, obtiene todos los usuarios con sus locales y suscripciones
-            var usuarios = manejadorU.ConsultarUsuariosConLocal(idUsuario == 2 ? 0 : idUsuario.Value);
+            // Usar paginación para evitar traer todos los registros
+            var resultado = manejadorU.ConsultarUsuariosPaginado(pagina, registrosPorPagina, busqueda);
 
-            return View(usuarios);
+            ViewBag.Busqueda = busqueda;
+
+            return View(resultado);
         }
 
         public class EditarEstadoRequest
@@ -113,6 +113,19 @@ namespace Abastecete.Controllers
         [HttpPost]
         public IActionResult Registrar(Usuario usuario)
         {
+            Console.WriteLine("=== DEBUG REGISTRO ===");
+            Console.WriteLine($"Persona null: {usuario?.Persona == null}");
+            Console.WriteLine($"Nombre: {usuario?.Persona?.Nombre}");
+            Console.WriteLine($"Apellido: {usuario?.Persona?.Apellido}");
+            Console.WriteLine($"Documento: {usuario?.Persona?.Documento}");
+            Console.WriteLine($"TipoDoc null: {usuario?.Persona?.TipoDeDocumento == null}");
+            Console.WriteLine($"TipoDoc.Id: {usuario?.Persona?.TipoDeDocumento?.Id}");
+            Console.WriteLine($"Telefono: {usuario?.Persona?.Telefono}");
+            Console.WriteLine($"Correo: {usuario?.Correo}");
+            Console.WriteLine($"Contrasenia: {usuario?.Contrasenia?.Length} chars");
+            Console.WriteLine($"CodigoReferido: {usuario?.CodigoReferido}");
+            Console.WriteLine("======================");
+
             bool result = manejadorU.RegistrarUsuario(usuario);
 
             if (result)

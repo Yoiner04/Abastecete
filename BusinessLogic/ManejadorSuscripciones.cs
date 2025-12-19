@@ -201,7 +201,6 @@ namespace BusinessLogic
             {
                 Id = Convert.ToInt32(row["TipoMembresiaId"]),
                 Nombre = row["TipoMembresiaNombre"].ToString(),
-                Descripcion = row["TipoMembresiaDescripcion"]?.ToString(),
                 Costo = row["TipoMembresiaCostoMes"] != DBNull.Value
                     ? float.Parse(row["TipoMembresiaCostoMes"].ToString())
                     : 0,
@@ -216,7 +215,19 @@ namespace BusinessLogic
                     : 0,
                 Estado = row["TipoMembresiaEstado"] != DBNull.Value
                     ? Convert.ToInt32(row["TipoMembresiaEstado"])
-                    : 1
+                    : 1,
+                Duracion = row.Table.Columns.Contains("TipoMembresiaDuracion") && row["TipoMembresiaDuracion"] != DBNull.Value
+                    ? Convert.ToInt32(row["TipoMembresiaDuracion"])
+                    : 0,
+                Cantidad = row.Table.Columns.Contains("TipoMembresiaCantidad") && row["TipoMembresiaCantidad"] != DBNull.Value
+                    ? Convert.ToInt32(row["TipoMembresiaCantidad"])
+                    : 0,
+                OfertasFlashSimultaneas = row.Table.Columns.Contains("TipoMembresiaOfertasSimultaneas") && row["TipoMembresiaOfertasSimultaneas"] != DBNull.Value
+                    ? Convert.ToInt32(row["TipoMembresiaOfertasSimultaneas"])
+                    : 1,
+                OfertasFlashTotal = row.Table.Columns.Contains("TipoMembresiaOfertasTotal") && row["TipoMembresiaOfertasTotal"] != DBNull.Value
+                    ? Convert.ToInt32(row["TipoMembresiaOfertasTotal"])
+                    : 0
             };
 
             return suscripcion;

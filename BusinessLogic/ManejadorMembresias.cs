@@ -46,9 +46,12 @@ namespace BusinessLogic
                 {
                     Id = Convert.ToInt32(row["PK_ID_TIPO_MEMBRESIA"]),
                     Nombre = row["NOMBRE"].ToString(),
-                    Descripcion = row["DESCRIPCION"].ToString(),
                     Costo = float.Parse(row["COSTO"].ToString()),
                     Estado = Convert.ToInt32(row["ESTADO"]),
+                    Duracion = row.Table.Columns.Contains("DURACION_OFERTA") ? Convert.ToInt32(row["DURACION_OFERTA"]) : 0,
+                    Cantidad = row.Table.Columns.Contains("CANTIDAD_PRODUCTOS") ? Convert.ToInt32(row["CANTIDAD_PRODUCTOS"]) : 0,
+                    OfertasFlashSimultaneas = row.Table.Columns.Contains("OFERTAS_FLASH_SIMULTANEAS") ? Convert.ToInt32(row["OFERTAS_FLASH_SIMULTANEAS"]) : 1,
+                    OfertasFlashTotal = row.Table.Columns.Contains("OFERTAS_FLASH_TOTAL") ? Convert.ToInt32(row["OFERTAS_FLASH_TOTAL"]) : 0,
                     Costo_trimestral = float.Parse(row["COSTO_TRIMESTRAL"].ToString()),
                     Costo_semestral = float.Parse(row["COSTO_SEMESTRAL"].ToString()),
                     Costo_anual = float.Parse(row["COSTO_ANUAL"].ToString())
@@ -64,11 +67,12 @@ namespace BusinessLogic
             {
                 new Parametro("p_id_tipo_membresia", membresia.Id),
                 new Parametro("p_nombre", membresia.Nombre),
-                new Parametro("p_descripcion", membresia.Descripcion),
                 new Parametro("p_costo", membresia.Costo),
                 new Parametro("p_estado", membresia.Estado),
                 new Parametro("p_duracion", membresia.Duracion),
                 new Parametro("p_cantidad", membresia.Cantidad),
+                new Parametro("p_ofertas_flash_simultaneas", membresia.OfertasFlashSimultaneas),
+                new Parametro("p_ofertas_flash_total", membresia.OfertasFlashTotal),
                 new Parametro("p_costo_trimestral", membresia.Costo_trimestral),
                 new Parametro("p_costo_semestral", membresia.Costo_semestral),
                 new Parametro("p_costo_anual", membresia.Costo_anual)
@@ -94,11 +98,12 @@ namespace BusinessLogic
                 {
                     Id = Convert.ToInt32(row["PK_ID_TIPO_MEMBRESIA"]),
                     Nombre = row["NOMBRE"].ToString(),
-                    Descripcion = row["DESCRIPCION"].ToString(),
                     Costo = float.Parse(row["COSTO"].ToString()),
                     Estado = Convert.ToInt32(row["ESTADO"]),
                     Duracion = Convert.ToInt32(row["DURACION_OFERTA"]),
                     Cantidad = Convert.ToInt32(row["CANTIDAD_PRODUCTOS"]),
+                    OfertasFlashSimultaneas = row.Table.Columns.Contains("OFERTAS_FLASH_SIMULTANEAS") ? Convert.ToInt32(row["OFERTAS_FLASH_SIMULTANEAS"]) : 1,
+                    OfertasFlashTotal = row.Table.Columns.Contains("OFERTAS_FLASH_TOTAL") ? Convert.ToInt32(row["OFERTAS_FLASH_TOTAL"]) : 0,
                     Costo_trimestral = float.Parse(row["COSTO_TRIMESTRAL"].ToString()),
                     Costo_semestral = float.Parse(row["COSTO_SEMESTRAL"].ToString()),
                     Costo_anual = float.Parse(row["COSTO_ANUAL"].ToString())

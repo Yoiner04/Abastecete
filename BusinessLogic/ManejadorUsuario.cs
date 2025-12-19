@@ -110,7 +110,7 @@ namespace BusinessLogic
                         Nombre = row["NOMBRE_ROL"].ToString()
                     },
                     Correo = row["CORREO"].ToString(),
-                    CodigoReferido = 0
+                    CodigoReferido = null
                 });
             }
             return usuarios;
@@ -290,7 +290,7 @@ namespace BusinessLogic
         }
 
         /// <summary>
-        /// Obtiene usuarios con información de su local y suscripción
+        /// Obtiene usuarios con información de su local y suscripción (método legacy - usa N+1 queries)
         /// </summary>
         public List<UsuarioConLocalViewModel> ConsultarUsuariosConLocal(int idUsuario)
         {
@@ -312,6 +312,103 @@ namespace BusinessLogic
                 }
 
                 resultado.Add(viewModel);
+            }
+
+            return resultado;
+        }
+
+        /// <summary>
+        /// Consulta usuarios paginados con información de local y suscripción en una sola query
+        /// </summary>
+        public ResultadoPaginado<UsuarioConLocalViewModel> ConsultarUsuariosPaginado(int pagina, int registrosPorPagina, string busqueda = null)
+        {
+            var resultado = new ResultadoPaginado<UsuarioConLocalViewModel>
+            {
+                PaginaActual = pagina,
+                RegistrosPorPagina = registrosPorPagina
+            };
+
+            // Obtener total de registros
+            List<Parametro> parametrosConteo = new List<Parametro>
+            {
+                new Parametro("p_busqueda", busqueda ?? "")
+            };
+            DataTable dataConteo = conexion.EjecutarConsulta("contar_usuarios", parametrosConteo);
+            if (dataConteo.Rows.Count > 0)
+            {
+                resultado.TotalRegistros = Convert.ToInt32(dataConteo.Rows[0]["Total"]);
+            }
+
+            // Obtener registros paginados
+            List<Parametro> parametros = new List<Parametro>
+            {
+                new Parametro("p_pagina", pagina),
+                new Parametro("p_registros_por_pagina", registrosPorPagina),
+                new Parametro("p_busqueda", busqueda ?? "")
+            };
+
+            DataTable datos = conexion.EjecutarConsulta("consultar_usuarios_paginado", parametros);
+
+            foreach (DataRow row in datos.Rows)
+            {
+                var viewModel = new UsuarioConLocalViewModel
+                {
+                    Usuario = new Usuario
+                    {
+                        Id = Convert.ToInt32(row["UsuarioId"]),
+                        Persona = new Persona
+                        {
+                            Id = row["PersonaId"] != DBNull.Value ? Convert.ToInt32(row["PersonaId"]) : 0,
+                            Nombre = row["PersonaNombres"].ToString(),
+                            Apellido = row["PersonaApellidos"].ToString(),
+                            Telefono = row["PersonaTelefono"].ToString(),
+                            Correo = row["PersonaCorreo"].ToString(),
+                            Estado = Convert.ToInt32(row["UsuarioEstado"]) == 1 ? "Activo" : "Inactivo"
+                        },
+                        Rol = new Rol
+                        {
+                            Nombre = row["RolNombre"].ToString()
+                        },
+                        Correo = row["PersonaCorreo"].ToString()
+                    }
+                };
+
+                // Local y suscripción (si existen)
+                if (row["LocalId"] != DBNull.Value)
+                {
+                    viewModel.Local = new Negocio
+                    {
+                        Id = Convert.ToInt32(row["LocalId"]),
+                        Nombre = row["LocalNombre"].ToString()
+                    };
+
+                    // Suscripción activa (si existe)
+                    if (row["SuscripcionId"] != DBNull.Value)
+                    {
+                        viewModel.Local.SuscripcionActiva = new Suscripcion
+                        {
+                            Id = Convert.ToInt32(row["SuscripcionId"]),
+                            FechaInicio = row["SuscripcionFechaInicio"] != DBNull.Value
+                                ? Convert.ToDateTime(row["SuscripcionFechaInicio"])
+                                : DateTime.MinValue,
+                            FechaFin = row["SuscripcionFechaFin"] != DBNull.Value
+                                ? Convert.ToDateTime(row["SuscripcionFechaFin"])
+                                : DateTime.MinValue,
+                            Estado = row["SuscripcionEstado"] != DBNull.Value
+                                ? Convert.ToInt32(row["SuscripcionEstado"])
+                                : 0,
+                            TipoMembresia = new Membresia
+                            {
+                                Id = row["TipoMembresiaId"] != DBNull.Value
+                                    ? Convert.ToInt32(row["TipoMembresiaId"])
+                                    : 0,
+                                Nombre = row["TipoMembresiaNombre"].ToString()
+                            }
+                        };
+                    }
+                }
+
+                resultado.Items.Add(viewModel);
             }
 
             return resultado;
