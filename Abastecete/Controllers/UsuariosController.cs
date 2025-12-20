@@ -10,6 +10,8 @@ namespace Abastecete.Controllers
     {
         ManejadorUsuario manejadorU = new ManejadorUsuario();
         ManejadorTipoDocumento TipoDocumento = new ManejadorTipoDocumento();
+        ManejadorSuscripciones manejadorSuscripciones = new ManejadorSuscripciones();
+        ManejadorMembresias manejadorMembresias = new ManejadorMembresias();
 
         public UsuariosController()
         {
@@ -36,8 +38,24 @@ namespace Abastecete.Controllers
             public int NuevoEstado { get; set; }
         }
 
+        public class ExtenderMembresiaRequest
+        {
+            public int IdLocal { get; set; }
+            public int IdSuscripcion { get; set; }
+            public string Periodo { get; set; }
+            public string Notas { get; set; }
+        }
+
+        public class CambiarMembresiaRequest
+        {
+            public int IdLocal { get; set; }
+            public int IdTipoMembresia { get; set; }
+            public string Periodo { get; set; }
+        }
+
         [HttpPost]
         [RequierePermiso("Administrar Usuarios")]
+        [Auditar(ModulosAuditoria.USUARIOS, TiposAccionAuditoria.UPDATE)]
         public IActionResult EditarEstado([FromBody] EditarEstadoRequest data)
         {
             try
@@ -57,6 +75,143 @@ namespace Abastecete.Controllers
             catch (Exception ex)
             {
                 return Json(new { mensaje = $"Error interno en el servidor: {ex.Message}" });
+            }
+        }
+
+        [HttpPost]
+        [RequierePermiso("Administrar Usuarios")]
+        [Auditar(ModulosAuditoria.MEMBRESIAS, TiposAccionAuditoria.UPDATE)]
+        public IActionResult ExtenderMembresia([FromBody] ExtenderMembresiaRequest data)
+        {
+            try
+            {
+                // Calcular el monto según el período (0 porque es extensión manual del admin)
+                decimal monto = 0;
+
+                var resultado = manejadorSuscripciones.RenovarSuscripcion(
+                    data.IdSuscripcion,
+                    data.Periodo,
+                    monto,
+                    "Admin - Extensión Manual"
+                );
+
+                if (resultado.IdSuscripcion > 0)
+                {
+                    return Json(new
+                    {
+                        success = true,
+                        mensaje = $"Membresía extendida exitosamente. Nueva fecha de vencimiento: {resultado.NuevaFechaFin:dd/MM/yyyy}",
+                        nuevaFechaFin = resultado.NuevaFechaFin.ToString("dd/MM/yyyy")
+                    });
+                }
+                else
+                {
+                    return Json(new { success = false, mensaje = "Error al extender la membresía." });
+                }
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, mensaje = $"Error: {ex.Message}" });
+            }
+        }
+
+        [HttpGet]
+        [RequierePermiso("Administrar Usuarios")]
+        public IActionResult ObtenerInfoSuscripcion(int idLocal)
+        {
+            try
+            {
+                var suscripcion = manejadorSuscripciones.ObtenerSuscripcionActiva(idLocal);
+
+                if (suscripcion != null)
+                {
+                    return Json(new
+                    {
+                        success = true,
+                        suscripcion = new
+                        {
+                            id = suscripcion.Id,
+                            tipoMembresiaId = suscripcion.TipoMembresia?.Id,
+                            tipoMembresia = suscripcion.TipoMembresia?.Nombre,
+                            fechaInicio = suscripcion.FechaInicio.ToString("dd/MM/yyyy"),
+                            fechaFin = suscripcion.FechaFin.ToString("dd/MM/yyyy"),
+                            diasRestantes = suscripcion.DiasRestantes,
+                            estado = suscripcion.EstadoDescripcion
+                        }
+                    });
+                }
+                else
+                {
+                    return Json(new { success = false, mensaje = "No se encontró suscripción activa." });
+                }
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, mensaje = $"Error: {ex.Message}" });
+            }
+        }
+
+        [HttpPost]
+        [RequierePermiso("Administrar Usuarios")]
+        [Auditar(ModulosAuditoria.MEMBRESIAS, TiposAccionAuditoria.UPDATE)]
+        public IActionResult CambiarMembresia([FromBody] CambiarMembresiaRequest data)
+        {
+            try
+            {
+                // Crear nueva suscripción con el nuevo tipo de membresía
+                var resultado = manejadorSuscripciones.CrearSuscripcion(
+                    data.IdLocal,
+                    data.IdTipoMembresia,
+                    data.Periodo,
+                    0, // Monto 0 porque es cambio manual del admin
+                    "Admin - Cambio Manual",
+                    "Cambio de membresía desde panel de administración"
+                );
+
+                if (resultado.IdSuscripcion > 0)
+                {
+                    var membresia = manejadorMembresias.ObtenerMembresia(data.IdTipoMembresia);
+                    return Json(new
+                    {
+                        success = true,
+                        mensaje = $"Membresía cambiada a {membresia?.Nombre ?? "nueva membresía"} exitosamente.",
+                        tipoCambio = resultado.TipoCambio
+                    });
+                }
+                else
+                {
+                    return Json(new { success = false, mensaje = "Error al cambiar la membresía." });
+                }
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, mensaje = $"Error: {ex.Message}" });
+            }
+        }
+
+        [HttpGet]
+        [RequierePermiso("Administrar Usuarios")]
+        public IActionResult ObtenerTiposMembresia()
+        {
+            try
+            {
+                // Obtener TODAS las membresías activas directamente
+                var todasMembresias = manejadorMembresias.ObtenerTodasMembresias();
+                var membresias = todasMembresias.Select(m => new
+                {
+                    id = m.Id,
+                    nombre = m.Nombre,
+                    costoMensual = m.Costo,
+                    costoTrimestral = m.Costo_trimestral,
+                    costoSemestral = m.Costo_semestral,
+                    costoAnual = m.Costo_anual
+                }).ToList();
+
+                return Json(new { success = true, membresias });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, mensaje = $"Error: {ex.Message}" });
             }
         }
 

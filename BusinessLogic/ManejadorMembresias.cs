@@ -82,6 +82,41 @@ namespace BusinessLogic
             return resultado ? "Membresía actualizada correctamente" : "Error en la base de datos";
         }
 
+        /// <summary>
+        /// Obtiene todas las membresías activas (sin filtros)
+        /// </summary>
+        public List<Membresia> ObtenerTodasMembresias()
+        {
+            DataTable datos = conexion.EjecutarConsulta("obtener_todas_membresias");
+            List<Membresia> membresias = new List<Membresia>();
+
+            foreach (DataRow row in datos.Rows)
+            {
+                membresias.Add(new Membresia
+                {
+                    Id = Convert.ToInt32(row["PK_ID_TIPO_MEMBRESIA"]),
+                    Nombre = row["NOMBRE"].ToString(),
+                    Costo = row.Table.Columns.Contains("COSTO_MES") && row["COSTO_MES"] != DBNull.Value
+                        ? float.Parse(row["COSTO_MES"].ToString())
+                        : 0,
+                    Estado = row.Table.Columns.Contains("ESTADO") && row["ESTADO"] != DBNull.Value
+                        ? Convert.ToInt32(row["ESTADO"])
+                        : 1,
+                    Costo_trimestral = row.Table.Columns.Contains("COSTO_TRIMESTRE") && row["COSTO_TRIMESTRE"] != DBNull.Value
+                        ? float.Parse(row["COSTO_TRIMESTRE"].ToString())
+                        : 0,
+                    Costo_semestral = row.Table.Columns.Contains("COSTO_SEMESTRE") && row["COSTO_SEMESTRE"] != DBNull.Value
+                        ? float.Parse(row["COSTO_SEMESTRE"].ToString())
+                        : 0,
+                    Costo_anual = row.Table.Columns.Contains("COSTO_ANIO") && row["COSTO_ANIO"] != DBNull.Value
+                        ? float.Parse(row["COSTO_ANIO"].ToString())
+                        : 0
+                });
+            }
+
+            return membresias;
+        }
+
         // Obtener una membresía por ID
         public Membresia ObtenerMembresia(int id)
         {

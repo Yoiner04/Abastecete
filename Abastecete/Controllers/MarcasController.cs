@@ -85,6 +85,7 @@ namespace Abastecete.Controllers
         /// </summary>
         [HttpPost]
         [RequierePermiso("Administrar Marcas")]
+        [Auditar(ModulosAuditoria.MARCAS, TiposAccionAuditoria.CREATE, ParametroDescripcion = "nombre")]
         public IActionResult Crear(string nombre, string descripcion, IFormFile logo)
         {
             if (string.IsNullOrWhiteSpace(nombre))
@@ -125,6 +126,7 @@ namespace Abastecete.Controllers
         /// </summary>
         [HttpPost]
         [RequierePermiso("Administrar Marcas")]
+        [Auditar(ModulosAuditoria.MARCAS, TiposAccionAuditoria.UPDATE, ParametroId = "id", ParametroDescripcion = "nombre")]
         public IActionResult Editar(int id, string nombre, string descripcion, IFormFile logo)
         {
             if (id <= 0)
@@ -178,6 +180,7 @@ namespace Abastecete.Controllers
         /// </summary>
         [HttpDelete]
         [RequierePermiso("Administrar Marcas")]
+        [Auditar(ModulosAuditoria.MARCAS, TiposAccionAuditoria.DELETE, ParametroId = "id")]
         public IActionResult Eliminar(int id)
         {
             if (id <= 0)

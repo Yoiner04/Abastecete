@@ -23,6 +23,8 @@ namespace BusinessLogic.Models
         public string Descripcion { get; set; }
         public string SKU { get; set; }
         public string CloudinaryPublicId { get; set; }
+        public int? IdTipoUnidad { get; set; }
+        public string NombreTipoUnidad { get; set; }
 
         // Campos para navegacion
         public string NombreSubCategoria { get; set; }

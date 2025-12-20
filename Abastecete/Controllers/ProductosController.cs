@@ -15,6 +15,7 @@ namespace Abastecete.Controllers
         private readonly ManejadorPersonas manejadorPersonas;
         private readonly ManejadorMarcas manejadorMarcas;
         private readonly ManejadorImagenes manejadorImagenes;
+        private readonly ManejadorTipoUnidad manejadorTipoUnidad;
 
         public ProductosController()
         {
@@ -24,6 +25,7 @@ namespace Abastecete.Controllers
             manejadorPersonas = new ManejadorPersonas();
             manejadorMarcas = new ManejadorMarcas();
             manejadorImagenes = new ManejadorImagenes();
+            manejadorTipoUnidad = new ManejadorTipoUnidad();
         }
 
         public IActionResult Consultar()
@@ -230,6 +232,7 @@ namespace Abastecete.Controllers
 
             ViewBag.Categorias = manejadorCategorias.ConsultarCategorias();
             ViewBag.Marcas = manejadorMarcas.ConsultarMarcas();
+            ViewBag.TiposUnidad = manejadorTipoUnidad.ConsultarTiposUnidad();
 
             return View(productos);
         }
@@ -257,6 +260,7 @@ namespace Abastecete.Controllers
                     cloudinaryPublicId = producto.CloudinaryPublicId,
                     idSubCategoria = producto.IdSubCategoria,
                     idMarca = producto.IdMarca,
+                    idTipoUnidad = producto.IdTipoUnidad,
                     categoria = producto.Categoria
                 });
             }
@@ -272,8 +276,13 @@ namespace Abastecete.Controllers
         /// </summary>
         [HttpPost]
         [RequierePermiso("Administrar Productos")]
-        public IActionResult CrearProductoAdmin(string nombre, string descripcion, string sku, int idSubCategoria, int idMarca, IFormFile imagen)
+        [Auditar(ModulosAuditoria.PRODUCTOS, TiposAccionAuditoria.CREATE, ParametroDescripcion = "nombre")]
+        public IActionResult CrearProductoAdmin(string nombre, string descripcion, string sku, int idSubCategoria, int idMarca, int? idTipoUnidad, IFormFile imagen)
         {
+            Console.WriteLine($"=== CrearProductoAdmin ===");
+            Console.WriteLine($"Nombre: {nombre}, SubCat: {idSubCategoria}, Marca: {idMarca}, TipoUnidad: {idTipoUnidad}");
+            Console.WriteLine($"Imagen: {imagen?.FileName}, Size: {imagen?.Length}");
+
             if (string.IsNullOrWhiteSpace(nombre))
                 return BadRequest(new { success = false, mensaje = "El nombre es requerido" });
 
@@ -288,11 +297,20 @@ namespace Abastecete.Controllers
                 // Subir imagen a Cloudinary si se proporciono
                 if (imagen != null && imagen.Length > 0)
                 {
+                    Console.WriteLine("Subiendo imagen a Cloudinary...");
                     var resultado = manejadorImagenes.SubirImagenCompleto(imagen, "productos");
+                    Console.WriteLine($"Resultado: Success={resultado.Success}, Error={resultado.Error}");
+
                     if (resultado.Success)
                     {
                         imagenUrl = resultado.SecureUrl;
                         cloudinaryPublicId = resultado.PublicId;
+                        Console.WriteLine($"Imagen subida OK: {imagenUrl}");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"ERROR Cloudinary: {resultado.Error}");
+                        return BadRequest(new { success = false, mensaje = $"Error al subir imagen: {resultado.Error}" });
                     }
                 }
 
@@ -303,6 +321,7 @@ namespace Abastecete.Controllers
                     SKU = sku,
                     IdSubCategoria = idSubCategoria,
                     IdMarca = idMarca > 0 ? idMarca : 1,
+                    IdTipoUnidad = idTipoUnidad,
                     ImagenUrl = imagenUrl,
                     CloudinaryPublicId = cloudinaryPublicId
                 };
@@ -326,7 +345,8 @@ namespace Abastecete.Controllers
         /// </summary>
         [HttpPost]
         [RequierePermiso("Administrar Productos")]
-        public IActionResult EditarProductoAdmin(int id, string nombre, string descripcion, string sku, int idSubCategoria, int idMarca, IFormFile imagen, string cloudinaryPublicId)
+        [Auditar(ModulosAuditoria.PRODUCTOS, TiposAccionAuditoria.UPDATE, ParametroId = "id", ParametroDescripcion = "nombre")]
+        public IActionResult EditarProductoAdmin(int id, string nombre, string descripcion, string sku, int idSubCategoria, int idMarca, int? idTipoUnidad, IFormFile imagen, string cloudinaryPublicId)
         {
             if (id <= 0)
                 return BadRequest(new { success = false, mensaje = "ID invalido" });
@@ -368,6 +388,7 @@ namespace Abastecete.Controllers
                     SKU = sku,
                     IdSubCategoria = idSubCategoria,
                     IdMarca = idMarca > 0 ? idMarca : 1,
+                    IdTipoUnidad = idTipoUnidad,
                     ImagenUrl = imagenUrl,
                     CloudinaryPublicId = nuevoCloudinaryPublicId
                 };
@@ -391,6 +412,7 @@ namespace Abastecete.Controllers
         /// </summary>
         [HttpDelete]
         [RequierePermiso("Administrar Productos")]
+        [Auditar(ModulosAuditoria.PRODUCTOS, TiposAccionAuditoria.DELETE, ParametroId = "id")]
         public IActionResult EliminarProductoAdmin(int id)
         {
             if (id <= 0)

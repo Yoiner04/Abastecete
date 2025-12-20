@@ -79,7 +79,8 @@ namespace BusinessLogic
                 new Parametro("p_fk_id_marca", producto.IdMarca > 0 ? producto.IdMarca : 1),
                 new Parametro("p_descripcion", producto.Descripcion ?? ""),
                 new Parametro("p_sku", producto.SKU ?? ""),
-                new Parametro("p_cloudinary_public_id", producto.CloudinaryPublicId ?? "")
+                new Parametro("p_cloudinary_public_id", producto.CloudinaryPublicId ?? ""),
+                new Parametro("p_fk_id_tipounidad", producto.IdTipoUnidad ?? 0)
             };
 
             bool resultado = conexion.EjecutarTransaccion("crear_producto", parametros);
@@ -102,7 +103,8 @@ namespace BusinessLogic
                 new Parametro("p_fk_id_marca", producto.IdMarca > 0 ? producto.IdMarca : 1),
                 new Parametro("p_descripcion", producto.Descripcion ?? ""),
                 new Parametro("p_sku", producto.SKU ?? ""),
-                new Parametro("p_cloudinary_public_id", producto.CloudinaryPublicId ?? "")
+                new Parametro("p_cloudinary_public_id", producto.CloudinaryPublicId ?? ""),
+                new Parametro("p_fk_id_tipounidad", producto.IdTipoUnidad ?? 0)
             };
 
             bool resultado = conexion.EjecutarTransaccion("editar_producto", parametros);
@@ -253,6 +255,12 @@ namespace BusinessLogic
                     : "",
                 CloudinaryPublicId = row.Table.Columns.Contains("CLOUDINARY_PUBLIC_ID")
                     ? row["CLOUDINARY_PUBLIC_ID"]?.ToString() ?? ""
+                    : "",
+                IdTipoUnidad = row.Table.Columns.Contains("FK_ID_TIPOUNIDAD") && row["FK_ID_TIPOUNIDAD"] != DBNull.Value
+                    ? Convert.ToInt32(row["FK_ID_TIPOUNIDAD"])
+                    : null,
+                NombreTipoUnidad = row.Table.Columns.Contains("NOMBRE_TIPOUNIDAD")
+                    ? row["NOMBRE_TIPOUNIDAD"]?.ToString() ?? ""
                     : ""
             };
         }

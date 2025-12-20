@@ -4,6 +4,7 @@
     ViewData["Title"] = "Administrar Productos";
     var categorias = ViewBag.Categorias as List<BusinessLogic.Models.Categoria> ?? new List<BusinessLogic.Models.Categoria>();
     var marcas = ViewBag.Marcas as List<BusinessLogic.Models.Marca> ?? new List<BusinessLogic.Models.Marca>();
+    var tiposUnidad = ViewBag.TiposUnidad as List<BusinessLogic.Models.TipoUnidad> ?? new List<BusinessLogic.Models.TipoUnidad>();
     var permisos = Context.Session.GetString("permisos");
     var puedeAdministrar = RolPermisos.TienePermiso("Administrar Roles", permisos);
 }
@@ -255,98 +256,180 @@
 <!-- Modal Crear/Editar Producto -->
 <div id="modal-producto" class="modal hidden fixed inset-0 z-50 overflow-y-auto">
     <div class="flex items-center justify-center min-h-screen px-4 py-8">
-        <div class="fixed inset-0 bg-black/50 backdrop-blur-sm" onclick="cerrarModal()"></div>
-        <div class="relative bg-white rounded-2xl shadow-xl max-w-2xl w-full p-6">
-            <div class="flex items-center justify-between mb-6">
-                <h3 id="modal-titulo" class="text-lg font-semibold text-gray-900">
-                    <i class="fas fa-box text-[#23916A] mr-2"></i>
-                    Nuevo Producto
-                </h3>
-                <button onclick="cerrarModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
-                    <i class="fas fa-times text-xl"></i>
-                </button>
+        <div class="fixed inset-0 bg-black/60 backdrop-blur-sm" onclick="cerrarModal()"></div>
+        <div class="relative bg-white rounded-3xl shadow-2xl max-w-3xl w-full overflow-hidden transform transition-all">
+            <!-- Header con gradiente -->
+            <div class="bg-gradient-to-r from-[#23916A] to-[#2eb380] px-6 py-5">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                            <i id="modal-icono" class="fas fa-box text-white text-lg"></i>
+                        </div>
+                        <div>
+                            <h3 id="modal-titulo" class="text-xl font-bold text-white">Nuevo Producto</h3>
+                            <p class="text-white/70 text-sm">Complete los campos requeridos</p>
+                        </div>
+                    </div>
+                    <button onclick="cerrarModal()" class="w-10 h-10 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-all flex items-center justify-center">
+                        <i class="fas fa-times text-lg"></i>
+                    </button>
+                </div>
             </div>
 
-            <form id="form-producto" onsubmit="guardarProducto(event)">
+            <form id="form-producto" onsubmit="guardarProducto(event)" class="p-6">
                 <input type="hidden" id="producto-id" value="0">
                 <input type="hidden" id="producto-cloudinary-id" value="">
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Nombre del producto *</label>
-                        <input type="text" id="producto-nombre" placeholder="Ej: Coca-Cola 600ml"
-                               class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#23916A] focus:border-[#23916A] transition-all"
-                               required maxlength="100">
+                <!-- Seccion: Informacion basica -->
+                <div class="mb-6">
+                    <h4 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+                        <i class="fas fa-info-circle text-[#23916A]"></i>
+                        Informacion Basica
+                    </h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="md:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-1.5">
+                                Nombre del producto <span class="text-red-500">*</span>
+                            </label>
+                            <div class="relative">
+                                <input type="text" id="producto-nombre" placeholder="Ej: Coca-Cola 600ml"
+                                       class="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#23916A]/20 focus:border-[#23916A] transition-all bg-gray-50 focus:bg-white"
+                                       required maxlength="100">
+                                <i class="fas fa-tag absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1.5">SKU</label>
+                            <div class="relative">
+                                <input type="text" id="producto-sku" placeholder="Ej: COCA-600ML"
+                                       class="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#23916A]/20 focus:border-[#23916A] transition-all bg-gray-50 focus:bg-white font-mono text-sm"
+                                       maxlength="50">
+                                <i class="fas fa-barcode absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1.5">Tipo de Unidad</label>
+                            <div class="relative">
+                                <select id="producto-tipounidad" class="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#23916A]/20 focus:border-[#23916A] transition-all bg-gray-50 focus:bg-white appearance-none">
+                                    <option value="">Sin especificar</option>
+                                    @foreach (var tipo in tiposUnidad)
+                                    {
+                                        <option value="@tipo.Id">@tipo.Nombre</option>
+                                    }
+                                </select>
+                                <i class="fas fa-balance-scale absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                                <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+                            </div>
+                        </div>
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">SKU</label>
-                        <input type="text" id="producto-sku" placeholder="Ej: COCA-600ML"
-                               class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#23916A] focus:border-[#23916A] transition-all"
-                               maxlength="50">
+                    <div class="mt-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-1.5">Descripcion</label>
+                        <textarea id="producto-descripcion" rows="2" placeholder="Descripcion breve del producto..."
+                                  class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#23916A]/20 focus:border-[#23916A] transition-all bg-gray-50 focus:bg-white resize-none"></textarea>
                     </div>
                 </div>
 
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
-                    <textarea id="producto-descripcion" rows="2" placeholder="Descripción del producto..."
-                              class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#23916A] focus:border-[#23916A] transition-all"></textarea>
+                <!-- Seccion: Clasificacion -->
+                <div class="mb-6">
+                    <h4 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+                        <i class="fas fa-layer-group text-[#23916A]"></i>
+                        Clasificacion
+                    </h4>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1.5">
+                                Categoria <span class="text-red-500">*</span>
+                            </label>
+                            <div class="relative">
+                                <select id="producto-categoria" class="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#23916A]/20 focus:border-[#23916A] transition-all bg-gray-50 focus:bg-white appearance-none" required>
+                                    <option value="">Seleccionar...</option>
+                                    @foreach (var cat in categorias)
+                                    {
+                                        <option value="@cat.Id">@cat.Nombre</option>
+                                    }
+                                </select>
+                                <i class="fas fa-folder absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                                <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1.5">
+                                Subcategoria <span class="text-red-500">*</span>
+                            </label>
+                            <div class="relative">
+                                <select id="producto-subcategoria" class="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#23916A]/20 focus:border-[#23916A] transition-all bg-gray-50 focus:bg-white appearance-none" required disabled>
+                                    <option value="">Seleccione categoria</option>
+                                </select>
+                                <i class="fas fa-folder-open absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                                <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1.5">Marca</label>
+                            <div class="relative">
+                                <select id="producto-marca" class="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#23916A]/20 focus:border-[#23916A] transition-all bg-gray-50 focus:bg-white appearance-none">
+                                    <option value="1">Sin Marca</option>
+                                    @foreach (var marca in marcas.Where(m => m.Activo))
+                                    {
+                                        <option value="@marca.Id">@marca.Nombre</option>
+                                    }
+                                </select>
+                                <i class="fas fa-trademark absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                                <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Categoría *</label>
-                        <select id="producto-categoria" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#23916A] transition-all" required>
-                            <option value="">Seleccionar...</option>
-                            @foreach (var cat in categorias)
-                            {
-                                <option value="@cat.Id">@cat.Nombre</option>
-                            }
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Subcategoría *</label>
-                        <select id="producto-subcategoria" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#23916A] transition-all" required disabled>
-                            <option value="">Seleccione categoría primero</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Marca</label>
-                        <select id="producto-marca" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#23916A] transition-all">
-                            <option value="1">Sin Marca</option>
-                            @foreach (var marca in marcas.Where(m => m.Activo))
-                            {
-                                <option value="@marca.Id">@marca.Nombre</option>
-                            }
-                        </select>
-                    </div>
-                </div>
-
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Imagen del producto</label>
+                <!-- Seccion: Imagen -->
+                <div class="mb-6">
+                    <h4 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+                        <i class="fas fa-image text-[#23916A]"></i>
+                        Imagen del Producto
+                    </h4>
                     <div class="flex items-start gap-4">
                         <div class="flex-1">
-                            <input id="producto-imagen" type="file" accept="image/*"
-                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#23916A] text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-green-50 file:text-green-700 hover:file:bg-green-100">
-                            <p class="mt-1 text-xs text-gray-500">Formatos: JPG, PNG, GIF. Se subirá a Cloudinary.</p>
+                            <label class="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer bg-gray-50 hover:bg-gray-100 hover:border-[#23916A] transition-all group">
+                                <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                    <i class="fas fa-cloud-upload-alt text-3xl text-gray-400 group-hover:text-[#23916A] transition-colors mb-2"></i>
+                                    <p class="text-sm text-gray-500"><span class="font-semibold text-[#23916A]">Clic para subir</span> o arrastra</p>
+                                    <p class="text-xs text-gray-400 mt-1">PNG, JPG, GIF (max 5MB)</p>
+                                </div>
+                                <input id="producto-imagen" type="file" accept="image/*" class="hidden">
+                            </label>
                         </div>
-                        <img id="imagen-preview" src="" alt="Vista previa"
-                             class="hidden w-20 h-20 rounded-lg border object-cover">
+                        <div class="w-32 h-32 rounded-xl border-2 border-dashed border-gray-200 bg-gray-50 flex items-center justify-center overflow-hidden">
+                            <img id="imagen-preview" src="" alt="Vista previa" class="hidden w-full h-full object-cover">
+                            <div id="imagen-placeholder" class="text-center">
+                                <i class="fas fa-image text-2xl text-gray-300"></i>
+                                <p class="text-xs text-gray-400 mt-1">Vista previa</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <div id="error-mensaje" class="hidden mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-700">
-                    <i class="fas fa-exclamation-circle mr-2"></i>
-                    <span id="error-texto"></span>
+                <!-- Mensaje de error -->
+                <div id="error-mensaje" class="hidden mb-4 p-4 rounded-xl bg-red-50 border border-red-200 flex items-start gap-3">
+                    <div class="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+                        <i class="fas fa-exclamation-circle text-red-500"></i>
+                    </div>
+                    <div>
+                        <p class="font-medium text-red-800">Error</p>
+                        <p id="error-texto" class="text-sm text-red-600"></p>
+                    </div>
                 </div>
 
-                <div class="flex gap-3 pt-4 border-t border-gray-200">
+                <!-- Botones -->
+                <div class="flex gap-3 pt-4 border-t border-gray-100">
                     <button type="button" onclick="cerrarModal()"
-                            class="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium">
+                            class="flex-1 px-6 py-3 border border-gray-200 text-gray-600 rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all font-medium flex items-center justify-center gap-2">
+                        <i class="fas fa-times"></i>
                         Cancelar
                     </button>
                     <button type="submit" id="btn-guardar"
-                            class="flex-1 px-4 py-2.5 bg-[#23916A] text-white rounded-lg hover:bg-[#1a6b4f] transition-colors font-medium">
-                        <i class="fas fa-save mr-2"></i>Guardar
+                            class="flex-1 px-6 py-3 bg-gradient-to-r from-[#23916A] to-[#2eb380] text-white rounded-xl hover:shadow-lg hover:shadow-green-500/25 transition-all font-medium flex items-center justify-center gap-2">
+                        <i class="fas fa-save"></i>
+                        Guardar Producto
                     </button>
                 </div>
             </form>
@@ -539,7 +622,8 @@
     // =============== MODAL PRODUCTO ===============
     function abrirModalProducto() {
         limpiarFormulario();
-        document.getElementById('modal-titulo').innerHTML = '<i class="fas fa-box text-[#23916A] mr-2"></i>Nuevo Producto';
+        document.getElementById('modal-titulo').textContent = 'Nuevo Producto';
+        document.getElementById('modal-icono').className = 'fas fa-box text-white text-lg';
         document.getElementById('modal-producto').classList.remove('hidden');
     }
 
@@ -554,11 +638,14 @@
         document.getElementById('producto-sku').value = '';
         document.getElementById('producto-descripcion').value = '';
         document.getElementById('producto-categoria').value = '';
-        document.getElementById('producto-subcategoria').innerHTML = '<option value="">Seleccione categoría primero</option>';
+        document.getElementById('producto-subcategoria').innerHTML = '<option value="">Seleccione categoria</option>';
         document.getElementById('producto-subcategoria').disabled = true;
         document.getElementById('producto-marca').value = '1';
+        document.getElementById('producto-tipounidad').value = '';
         document.getElementById('producto-imagen').value = '';
+        document.getElementById('imagen-preview').src = '';
         document.getElementById('imagen-preview').classList.add('hidden');
+        document.getElementById('imagen-placeholder').classList.remove('hidden');
         document.getElementById('error-mensaje').classList.add('hidden');
     }
 
@@ -569,8 +656,10 @@
             const reader = new FileReader();
             reader.onload = function(e) {
                 const preview = document.getElementById('imagen-preview');
+                const placeholder = document.getElementById('imagen-placeholder');
                 preview.src = e.target.result;
                 preview.classList.remove('hidden');
+                placeholder.classList.add('hidden');
             };
             reader.readAsDataURL(file);
         }
@@ -588,18 +677,23 @@
                 document.getElementById('producto-descripcion').value = data.descripcion || '';
                 document.getElementById('producto-categoria').value = data.categoria;
                 document.getElementById('producto-marca').value = data.idMarca || 1;
+                document.getElementById('producto-tipounidad').value = data.idTipoUnidad || '';
 
                 cargarSubcategoriasYSeleccionar(data.categoria, data.idSubCategoria);
 
+                const preview = document.getElementById('imagen-preview');
+                const placeholder = document.getElementById('imagen-placeholder');
                 if (data.imagenUrl) {
-                    const preview = document.getElementById('imagen-preview');
                     preview.src = data.imagenUrl;
                     preview.classList.remove('hidden');
+                    placeholder.classList.add('hidden');
                 } else {
-                    document.getElementById('imagen-preview').classList.add('hidden');
+                    preview.classList.add('hidden');
+                    placeholder.classList.remove('hidden');
                 }
 
-                document.getElementById('modal-titulo').innerHTML = '<i class="fas fa-edit text-blue-500 mr-2"></i>Editar Producto';
+                document.getElementById('modal-titulo').textContent = 'Editar Producto';
+                document.getElementById('modal-icono').className = 'fas fa-edit text-white text-lg';
                 document.getElementById('modal-producto').classList.remove('hidden');
             })
             .catch(error => {
@@ -635,6 +729,7 @@
         const descripcion = document.getElementById('producto-descripcion').value.trim();
         const idSubCategoria = document.getElementById('producto-subcategoria').value;
         const idMarca = document.getElementById('producto-marca').value;
+        const idTipoUnidad = document.getElementById('producto-tipounidad').value;
         const imagenInput = document.getElementById('producto-imagen').files[0];
         const cloudinaryId = document.getElementById('producto-cloudinary-id').value;
 
@@ -644,7 +739,7 @@
         }
 
         if (!idSubCategoria) {
-            mostrarError('Debe seleccionar una subcategoría');
+            mostrarError('Debe seleccionar una subcategoria');
             return;
         }
 
@@ -654,6 +749,7 @@
         formData.append('descripcion', descripcion);
         formData.append('idSubCategoria', idSubCategoria);
         formData.append('idMarca', idMarca);
+        formData.append('idTipoUnidad', idTipoUnidad || '');
         if (imagenInput) formData.append('imagen', imagenInput);
         if (cloudinaryId) formData.append('cloudinaryPublicId', cloudinaryId);
 

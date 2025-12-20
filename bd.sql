@@ -252,32 +252,31 @@ DELIMITER ;
 -- Volcando estructura para procedimiento abastecete.agregar_productos_local
 DELIMITER //
 CREATE PROCEDURE `agregar_productos_local`(
-	IN `producto_id` INT,
-	IN `medida` INT,
-	IN `valor` INT,
-	IN `local_id` INT
+    IN `producto_id` INT,
+    IN `medida` INT,
+    IN `valor` INT,
+    IN `local_id` INT
 )
 BEGIN
-    DECLARE v_total  INT DEFAULT 0;
-    DECLARE v_max    INT DEFAULT 0;
+    DECLARE v_total INT DEFAULT 0;
+    DECLARE v_max INT DEFAULT 0;
 
-    -- 1) Cuenta cuántos productos ya tiene este local
-    SELECT COUNT(*) 
-      INTO v_total
+    -- Cuenta cuántos productos ya tiene este local
+    SELECT COUNT(*)
+    INTO v_total
     FROM productoslocal
     WHERE FK_ID_LOCAL = local_id;
 
-    -- 2) Lee el límite de productos de la membresía (0 = sin límite)
-    SELECT tm.CANTIDAD_PRODUCTOS 
-      INTO v_max
+    -- Lee el límite de productos de la membresía desde la suscripción activa
+    SELECT COALESCE(tm.CANTIDAD_PRODUCTOS, 0)
+    INTO v_max
     FROM local l
-    JOIN tipo_membresia tm 
-      ON l.FK_ID_TIPOMEMBRESIA = tm.PK_ID_TIPO_MEMBRESIA
+    LEFT JOIN suscripcion s ON l.FK_ID_SUSCRIPCION_ACTIVA = s.PK_ID_SUSCRIPCION AND s.ESTADO = 1
+    LEFT JOIN tipo_membresia tm ON s.FK_ID_TIPO_MEMBRESIA = tm.PK_ID_TIPO_MEMBRESIA
     WHERE l.PK_ID_LOCAL = local_id;
 
-    -- 3) Inserta sólo si no supera el límite
+    -- Inserta sólo si no supera el límite (0 = sin límite)
     IF v_max = 0 OR v_total < v_max THEN
-
         INSERT INTO productoslocal (
             FK_ID_PRODUCTO,
             FK_ID_UNIDAD,
@@ -290,29 +289,30 @@ BEGIN
             local_id
         );
     END IF;
-
 END//
 DELIMITER ;
 
 -- Volcando estructura para procedimiento abastecete.aprobar_ofertas_flash
 DELIMITER //
 CREATE PROCEDURE `aprobar_ofertas_flash`(
-	IN `p_id_oferta` INT
+    IN `p_id_oferta` INT
 )
 BEGIN
-    DECLARE intervalo INT;
+    DECLARE intervalo INT DEFAULT 24; -- Valor por defecto: 24 horas
 
-	 SELECT tipo_membresia.DURACION_OFERTA INTO intervalo
-	 FROM oferta_flash
-	 INNER JOIN local ON oferta_flash.FK_ID_LOCAL = local.PK_ID_LOCAL
-	 INNER JOIN tipo_membresia ON local.FK_ID_TIPOMEMBRESIA = tipo_membresia.PK_ID_TIPO_MEMBRESIA
-	 WHERE oferta_flash.ID_OFERTAFLASH = p_id_oferta;
-	 
-     UPDATE oferta_flash
-     SET ESTADO_OFERTA_FLASH = 1,
-         FECHA_OFERTA_FLASH = NOW(),
-         TIEMPO_OFERTA_FLASH = NOW() + INTERVAL intervalo HOUR
-     WHERE ID_OFERTAFLASH = p_id_oferta;
+    -- Obtener duración de oferta desde la suscripción activa del local
+    SELECT COALESCE(tm.DURACION_OFERTA, 24) INTO intervalo
+    FROM oferta_flash ofl
+    INNER JOIN local l ON ofl.FK_ID_LOCAL = l.PK_ID_LOCAL
+    LEFT JOIN suscripcion s ON l.FK_ID_SUSCRIPCION_ACTIVA = s.PK_ID_SUSCRIPCION AND s.ESTADO = 1
+    LEFT JOIN tipo_membresia tm ON s.FK_ID_TIPO_MEMBRESIA = tm.PK_ID_TIPO_MEMBRESIA
+    WHERE ofl.ID_OFERTAFLASH = p_id_oferta;
+
+    UPDATE oferta_flash
+    SET ESTADO_OFERTA_FLASH = 1,
+        FECHA_OFERTA_FLASH = NOW(),
+        TIEMPO_OFERTA_FLASH = NOW() + INTERVAL intervalo HOUR
+    WHERE ID_OFERTAFLASH = p_id_oferta;
 END//
 DELIMITER ;
 
@@ -582,12 +582,15 @@ BEGIN
         p.DESCRIPCION,
         p.SKU,
         p.CLOUDINARY_PUBLIC_ID,
+        p.FK_ID_TIPOUNIDAD,
         m.NOMBRE AS NOMBRE_MARCA,
+        tu.NOMBRE_TIPOUNIDAD,
         sc.NOMBRE_SUB_CATEGORIA,
         c.PK_ID_CATEGORIA,
         c.NOMBRE_CATEGORIA
     FROM producto p
     LEFT JOIN marca m ON p.FK_ID_MARCA = m.PK_ID_MARCA
+    LEFT JOIN tipo_unidad tu ON p.FK_ID_TIPOUNIDAD = tu.ID_TIPOUNIDAD
     LEFT JOIN sub_categoria sc ON p.FK_ID_SUB_CATEGORIA = sc.PK_ID_SUB_CATEGORIA
     LEFT JOIN categoria c ON sc.FK_ID_CATEGORIA = c.PK_ID_CATEGORIA
     WHERE
@@ -874,6 +877,28 @@ BEGIN
 END//
 DELIMITER ;
 
+-- Volcando estructura para procedimiento abastecete.consultar_locales_por_categoria
+DELIMITER //
+CREATE PROCEDURE `consultar_locales_por_categoria`(
+    IN `idcategoria` INT,
+    IN `tipoMembresia` VARCHAR(50)
+)
+BEGIN
+    SELECT l.*
+    FROM local l
+    INNER JOIN localcategoria lc ON lc.FK_ID_LOCAL = l.PK_ID_LOCAL
+    LEFT JOIN suscripcion s ON l.FK_ID_SUSCRIPCION_ACTIVA = s.PK_ID_SUSCRIPCION AND s.ESTADO = 1
+    LEFT JOIN tipo_membresia tm ON s.FK_ID_TIPO_MEMBRESIA = tm.PK_ID_TIPO_MEMBRESIA
+    WHERE lc.FK_ID_CATEGORIA = idcategoria
+    AND (
+        tipoMembresia = 'Selecciona un Tipo'
+        OR tm.NOMBRE = tipoMembresia
+        OR tipoMembresia IS NULL
+        OR tipoMembresia = ''
+    );
+END//
+DELIMITER ;
+
 -- Volcando estructura para procedimiento abastecete.consultar_local_categoria
 DELIMITER //
 CREATE PROCEDURE `consultar_local_categoria`(
@@ -1134,9 +1159,12 @@ BEGIN
         p.DESCRIPCION,
         p.SKU,
         p.CLOUDINARY_PUBLIC_ID,
-        m.NOMBRE AS NOMBRE_MARCA
+        p.FK_ID_TIPOUNIDAD,
+        m.NOMBRE AS NOMBRE_MARCA,
+        tu.NOMBRE_TIPOUNIDAD
     FROM producto p
-    LEFT JOIN marca m ON p.FK_ID_MARCA = m.PK_ID_MARCA;
+    LEFT JOIN marca m ON p.FK_ID_MARCA = m.PK_ID_MARCA
+    LEFT JOIN tipo_unidad tu ON p.FK_ID_TIPOUNIDAD = tu.ID_TIPOUNIDAD;
 END//
 DELIMITER ;
 
@@ -1179,9 +1207,12 @@ BEGIN
         p.DESCRIPCION,
         p.SKU,
         p.CLOUDINARY_PUBLIC_ID,
-        m.NOMBRE AS NOMBRE_MARCA
+        p.FK_ID_TIPOUNIDAD,
+        m.NOMBRE AS NOMBRE_MARCA,
+        tu.NOMBRE_TIPOUNIDAD
     FROM producto p
     LEFT JOIN marca m ON p.FK_ID_MARCA = m.PK_ID_MARCA
+    LEFT JOIN tipo_unidad tu ON p.FK_ID_TIPOUNIDAD = tu.ID_TIPOUNIDAD
     WHERE p.FK_ID_SUB_CATEGORIA = id_subcategoria;
 END//
 DELIMITER ;
@@ -1199,12 +1230,15 @@ BEGIN
         p.DESCRIPCION,
         p.SKU,
         p.CLOUDINARY_PUBLIC_ID,
+        p.FK_ID_TIPOUNIDAD,
         m.NOMBRE AS NOMBRE_MARCA,
+        tu.NOMBRE_TIPOUNIDAD,
         sc.NOMBRE_SUB_CATEGORIA,
         c.PK_ID_CATEGORIA,
         c.NOMBRE_CATEGORIA
     FROM producto p
     LEFT JOIN marca m ON p.FK_ID_MARCA = m.PK_ID_MARCA
+    LEFT JOIN tipo_unidad tu ON p.FK_ID_TIPOUNIDAD = tu.ID_TIPOUNIDAD
     LEFT JOIN sub_categoria sc ON p.FK_ID_SUB_CATEGORIA = sc.PK_ID_SUB_CATEGORIA
     LEFT JOIN categoria c ON sc.FK_ID_CATEGORIA = c.PK_ID_CATEGORIA
     ORDER BY c.NOMBRE_CATEGORIA, sc.NOMBRE_SUB_CATEGORIA, p.NOMBRE_PRODUCTO;
@@ -1282,12 +1316,15 @@ BEGIN
         p.DESCRIPCION,
         p.SKU,
         p.CLOUDINARY_PUBLIC_ID,
+        p.FK_ID_TIPOUNIDAD,
         m.NOMBRE AS NOMBRE_MARCA,
+        tu.NOMBRE_TIPOUNIDAD,
         sc.NOMBRE_SUB_CATEGORIA,
         c.PK_ID_CATEGORIA,
         c.NOMBRE_CATEGORIA
     FROM producto p
     LEFT JOIN marca m ON p.FK_ID_MARCA = m.PK_ID_MARCA
+    LEFT JOIN tipo_unidad tu ON p.FK_ID_TIPOUNIDAD = tu.ID_TIPOUNIDAD
     LEFT JOIN sub_categoria sc ON p.FK_ID_SUB_CATEGORIA = sc.PK_ID_SUB_CATEGORIA
     LEFT JOIN categoria c ON sc.FK_ID_CATEGORIA = c.PK_ID_CATEGORIA
     WHERE p.PK_ID_PRODUCTO = p_id;
@@ -1480,22 +1517,86 @@ DELIMITER ;
 
 -- Volcando estructura para procedimiento abastecete.consultar_usuarios
 DELIMITER //
-CREATE PROCEDURE `consultar_usuarios`()
+CREATE PROCEDURE `consultar_usuarios`(
+    IN `id_usuario` INT
+)
 BEGIN
-  SELECT
-    usuario.PK_ID_USUARIO,
-    persona.NOMBRES,
-    persona.APELLIDOS,
-    persona.TELEFONO,
-    usuario.ESTADO,
-    rol.NOMBRE_ROL,
-    persona.CORREO,
-    tipo_membresia.NOMBRE
-  FROM usuario
-    LEFT JOIN persona ON usuario.FK_ID_PERSONA = persona.PK_ID_PERSONA
-    LEFT JOIN rol ON usuario.FK_ID_ROL = rol.PK_ID_ROL
-    LEFT JOIN local ON local.FK_ID_PERSONA = persona.PK_ID_PERSONA
-    LEFT JOIN tipo_membresia ON local.FK_ID_TIPOMEMBRESIA = tipo_membresia.PK_ID_TIPO_MEMBRESIA;
+    SELECT
+        u.PK_ID_USUARIO,
+        COALESCE(p.PK_ID_PERSONA, 0) AS PK_ID_PERSONA,
+        COALESCE(p.NOMBRES, '') AS NOMBRES,
+        COALESCE(p.APELLIDOS, '') AS APELLIDOS,
+        COALESCE(p.TELEFONO, '') AS TELEFONO,
+        COALESCE(u.ESTADO, 0) AS ESTADO,
+        COALESCE(r.NOMBRE_ROL, 'Sin rol') AS NOMBRE_ROL,
+        COALESCE(p.CORREO, '') AS CORREO
+    FROM usuario u
+    LEFT JOIN persona p ON u.FK_ID_PERSONA = p.PK_ID_PERSONA
+    LEFT JOIN rol r ON u.FK_ID_ROL = r.PK_ID_ROL
+    WHERE (id_usuario = 0 OR u.PK_ID_USUARIO = id_usuario);
+END//
+DELIMITER ;
+
+-- Volcando estructura para procedimiento abastecete.consultar_usuarios_paginado
+DELIMITER //
+CREATE PROCEDURE `consultar_usuarios_paginado`(
+    IN `p_pagina` INT,
+    IN `p_registros_por_pagina` INT,
+    IN `p_busqueda` VARCHAR(100)
+)
+BEGIN
+    DECLARE v_offset INT;
+    SET v_offset = (p_pagina - 1) * p_registros_por_pagina;
+
+    -- Consulta principal con paginación
+    SELECT
+        u.PK_ID_USUARIO AS UsuarioId,
+        COALESCE(u.ESTADO, 0) AS UsuarioEstado,
+        COALESCE(p.PK_ID_PERSONA, 0) AS PersonaId,
+        COALESCE(p.NOMBRES, '') AS PersonaNombres,
+        COALESCE(p.APELLIDOS, '') AS PersonaApellidos,
+        COALESCE(p.TELEFONO, '') AS PersonaTelefono,
+        COALESCE(p.CORREO, '') AS PersonaCorreo,
+        COALESCE(r.NOMBRE_ROL, 'Sin rol') AS RolNombre,
+        l.PK_ID_LOCAL AS LocalId,
+        COALESCE(l.NOMBRE_LOCAL, '') AS LocalNombre,
+        s.PK_ID_SUSCRIPCION AS SuscripcionId,
+        s.FECHA_INICIO AS SuscripcionFechaInicio,
+        s.FECHA_FIN AS SuscripcionFechaFin,
+        s.ESTADO AS SuscripcionEstado,
+        tm.PK_ID_TIPO_MEMBRESIA AS TipoMembresiaId,
+        COALESCE(tm.NOMBRE, 'Sin membresía') AS TipoMembresiaNombre
+    FROM usuario u
+    LEFT JOIN persona p ON u.FK_ID_PERSONA = p.PK_ID_PERSONA
+    LEFT JOIN rol r ON u.FK_ID_ROL = r.PK_ID_ROL
+    LEFT JOIN local l ON l.FK_ID_PERSONA = p.PK_ID_PERSONA
+    LEFT JOIN suscripcion s ON l.FK_ID_SUSCRIPCION_ACTIVA = s.PK_ID_SUSCRIPCION
+    LEFT JOIN tipo_membresia tm ON s.FK_ID_TIPO_MEMBRESIA = tm.PK_ID_TIPO_MEMBRESIA
+    WHERE (p_busqueda IS NULL OR p_busqueda = '' OR
+           p.NOMBRES LIKE CONCAT('%', p_busqueda, '%') OR
+           p.APELLIDOS LIKE CONCAT('%', p_busqueda, '%') OR
+           p.CORREO LIKE CONCAT('%', p_busqueda, '%') OR
+           l.NOMBRE_LOCAL LIKE CONCAT('%', p_busqueda, '%'))
+    ORDER BY u.PK_ID_USUARIO DESC
+    LIMIT p_registros_por_pagina OFFSET v_offset;
+END//
+DELIMITER ;
+
+-- Volcando estructura para procedimiento abastecete.contar_usuarios
+DELIMITER //
+CREATE PROCEDURE `contar_usuarios`(
+    IN `p_busqueda` VARCHAR(100)
+)
+BEGIN
+    SELECT COUNT(DISTINCT u.PK_ID_USUARIO) AS Total
+    FROM usuario u
+    LEFT JOIN persona p ON u.FK_ID_PERSONA = p.PK_ID_PERSONA
+    LEFT JOIN local l ON l.FK_ID_PERSONA = p.PK_ID_PERSONA
+    WHERE (p_busqueda IS NULL OR p_busqueda = '' OR
+           p.NOMBRES LIKE CONCAT('%', p_busqueda, '%') OR
+           p.APELLIDOS LIKE CONCAT('%', p_busqueda, '%') OR
+           p.CORREO LIKE CONCAT('%', p_busqueda, '%') OR
+           l.NOMBRE_LOCAL LIKE CONCAT('%', p_busqueda, '%'));
 END//
 DELIMITER ;
 
@@ -1835,7 +1936,8 @@ CREATE PROCEDURE `crear_producto`(
     IN `p_fk_id_marca` INT,
     IN `p_descripcion` TEXT,
     IN `p_sku` VARCHAR(50),
-    IN `p_cloudinary_public_id` VARCHAR(255)
+    IN `p_cloudinary_public_id` VARCHAR(255),
+    IN `p_fk_id_tipounidad` INT
 )
 BEGIN
     DECLARE sub_categoria_existe INT;
@@ -1858,7 +1960,8 @@ BEGIN
             FK_ID_MARCA,
             DESCRIPCION,
             SKU,
-            CLOUDINARY_PUBLIC_ID
+            CLOUDINARY_PUBLIC_ID,
+            FK_ID_TIPOUNIDAD
         )
         VALUES (
             p_fk_id_sub_categoria,
@@ -1867,7 +1970,8 @@ BEGIN
             marca_id,
             p_descripcion,
             NULLIF(p_sku, ''),
-            p_cloudinary_public_id
+            p_cloudinary_public_id,
+            NULLIF(p_fk_id_tipounidad, 0)
         );
 
         SELECT LAST_INSERT_ID() AS id_producto, 'Producto creado exitosamente' AS mensaje;
@@ -2781,7 +2885,8 @@ CREATE PROCEDURE `editar_producto`(
     IN `p_fk_id_marca` INT,
     IN `p_descripcion` TEXT,
     IN `p_sku` VARCHAR(50),
-    IN `p_cloudinary_public_id` VARCHAR(255)
+    IN `p_cloudinary_public_id` VARCHAR(255),
+    IN `p_fk_id_tipounidad` INT
 )
 BEGIN
     DECLARE sub_categoria_existe INT;
@@ -2806,7 +2911,8 @@ BEGIN
                 FK_ID_MARCA = marca_id,
                 DESCRIPCION = p_descripcion,
                 SKU = NULLIF(p_sku, ''),
-                CLOUDINARY_PUBLIC_ID = p_cloudinary_public_id
+                CLOUDINARY_PUBLIC_ID = p_cloudinary_public_id,
+                FK_ID_TIPOUNIDAD = NULLIF(p_fk_id_tipounidad, 0)
             WHERE PK_ID_PRODUCTO = p_id_producto;
 
             SELECT 1 AS resultado, 'Producto actualizado exitosamente' AS mensaje;
@@ -2918,25 +3024,27 @@ DELIMITER ;
 -- Volcando estructura para procedimiento abastecete.editar_tipo_membresia
 DELIMITER //
 CREATE PROCEDURE `editar_tipo_membresia`(
-	IN `p_id_tipo_membresia` INT,
-	IN `p_nombre` VARCHAR(50),
-	IN `p_descripcion` TEXT,
-	IN `p_costo` DECIMAL(10,2),
-	IN `p_estado` TINYINT,
-	IN `p_duracion` INT,
-	IN `p_cantidad` INT,
-	IN `p_costo_trimestral` DECIMAL(10,2),
-	IN `p_costo_semestral` DECIMAL(10,2),
-	IN `p_costo_anual` DECIMAL(10,2)
+    IN p_id_tipo_membresia INT,
+    IN p_nombre VARCHAR(50),
+    IN p_costo INT,
+    IN p_estado TINYINT,
+    IN p_duracion INT,
+    IN p_cantidad INT,
+    IN p_ofertas_flash_simultaneas INT,
+    IN p_ofertas_flash_total INT,
+    IN p_costo_trimestral INT,
+    IN p_costo_semestral INT,
+    IN p_costo_anual INT
 )
 BEGIN
-    UPDATE tipo_membresia
-    SET NOMBRE = p_nombre,
-        DESCRIPCION = p_descripcion,
+    UPDATE tipo_membresia SET
+        NOMBRE = p_nombre,
         COSTO = p_costo,
         ESTADO = p_estado,
         DURACION_OFERTA = p_duracion,
         CANTIDAD_PRODUCTOS = p_cantidad,
+        OFERTAS_FLASH_SIMULTANEAS = p_ofertas_flash_simultaneas,
+        OFERTAS_FLASH_TOTAL = p_ofertas_flash_total,
         COSTO_TRIMESTRAL = p_costo_trimestral,
         COSTO_SEMESTRAL = p_costo_semestral,
         COSTO_ANUAL = p_costo_anual
@@ -3639,7 +3747,7 @@ CREATE TABLE IF NOT EXISTS `historial_membresia` (
   KEY `IDX_historial_local` (`FK_ID_LOCAL`),
   KEY `IDX_historial_fecha` (`FECHA_CAMBIO`),
   CONSTRAINT `FK_historial_local` FOREIGN KEY (`FK_ID_LOCAL`) REFERENCES `local` (`PK_ID_LOCAL`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Volcando datos para la tabla abastecete.historial_membresia: ~13 rows (aproximadamente)
 INSERT INTO `historial_membresia` (`PK_ID_HISTORIAL`, `FK_ID_LOCAL`, `FK_ID_SUSCRIPCION`, `FK_ID_TIPO_ANTERIOR`, `FK_ID_TIPO_NUEVO`, `TIPO_CAMBIO`, `FECHA_CAMBIO`, `FECHA_INICIO_PERIODO`, `FECHA_FIN_PERIODO`, `MONTO`, `PERIODO`, `NOTAS`) VALUES
@@ -3655,7 +3763,8 @@ INSERT INTO `historial_membresia` (`PK_ID_HISTORIAL`, `FK_ID_LOCAL`, `FK_ID_SUSC
 	(10, 34, 10, NULL, 11, 'MIGRACION', '2025-12-19 05:42:03', '2025-06-16 23:43:32', '2025-07-16 23:43:32', NULL, NULL, 'Registro inicial migrado automáticamente'),
 	(11, 35, 11, NULL, 11, 'MIGRACION', '2025-12-19 05:42:03', '2025-07-22 01:28:20', '2025-08-22 01:28:20', NULL, NULL, 'Registro inicial migrado automáticamente'),
 	(12, 36, 12, NULL, 13, 'MIGRACION', '2025-12-19 05:42:03', '2025-08-20 22:11:19', '2025-09-20 22:11:19', NULL, NULL, 'Registro inicial migrado automáticamente'),
-	(13, 37, 13, NULL, 11, 'MIGRACION', '2025-12-19 05:42:03', '2025-08-21 01:20:45', '2025-09-21 01:20:45', NULL, NULL, 'Registro inicial migrado automáticamente');
+	(13, 37, 13, NULL, 11, 'MIGRACION', '2025-12-19 05:42:03', '2025-08-21 01:20:45', '2025-09-21 01:20:45', NULL, NULL, 'Registro inicial migrado automáticamente'),
+	(16, 36, 16, 13, 11, 'DOWNGRADE', '2025-12-20 13:19:13', '2025-12-20 13:19:13', '2026-01-20 13:19:13', 0.00, 'MENSUAL', 'Cambio de membresía desde panel de administración');
 
 -- Volcando estructura para evento abastecete.limpiar_bloqueos_usuario
 DELIMITER //
@@ -3737,7 +3846,7 @@ INSERT INTO `local` (`PK_ID_LOCAL`, `FK_ID_PERSONA`, `FK_ID_ESTADO_LOCAL`, `NOMB
 	(29, 38, 1, 'Prome', '1.6234506622739668,-75.60409692513122', 'Florencia, Caquetá, Colombia', '3204440787', '', NULL, NULL, NULL, 9),
 	(34, 40, 1, 'Pan pa\' ya', '1.6046943720574707,-75.60290677490232', 'Cra. 15a #2d-115, Florencia, Caquetá', '3204440787', '6850ac1dac6622168168c557', '683436264765d87a461b3405', NULL, 'panaderia de pan', 10),
 	(35, 50, 1, 'Abastecible', '2.9339860379526495,-75.27426106872556', 'Los pinos', '3112929178', '687ee8f4ac6622168168c559', '683436264765d87a461b3405', NULL, 'Pinos', 11),
-	(36, 51, 1, 'Websen', NULL, 'Fusagasugá', '3103348519', '68a648005c46ee78254291cf', '683436264765d87a461b3405', NULL, NULL, 12),
+	(36, 51, 1, 'Websen', NULL, 'Fusagasugá', '3103348519', '68a648005c46ee78254291cf', '683436264765d87a461b3405', NULL, NULL, 16),
 	(37, 36, 1, 'Edifik', NULL, 'villa counrty', '3103348519', '68a674485c46ee78254291d1', NULL, NULL, NULL, 13);
 
 -- Volcando estructura para tabla abastecete.localcategoria
@@ -3754,7 +3863,7 @@ CREATE TABLE IF NOT EXISTS `localcategoria` (
   CONSTRAINT `FK2` FOREIGN KEY (`FK_ID_CATEGORIA`) REFERENCES `categoria` (`PK_ID_CATEGORIA`)
 ) ENGINE=InnoDB AUTO_INCREMENT=39 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla abastecete.localcategoria: ~17 rows (aproximadamente)
+-- Volcando datos para la tabla abastecete.localcategoria: ~15 rows (aproximadamente)
 INSERT INTO `localcategoria` (`PK_ID_LOCALCATEGORIA`, `FK_ID_LOCAL`, `FK_ID_CATEGORIA`) VALUES
 	(22, 28, 4),
 	(23, 34, 7),
@@ -3773,6 +3882,77 @@ INSERT INTO `localcategoria` (`PK_ID_LOCALCATEGORIA`, `FK_ID_LOCAL`, `FK_ID_CATE
 	(36, 27, 12),
 	(37, 27, 16),
 	(38, 28, 6);
+
+-- Volcando estructura para procedimiento abastecete.login_google
+DELIMITER //
+CREATE PROCEDURE `login_google`(
+    IN `p_correo` VARCHAR(100)
+)
+BEGIN
+    DECLARE v_id_usuario INT;
+    DECLARE v_id_persona INT;
+    DECLARE v_estado INT;
+    DECLARE v_fecha_bloqueo DATETIME;
+    DECLARE v_id_tipo_membresia INT DEFAULT NULL;
+
+    -- Obtener datos del usuario por correo
+    SELECT u.PK_ID_USUARIO, u.FK_ID_PERSONA, u.ESTADO, u.FECHA_BLOQUEO
+    INTO v_id_usuario, v_id_persona, v_estado, v_fecha_bloqueo
+    FROM usuario u
+    INNER JOIN persona p ON u.FK_ID_PERSONA = p.PK_ID_PERSONA
+    WHERE p.CORREO = p_correo
+    LIMIT 1;
+
+    -- Si el usuario no existe
+    IF v_id_usuario IS NULL THEN
+        SELECT
+            0 AS FK_ID_ROL,
+            NULL AS FK_ID_PERSONA,
+            NULL AS NOMBRE_USUARIO,
+            NULL AS FK_ID_TIPOMEMBRESIA,
+            'NO_EXISTE' AS estado_login;
+
+    -- Si el usuario está inhabilitado
+    ELSEIF v_estado = 97 THEN
+        SELECT
+            97 AS FK_ID_ROL,
+            NULL AS FK_ID_PERSONA,
+            NULL AS NOMBRE_USUARIO,
+            NULL AS FK_ID_TIPOMEMBRESIA,
+            'INHABILITADO' AS estado_login;
+
+    -- Si el usuario está bloqueado
+    ELSEIF v_estado = 0 AND v_fecha_bloqueo IS NOT NULL AND v_fecha_bloqueo > NOW() THEN
+        SELECT
+            0 AS FK_ID_ROL,
+            NULL AS FK_ID_PERSONA,
+            NULL AS NOMBRE_USUARIO,
+            NULL AS FK_ID_TIPOMEMBRESIA,
+            'BLOQUEADO' AS estado_login;
+
+    ELSE
+        -- Obtener tipo de membresía desde la suscripción activa
+        SELECT s.FK_ID_TIPO_MEMBRESIA
+        INTO v_id_tipo_membresia
+        FROM persona p
+        LEFT JOIN local l ON l.FK_ID_PERSONA = p.PK_ID_PERSONA
+        LEFT JOIN suscripcion s ON l.FK_ID_SUSCRIPCION_ACTIVA = s.PK_ID_SUSCRIPCION AND s.ESTADO = 1
+        WHERE p.PK_ID_PERSONA = v_id_persona
+        LIMIT 1;
+
+        -- Retornar datos del usuario
+        SELECT
+            u.PK_ID_USUARIO,
+            u.FK_ID_ROL,
+            u.FK_ID_PERSONA,
+            u.NOMBRE_USUARIO,
+            COALESCE(v_id_tipo_membresia, 0) AS FK_ID_TIPOMEMBRESIA,
+            'OK' AS estado_login
+        FROM usuario u
+        WHERE u.PK_ID_USUARIO = v_id_usuario;
+    END IF;
+END//
+DELIMITER ;
 
 -- Volcando estructura para procedimiento abastecete.login_usuario
 DELIMITER //
@@ -3837,12 +4017,14 @@ BEGIN
                 SET INTENTOS_FALLIDOS = 0
                 WHERE PK_ID_USUARIO = id_usuario;
 
-                -- Obtener el tipo de membresía (usando LEFT JOIN para manejar usuarios sin local)
-                SELECT l.FK_ID_TIPOMEMBRESIA
+                -- Obtener el tipo de membresía desde la nueva estructura de suscripciones
+                -- Usa la tabla suscripcion en lugar de la columna eliminada FK_ID_TIPOMEMBRESIA
+                SELECT s.FK_ID_TIPO_MEMBRESIA
                 INTO id_tipo_membresia
                 FROM usuario u
                 INNER JOIN persona p ON u.FK_ID_PERSONA = p.PK_ID_PERSONA
                 LEFT JOIN local l ON l.FK_ID_PERSONA = p.PK_ID_PERSONA
+                LEFT JOIN suscripcion s ON l.FK_ID_SUSCRIPCION_ACTIVA = s.PK_ID_SUSCRIPCION AND s.ESTADO = 1
                 WHERE u.PK_ID_USUARIO = id_usuario
                 LIMIT 1;
 
@@ -4016,7 +4198,7 @@ CREATE TABLE IF NOT EXISTS `marca` (
   UNIQUE KEY `uk_marca_nombre` (`NOMBRE`)
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla abastecete.marca: ~1 rows (aproximadamente)
+-- Volcando datos para la tabla abastecete.marca: ~0 rows (aproximadamente)
 INSERT INTO `marca` (`PK_ID_MARCA`, `NOMBRE`, `DESCRIPCION`, `LOGO_URL`, `CLOUDINARY_PUBLIC_ID`, `ACTIVO`, `FECHA_REGISTRO`) VALUES
 	(1, 'Sin Marca', 'Productos sin marca específica', NULL, NULL, 1, '2025-12-19 03:16:12');
 
@@ -4034,7 +4216,7 @@ CREATE TABLE IF NOT EXISTS `membresia_local_deprecated` (
   CONSTRAINT `FK_membresia_local` FOREIGN KEY (`FK_ID_LOCAL`) REFERENCES `local` (`PK_ID_LOCAL`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=37 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla abastecete.membresia_local_deprecated: ~13 rows (aproximadamente)
+-- Volcando datos para la tabla abastecete.membresia_local_deprecated: ~12 rows (aproximadamente)
 INSERT INTO `membresia_local_deprecated` (`PK_ID_MEMBRESIA`, `FK_ID_LOCAL`, `ESTADO`, `FECHA_INICIO`, `FECHA_FIN`) VALUES
 	(2, 1, 1, '2025-02-20 10:05:41', '2025-03-20 10:05:41'),
 	(3, 3, 1, '2025-02-20 10:43:17', '2025-03-20 10:43:17'),
@@ -4066,34 +4248,48 @@ INSERT INTO `metodo_autenticacion` (`PK_ID_METODO_AUTENTICACION`, `NOMBRE`) VALU
 DELIMITER //
 CREATE PROCEDURE `ObtenerLocalesAleatorios`()
 BEGIN
-    SELECT PK_ID_LOCAL, NOMBRE_LOCAL, FOTOS_LOCAL, FK_ID_TIPOMEMBRESIA
-FROM (
-    (
-        SELECT PK_ID_LOCAL, NOMBRE_LOCAL, FOTOS_LOCAL, FK_ID_TIPOMEMBRESIA
-        FROM local
-        WHERE FK_ID_TIPOMEMBRESIA IN (19, 18, 17)
-        ORDER BY RAND()
-        LIMIT 6
-    )
-    UNION ALL
-    (
-        SELECT PK_ID_LOCAL, NOMBRE_LOCAL, FOTOS_LOCAL, FK_ID_TIPOMEMBRESIA
-        FROM local
-        WHERE FK_ID_TIPOMEMBRESIA IN (16, 15, 14)
-        ORDER BY RAND()
-        LIMIT 6
-    )
-    
-) AS locales_priorizados
-LIMIT 6;
+    -- Estrategia optimizada: seleccionar IDs aleatorios primero, luego hacer JOIN
+    -- Esto es mucho más rápido que ORDER BY RAND() en tablas grandes
 
+    SELECT
+        l.PK_ID_LOCAL,
+        l.NOMBRE_LOCAL,
+        l.FOTOS_LOCAL,
+        COALESCE(s.FK_ID_TIPO_MEMBRESIA, 0) AS FK_ID_TIPOMEMBRESIA
+    FROM local l
+    LEFT JOIN suscripcion s ON l.FK_ID_SUSCRIPCION_ACTIVA = s.PK_ID_SUSCRIPCION AND s.ESTADO = 1
+    WHERE l.FK_ID_ESTADO_LOCAL = 1
+    ORDER BY
+        -- Priorizar por tipo de membresía (premium primero)
+        CASE
+            WHEN s.FK_ID_TIPO_MEMBRESIA IN (19, 18, 17) THEN 1
+            WHEN s.FK_ID_TIPO_MEMBRESIA IN (16, 15, 14) THEN 2
+            ELSE 3
+        END,
+        -- Aleatorio dentro de cada grupo
+        RAND()
+    LIMIT 6;
+END//
+DELIMITER ;
+
+-- Volcando estructura para procedimiento abastecete.obtener_duracion_oferta
+DELIMITER //
+CREATE PROCEDURE `obtener_duracion_oferta`(
+    IN `p_id_local` INT
+)
+BEGIN
+    SELECT COALESCE(tm.DURACION_OFERTA, 24) AS DURACION_OFERTA
+    FROM local l
+    LEFT JOIN suscripcion s ON l.FK_ID_SUSCRIPCION_ACTIVA = s.PK_ID_SUSCRIPCION AND s.ESTADO = 1
+    LEFT JOIN tipo_membresia tm ON s.FK_ID_TIPO_MEMBRESIA = tm.PK_ID_TIPO_MEMBRESIA
+    WHERE l.PK_ID_LOCAL = p_id_local;
 END//
 DELIMITER ;
 
 -- Volcando estructura para procedimiento abastecete.obtener_suscripciones_local
 DELIMITER //
 CREATE PROCEDURE `obtener_suscripciones_local`(
-    IN p_id_local INT
+    IN `p_id_local` INT
 )
 BEGIN
     SELECT
@@ -4109,7 +4305,7 @@ BEGIN
         s.NOTAS AS Notas,
         tm.PK_ID_TIPO_MEMBRESIA AS TipoMembresiaId,
         tm.NOMBRE AS TipoMembresiaNombre,
-        tm.COSTO_MES AS TipoMembresiaCostoMes
+        COALESCE(tm.COSTO, 0) AS TipoMembresiaCostoMes
     FROM suscripcion s
     INNER JOIN tipo_membresia tm ON s.FK_ID_TIPO_MEMBRESIA = tm.PK_ID_TIPO_MEMBRESIA
     WHERE s.FK_ID_LOCAL = p_id_local
@@ -4120,7 +4316,7 @@ DELIMITER ;
 -- Volcando estructura para procedimiento abastecete.obtener_suscripcion_activa
 DELIMITER //
 CREATE PROCEDURE `obtener_suscripcion_activa`(
-    IN p_id_local INT
+    IN `p_id_local` INT
 )
 BEGIN
     SELECT
@@ -4134,19 +4330,19 @@ BEGIN
         s.METODO_PAGO AS MetodoPago,
         s.PERIODO AS Periodo,
         s.NOTAS AS Notas,
-        -- Datos del tipo de membresía
         tm.PK_ID_TIPO_MEMBRESIA AS TipoMembresiaId,
         tm.NOMBRE AS TipoMembresiaNombre,
-        tm.DESCRIPCION AS TipoMembresiaDescripcion,
-        tm.COSTO_MES AS TipoMembresiaCostoMes,
-        tm.COSTO_TRIMESTRE AS TipoMembresiaCostoTrimestre,
-        tm.COSTO_SEMESTRE AS TipoMembresiaCostoSemestre,
-        tm.COSTO_ANIO AS TipoMembresiaCostoAnio,
-        tm.ESTADO AS TipoMembresiaEstado
+        COALESCE(tm.DESCRIPCION, '') AS TipoMembresiaDescripcion,
+        COALESCE(tm.COSTO, 0) AS TipoMembresiaCostoMes,
+        COALESCE(tm.COSTO_TRIMESTRAL, 0) AS TipoMembresiaCostoTrimestre,
+        COALESCE(tm.COSTO_SEMESTRAL, 0) AS TipoMembresiaCostoSemestre,
+        COALESCE(tm.COSTO_ANUAL, 0) AS TipoMembresiaCostoAnio,
+        COALESCE(tm.ESTADO, 1) AS TipoMembresiaEstado
     FROM suscripcion s
     INNER JOIN tipo_membresia tm ON s.FK_ID_TIPO_MEMBRESIA = tm.PK_ID_TIPO_MEMBRESIA
     WHERE s.FK_ID_LOCAL = p_id_local
-        AND s.ESTADO = 1
+    AND s.ESTADO = 1
+    AND s.FECHA_FIN > NOW()
     ORDER BY s.FECHA_CREACION DESC
     LIMIT 1;
 END//
@@ -4279,7 +4475,7 @@ CREATE TABLE IF NOT EXISTS `permiso` (
   `NOMBRE_PERMISO` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
   `ESTADO_PERMISO` tinyint NOT NULL,
   PRIMARY KEY (`PK_ID_PERMISO`)
-) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Volcando datos para la tabla abastecete.permiso: ~10 rows (aproximadamente)
 INSERT INTO `permiso` (`PK_ID_PERMISO`, `NOMBRE_PERMISO`, `ESTADO_PERMISO`) VALUES
@@ -4292,7 +4488,8 @@ INSERT INTO `permiso` (`PK_ID_PERMISO`, `NOMBRE_PERMISO`, `ESTADO_PERMISO`) VALU
 	(8, 'Mi negocio', 1),
 	(9, 'Administrar Banners', 1),
 	(11, 'Administrar Marcas', 1),
-	(12, 'Administrar Productos', 1);
+	(12, 'Administrar Productos', 1),
+	(13, 'Ver Logs Sistema', 1);
 
 -- Volcando estructura para tabla abastecete.permiso_de_rol
 CREATE TABLE IF NOT EXISTS `permiso_de_rol` (
@@ -4305,7 +4502,7 @@ CREATE TABLE IF NOT EXISTS `permiso_de_rol` (
   KEY `FK_permiso_de_rol_permiso` (`PFK_ID_PERMISO`),
   CONSTRAINT `FK_permiso_de_rol_permiso` FOREIGN KEY (`PFK_ID_PERMISO`) REFERENCES `permiso` (`PK_ID_PERMISO`),
   CONSTRAINT `FK_permiso_de_rol_rol` FOREIGN KEY (`PFK_ID_ROL`) REFERENCES `rol` (`PK_ID_ROL`)
-) ENGINE=InnoDB AUTO_INCREMENT=37 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=38 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Volcando datos para la tabla abastecete.permiso_de_rol: ~28 rows (aproximadamente)
 INSERT INTO `permiso_de_rol` (`PK_ID_PERMISO_ROL`, `PFK_ID_ROL`, `PFK_ID_PERMISO`, `ESTADO_PERMISO_ROL`) VALUES
@@ -4336,7 +4533,8 @@ INSERT INTO `permiso_de_rol` (`PK_ID_PERMISO_ROL`, `PFK_ID_ROL`, `PFK_ID_PERMISO
 	(33, 1, 11, 1),
 	(34, 8, 11, 1),
 	(35, 1, 12, 1),
-	(36, 8, 12, 1);
+	(36, 8, 12, 1),
+	(37, 1, 13, 1);
 
 -- Volcando estructura para tabla abastecete.persona
 CREATE TABLE IF NOT EXISTS `persona` (
@@ -4358,7 +4556,7 @@ CREATE TABLE IF NOT EXISTS `persona` (
   CONSTRAINT `FK_persona_tipo_documento` FOREIGN KEY (`FK_ID_TIPO_DOCUMENTO`) REFERENCES `tipo_documento` (`PK_ID_TIPO_DOCUMENTO`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=54 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla abastecete.persona: ~28 rows (aproximadamente)
+-- Volcando datos para la tabla abastecete.persona: ~29 rows (aproximadamente)
 INSERT INTO `persona` (`PK_ID_PERSONA`, `NOMBRES`, `APELLIDOS`, `TELEFONO`, `CORREO`, `DOCUMENTO_IDENTIDAD`, `ESTADO`, `FK_ID_TIPO_DOCUMENTO`, `CODIGO_REFERIDO`, `CODIGO_REFERIDO_USUARIO`) VALUES
 	(2, 'Kevin', 'Benavidez', '3123687284', 'kevin12@gmail.com', 1080360, 1, 1, 'COD659438', NULL),
 	(3, 'Sebastian', 'Sierra', '312361', 'sierra@gmail.com', 1020, 1, 1, 'COD638751', NULL),
@@ -4408,9 +4606,9 @@ CREATE TABLE IF NOT EXISTS `producto` (
   CONSTRAINT `fk_producto_marca` FOREIGN KEY (`FK_ID_MARCA`) REFERENCES `marca` (`PK_ID_MARCA`),
   CONSTRAINT `FK_producto_sub_categoria` FOREIGN KEY (`FK_ID_SUB_CATEGORIA`) REFERENCES `sub_categoria` (`PK_ID_SUB_CATEGORIA`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `fk_tipounidad` FOREIGN KEY (`FK_ID_TIPOUNIDAD`) REFERENCES `tipo_unidad` (`ID_TIPOUNIDAD`)
-) ENGINE=InnoDB AUTO_INCREMENT=582 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=584 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla abastecete.producto: ~572 rows (aproximadamente)
+-- Volcando datos para la tabla abastecete.producto: ~573 rows (aproximadamente)
 INSERT INTO `producto` (`PK_ID_PRODUCTO`, `FK_ID_SUB_CATEGORIA`, `NOMBRE_PRODUCTO`, `IMAGEN_URL`, `FK_ID_TIPOUNIDAD`, `FK_ID_MARCA`, `DESCRIPCION`, `SKU`, `CLOUDINARY_PUBLIC_ID`) VALUES
 	(1, 1, 'Manzanas', '/images/PRODUCTOS ABASTECETE/Frutas y Verduras/Frutas frescas/Manzanas.webp', 1, 1, NULL, NULL, NULL),
 	(2, 1, 'Bananas', '/images/PRODUCTOS ABASTECETE/Frutas y Verduras/Frutas frescas/Bananas.webp', 1, 1, NULL, NULL, NULL),
@@ -4983,7 +5181,8 @@ INSERT INTO `producto` (`PK_ID_PRODUCTO`, `FK_ID_SUB_CATEGORIA`, `NOMBRE_PRODUCT
 	(578, 62, 'Pods de nicotina', '/images/PRODUCTOS ABASTECETE/Licores y Tabaco/Cigarrillos y vapeadores/Pods de nicotina.webp', 3, 1, NULL, NULL, NULL),
 	(579, 62, 'Líquidos para vapeadores', '/images/PRODUCTOS ABASTECETE/Licores y Tabaco/Cigarrillos y vapeadores/Líquidos para vapeadores.webp', 3, 1, NULL, NULL, NULL),
 	(580, 62, 'Cigarrillos electrónicos', '/images/PRODUCTOS ABASTECETE/Licores y Tabaco/Cigarrillos y vapeadores/Cigarrillos electrónicos.webp', 3, 1, NULL, NULL, NULL),
-	(581, 38, 'Chocolatería fina', '/images/PRODUCTOS ABASTECETE/Dulces y Chocolatería/Chocolatería fina/Chocolatería fina.webp', 3, 1, NULL, NULL, NULL);
+	(581, 38, 'Chocolatería fina', '/images/PRODUCTOS ABASTECETE/Dulces y Chocolatería/Chocolatería fina/Chocolatería fina.webp', 3, 1, NULL, NULL, NULL),
+	(583, 51, 'Prueba', 'https://res.cloudinary.com/dwl5ggfhd/image/upload/v1766234586/productos/ffjleq3lqniflonmphg0.png', 3, 1, 'aaaaaaaaaaaaaaaa', 'prueba-000', 'productos/ffjleq3lqniflonmphg0');
 
 -- Volcando estructura para tabla abastecete.productoslocal
 CREATE TABLE IF NOT EXISTS `productoslocal` (
@@ -5006,7 +5205,7 @@ CREATE TABLE IF NOT EXISTS `productoslocal` (
   CONSTRAINT `fk_local` FOREIGN KEY (`FK_ID_LOCAL`) REFERENCES `local` (`PK_ID_LOCAL`)
 ) ENGINE=InnoDB AUTO_INCREMENT=131 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla abastecete.productoslocal: ~27 rows (aproximadamente)
+-- Volcando datos para la tabla abastecete.productoslocal: ~26 rows (aproximadamente)
 INSERT INTO `productoslocal` (`PK_ID_PRODUCTS_LOCAL`, `FK_ID_PRODUCTO`, `FK_ID_UNIDAD`, `VALOR_PRODUCTS_LOCAL`, `FK_ID_LOCAL`, `FK_ESTADO`) VALUES
 	(104, 1, 6, 5000, 28, 1),
 	(105, 5, 6, 7000, 28, 1),
@@ -5433,7 +5632,7 @@ CREATE TABLE IF NOT EXISTS `rol` (
   PRIMARY KEY (`PK_ID_ROL`)
 ) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla abastecete.rol: ~5 rows (aproximadamente)
+-- Volcando datos para la tabla abastecete.rol: ~4 rows (aproximadamente)
 INSERT INTO `rol` (`PK_ID_ROL`, `NOMBRE_ROL`) VALUES
 	(1, 'Administrador'),
 	(2, 'Proveedor'),
@@ -5537,7 +5736,7 @@ CREATE TABLE IF NOT EXISTS `suscripcion` (
   KEY `IDX_suscripcion_fecha_fin` (`FECHA_FIN`),
   CONSTRAINT `FK_suscripcion_local` FOREIGN KEY (`FK_ID_LOCAL`) REFERENCES `local` (`PK_ID_LOCAL`) ON DELETE CASCADE,
   CONSTRAINT `FK_suscripcion_tipo` FOREIGN KEY (`FK_ID_TIPO_MEMBRESIA`) REFERENCES `tipo_membresia` (`PK_ID_TIPO_MEMBRESIA`)
-) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Volcando datos para la tabla abastecete.suscripcion: ~13 rows (aproximadamente)
 INSERT INTO `suscripcion` (`PK_ID_SUSCRIPCION`, `FK_ID_LOCAL`, `FK_ID_TIPO_MEMBRESIA`, `ESTADO`, `FECHA_INICIO`, `FECHA_FIN`, `FECHA_CREACION`, `MONTO_PAGADO`, `METODO_PAGO`, `PERIODO`, `NOTAS`) VALUES
@@ -5552,8 +5751,9 @@ INSERT INTO `suscripcion` (`PK_ID_SUSCRIPCION`, `FK_ID_LOCAL`, `FK_ID_TIPO_MEMBR
 	(9, 29, 19, 1, '2025-04-26 09:25:06', '2025-05-26 09:25:06', '2025-12-19 05:42:03', NULL, NULL, 'MENSUAL', 'Migrado automáticamente desde membresia_local'),
 	(10, 34, 11, 1, '2025-06-16 23:43:32', '2025-07-16 23:43:32', '2025-12-19 05:42:03', NULL, NULL, 'MENSUAL', 'Migrado automáticamente desde membresia_local'),
 	(11, 35, 11, 1, '2025-07-22 01:28:20', '2025-08-22 01:28:20', '2025-12-19 05:42:03', NULL, NULL, 'MENSUAL', 'Migrado automáticamente desde membresia_local'),
-	(12, 36, 13, 1, '2025-08-20 22:11:19', '2025-09-20 22:11:19', '2025-12-19 05:42:03', NULL, NULL, 'MENSUAL', 'Migrado automáticamente desde membresia_local'),
-	(13, 37, 11, 1, '2025-08-21 01:20:45', '2025-09-21 01:20:45', '2025-12-19 05:42:03', NULL, NULL, 'MENSUAL', 'Migrado automáticamente desde membresia_local');
+	(12, 36, 13, 0, '2025-08-20 22:11:19', '2025-09-20 22:11:19', '2025-12-19 05:42:03', NULL, NULL, 'MENSUAL', 'Migrado automáticamente desde membresia_local'),
+	(13, 37, 11, 1, '2025-08-21 01:20:45', '2025-09-21 01:20:45', '2025-12-19 05:42:03', NULL, NULL, 'MENSUAL', 'Migrado automáticamente desde membresia_local'),
+	(16, 36, 11, 1, '2025-12-20 13:19:13', '2026-01-20 13:19:13', '2025-12-20 13:19:13', 0.00, 'Admin - Cambio Manual', 'MENSUAL', 'Cambio de membresía desde panel de administración');
 
 -- Volcando estructura para tabla abastecete.tipo_documento
 CREATE TABLE IF NOT EXISTS `tipo_documento` (
@@ -5573,7 +5773,6 @@ INSERT INTO `tipo_documento` (`PK_ID_TIPO_DOCUMENTO`, `NOMBRE_TIPO_DOCUMENTO`) V
 CREATE TABLE IF NOT EXISTS `tipo_membresia` (
   `PK_ID_TIPO_MEMBRESIA` int NOT NULL AUTO_INCREMENT,
   `NOMBRE` varchar(50) NOT NULL,
-  `DESCRIPCION` text,
   `COSTO` int NOT NULL DEFAULT '0',
   `ESTADO` tinyint DEFAULT '1',
   `DURACION_OFERTA` int DEFAULT '0',
@@ -5581,20 +5780,22 @@ CREATE TABLE IF NOT EXISTS `tipo_membresia` (
   `COSTO_SEMESTRAL` int DEFAULT '0',
   `COSTO_ANUAL` int DEFAULT '0',
   `CANTIDAD_PRODUCTOS` varchar(50) DEFAULT NULL,
+  `OFERTAS_FLASH_SIMULTANEAS` int NOT NULL DEFAULT '1' COMMENT 'Cantidad de ofertas flash activas al mismo tiempo',
+  `OFERTAS_FLASH_TOTAL` int NOT NULL DEFAULT '0' COMMENT 'Total de ofertas flash permitidas en la suscripción (0=ilimitado)',
   PRIMARY KEY (`PK_ID_TIPO_MEMBRESIA`)
 ) ENGINE=InnoDB AUTO_INCREMENT=20 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Volcando datos para la tabla abastecete.tipo_membresia: ~9 rows (aproximadamente)
-INSERT INTO `tipo_membresia` (`PK_ID_TIPO_MEMBRESIA`, `NOMBRE`, `DESCRIPCION`, `COSTO`, `ESTADO`, `DURACION_OFERTA`, `COSTO_TRIMESTRAL`, `COSTO_SEMESTRAL`, `COSTO_ANUAL`, `CANTIDAD_PRODUCTOS`) VALUES
-	(11, 'Plan Proveedor Básico', '* Publicación de hasta 10 productos.\r\n* Perfil de proveedor con información de contacto.\r\n* Estadísticas básicas de visualización.\r\n* Posicionamiento orgánico en la búsqueda.\r\n* 5% de descuento en add-on de producción de contenido visual.', 0, 1, 6, 0, 0, 0, '10'),
-	(12, 'Plan Cultivador Básico', '* Publicación de hasta 1 producto.\r\n* Perfil de cultivador con información de contacto y ubicación.\r\n* Estadísticas básicas de visualización.\r\n* Posicionamiento orgánico en la búsqueda.\r\n* 5% de descuento en add-on de producción de contenido visual.', 0, 1, 6, 0, 0, 0, '1'),
-	(13, 'Plan Empresa Básico', '* Publicación de hasta 50 productos.\r\n* Perfil empresarial con datos de contacto y ubicación.\r\n* Estadísticas básicas de visualización y clics.\r\n* Posicionamiento orgánico en la búsqueda.\r\n* 5% de descuento en add-ons de producción de contenido visual.', 0, 1, 6, 0, 0, 0, '50'),
-	(14, 'Plan Proveedor Pro ', '* Publicación de hasta 30 productos.\r\n* 3 productos destacados en la sección de "Ofertas Flash" por mes.\r\n* Estadísticas avanzadas con datos de visualización y clics.\r\n* Prioridad media en los resultados de búsqueda.\r\n* Integración con redes sociales y sitio web.\r\n* Acceso a promociones y eventos exclusivos.\r\n* 10% de descuento en add-on de producción de contenido visual.', 50000, 1, 12, 135000, 255000, 480000, '30'),
-	(15, 'Plan Cultivador Pro ', '* Publicación de hasta 3 productos.\r\n* 2 productos destacados en la sección de "Ofertas Flash" por mes.\r\n* Estadísticas avanzadas con datos de visualización y clics.\r\n* Prioridad media en los resultados de búsqueda.\r\n* Redireccionamiento a redes sociales y sitio web. \r\n* Opción de mostrar certificaciones y sellos de calidad. \r\n* 10% de descuento en add-on de producción de contenido visual.', 50000, 1, 12, 135000, 255000, 480000, '3'),
-	(16, 'Plan Empresa Pro', '* Publicación de hasta 150 productos.\r\n* 10 productos destacados en la sección de "Ofertas Flash" por mes.\r\n* Estadísticas avanzadas con datos de visualización y clics.\r\n* Prioridad media en los resultados de búsqueda.\r\n* Integración con redes sociales y sitio web.\r\n* Acceso a promociones y eventos exclusivos.\r\n* 10% de descuento en add-ons de producción de contenido visual.', 150000, 1, 12, 405000, 765000, 1440000, '150'),
-	(17, 'Plan Proveedor Premium ', '* Publicación ilimitada de productos.\r\n* 10 productos destacados en la sección de "Ofertas Flash" por mes.\r\n* Posicionamiento prioritario en los resultados de búsqueda.\r\n* Publicidad en banners dentro de la página.\r\n* Acceso a analítica avanzada con tendencias de mercado.\r\n* Campañas de email marketing segmentadas.\r\n* Soporte premium y asesoramiento en estrategias de venta.\r\n* 25% de descuento en add-on de producción de contenido visual\r\n* Gestión de Sello de Verificación.', 100000, 1, 24, 270000, 510000, 960000, '0'),
-	(18, 'Plan Cultivador Premium ', '* Publicación ilimitada de productos.\r\n* 5 productos destacados en la sección de "Ofertas Flash" por mes.\r\n* Posicionamiento prioritario en los resultados de búsqueda.\r\n* Publicidad en banners dentro de la página.\r\n* Acceso a analítica avanzada con tendencias de mercado. \r\n* Promoción destacada de cosechas y lotes a granel.\r\n* Campañas de email marketing segmentadas.\r\n* Soporte premium y asesoramiento en estrategias de venta.\r\n* 25% de descuento en add-on de producción de contenido visual.\r\n* Sello de Verificación.', 100000, 1, 24, 270000, 510000, 960000, '0'),
-	(19, 'Plan Empresa Premium ', '* Publicación ilimitada de productos.\r\n* 20 productos destacados en la sección de "Ofertas Flash" por mes.\r\n* Posicionamiento prioritario en los resultados de búsqueda.\r\n* Publicidad en banners dentro de la plataforma.\r\n* Acceso a reportes avanzados de tendencias de mercado.\r\n* Campañas de email marketing segmentadas.\r\n* Soporte premium y asesoramiento en estrategias de compra.\r\n* Conexión directa con proveedores exclusivos.\r\n* 25% de descuento en add-ons de producción de contenido visual.', 300000, 1, 24, 810000, 1530000, 2880000, '0');
+INSERT INTO `tipo_membresia` (`PK_ID_TIPO_MEMBRESIA`, `NOMBRE`, `COSTO`, `ESTADO`, `DURACION_OFERTA`, `COSTO_TRIMESTRAL`, `COSTO_SEMESTRAL`, `COSTO_ANUAL`, `CANTIDAD_PRODUCTOS`, `OFERTAS_FLASH_SIMULTANEAS`, `OFERTAS_FLASH_TOTAL`) VALUES
+	(11, 'Plan Proveedor Básico', 0, 1, 6, 0, 0, 0, '10', 3, 15),
+	(12, 'Plan Cultivador Básico', 0, 1, 6, 0, 0, 0, '1', 1, 5),
+	(13, 'Plan Empresa Básico', 0, 1, 6, 0, 0, 0, '50', 1, 5),
+	(14, 'Plan Proveedor Pro ', 50000, 1, 12, 135000, 255000, 480000, '30', 3, 15),
+	(15, 'Plan Cultivador Pro ', 50000, 1, 12, 135000, 255000, 480000, '3', 3, 15),
+	(16, 'Plan Empresa Pro', 150000, 1, 12, 405000, 765000, 1440000, '150', 3, 15),
+	(17, 'Plan Proveedor Premium ', 100000, 1, 24, 270000, 510000, 960000, '0', 10, 0),
+	(18, 'Plan Cultivador Premium ', 100000, 1, 24, 270000, 510000, 960000, '0', 10, 0),
+	(19, 'Plan Empresa Premium ', 300000, 1, 24, 810000, 1530000, 2880000, '0', 10, 0);
 
 -- Volcando estructura para tabla abastecete.tipo_unidad
 CREATE TABLE IF NOT EXISTS `tipo_unidad` (
@@ -5603,7 +5804,7 @@ CREATE TABLE IF NOT EXISTS `tipo_unidad` (
   PRIMARY KEY (`ID_TIPOUNIDAD`)
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla abastecete.tipo_unidad: ~3 rows (aproximadamente)
+-- Volcando datos para la tabla abastecete.tipo_unidad: ~2 rows (aproximadamente)
 INSERT INTO `tipo_unidad` (`ID_TIPOUNIDAD`, `NOMBRE_TIPOUNIDAD`) VALUES
 	(1, 'Peso'),
 	(2, 'Volumen'),
@@ -5709,6 +5910,66 @@ INSERT INTO `usuario` (`PK_ID_USUARIO`, `FK_ID_PERSONA`, `FK_ID_ROL`, `NOMBRE_US
 	(50, 50, 2, 'sebsirra13@gmail.com', 'stCAUXlvlTCDOFCW3+AFGw==', NULL, NULL, 2, 0, NULL, 0, 1, 0, 0, NULL),
 	(51, 51, 2, 'websencol@gmail.com', 'stCAUXlvlTCDOFCW3+AFGw==', NULL, NULL, 2, 0, NULL, 0, 1, 0, 0, NULL),
 	(52, 52, 3, 'dananabia2000@gmail.com', 'stCAUXlvlTCDOFCW3+AFGw==', NULL, NULL, 2, 0, NULL, 0, 1, 0, 0, NULL);
+
+-- Volcando estructura para procedimiento abastecete.validar_limite_ofertas_flash
+DELIMITER //
+CREATE PROCEDURE `validar_limite_ofertas_flash`(
+    IN p_id_local INT,
+    OUT p_puede_crear TINYINT,
+    OUT p_mensaje VARCHAR(200)
+)
+BEGIN
+    DECLARE v_max_simultaneas INT DEFAULT 1;
+    DECLARE v_max_total INT DEFAULT 0;
+    DECLARE v_activas_ahora INT DEFAULT 0;
+    DECLARE v_usadas_suscripcion INT DEFAULT 0;
+    DECLARE v_id_suscripcion INT DEFAULT 0;
+    DECLARE v_fecha_inicio_suscripcion DATETIME;
+
+    -- Obtener límites de la membresía activa
+    SELECT
+        COALESCE(tm.OFERTAS_FLASH_SIMULTANEAS, 1),
+        COALESCE(tm.OFERTAS_FLASH_TOTAL, 0),
+        s.PK_ID_SUSCRIPCION,
+        s.FECHA_INICIO
+    INTO v_max_simultaneas, v_max_total, v_id_suscripcion, v_fecha_inicio_suscripcion
+    FROM local l
+    LEFT JOIN suscripcion s ON l.FK_ID_SUSCRIPCION_ACTIVA = s.PK_ID_SUSCRIPCION AND s.ESTADO = 1
+    LEFT JOIN tipo_membresia tm ON s.FK_ID_TIPO_MEMBRESIA = tm.PK_ID_TIPO_MEMBRESIA
+    WHERE l.PK_ID_LOCAL = p_id_local;
+
+    -- Contar ofertas activas ahora
+    SELECT COUNT(*) INTO v_activas_ahora
+    FROM oferta_flash
+    WHERE FK_ID_LOCAL = p_id_local
+      AND ESTADO = 1
+      AND FECHA_EXPIRACION > NOW();
+
+    -- Verificar límite de simultáneas
+    IF v_activas_ahora >= v_max_simultaneas THEN
+        SET p_puede_crear = 0;
+        SET p_mensaje = CONCAT('Ya tienes ', v_activas_ahora, ' ofertas activas. Tu plan permite máximo ', v_max_simultaneas);
+    -- Verificar límite total (si aplica)
+    ELSEIF v_max_total > 0 THEN
+        -- Contar ofertas creadas desde inicio de suscripción
+        SELECT COUNT(*) INTO v_usadas_suscripcion
+        FROM oferta_flash
+        WHERE FK_ID_LOCAL = p_id_local
+          AND FECHA_CREACION >= v_fecha_inicio_suscripcion;
+
+        IF v_usadas_suscripcion >= v_max_total THEN
+            SET p_puede_crear = 0;
+            SET p_mensaje = CONCAT('Has usado ', v_usadas_suscripcion, ' de ', v_max_total, ' ofertas permitidas en tu suscripción');
+        ELSE
+            SET p_puede_crear = 1;
+            SET p_mensaje = CONCAT('Puedes crear oferta. Usadas: ', v_usadas_suscripcion, '/', v_max_total);
+        END IF;
+    ELSE
+        SET p_puede_crear = 1;
+        SET p_mensaje = 'OK';
+    END IF;
+END//
+DELIMITER ;
 
 -- Volcando estructura para procedimiento abastecete.validar_token_recuperacion
 DELIMITER //

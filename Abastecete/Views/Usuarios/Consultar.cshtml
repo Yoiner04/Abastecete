@@ -246,11 +246,23 @@
                         @if (puedeAdministrar)
                         {
                             <td class="px-4 py-4 text-center">
-                                <button onclick="abrirModal(@usuario.Id, '@estado')"
-                                        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-blue-600 hover:bg-blue-50 transition-colors">
-                                    <i class="fas fa-edit"></i>
-                                    Editar
-                                </button>
+                                <div class="flex items-center justify-center gap-2">
+                                    <button onclick="abrirModal(@usuario.Id, '@estado')"
+                                            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-blue-600 hover:bg-blue-50 transition-colors"
+                                            title="Editar estado">
+                                        <i class="fas fa-edit"></i>
+                                        Estado
+                                    </button>
+                                    @if (item.TieneSuscripcion)
+                                    {
+                                        <button onclick="abrirModalExtender(@item.Local.Id, '@item.NombreMembresia', @item.DiasRestantes)"
+                                                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-[#23916A] hover:bg-green-50 transition-colors"
+                                                title="Extender membresía">
+                                            <i class="fas fa-clock"></i>
+                                            Extender
+                                        </button>
+                                    }
+                                </div>
                             </td>
                         }
                     </tr>
@@ -426,6 +438,177 @@
     </div>
 </div>
 
+<!-- Modal Gestionar Membresía -->
+<div id="modal-extender" class="hidden fixed inset-0 z-50 overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen px-4 text-center">
+        <div class="fixed inset-0 bg-gray-900/50 transition-opacity" onclick="cerrarModalExtender()"></div>
+
+        <div class="relative bg-white rounded-2xl shadow-xl transform transition-all sm:max-w-md w-full mx-4">
+            <!-- Header compacto -->
+            <div class="px-4 py-3 border-b border-gray-200 bg-gradient-to-r from-[#23916A] to-[#1a6b4f] rounded-t-2xl">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
+                            <i class="fas fa-crown text-white text-sm"></i>
+                        </div>
+                        <h3 class="text-base font-semibold text-white">Gestionar Membresía</h3>
+                    </div>
+                    <button onclick="cerrarModalExtender()" class="w-7 h-7 rounded-lg hover:bg-white/20 flex items-center justify-center transition-colors">
+                        <i class="fas fa-times text-white text-sm"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="border-b border-gray-200">
+                <div class="flex">
+                    <button onclick="cambiarTab('extender')" id="tab-extender"
+                            class="flex-1 px-3 py-2 text-sm font-medium text-[#23916A] border-b-2 border-[#23916A] bg-green-50">
+                        <i class="fas fa-clock mr-1"></i>Extender
+                    </button>
+                    <button onclick="cambiarTab('cambiar')" id="tab-cambiar"
+                            class="flex-1 px-3 py-2 text-sm font-medium text-gray-500 border-b-2 border-transparent hover:text-gray-700 hover:bg-gray-50">
+                        <i class="fas fa-exchange-alt mr-1"></i>Cambiar Plan
+                    </button>
+                </div>
+            </div>
+
+            <!-- Body compacto -->
+            <div class="px-4 py-4">
+                <!-- Info actual inline -->
+                <div class="mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <div class="w-7 h-7 rounded-full bg-yellow-100 flex items-center justify-center">
+                            <i class="fas fa-crown text-yellow-600 text-xs"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500">Plan actual</p>
+                            <p id="extender-membresia-actual" class="font-semibold text-gray-900 text-sm">-</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-xs text-gray-500">Restantes</p>
+                        <p id="extender-dias-restantes" class="font-semibold text-gray-900 text-sm">-</p>
+                    </div>
+                </div>
+
+                <input type="hidden" id="extender-local-id">
+                <input type="hidden" id="extender-suscripcion-id">
+                <input type="hidden" id="extender-membresia-id">
+
+                <!-- Tab Extender -->
+                <div id="content-extender">
+                    <form id="form-extender-membresia">
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Período a extender</label>
+                            <div class="grid grid-cols-4 gap-2">
+                                <label class="relative">
+                                    <input type="radio" name="periodo" value="mensual" class="peer sr-only" checked>
+                                    <div class="p-2 rounded-lg border-2 border-gray-200 cursor-pointer transition-all peer-checked:border-[#23916A] peer-checked:bg-green-50 text-center">
+                                        <p class="text-lg font-bold text-gray-900">1</p>
+                                        <p class="text-xs text-gray-500">Mes</p>
+                                    </div>
+                                </label>
+                                <label class="relative">
+                                    <input type="radio" name="periodo" value="trimestral" class="peer sr-only">
+                                    <div class="p-2 rounded-lg border-2 border-gray-200 cursor-pointer transition-all peer-checked:border-[#23916A] peer-checked:bg-green-50 text-center">
+                                        <p class="text-lg font-bold text-gray-900">3</p>
+                                        <p class="text-xs text-gray-500">Meses</p>
+                                    </div>
+                                </label>
+                                <label class="relative">
+                                    <input type="radio" name="periodo" value="semestral" class="peer sr-only">
+                                    <div class="p-2 rounded-lg border-2 border-gray-200 cursor-pointer transition-all peer-checked:border-[#23916A] peer-checked:bg-green-50 text-center">
+                                        <p class="text-lg font-bold text-gray-900">6</p>
+                                        <p class="text-xs text-gray-500">Meses</p>
+                                    </div>
+                                </label>
+                                <label class="relative">
+                                    <input type="radio" name="periodo" value="anual" class="peer sr-only">
+                                    <div class="p-2 rounded-lg border-2 border-gray-200 cursor-pointer transition-all peer-checked:border-[#23916A] peer-checked:bg-green-50 text-center">
+                                        <p class="text-lg font-bold text-gray-900">12</p>
+                                        <p class="text-xs text-gray-500">Meses</p>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="flex gap-2">
+                            <button type="button" onclick="cerrarModalExtender()"
+                                    class="flex-1 px-3 py-2 rounded-lg border border-gray-300 text-gray-700 text-sm font-medium hover:bg-gray-50 transition-colors">
+                                Cancelar
+                            </button>
+                            <button type="submit" id="btn-extender"
+                                    class="flex-1 px-3 py-2 rounded-lg bg-[#23916A] text-white text-sm font-medium hover:bg-[#1a6b4f] transition-colors">
+                                <i class="fas fa-plus mr-1"></i>Extender
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Tab Cambiar -->
+                <div id="content-cambiar" class="hidden">
+                    <form id="form-cambiar-membresia">
+                        <div class="mb-3">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Nuevo plan</label>
+                            <div id="planes-container" class="space-y-2 max-h-40 overflow-y-auto">
+                                <div class="text-center py-3 text-gray-500 text-sm">
+                                    <i class="fas fa-spinner fa-spin mr-1"></i>Cargando...
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Duración</label>
+                            <div class="grid grid-cols-4 gap-2">
+                                <label class="relative">
+                                    <input type="radio" name="periodo-cambio" value="mensual" class="peer sr-only" checked>
+                                    <div class="p-2 rounded-lg border-2 border-gray-200 cursor-pointer transition-all peer-checked:border-purple-500 peer-checked:bg-purple-50 text-center">
+                                        <p class="text-sm font-bold text-gray-900">1</p>
+                                        <p class="text-xs text-gray-500">Mes</p>
+                                    </div>
+                                </label>
+                                <label class="relative">
+                                    <input type="radio" name="periodo-cambio" value="trimestral" class="peer sr-only">
+                                    <div class="p-2 rounded-lg border-2 border-gray-200 cursor-pointer transition-all peer-checked:border-purple-500 peer-checked:bg-purple-50 text-center">
+                                        <p class="text-sm font-bold text-gray-900">3</p>
+                                        <p class="text-xs text-gray-500">Meses</p>
+                                    </div>
+                                </label>
+                                <label class="relative">
+                                    <input type="radio" name="periodo-cambio" value="semestral" class="peer sr-only">
+                                    <div class="p-2 rounded-lg border-2 border-gray-200 cursor-pointer transition-all peer-checked:border-purple-500 peer-checked:bg-purple-50 text-center">
+                                        <p class="text-sm font-bold text-gray-900">6</p>
+                                        <p class="text-xs text-gray-500">Meses</p>
+                                    </div>
+                                </label>
+                                <label class="relative">
+                                    <input type="radio" name="periodo-cambio" value="anual" class="peer sr-only">
+                                    <div class="p-2 rounded-lg border-2 border-gray-200 cursor-pointer transition-all peer-checked:border-purple-500 peer-checked:bg-purple-50 text-center">
+                                        <p class="text-sm font-bold text-gray-900">12</p>
+                                        <p class="text-xs text-gray-500">Meses</p>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="flex gap-2">
+                            <button type="button" onclick="cerrarModalExtender()"
+                                    class="flex-1 px-3 py-2 rounded-lg border border-gray-300 text-gray-700 text-sm font-medium hover:bg-gray-50 transition-colors">
+                                Cancelar
+                            </button>
+                            <button type="submit" id="btn-cambiar"
+                                    class="flex-1 px-3 py-2 rounded-lg bg-purple-600 text-white text-sm font-medium hover:bg-purple-700 transition-colors">
+                                <i class="fas fa-exchange-alt mr-1"></i>Cambiar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Toast Notification -->
 <div id="toast" class="fixed bottom-4 right-4 z-50 transform translate-y-full opacity-0 transition-all duration-300">
     <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-4 flex items-center gap-3 max-w-sm">
@@ -532,7 +715,215 @@
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
             cerrarModal();
+            cerrarModalExtender();
         }
+    });
+
+    // ========================================
+    // GESTIONAR MEMBRESÍA (EXTENDER / CAMBIAR)
+    // ========================================
+
+    let planesMembresia = [];
+    let membresiaActualId = null;
+
+    function abrirModalExtender(idLocal, membresia, diasRestantes) {
+        document.getElementById('extender-local-id').value = idLocal;
+        document.getElementById('extender-membresia-actual').textContent = membresia;
+        document.getElementById('extender-dias-restantes').textContent = diasRestantes + ' días';
+
+        // Reset tabs
+        cambiarTab('extender');
+
+        // Obtener info de la suscripción
+        fetch(`/Usuarios/ObtenerInfoSuscripcion?idLocal=${idLocal}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('extender-suscripcion-id').value = data.suscripcion.id;
+                    document.getElementById('extender-membresia-id').value = data.suscripcion.tipoMembresiaId;
+                    membresiaActualId = data.suscripcion.tipoMembresiaId;
+                }
+            })
+            .catch(error => console.error('Error:', error));
+
+        // Cargar planes disponibles
+        cargarPlanesMembresia();
+
+        // Reset radio buttons
+        document.querySelector('input[name="periodo"][value="mensual"]').checked = true;
+        const periodoCambio = document.querySelector('input[name="periodo-cambio"][value="mensual"]');
+        if (periodoCambio) periodoCambio.checked = true;
+
+        document.getElementById('modal-extender').classList.remove('hidden');
+    }
+
+    function cerrarModalExtender() {
+        document.getElementById('modal-extender').classList.add('hidden');
+    }
+
+    function cambiarTab(tab) {
+        const tabExtender = document.getElementById('tab-extender');
+        const tabCambiar = document.getElementById('tab-cambiar');
+        const contentExtender = document.getElementById('content-extender');
+        const contentCambiar = document.getElementById('content-cambiar');
+
+        if (tab === 'extender') {
+            tabExtender.className = 'flex-1 px-3 py-2 text-sm font-medium text-[#23916A] border-b-2 border-[#23916A] bg-green-50';
+            tabCambiar.className = 'flex-1 px-3 py-2 text-sm font-medium text-gray-500 border-b-2 border-transparent hover:text-gray-700 hover:bg-gray-50';
+            contentExtender.classList.remove('hidden');
+            contentCambiar.classList.add('hidden');
+        } else {
+            tabCambiar.className = 'flex-1 px-3 py-2 text-sm font-medium text-purple-600 border-b-2 border-purple-600 bg-purple-50';
+            tabExtender.className = 'flex-1 px-3 py-2 text-sm font-medium text-gray-500 border-b-2 border-transparent hover:text-gray-700 hover:bg-gray-50';
+            contentCambiar.classList.remove('hidden');
+            contentExtender.classList.add('hidden');
+        }
+    }
+
+    function cargarPlanesMembresia() {
+        const container = document.getElementById('planes-container');
+        container.innerHTML = '<div class="text-center py-4 text-gray-500"><i class="fas fa-spinner fa-spin mr-2"></i>Cargando planes...</div>';
+
+        fetch('/Usuarios/ObtenerTiposMembresia')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.membresias) {
+                    planesMembresia = data.membresias;
+                    renderizarPlanes();
+                } else {
+                    container.innerHTML = '<div class="text-center py-4 text-red-500">Error al cargar planes</div>';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                container.innerHTML = '<div class="text-center py-4 text-red-500">Error al cargar planes</div>';
+            });
+    }
+
+    function renderizarPlanes() {
+        const container = document.getElementById('planes-container');
+        const colores = {
+            'Basico': { bg: 'bg-gray-100', icon: 'text-gray-600' },
+            'Premium': { bg: 'bg-yellow-100', icon: 'text-yellow-600' },
+            'Empresarial': { bg: 'bg-purple-100', icon: 'text-purple-600' }
+        };
+
+        let html = '';
+        planesMembresia.forEach((plan, index) => {
+            const color = colores[plan.nombre] || colores['Basico'];
+            const esActual = plan.id === membresiaActualId;
+
+            html += `
+                <label class="relative block ${esActual ? 'opacity-50 pointer-events-none' : ''}">
+                    <input type="radio" name="nuevo-plan" value="${plan.id}" class="peer sr-only" ${index === 0 && !esActual ? 'checked' : ''} ${esActual ? 'disabled' : ''}>
+                    <div class="p-2.5 rounded-lg border-2 border-gray-200 cursor-pointer transition-all peer-checked:border-purple-500 peer-checked:bg-purple-50 flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <div class="w-7 h-7 rounded-full ${color.bg} flex items-center justify-center">
+                                <i class="fas fa-crown ${color.icon} text-xs"></i>
+                            </div>
+                            <div>
+                                <p class="font-semibold text-gray-900 text-sm">${plan.nombre}</p>
+                                <p class="text-xs text-gray-500">$${plan.costoMensual.toLocaleString()}/mes</p>
+                            </div>
+                        </div>
+                        ${esActual ? '<span class="text-xs bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded-full">Actual</span>' : ''}
+                    </div>
+                </label>
+            `;
+        });
+
+        container.innerHTML = html;
+    }
+
+    // Form extender membresía
+    document.getElementById('form-extender-membresia').addEventListener('submit', function(event) {
+        event.preventDefault();
+
+        const idLocal = document.getElementById('extender-local-id').value;
+        const idSuscripcion = document.getElementById('extender-suscripcion-id').value;
+        const periodo = document.querySelector('input[name="periodo"]:checked').value.toUpperCase();
+
+        const btn = document.getElementById('btn-extender');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Procesando...';
+
+        fetch('/Usuarios/ExtenderMembresia', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                IdLocal: parseInt(idLocal),
+                IdSuscripcion: parseInt(idSuscripcion),
+                Periodo: periodo,
+                Notas: 'Extensión desde panel de administración'
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            cerrarModalExtender();
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-plus mr-2"></i>Extender';
+
+            if (data.success) {
+                showToast('success', 'Membresía extendida', data.mensaje);
+                // Recargar la página para ver los cambios
+                setTimeout(() => window.location.reload(), 1500);
+            } else {
+                showToast('error', 'Error', data.mensaje);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-plus mr-2"></i>Extender';
+            showToast('error', 'Error', 'No se pudo extender la membresía');
+        });
+    });
+
+    // Form cambiar membresía
+    document.getElementById('form-cambiar-membresia').addEventListener('submit', function(event) {
+        event.preventDefault();
+
+        const idLocal = document.getElementById('extender-local-id').value;
+        const nuevoPlan = document.querySelector('input[name="nuevo-plan"]:checked');
+        const periodo = document.querySelector('input[name="periodo-cambio"]:checked').value.toUpperCase();
+
+        if (!nuevoPlan) {
+            showToast('error', 'Error', 'Selecciona un plan');
+            return;
+        }
+
+        const btn = document.getElementById('btn-cambiar');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Procesando...';
+
+        fetch('/Usuarios/CambiarMembresia', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                IdLocal: parseInt(idLocal),
+                IdTipoMembresia: parseInt(nuevoPlan.value),
+                Periodo: periodo
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            cerrarModalExtender();
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-exchange-alt mr-2"></i>Cambiar Plan';
+
+            if (data.success) {
+                showToast('success', 'Plan cambiado', data.mensaje);
+                setTimeout(() => window.location.reload(), 1500);
+            } else {
+                showToast('error', 'Error', data.mensaje);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-exchange-alt mr-2"></i>Cambiar Plan';
+            showToast('error', 'Error', 'No se pudo cambiar el plan');
+        });
     });
 </script>
 }
