@@ -23,7 +23,39 @@ namespace BusinessLogic.Models
         public ImagenModel imagen { get; set; }
         public string BannerId { get; set; }
         public ImagenModel BannerImagen { get; set; }
-
         public string Descripcion { get; set; }
+
+        // Contacto adicional
+        public string? EmailContacto { get; set; }
+        public string? Whatsapp { get; set; }
+        public string? SitioWeb { get; set; }
+        public string? Nit { get; set; }
+
+        // Redes sociales
+        public string? Instagram { get; set; }
+        public string? Facebook { get; set; }
+        public string? Tiktok { get; set; }
+        public string? Youtube { get; set; }
+        public string? Twitter { get; set; }
+
+        // Horarios estructurados
+        public string? HorarioLunes { get; set; }
+        public string? HorarioMartes { get; set; }
+        public string? HorarioMiercoles { get; set; }
+        public string? HorarioJueves { get; set; }
+        public string? HorarioViernes { get; set; }
+        public string? HorarioSabado { get; set; }
+        public string? HorarioDomingo { get; set; }
+
+        // Coordenadas GPS
+        public decimal? Latitud { get; set; }
+        public decimal? Longitud { get; set; }
+
+        // Auditoría
+        public DateTime? FechaRegistro { get; set; }
+        public DateTime? FechaActualizacion { get; set; }
+
+        // Galería de imágenes
+        public List<GaleriaLocal>? Galeria { get; set; }
     }
 }

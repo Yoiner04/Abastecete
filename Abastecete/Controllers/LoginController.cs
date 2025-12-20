@@ -218,21 +218,33 @@ namespace ConnectionProject.Controllers
                     return RedirectToAction("Login");
                 }
 
-                ManejadorUsuario manejador = new ManejadorUsuario();
-                DataTable data = manejador.LoginGoogle(email);
+                // Usar el manejador existente en lugar de crear uno nuevo
+                DataTable data = _manejadorUsuario.LoginGoogle(email);
 
                 int rol = data.Rows.Count > 0 ? Convert.ToInt32(data.Rows[0]["FK_ID_ROL"]) : 0;
 
-                if (rol == 0)
+                // Validar estados de error igual que en login normal
+                switch (rol)
                 {
-                    int userId = manejador.RegistrarUsuarioGoogle(email, name);
+                    case 97:
+                        TempData["Error"] = "Tu cuenta ha sido inhabilitada.";
+                        return RedirectToAction("Login");
+                    case 0 when data.Rows.Count > 0:
+                        TempData["Error"] = "Tu cuenta ha sido bloqueada.";
+                        return RedirectToAction("Login");
+                }
+
+                // Usuario no existe, registrarlo
+                if (rol == 0 && data.Rows.Count == 0)
+                {
+                    int userId = _manejadorUsuario.RegistrarUsuarioGoogle(email, name);
                     if (userId == 0)
                     {
                         TempData["Error"] = "Hubo un problema al registrar tu cuenta con Google.";
                         return RedirectToAction("Login");
                     }
 
-                    data = manejador.LoginGoogle(email);
+                    data = _manejadorUsuario.LoginGoogle(email);
                     rol = data.Rows.Count > 0 ? Convert.ToInt32(data.Rows[0]["FK_ID_ROL"]) : 0;
                 }
 
@@ -240,11 +252,22 @@ namespace ConnectionProject.Controllers
                 {
                     int idUsuario = Convert.ToInt32(data.Rows[0]["PK_ID_USUARIO"]);
                     int idPersona = Convert.ToInt32(data.Rows[0]["FK_ID_PERSONA"]);
-                    string membresia = data.Rows[0]["FK_ID_TIPOMEMBRESIA"]?.ToString() ?? "sin membresia";
+
+                    // Manejo seguro de FK_ID_TIPOMEMBRESIA
+                    string membresia = "sin membresia";
+                    var membresiaValue = data.Rows[0]["FK_ID_TIPOMEMBRESIA"];
+                    if (membresiaValue != DBNull.Value && membresiaValue != null)
+                    {
+                        string membresiaStr = membresiaValue.ToString();
+                        if (!string.IsNullOrWhiteSpace(membresiaStr))
+                        {
+                            membresia = membresiaStr;
+                        }
+                    }
 
                     HttpContext.Session.SetInt32("idUsuario", idUsuario);
                     HttpContext.Session.SetInt32("PersonaId", idPersona);
-                    HttpContext.Session.SetString("membresia", string.IsNullOrWhiteSpace(membresia) ? "sin membresia" : membresia);
+                    HttpContext.Session.SetString("membresia", membresia);
                 }
 
                 HttpContext.Session.SetString("userEmail", email);
@@ -262,6 +285,7 @@ namespace ConnectionProject.Controllers
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"Error en GoogleResponse: {ex.Message}");
                 TempData["Error"] = "Hubo un error en el inicio de sesión.";
                 return RedirectToAction("Login");
             }

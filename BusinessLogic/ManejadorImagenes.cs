@@ -87,22 +87,6 @@ namespace BusinessLogic
         }
 
         /// <summary>
-        /// Sube imagen (compatibilidad con firma anterior)
-        /// </summary>
-        public string SubirImagen(IFormFile archivo, int calidad)
-        {
-            return SubirImagen(archivo, "abastecete");
-        }
-
-        /// <summary>
-        /// Actualiza una imagen
-        /// </summary>
-        public string updateImage(IFormFile archivo, string oldImageId)
-        {
-            return SubirImagen(archivo);
-        }
-
-        /// <summary>
         /// Sube imagen y retorna resultado completo con PublicId
         /// </summary>
         public CloudinaryResult SubirImagenCompleto(IFormFile archivo, string folder = "abastecete")
@@ -116,6 +100,17 @@ namespace BusinessLogic
         public bool EliminarImagenCloudinary(string publicId)
         {
             return _cloudinary.EliminarImagen(publicId);
+        }
+
+        /// <summary>
+        /// Actualiza una imagen existente: sube la nueva y retorna su URL
+        /// </summary>
+        public string updateImage(IFormFile archivo, string oldImageId)
+        {
+            if (archivo == null || archivo.Length == 0)
+                return oldImageId;
+
+            return SubirImagen(archivo);
         }
 
         // =============================================

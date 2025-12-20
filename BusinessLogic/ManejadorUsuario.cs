@@ -43,44 +43,6 @@ namespace BusinessLogic
         }
 
 
-        /*Revisar por favor*/
-        public List<Usuario> ObtenerUsuarios(int id)
-        {
-            List<Parametro> parametros = new List<Parametro>()
-            {
-                new Parametro("id_usuario", id)
-            };
-            DataTable data = conexion.EjecutarConsulta("consultar_usuario", parametros);
-            List<Usuario> usuarios = new List<Usuario>();
-            foreach (DataRow row in data.AsEnumerable())
-            {
-                usuarios.Add(new Usuario()
-                {
-                    Id = Convert.ToInt32(row["PK_ID_USUARIO"].ToString()),
-                    Correo = row["NOMBRE_USUARIO"].ToString(),
-                    Rol = new Rol()
-                    {
-                        Nombre = row["NOMBRE_ROL"].ToString()
-                    },
-                    Persona = new Persona()
-                    {
-                        Id = Convert.ToInt32(row["PK_ID_PERSONA"].ToString()),
-                        Nombre = row["NOMBRES"].ToString(),
-                        Apellido = row["APELLIDOS"].ToString(),
-                        Documento = Convert.ToInt32(row["DOCUMENTO_IDENTIDAD"].ToString()),
-                        Telefono = row["TELEFONO"].ToString(),
-                        TipoDeDocumento = new TipoDocumento()
-                        {
-                            Id = Convert.ToInt32(row["PK_ID_TIPO_DOCUMENTO"].ToString()),
-                            Nombre = row["NOMBRE_TIPO_DOCUMENTO"].ToString()
-                        }
-                    }
-
-                });
-            }
-            return usuarios;
-        }
-
         public List<Usuario> ConsultarUsuarios(int idUsuario)
         {
             List<Parametro> parametros = new List<Parametro>()
@@ -115,6 +77,11 @@ namespace BusinessLogic
             }
             return usuarios;
         }
+
+        /// <summary>
+        /// Alias de ConsultarUsuarios para compatibilidad
+        /// </summary>
+        public List<Usuario> ObtenerUsuarios(int idUsuario) => ConsultarUsuarios(idUsuario);
 
 
 

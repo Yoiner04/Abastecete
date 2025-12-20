@@ -25,8 +25,8 @@ builder.Services.AddAuthentication(options =>
 .AddCookie()
 .AddGoogle(options =>
 {
-    options.ClientId = "169045921628-am6cj2hhhpkthrqckqp3k9l667kp7ahb.apps.googleusercontent.com";
-    options.ClientSecret = "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";
+    options.ClientId = builder.Configuration["Google:ClientId"];
+    options.ClientSecret = builder.Configuration["Google:ClientSecret"];
     options.CallbackPath = "/signin-google";
 });
 
@@ -48,7 +48,7 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
-// Activar autenticación y autorización
+// Activar autenticaciï¿½n y autorizaciï¿½n
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseSession();

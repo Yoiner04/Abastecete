@@ -96,7 +96,7 @@ namespace BusinessLogic
                 new Parametro("p_id_persona", idPersona)
             };
 
-            DataTable datos = conexion.EjecutarConsulta("consultar_local_por_persona_seguro", parametros);
+            DataTable datos = conexion.EjecutarConsulta("consultar_negocio", parametros);
 
             // Validar que existan datos antes de acceder
             if (datos == null || datos.Rows.Count == 0)
@@ -106,19 +106,56 @@ namespace BusinessLogic
 
             DataRow row = datos.Rows[0];
 
-            return new Negocio
+            var negocio = new Negocio
             {
                 Id = Convert.ToInt32(row["PK_ID_LOCAL"]),
                 Nombre = row["NOMBRE_LOCAL"].ToString(),
                 Localizacion = row["LOCALIZACION"].ToString(),
                 Direccion = row["DIRECCION_LOCAL"] + "",
-                Telefono = Convert.ToInt64(row["TELEFONO_LOCAL"]),
+                Telefono = row["TELEFONO_LOCAL"] != DBNull.Value ? Convert.ToInt64(row["TELEFONO_LOCAL"]) : 0,
                 LogotipoId = row["FOTOS_LOCAL"].ToString(),
                 Descripcion = row["DESCRIPCION_LOCAL"].ToString(),
                 imagen = _manejadorMongo.ObtenerImagen(row["FOTOS_LOCAL"].ToString()),
                 BannerId = row["BANNER_LOCAL"].ToString(),
-                BannerImagen = _manejadorMongo.ObtenerImagen(row["BANNER_LOCAL"].ToString())
+                BannerImagen = _manejadorMongo.ObtenerImagen(row["BANNER_LOCAL"].ToString()),
+                Estado = row["FK_ID_ESTADO_LOCAL"] != DBNull.Value ? Convert.ToInt32(row["FK_ID_ESTADO_LOCAL"]) : 0,
+
+                // Campos nuevos de contacto
+                EmailContacto = row.Table.Columns.Contains("EMAIL_CONTACTO") ? row["EMAIL_CONTACTO"]?.ToString() : null,
+                Whatsapp = row.Table.Columns.Contains("WHATSAPP") ? row["WHATSAPP"]?.ToString() : null,
+                SitioWeb = row.Table.Columns.Contains("SITIO_WEB") ? row["SITIO_WEB"]?.ToString() : null,
+                Nit = row.Table.Columns.Contains("NIT") ? row["NIT"]?.ToString() : null,
+
+                // Redes sociales
+                Instagram = row.Table.Columns.Contains("INSTAGRAM") ? row["INSTAGRAM"]?.ToString() : null,
+                Facebook = row.Table.Columns.Contains("FACEBOOK") ? row["FACEBOOK"]?.ToString() : null,
+                Tiktok = row.Table.Columns.Contains("TIKTOK") ? row["TIKTOK"]?.ToString() : null,
+                Youtube = row.Table.Columns.Contains("YOUTUBE") ? row["YOUTUBE"]?.ToString() : null,
+                Twitter = row.Table.Columns.Contains("TWITTER") ? row["TWITTER"]?.ToString() : null,
+
+                // Horarios
+                HorarioLunes = row.Table.Columns.Contains("HORARIO_LUNES") ? row["HORARIO_LUNES"]?.ToString() : null,
+                HorarioMartes = row.Table.Columns.Contains("HORARIO_MARTES") ? row["HORARIO_MARTES"]?.ToString() : null,
+                HorarioMiercoles = row.Table.Columns.Contains("HORARIO_MIERCOLES") ? row["HORARIO_MIERCOLES"]?.ToString() : null,
+                HorarioJueves = row.Table.Columns.Contains("HORARIO_JUEVES") ? row["HORARIO_JUEVES"]?.ToString() : null,
+                HorarioViernes = row.Table.Columns.Contains("HORARIO_VIERNES") ? row["HORARIO_VIERNES"]?.ToString() : null,
+                HorarioSabado = row.Table.Columns.Contains("HORARIO_SABADO") ? row["HORARIO_SABADO"]?.ToString() : null,
+                HorarioDomingo = row.Table.Columns.Contains("HORARIO_DOMINGO") ? row["HORARIO_DOMINGO"]?.ToString() : null,
+
+                // Coordenadas GPS
+                Latitud = row.Table.Columns.Contains("LATITUD") && row["LATITUD"] != DBNull.Value
+                    ? Convert.ToDecimal(row["LATITUD"]) : null,
+                Longitud = row.Table.Columns.Contains("LONGITUD") && row["LONGITUD"] != DBNull.Value
+                    ? Convert.ToDecimal(row["LONGITUD"]) : null,
+
+                // Auditoría
+                FechaRegistro = row.Table.Columns.Contains("FECHA_REGISTRO") && row["FECHA_REGISTRO"] != DBNull.Value
+                    ? Convert.ToDateTime(row["FECHA_REGISTRO"]) : null,
+                FechaActualizacion = row.Table.Columns.Contains("FECHA_ACTUALIZACION") && row["FECHA_ACTUALIZACION"] != DBNull.Value
+                    ? Convert.ToDateTime(row["FECHA_ACTUALIZACION"]) : null
             };
+
+            return negocio;
         }
 
         public Producto ConsultarProductoNegocio(int idProducto, int IdLocal)
@@ -174,7 +211,33 @@ namespace BusinessLogic
                 new Parametro("p_telefono_local", negocio.Telefono != 0 ? negocio.Telefono : actual.Telefono),
                 new Parametro("p_fotos_local", !string.IsNullOrEmpty(negocio.LogotipoId) ? negocio.LogotipoId : actual.LogotipoId),
                 new Parametro("p_descripcion_local", !string.IsNullOrEmpty(negocio.Descripcion) ? negocio.Descripcion : actual.Descripcion),
-                new Parametro("p_banner_local", !string.IsNullOrEmpty(negocio.BannerId) ? negocio.BannerId : actual.BannerId)
+                new Parametro("p_banner_local", !string.IsNullOrEmpty(negocio.BannerId) ? negocio.BannerId : actual.BannerId),
+
+                // Campos nuevos de contacto
+                new Parametro("p_email_contacto", negocio.EmailContacto ?? actual.EmailContacto),
+                new Parametro("p_whatsapp", negocio.Whatsapp ?? actual.Whatsapp),
+                new Parametro("p_sitio_web", negocio.SitioWeb ?? actual.SitioWeb),
+                new Parametro("p_nit", negocio.Nit ?? actual.Nit),
+
+                // Redes sociales
+                new Parametro("p_instagram", negocio.Instagram ?? actual.Instagram),
+                new Parametro("p_facebook", negocio.Facebook ?? actual.Facebook),
+                new Parametro("p_tiktok", negocio.Tiktok ?? actual.Tiktok),
+                new Parametro("p_youtube", negocio.Youtube ?? actual.Youtube),
+                new Parametro("p_twitter", negocio.Twitter ?? actual.Twitter),
+
+                // Horarios
+                new Parametro("p_horario_lunes", negocio.HorarioLunes ?? actual.HorarioLunes),
+                new Parametro("p_horario_martes", negocio.HorarioMartes ?? actual.HorarioMartes),
+                new Parametro("p_horario_miercoles", negocio.HorarioMiercoles ?? actual.HorarioMiercoles),
+                new Parametro("p_horario_jueves", negocio.HorarioJueves ?? actual.HorarioJueves),
+                new Parametro("p_horario_viernes", negocio.HorarioViernes ?? actual.HorarioViernes),
+                new Parametro("p_horario_sabado", negocio.HorarioSabado ?? actual.HorarioSabado),
+                new Parametro("p_horario_domingo", negocio.HorarioDomingo ?? actual.HorarioDomingo),
+
+                // Coordenadas GPS
+                new Parametro("p_latitud", negocio.Latitud ?? actual.Latitud),
+                new Parametro("p_longitud", negocio.Longitud ?? actual.Longitud)
             };
 
             return conexion.EjecutarTransaccion("editar_local", parametros);

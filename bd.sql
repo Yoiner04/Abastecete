@@ -3749,7 +3749,7 @@ CREATE TABLE IF NOT EXISTS `historial_membresia` (
   CONSTRAINT `FK_historial_local` FOREIGN KEY (`FK_ID_LOCAL`) REFERENCES `local` (`PK_ID_LOCAL`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla abastecete.historial_membresia: ~13 rows (aproximadamente)
+-- Volcando datos para la tabla abastecete.historial_membresia: ~14 rows (aproximadamente)
 INSERT INTO `historial_membresia` (`PK_ID_HISTORIAL`, `FK_ID_LOCAL`, `FK_ID_SUSCRIPCION`, `FK_ID_TIPO_ANTERIOR`, `FK_ID_TIPO_NUEVO`, `TIPO_CAMBIO`, `FECHA_CAMBIO`, `FECHA_INICIO_PERIODO`, `FECHA_FIN_PERIODO`, `MONTO`, `PERIODO`, `NOTAS`) VALUES
 	(1, 1, 1, NULL, 12, 'MIGRACION', '2025-12-19 05:42:03', '2025-02-20 10:05:41', '2025-03-20 10:05:41', NULL, NULL, 'Registro inicial migrado automáticamente'),
 	(2, 3, 2, NULL, 18, 'MIGRACION', '2025-12-19 05:42:03', '2025-02-20 10:43:17', '2025-03-20 10:43:17', NULL, NULL, 'Registro inicial migrado automáticamente'),
@@ -3863,7 +3863,7 @@ CREATE TABLE IF NOT EXISTS `localcategoria` (
   CONSTRAINT `FK2` FOREIGN KEY (`FK_ID_CATEGORIA`) REFERENCES `categoria` (`PK_ID_CATEGORIA`)
 ) ENGINE=InnoDB AUTO_INCREMENT=39 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla abastecete.localcategoria: ~15 rows (aproximadamente)
+-- Volcando datos para la tabla abastecete.localcategoria: ~17 rows (aproximadamente)
 INSERT INTO `localcategoria` (`PK_ID_LOCALCATEGORIA`, `FK_ID_LOCAL`, `FK_ID_CATEGORIA`) VALUES
 	(22, 28, 4),
 	(23, 34, 7),
@@ -4198,7 +4198,7 @@ CREATE TABLE IF NOT EXISTS `marca` (
   UNIQUE KEY `uk_marca_nombre` (`NOMBRE`)
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla abastecete.marca: ~0 rows (aproximadamente)
+-- Volcando datos para la tabla abastecete.marca: ~1 rows (aproximadamente)
 INSERT INTO `marca` (`PK_ID_MARCA`, `NOMBRE`, `DESCRIPCION`, `LOGO_URL`, `CLOUDINARY_PUBLIC_ID`, `ACTIVO`, `FECHA_REGISTRO`) VALUES
 	(1, 'Sin Marca', 'Productos sin marca específica', NULL, NULL, 1, '2025-12-19 03:16:12');
 
@@ -4216,7 +4216,7 @@ CREATE TABLE IF NOT EXISTS `membresia_local_deprecated` (
   CONSTRAINT `FK_membresia_local` FOREIGN KEY (`FK_ID_LOCAL`) REFERENCES `local` (`PK_ID_LOCAL`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=37 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla abastecete.membresia_local_deprecated: ~12 rows (aproximadamente)
+-- Volcando datos para la tabla abastecete.membresia_local_deprecated: ~13 rows (aproximadamente)
 INSERT INTO `membresia_local_deprecated` (`PK_ID_MEMBRESIA`, `FK_ID_LOCAL`, `ESTADO`, `FECHA_INICIO`, `FECHA_FIN`) VALUES
 	(2, 1, 1, '2025-02-20 10:05:41', '2025-03-20 10:05:41'),
 	(3, 3, 1, '2025-02-20 10:43:17', '2025-03-20 10:43:17'),
@@ -4477,7 +4477,7 @@ CREATE TABLE IF NOT EXISTS `permiso` (
   PRIMARY KEY (`PK_ID_PERMISO`)
 ) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla abastecete.permiso: ~10 rows (aproximadamente)
+-- Volcando datos para la tabla abastecete.permiso: ~11 rows (aproximadamente)
 INSERT INTO `permiso` (`PK_ID_PERMISO`, `NOMBRE_PERMISO`, `ESTADO_PERMISO`) VALUES
 	(2, 'Administrar Categorias', 1),
 	(3, 'Administrar Usuarios', 1),
@@ -4504,7 +4504,7 @@ CREATE TABLE IF NOT EXISTS `permiso_de_rol` (
   CONSTRAINT `FK_permiso_de_rol_rol` FOREIGN KEY (`PFK_ID_ROL`) REFERENCES `rol` (`PK_ID_ROL`)
 ) ENGINE=InnoDB AUTO_INCREMENT=38 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla abastecete.permiso_de_rol: ~28 rows (aproximadamente)
+-- Volcando datos para la tabla abastecete.permiso_de_rol: ~29 rows (aproximadamente)
 INSERT INTO `permiso_de_rol` (`PK_ID_PERMISO_ROL`, `PFK_ID_ROL`, `PFK_ID_PERMISO`, `ESTADO_PERMISO_ROL`) VALUES
 	(2, 1, 2, 1),
 	(3, 3, 4, 1),
@@ -4556,7 +4556,7 @@ CREATE TABLE IF NOT EXISTS `persona` (
   CONSTRAINT `FK_persona_tipo_documento` FOREIGN KEY (`FK_ID_TIPO_DOCUMENTO`) REFERENCES `tipo_documento` (`PK_ID_TIPO_DOCUMENTO`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=54 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla abastecete.persona: ~29 rows (aproximadamente)
+-- Volcando datos para la tabla abastecete.persona: ~28 rows (aproximadamente)
 INSERT INTO `persona` (`PK_ID_PERSONA`, `NOMBRES`, `APELLIDOS`, `TELEFONO`, `CORREO`, `DOCUMENTO_IDENTIDAD`, `ESTADO`, `FK_ID_TIPO_DOCUMENTO`, `CODIGO_REFERIDO`, `CODIGO_REFERIDO_USUARIO`) VALUES
 	(2, 'Kevin', 'Benavidez', '3123687284', 'kevin12@gmail.com', 1080360, 1, 1, 'COD659438', NULL),
 	(3, 'Sebastian', 'Sierra', '312361', 'sierra@gmail.com', 1020, 1, 1, 'COD638751', NULL),
@@ -5205,7 +5205,7 @@ CREATE TABLE IF NOT EXISTS `productoslocal` (
   CONSTRAINT `fk_local` FOREIGN KEY (`FK_ID_LOCAL`) REFERENCES `local` (`PK_ID_LOCAL`)
 ) ENGINE=InnoDB AUTO_INCREMENT=131 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla abastecete.productoslocal: ~26 rows (aproximadamente)
+-- Volcando datos para la tabla abastecete.productoslocal: ~27 rows (aproximadamente)
 INSERT INTO `productoslocal` (`PK_ID_PRODUCTS_LOCAL`, `FK_ID_PRODUCTO`, `FK_ID_UNIDAD`, `VALOR_PRODUCTS_LOCAL`, `FK_ID_LOCAL`, `FK_ESTADO`) VALUES
 	(104, 1, 6, 5000, 28, 1),
 	(105, 5, 6, 7000, 28, 1),
@@ -5632,7 +5632,7 @@ CREATE TABLE IF NOT EXISTS `rol` (
   PRIMARY KEY (`PK_ID_ROL`)
 ) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla abastecete.rol: ~4 rows (aproximadamente)
+-- Volcando datos para la tabla abastecete.rol: ~5 rows (aproximadamente)
 INSERT INTO `rol` (`PK_ID_ROL`, `NOMBRE_ROL`) VALUES
 	(1, 'Administrador'),
 	(2, 'Proveedor'),
@@ -5738,7 +5738,7 @@ CREATE TABLE IF NOT EXISTS `suscripcion` (
   CONSTRAINT `FK_suscripcion_tipo` FOREIGN KEY (`FK_ID_TIPO_MEMBRESIA`) REFERENCES `tipo_membresia` (`PK_ID_TIPO_MEMBRESIA`)
 ) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla abastecete.suscripcion: ~13 rows (aproximadamente)
+-- Volcando datos para la tabla abastecete.suscripcion: ~14 rows (aproximadamente)
 INSERT INTO `suscripcion` (`PK_ID_SUSCRIPCION`, `FK_ID_LOCAL`, `FK_ID_TIPO_MEMBRESIA`, `ESTADO`, `FECHA_INICIO`, `FECHA_FIN`, `FECHA_CREACION`, `MONTO_PAGADO`, `METODO_PAGO`, `PERIODO`, `NOTAS`) VALUES
 	(1, 1, 12, 1, '2025-02-20 10:05:41', '2025-03-20 10:05:41', '2025-12-19 05:42:03', NULL, NULL, 'MENSUAL', 'Migrado automáticamente desde membresia_local'),
 	(2, 3, 18, 1, '2025-02-20 10:43:17', '2025-03-20 10:43:17', '2025-12-19 05:42:03', NULL, NULL, 'MENSUAL', 'Migrado automáticamente desde membresia_local'),
@@ -5804,7 +5804,7 @@ CREATE TABLE IF NOT EXISTS `tipo_unidad` (
   PRIMARY KEY (`ID_TIPOUNIDAD`)
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla abastecete.tipo_unidad: ~2 rows (aproximadamente)
+-- Volcando datos para la tabla abastecete.tipo_unidad: ~3 rows (aproximadamente)
 INSERT INTO `tipo_unidad` (`ID_TIPOUNIDAD`, `NOMBRE_TIPOUNIDAD`) VALUES
 	(1, 'Peso'),
 	(2, 'Volumen'),
