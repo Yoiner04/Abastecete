@@ -16,6 +16,7 @@ namespace Abastecete.Controllers
         private readonly ManejadorMarcas manejadorMarcas;
         private readonly ManejadorImagenes manejadorImagenes;
         private readonly ManejadorTipoUnidad manejadorTipoUnidad;
+        private readonly ManejadorGaleriaLocal manejadorGaleria;
 
         public ProductosController()
         {
@@ -26,6 +27,7 @@ namespace Abastecete.Controllers
             manejadorMarcas = new ManejadorMarcas();
             manejadorImagenes = new ManejadorImagenes();
             manejadorTipoUnidad = new ManejadorTipoUnidad();
+            manejadorGaleria = new ManejadorGaleriaLocal();
         }
 
         public IActionResult Consultar()
@@ -67,11 +69,14 @@ namespace Abastecete.Controllers
             Negocio negocio = manejadorNegocios.ConsultarNegocio(personaId);
             if (negocio == null)
             {
-                return View("ErrorNegocioNoEncontrado"); // Vista de error si no tiene negocio
+                return View("ErrorNegocioNoEncontrado");
             }
 
             List<Persona> persona = manejadorPersonas.ObtenerPersonas(personaId);
             List<Producto> productos = manejadorProductos.ConsultarProductosLocal(negocio.Id);
+
+            // Cargar galería aprobada del local
+            negocio.Galeria = manejadorGaleria.ListarGaleriaAprobada(negocio.Id);
 
             ViewBag.productos = productos;
 

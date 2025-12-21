@@ -1,4 +1,4 @@
-﻿@model BusinessLogic.Models.NegocioPersona
+@model BusinessLogic.Models.NegocioPersona
 
 <!DOCTYPE html>
 <html lang="es">
@@ -136,6 +136,49 @@
         .products-counter {
             background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
         }
+
+        /* Panel lateral del local */
+        .local-panel {
+            background: linear-gradient(180deg, #ffffff 0%, #f9fafb 100%);
+        }
+
+        /* Galería grid */
+        .gallery-item {
+            transition: all 0.3s ease;
+        }
+        .gallery-item:hover {
+            transform: scale(1.05);
+            z-index: 10;
+        }
+
+        /* Redes sociales */
+        .social-btn {
+            transition: all 0.2s ease;
+        }
+        .social-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Scroll personalizado para panel */
+        .custom-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scroll::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 3px;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* Lightbox galería */
+        .lightbox {
+            transition: opacity 0.3s ease;
+        }
     </style>
 </head>
 
@@ -143,7 +186,7 @@
     <!-- Header mejorado con gradiente -->
     <header class="relative w-full overflow-hidden">
         <!-- Banner con gradiente overlay -->
-        <div class="relative h-64 sm:h-72 w-full">
+        <div class="relative h-56 sm:h-64 w-full">
             @if (!string.IsNullOrWhiteSpace(Model.Negocio?.BannerImagen?.Base64))
             {
                 <img src="@Model.Negocio.BannerImagen.Base64" alt="Fondo"
@@ -156,10 +199,10 @@
             }
 
             <!-- Contenido del header -->
-            <div class="relative z-10 h-full flex flex-col justify-end pb-6 px-4 sm:px-8 lg:px-12">
-                <div class="flex items-end gap-4 sm:gap-6">
+            <div class="relative z-10 h-full flex flex-col justify-end pb-4 px-4 sm:px-8 lg:px-12">
+                <div class="flex items-end gap-4">
                     <!-- Logo del negocio -->
-                    <div class="animate-fadeInUp flex-shrink-0 w-24 h-24 sm:w-32 sm:h-32 rounded-2xl border-4 border-white bg-white shadow-xl overflow-hidden">
+                    <div class="animate-fadeInUp flex-shrink-0 w-20 h-20 sm:w-24 sm:h-24 rounded-2xl border-4 border-white bg-white shadow-xl overflow-hidden">
                         @if (!string.IsNullOrWhiteSpace(Model.Negocio?.imagen?.Base64))
                         {
                             <img src="@Model.Negocio.imagen.Base64" alt="Logo negocio" class="h-full w-full object-cover" />
@@ -167,19 +210,19 @@
                         else
                         {
                             <div class="h-full w-full flex items-center justify-center bg-gray-100">
-                                <i class="fas fa-store text-3xl text-gray-400"></i>
+                                <i class="fas fa-store text-2xl text-gray-400"></i>
                             </div>
                         }
                     </div>
 
                     <!-- Info del negocio sobre el banner -->
-                    <div class="animate-fadeInUp delay-100 flex-1 text-white pb-2">
-                        <h1 class="text-2xl sm:text-3xl lg:text-4xl font-bold drop-shadow-lg">
+                    <div class="animate-fadeInUp delay-100 flex-1 text-white pb-1">
+                        <h1 class="text-xl sm:text-2xl lg:text-3xl font-bold drop-shadow-lg">
                             @Model.Negocio?.Nombre
                         </h1>
                         @if (!string.IsNullOrWhiteSpace(Model.Negocio?.Descripcion))
                         {
-                            <p class="mt-1 text-sm sm:text-base text-white/90 drop-shadow line-clamp-2">
+                            <p class="mt-1 text-sm text-white/90 drop-shadow line-clamp-1">
                                 @Model.Negocio?.Descripcion
                             </p>
                         }
@@ -190,19 +233,19 @@
 
         <!-- Barra de info debajo del header -->
         <div class="bg-white border-b border-gray-100 shadow-sm">
-            <div class="px-4 sm:px-8 lg:px-12 py-3">
-                <div class="flex flex-wrap items-center justify-between gap-3">
+            <div class="px-4 sm:px-8 lg:px-12 py-2.5">
+                <div class="flex flex-wrap items-center justify-between gap-2">
                     <!-- Info de contacto -->
-                    <div class="flex flex-wrap items-center gap-4 text-sm text-gray-600">
+                    <div class="flex flex-wrap items-center gap-3 text-sm text-gray-600">
                         @if (Model.Negocio?.Telefono != null)
                         {
-                            <a href="tel:@Model.Negocio.Telefono" class="flex items-center gap-2 hover:text-green-600 transition-colors">
-                                <i class="fas fa-phone text-green-500"></i>
+                            <a href="tel:@Model.Negocio.Telefono" class="flex items-center gap-1.5 hover:text-green-600 transition-colors">
+                                <i class="fas fa-phone text-green-500 text-xs"></i>
                                 <span>@Model.Negocio.Telefono</span>
                             </a>
                         }
-                        <div class="flex items-center gap-2">
-                            <i class="fas fa-box text-orange-500"></i>
+                        <div class="flex items-center gap-1.5">
+                            <i class="fas fa-box text-orange-500 text-xs"></i>
                             <span id="productos-count" class="font-medium">@(((IEnumerable<dynamic>)ViewBag.productos).Count()) productos</span>
                         </div>
                     </div>
@@ -212,10 +255,9 @@
                     {
                         <a href="https://wa.me/57@Model.Negocio.Telefono?text=Hola, vi tu negocio en Abastecete"
                            target="_blank"
-                           class="whatsapp-btn flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-full text-sm font-medium hover:bg-green-600 transition-all">
-                            <i class="fab fa-whatsapp text-lg"></i>
-                            <span class="hidden sm:inline">Contactar por WhatsApp</span>
-                            <span class="sm:hidden">WhatsApp</span>
+                           class="whatsapp-btn flex items-center gap-1.5 px-3 py-1.5 bg-green-500 text-white rounded-full text-sm font-medium hover:bg-green-600 transition-all">
+                            <i class="fab fa-whatsapp"></i>
+                            <span class="hidden sm:inline">WhatsApp</span>
                         </a>
                     }
                 </div>
@@ -260,125 +302,380 @@
         </div>
     </div>
 
-    <main class="w-full px-4 sm:px-6 lg:px-12 py-6">
+    <main class="w-full px-4 sm:px-6 lg:px-8 py-4">
+        <!-- Layout principal: Productos + Panel del Local -->
+        <div class="flex flex-col lg:flex-row gap-4">
 
-        <div class="w-full transition-all">
-            <div id="productosWrapper"
-                class="w-full rounded-2xl bg-white p-4 shadow-sm border border-gray-100 transition-all duration-300 sm:p-6">
+            <!-- Sección de Productos (izquierda/principal) -->
+            <div class="flex-1 min-w-0">
+                <div id="productosWrapper"
+                    class="w-full rounded-2xl bg-white p-4 shadow-sm border border-gray-100 transition-all duration-300">
 
-                <!-- Barra de acciones mejorada -->
-                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-                    <div class="flex items-center gap-2">
-                        <h2 class="text-lg sm:text-xl font-bold text-gray-800">Mis Productos</h2>
-                        <span class="products-counter px-2 py-0.5 text-xs font-bold text-white rounded-full">
-                            @(((IEnumerable<dynamic>)ViewBag.productos).Count())
-                        </span>
+                    <!-- Barra de acciones -->
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+                        <div class="flex items-center gap-2">
+                            <h2 class="text-lg font-bold text-gray-800">Mis Productos</h2>
+                            <span class="products-counter px-2 py-0.5 text-xs font-bold text-white rounded-full">
+                                @(((IEnumerable<dynamic>)ViewBag.productos).Count())
+                            </span>
+                        </div>
+
+                        <div class="flex items-center gap-2">
+                            <a href="#" onclick="openMensajeModal(); return false;"
+                               class="action-btn flex items-center gap-1.5 h-9 px-3 rounded-xl bg-gray-100 text-gray-700 hover:bg-gray-200 transition-all text-sm"
+                               data-tooltip="Enviar solicitud">
+                                <i class="fas fa-comment-dots text-sm"></i>
+                                <span class="hidden sm:inline">Solicitud</span>
+                            </a>
+
+                            <a href="@Url.Action("AgregarProductNegocio", "Productos")"
+                               class="action-btn flex items-center gap-1.5 h-9 px-3 rounded-xl bg-orange-500 text-white hover:bg-orange-600 transition-all shadow-sm text-sm"
+                               data-tooltip="Agregar producto">
+                                <i class="fas fa-plus text-sm"></i>
+                                <span class="hidden sm:inline">Agregar</span>
+                            </a>
+
+                            <a href="@Url.Action("EditarNegocio", "Negocios")"
+                               class="action-btn flex items-center gap-1.5 h-9 px-3 rounded-xl bg-green-500 text-white hover:bg-green-600 transition-all shadow-sm text-sm"
+                               data-tooltip="Editar negocio">
+                                <i class="fas fa-pen-to-square text-sm"></i>
+                                <span class="hidden sm:inline">Editar</span>
+                            </a>
+                        </div>
                     </div>
 
-                    <div class="flex items-center gap-2 sm:gap-3">
-                        <a href="#" onclick="openMensajeModal(); return false;"
-                           class="action-btn flex items-center gap-2 h-10 px-3 sm:px-4 rounded-xl bg-gray-100 text-gray-700 hover:bg-gray-200 transition-all"
-                           data-tooltip="Enviar solicitud">
-                            <i class="fas fa-comment-dots"></i>
-                            <span class="hidden sm:inline text-sm font-medium">Solicitud</span>
-                        </a>
+                    <!-- Grid de productos -->
+                    <div id="productosContainer"
+                        class="grid grid-cols-2 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4">
 
-                        <a href="@Url.Action("AgregarProductNegocio", "Productos")"
-                           class="action-btn flex items-center gap-2 h-10 px-3 sm:px-4 rounded-xl bg-orange-500 text-white hover:bg-orange-600 transition-all shadow-sm hover:shadow-md"
-                           data-tooltip="Agregar producto">
-                            <i class="fas fa-plus"></i>
-                            <span class="hidden sm:inline text-sm font-medium">Agregar</span>
-                        </a>
+                        @{ var index = 0; }
+                        @foreach (var producto in ViewBag.productos)
+                        {
+                            var delayClass = $"delay-{Math.Min(index * 100, 500)}";
+                            <div id="producto-@producto.Id"
+                                class="producto producto-card animate-fadeInUp @delayClass group relative flex flex-col rounded-xl border border-gray-100 bg-white overflow-hidden shadow-sm"
+                                data-categoria-id="@producto.IdSubCategoria"
+                                data-precio="@producto.Precio"
+                                data-nombre="@producto.Nombre"
+                                data-imagen="@producto.ImagenUrl">
 
-                        <a href="@Url.Action("EditarNegocio", "Negocios")"
-                           class="action-btn flex items-center gap-2 h-10 px-3 sm:px-4 rounded-xl bg-green-500 text-white hover:bg-green-600 transition-all shadow-sm hover:shadow-md"
-                           data-tooltip="Editar negocio">
-                            <i class="fas fa-pen-to-square"></i>
-                            <span class="hidden sm:inline text-sm font-medium">Editar</span>
-                        </a>
-                    </div>
-                </div>
+                                <!-- Contenedor de imagen con overlay -->
+                                <div class="relative aspect-square overflow-hidden bg-gray-50">
+                                    <img src="@producto.ImagenUrl"
+                                         alt="@producto.Nombre"
+                                         class="producto-image h-full w-full object-contain p-2"
+                                         loading="lazy" />
 
-                <!-- Grid de productos -->
-                <div id="productosContainer"
-                    class="grid grid-cols-2 gap-3 sm:gap-4 md:gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                                    <!-- Overlay con acciones -->
+                                    <div class="producto-overlay absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent flex items-center justify-center gap-2">
+                                        <button onclick="mostrarDetalle('@producto.Nombre.Replace("'", "\\'"))', '@producto.Precio', '@producto.ImagenUrl', @producto.Id)"
+                                                class="w-8 h-8 rounded-full bg-white/95 backdrop-blur-sm flex items-center justify-center text-gray-700 hover:bg-green-500 hover:text-white transition-all shadow-lg hover:scale-110"
+                                                title="Ver detalle">
+                                            <i class="fas fa-eye text-xs"></i>
+                                        </button>
+                                        <button onclick="abrirModalEditar(@producto.Id, '@producto.Nombre.Replace("'", "\\'")', '@producto.Precio', '@producto.ImagenUrl')"
+                                                class="w-8 h-8 rounded-full bg-white/95 backdrop-blur-sm flex items-center justify-center text-gray-700 hover:bg-orange-500 hover:text-white transition-all shadow-lg hover:scale-110"
+                                                title="Editar producto">
+                                            <i class="fas fa-pen text-xs"></i>
+                                        </button>
+                                        <button onclick="confirmarEliminar(@producto.Id, '@producto.Nombre.Replace("'", "\\'")')"
+                                                class="w-8 h-8 rounded-full bg-white/95 backdrop-blur-sm flex items-center justify-center text-gray-700 hover:bg-red-500 hover:text-white transition-all shadow-lg hover:scale-110"
+                                                title="Eliminar producto">
+                                            <i class="fas fa-trash text-xs"></i>
+                                        </button>
+                                    </div>
+                                </div>
 
-                    @{ var index = 0; }
-                    @foreach (var producto in ViewBag.productos)
-                    {
-                        var delayClass = $"delay-{Math.Min(index * 100, 500)}";
-                        <div id="producto-@producto.Id"
-                            class="producto producto-card animate-fadeInUp @delayClass group relative flex flex-col rounded-xl border border-gray-100 bg-white overflow-hidden shadow-sm"
-                            data-categoria-id="@producto.IdSubCategoria"
-                            data-precio="@producto.Precio"
-                            data-nombre="@producto.Nombre"
-                            data-imagen="@producto.ImagenUrl">
-
-                            <!-- Contenedor de imagen con overlay -->
-                            <div class="relative aspect-square overflow-hidden bg-gray-50">
-                                <img src="@producto.ImagenUrl"
-                                     alt="@producto.Nombre"
-                                     class="producto-image h-full w-full object-contain p-2 sm:p-3"
-                                     loading="lazy" />
-
-                                <!-- Overlay con acciones -->
-                                <div class="producto-overlay absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent flex items-center justify-center gap-2 sm:gap-3">
-                                    <button onclick="mostrarDetalle('@producto.Nombre.Replace("'", "\\'"))', '@producto.Precio', '@producto.ImagenUrl', @producto.Id)"
-                                            class="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/95 backdrop-blur-sm flex items-center justify-center text-gray-700 hover:bg-green-500 hover:text-white transition-all shadow-lg hover:scale-110"
-                                            title="Ver detalle">
-                                        <i class="fas fa-eye text-sm"></i>
-                                    </button>
-                                    <button onclick="abrirModalEditar(@producto.Id, '@producto.Nombre.Replace("'", "\\'")', '@producto.Precio', '@producto.ImagenUrl')"
-                                            class="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/95 backdrop-blur-sm flex items-center justify-center text-gray-700 hover:bg-orange-500 hover:text-white transition-all shadow-lg hover:scale-110"
-                                            title="Editar producto">
-                                        <i class="fas fa-pen text-sm"></i>
-                                    </button>
-                                    <button onclick="confirmarEliminar(@producto.Id, '@producto.Nombre.Replace("'", "\\'")')"
-                                            class="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-white/95 backdrop-blur-sm flex items-center justify-center text-gray-700 hover:bg-red-500 hover:text-white transition-all shadow-lg hover:scale-110"
-                                            title="Eliminar producto">
-                                        <i class="fas fa-trash text-sm"></i>
-                                    </button>
+                                <!-- Info del producto -->
+                                <div class="p-2.5">
+                                    <h3 class="text-sm font-semibold text-gray-800 line-clamp-2 group-hover:text-green-600 transition-colors leading-tight">
+                                        @producto.Nombre
+                                    </h3>
+                                    <div class="mt-1.5 flex items-center justify-between">
+                                        <p class="text-base font-bold text-orange-500">$@producto.Precio</p>
+                                        @if (producto.Unidad?.Nombre != null)
+                                        {
+                                            <span class="text-xs text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded-full">@producto.Unidad.Nombre</span>
+                                        }
+                                    </div>
                                 </div>
                             </div>
+                            index++;
+                        }
+                    </div>
 
-                            <!-- Info del producto -->
-                            <div class="p-3 sm:p-4">
-                                <h3 class="text-sm sm:text-base font-semibold text-gray-800 line-clamp-2 group-hover:text-green-600 transition-colors leading-tight">
-                                    @producto.Nombre
-                                </h3>
-                                <div class="mt-2 flex items-center justify-between">
-                                    <p class="text-lg sm:text-xl font-bold text-orange-500">$@producto.Precio</p>
-                                    @if (producto.Unidad?.Nombre != null)
+                    <!-- Estado vacío -->
+                    @if (!((IEnumerable<dynamic>)ViewBag.productos).Any())
+                    {
+                        <div class="flex flex-col items-center justify-center py-12 text-center">
+                            <div class="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center mb-4">
+                                <i class="fas fa-box-open text-3xl text-gray-300"></i>
+                            </div>
+                            <h3 class="text-lg font-semibold text-gray-700 mb-2">No hay productos aún</h3>
+                            <p class="text-gray-500 mb-4 max-w-sm text-sm">Comienza agregando tu primer producto</p>
+                            <a href="@Url.Action("AgregarProductNegocio", "Productos")"
+                               class="inline-flex items-center gap-2 px-5 py-2.5 bg-orange-500 text-white rounded-xl font-medium hover:bg-orange-600 transition-colors shadow-lg text-sm">
+                                <i class="fas fa-plus"></i>
+                                Agregar mi primer producto
+                            </a>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Panel lateral del Local (derecha) -->
+            <div class="lg:w-80 xl:w-96 flex-shrink-0">
+                <div class="local-panel rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden sticky top-4">
+
+                    <!-- Header del panel -->
+                    <div class="bg-gradient-to-r from-[#23916A] to-emerald-500 px-4 py-3">
+                        <h3 class="text-white font-bold flex items-center gap-2">
+                            <i class="fas fa-store"></i>
+                            Mi Negocio
+                        </h3>
+                    </div>
+
+                    <div class="p-4 custom-scroll max-h-[calc(100vh-200px)] overflow-y-auto">
+
+                        <!-- Info básica del local -->
+                        <div class="mb-4">
+                            <div class="flex items-start gap-3 mb-3">
+                                <div class="w-14 h-14 rounded-xl overflow-hidden bg-gray-100 flex-shrink-0 border border-gray-200">
+                                    @if (!string.IsNullOrWhiteSpace(Model.Negocio?.imagen?.Base64))
                                     {
-                                        <span class="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">@producto.Unidad.Nombre</span>
+                                        <img src="@Model.Negocio.imagen.Base64" alt="Logo" class="w-full h-full object-cover" />
+                                    }
+                                    else
+                                    {
+                                        <div class="w-full h-full flex items-center justify-center">
+                                            <i class="fas fa-store text-gray-400"></i>
+                                        </div>
+                                    }
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <h4 class="font-bold text-gray-800 truncate">@Model.Negocio?.Nombre</h4>
+                                    <p class="text-sm text-gray-500 line-clamp-2">@(Model.Negocio?.Descripcion ?? "Sin descripción")</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Información de contacto -->
+                        <div class="mb-4">
+                            <h5 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Contacto</h5>
+                            <div class="space-y-2">
+                                @if (Model.Negocio?.Telefono > 0)
+                                {
+                                    <a href="tel:@Model.Negocio.Telefono" class="flex items-center gap-2 text-sm text-gray-600 hover:text-green-600 transition-colors">
+                                        <div class="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center">
+                                            <i class="fas fa-phone text-green-500 text-xs"></i>
+                                        </div>
+                                        <span>@Model.Negocio.Telefono</span>
+                                    </a>
+                                }
+                                @if (!string.IsNullOrEmpty(Model.Negocio?.Whatsapp))
+                                {
+                                    <a href="https://wa.me/57@Model.Negocio.Whatsapp" target="_blank" class="flex items-center gap-2 text-sm text-gray-600 hover:text-green-600 transition-colors">
+                                        <div class="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center">
+                                            <i class="fab fa-whatsapp text-green-500"></i>
+                                        </div>
+                                        <span>@Model.Negocio.Whatsapp</span>
+                                    </a>
+                                }
+                                @if (!string.IsNullOrEmpty(Model.Negocio?.EmailContacto))
+                                {
+                                    <a href="mailto:@Model.Negocio.EmailContacto" class="flex items-center gap-2 text-sm text-gray-600 hover:text-blue-600 transition-colors">
+                                        <div class="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
+                                            <i class="fas fa-envelope text-blue-500 text-xs"></i>
+                                        </div>
+                                        <span class="truncate">@Model.Negocio.EmailContacto</span>
+                                    </a>
+                                }
+                                @if (!string.IsNullOrEmpty(Model.Negocio?.SitioWeb))
+                                {
+                                    <a href="@Model.Negocio.SitioWeb" target="_blank" class="flex items-center gap-2 text-sm text-gray-600 hover:text-purple-600 transition-colors">
+                                        <div class="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center">
+                                            <i class="fas fa-globe text-purple-500 text-xs"></i>
+                                        </div>
+                                        <span class="truncate">Sitio web</span>
+                                    </a>
+                                }
+                            </div>
+                        </div>
+
+                        <!-- Redes Sociales -->
+                        @{
+                            var tieneRedes = !string.IsNullOrEmpty(Model.Negocio?.Instagram) ||
+                                            !string.IsNullOrEmpty(Model.Negocio?.Facebook) ||
+                                            !string.IsNullOrEmpty(Model.Negocio?.Tiktok) ||
+                                            !string.IsNullOrEmpty(Model.Negocio?.Youtube) ||
+                                            !string.IsNullOrEmpty(Model.Negocio?.Twitter);
+                        }
+                        @if (tieneRedes)
+                        {
+                            <div class="mb-4">
+                                <h5 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Redes Sociales</h5>
+                                <div class="flex flex-wrap gap-2">
+                                    @if (!string.IsNullOrEmpty(Model.Negocio?.Instagram))
+                                    {
+                                        <a href="https://instagram.com/@Model.Negocio.Instagram" target="_blank"
+                                           class="social-btn w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 via-pink-500 to-orange-400 flex items-center justify-center text-white shadow-sm">
+                                            <i class="fab fa-instagram"></i>
+                                        </a>
+                                    }
+                                    @if (!string.IsNullOrEmpty(Model.Negocio?.Facebook))
+                                    {
+                                        <a href="@Model.Negocio.Facebook" target="_blank"
+                                           class="social-btn w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-sm">
+                                            <i class="fab fa-facebook-f"></i>
+                                        </a>
+                                    }
+                                    @if (!string.IsNullOrEmpty(Model.Negocio?.Tiktok))
+                                    {
+                                        <a href="https://tiktok.com/@@Model.Negocio.Tiktok" target="_blank"
+                                           class="social-btn w-10 h-10 rounded-xl bg-black flex items-center justify-center text-white shadow-sm">
+                                            <i class="fab fa-tiktok"></i>
+                                        </a>
+                                    }
+                                    @if (!string.IsNullOrEmpty(Model.Negocio?.Youtube))
+                                    {
+                                        <a href="@Model.Negocio.Youtube" target="_blank"
+                                           class="social-btn w-10 h-10 rounded-xl bg-red-600 flex items-center justify-center text-white shadow-sm">
+                                            <i class="fab fa-youtube"></i>
+                                        </a>
+                                    }
+                                    @if (!string.IsNullOrEmpty(Model.Negocio?.Twitter))
+                                    {
+                                        <a href="https://twitter.com/@Model.Negocio.Twitter" target="_blank"
+                                           class="social-btn w-10 h-10 rounded-xl bg-gray-800 flex items-center justify-center text-white shadow-sm">
+                                            <i class="fab fa-x-twitter"></i>
+                                        </a>
                                     }
                                 </div>
                             </div>
-                        </div>
-                        index++;
-                    }
-                </div>
+                        }
 
-                <!-- Estado vacío -->
-                @if (!((IEnumerable<dynamic>)ViewBag.productos).Any())
-                {
-                    <div class="flex flex-col items-center justify-center py-16 text-center">
-                        <div class="w-24 h-24 rounded-full bg-gray-100 flex items-center justify-center mb-4">
-                            <i class="fas fa-box-open text-4xl text-gray-300"></i>
-                        </div>
-                        <h3 class="text-xl font-semibold text-gray-700 mb-2">No hay productos aún</h3>
-                        <p class="text-gray-500 mb-6 max-w-sm">Comienza agregando tu primer producto para que tus clientes puedan verlo</p>
-                        <a href="@Url.Action("AgregarProductNegocio", "Productos")"
-                           class="inline-flex items-center gap-2 px-6 py-3 bg-orange-500 text-white rounded-xl font-medium hover:bg-orange-600 transition-colors shadow-lg hover:shadow-xl">
-                            <i class="fas fa-plus"></i>
-                            Agregar mi primer producto
+                        <!-- Horarios (si existen) -->
+                        @{
+                            var tieneHorarios = !string.IsNullOrEmpty(Model.Negocio?.HorarioLunes) ||
+                                               !string.IsNullOrEmpty(Model.Negocio?.HorarioMartes) ||
+                                               !string.IsNullOrEmpty(Model.Negocio?.HorarioMiercoles);
+                        }
+                        @if (tieneHorarios)
+                        {
+                            <div class="mb-4">
+                                <h5 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Horarios</h5>
+                                <div class="bg-gray-50 rounded-xl p-3 text-sm">
+                                    <div class="grid grid-cols-2 gap-1.5 text-xs">
+                                        @if (!string.IsNullOrEmpty(Model.Negocio?.HorarioLunes))
+                                        {
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-500">Lun:</span>
+                                                <span class="text-gray-700 font-medium">@Model.Negocio.HorarioLunes</span>
+                                            </div>
+                                        }
+                                        @if (!string.IsNullOrEmpty(Model.Negocio?.HorarioMartes))
+                                        {
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-500">Mar:</span>
+                                                <span class="text-gray-700 font-medium">@Model.Negocio.HorarioMartes</span>
+                                            </div>
+                                        }
+                                        @if (!string.IsNullOrEmpty(Model.Negocio?.HorarioMiercoles))
+                                        {
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-500">Mié:</span>
+                                                <span class="text-gray-700 font-medium">@Model.Negocio.HorarioMiercoles</span>
+                                            </div>
+                                        }
+                                        @if (!string.IsNullOrEmpty(Model.Negocio?.HorarioJueves))
+                                        {
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-500">Jue:</span>
+                                                <span class="text-gray-700 font-medium">@Model.Negocio.HorarioJueves</span>
+                                            </div>
+                                        }
+                                        @if (!string.IsNullOrEmpty(Model.Negocio?.HorarioViernes))
+                                        {
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-500">Vie:</span>
+                                                <span class="text-gray-700 font-medium">@Model.Negocio.HorarioViernes</span>
+                                            </div>
+                                        }
+                                        @if (!string.IsNullOrEmpty(Model.Negocio?.HorarioSabado))
+                                        {
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-500">Sáb:</span>
+                                                <span class="text-gray-700 font-medium">@Model.Negocio.HorarioSabado</span>
+                                            </div>
+                                        }
+                                        @if (!string.IsNullOrEmpty(Model.Negocio?.HorarioDomingo))
+                                        {
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-500">Dom:</span>
+                                                <span class="text-gray-700 font-medium">@Model.Negocio.HorarioDomingo</span>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        }
+
+                        <!-- Galería de imágenes -->
+                        @{
+                            var galeria = Model.Negocio?.Galeria ?? new List<BusinessLogic.Models.GaleriaLocal>();
+                            var galeriaAprobada = galeria.Where(g => g.Estado == BusinessLogic.Models.EstadoGaleria.Aprobada).ToList();
+                        }
+                        @if (galeriaAprobada.Any())
+                        {
+                            <div class="mb-4">
+                                <h5 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                                    Galería
+                                    <span class="text-gray-300 font-normal">(@galeriaAprobada.Count)</span>
+                                </h5>
+                                <div class="grid grid-cols-3 gap-2">
+                                    @foreach (var imagen in galeriaAprobada.Take(6))
+                                    {
+                                        <div class="gallery-item aspect-square rounded-lg overflow-hidden bg-gray-100 cursor-pointer border border-gray-200"
+                                             onclick="abrirLightbox('@imagen.CloudinaryUrl')">
+                                            <img src="@imagen.CloudinaryUrl" alt="Galería" class="w-full h-full object-cover" loading="lazy" />
+                                        </div>
+                                    }
+                                </div>
+                                @if (galeriaAprobada.Count > 6)
+                                {
+                                    <button onclick="verTodasLasImagenes()" class="mt-2 w-full py-2 text-sm text-green-600 hover:text-green-700 font-medium flex items-center justify-center gap-1">
+                                        <i class="fas fa-images"></i>
+                                        Ver todas (@galeriaAprobada.Count)
+                                    </button>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="mb-4">
+                                <h5 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Galería</h5>
+                                <div class="bg-gray-50 rounded-xl p-4 text-center">
+                                    <i class="fas fa-images text-2xl text-gray-300 mb-2"></i>
+                                    <p class="text-xs text-gray-400">Sin imágenes aún</p>
+                                    <a href="@Url.Action("EditarNegocio", "Negocios")" class="text-xs text-green-600 hover:underline mt-1 inline-block">
+                                        Agregar fotos
+                                    </a>
+                                </div>
+                            </div>
+                        }
+
+                        <!-- Botón editar negocio -->
+                        <a href="@Url.Action("EditarNegocio", "Negocios")"
+                           class="block w-full py-2.5 rounded-xl bg-gradient-to-r from-[#23916A] to-emerald-500 text-white text-center font-medium text-sm hover:shadow-lg transition-all">
+                            <i class="fas fa-pen-to-square mr-1.5"></i>
+                            Editar mi negocio
                         </a>
                     </div>
-                }
+                </div>
             </div>
         </div>
 
-        <!-- Panel lateral de detalle -->
+        <!-- Panel lateral de detalle de producto -->
         <div id="detalleProducto"
              class="panel-detalle hidden fixed right-0 top-0 h-full w-80 bg-white shadow-2xl z-40 overflow-y-auto border-l border-gray-200">
 
@@ -418,6 +715,14 @@
             </div>
         </div>
     </main>
+
+    <!-- Lightbox para galería -->
+    <div id="lightbox" class="lightbox fixed inset-0 z-50 hidden bg-black/90 items-center justify-center" onclick="cerrarLightbox(event)">
+        <button onclick="cerrarLightbox()" class="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors">
+            <i class="fas fa-times text-xl"></i>
+        </button>
+        <img id="lightbox-img" src="" alt="Imagen" class="max-w-[90%] max-h-[90%] rounded-lg shadow-2xl" onclick="event.stopPropagation()" />
+    </div>
 
     <!-- Modal de edición de producto -->
     <div id="editar-modal" class="fixed inset-0 z-50 hidden bg-black/50 transition-opacity duration-300">
@@ -509,6 +814,29 @@
         </div>
     </div>
 
+    <!-- Modal de todas las imágenes de galería -->
+    <div id="galeria-modal" class="fixed inset-0 z-50 hidden bg-black/80 overflow-y-auto">
+        <div class="min-h-screen py-8 px-4">
+            <div class="max-w-4xl mx-auto">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-xl font-bold text-white">Galería del negocio</h2>
+                    <button onclick="cerrarGaleriaModal()" class="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                <div id="galeria-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                    @foreach (var imagen in galeriaAprobada)
+                    {
+                        <div class="aspect-square rounded-xl overflow-hidden bg-gray-800 cursor-pointer hover:opacity-90 transition-opacity"
+                             onclick="abrirLightbox('@imagen.CloudinaryUrl')">
+                            <img src="@imagen.CloudinaryUrl" alt="Galería" class="w-full h-full object-cover" loading="lazy" />
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Definir la función en el ámbito global
         function openMensajeModal() {
@@ -552,7 +880,7 @@
                     const formData = new FormData(mensajeForm);
 
                     try {
-                        const response = await fetch("/api/contact/send", { // Usa la misma ruta
+                        const response = await fetch("/api/contact/send", {
                             method: "POST",
                             body: formData
                         });
@@ -580,6 +908,43 @@
         let productoSeleccionado = null;
         let productoIdActual = null;
         let detalleAbierto = false;
+
+        // ==========================================
+        // LIGHTBOX GALERÍA
+        // ==========================================
+        function abrirLightbox(url) {
+            const lightbox = document.getElementById('lightbox');
+            const img = document.getElementById('lightbox-img');
+            img.src = url;
+            lightbox.classList.remove('hidden');
+            lightbox.classList.add('flex');
+            document.body.classList.add('overflow-hidden');
+        }
+
+        function cerrarLightbox(event) {
+            if (event && event.target !== document.getElementById('lightbox')) return;
+            const lightbox = document.getElementById('lightbox');
+            lightbox.classList.add('hidden');
+            lightbox.classList.remove('flex');
+            document.body.classList.remove('overflow-hidden');
+        }
+
+        function verTodasLasImagenes() {
+            const modal = document.getElementById('galeria-modal');
+            modal.classList.remove('hidden');
+            document.body.classList.add('overflow-hidden');
+        }
+
+        function cerrarGaleriaModal() {
+            const modal = document.getElementById('galeria-modal');
+            modal.classList.add('hidden');
+            document.body.classList.remove('overflow-hidden');
+        }
+
+        // Cerrar galería modal al hacer clic fuera
+        document.getElementById('galeria-modal')?.addEventListener('click', function(e) {
+            if (e.target === this) cerrarGaleriaModal();
+        });
 
         // ==========================================
         // PANEL DE DETALLE
@@ -806,6 +1171,17 @@
                     document.getElementById('editar-imagen-preview').src = e.target.result;
                 };
                 reader.readAsDataURL(file);
+            }
+        });
+
+        // Tecla Escape para cerrar modales
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                cerrarModalEditar();
+                cerrarModalEliminar();
+                cerrarLightbox();
+                cerrarGaleriaModal();
+                ocultarDetalle();
             }
         });
     </script>
