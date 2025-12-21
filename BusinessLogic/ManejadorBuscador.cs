@@ -74,5 +74,46 @@ namespace BusinessLogic
             }
             return productos;
         }
+
+        public List<Negocio> ConsultarLocales(string busqueda)
+        {
+            List<Parametro> parametros = new List<Parametro>
+            {
+                new Parametro("p_busqueda", busqueda)
+            };
+            DataTable datos = conexion.EjecutarConsulta("buscador_locales", parametros);
+            List<Negocio> locales = new List<Negocio>();
+
+            if (datos == null || datos.Rows.Count == 0)
+                return locales;
+
+            // Recolectar IDs de imágenes para batch
+            var imageIds = new List<string>();
+            foreach (DataRow row in datos.Rows)
+            {
+                string fotosId = row["FOTOS_LOCAL"]?.ToString();
+                if (!string.IsNullOrEmpty(fotosId)) imageIds.Add(fotosId);
+            }
+
+            // Obtener imágenes en batch
+            var imagenesBatch = _manejadorMongo.ObtenerImagenesBatch(imageIds);
+
+            foreach (DataRow row in datos.Rows)
+            {
+                string fotosId = row["FOTOS_LOCAL"]?.ToString();
+                locales.Add(new Negocio
+                {
+                    Id = Convert.ToInt32(row["PK_ID_LOCAL"]),
+                    Nombre = row["NOMBRE_LOCAL"]?.ToString(),
+                    Descripcion = row["DESCRIPCION_LOCAL"]?.ToString(),
+                    Direccion = row["DIRECCION_LOCAL"]?.ToString(),
+                    Telefono = row["TELEFONO_LOCAL"] != DBNull.Value ? Convert.ToInt64(row["TELEFONO_LOCAL"]) : 0,
+                    LogotipoId = fotosId,
+                    imagen = !string.IsNullOrEmpty(fotosId) && imagenesBatch.ContainsKey(fotosId)
+                        ? imagenesBatch[fotosId] : null
+                });
+            }
+            return locales;
+        }
     }
 }

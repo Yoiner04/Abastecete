@@ -175,6 +175,90 @@
         .fab:hover {
             transform: scale(1.1) rotate(5deg);
         }
+
+        /* Vista Lista */
+        #productosContainer.list-view {
+            display: flex !important;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        #productosContainer.list-view .producto-card {
+            flex-direction: row !important;
+            max-height: 140px;
+        }
+
+        #productosContainer.list-view .producto-imagen {
+            width: 140px;
+            min-width: 140px;
+            aspect-ratio: 1;
+        }
+
+        #productosContainer.list-view .producto-imagen img {
+            padding: 0.5rem;
+        }
+
+        #productosContainer.list-view .producto-info {
+            padding: 1rem 1.5rem;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        #productosContainer.list-view .producto-nombre {
+            flex: 1;
+            margin-bottom: 0;
+            font-size: 1rem;
+        }
+
+        #productosContainer.list-view .producto-acciones {
+            flex-direction: row;
+            align-items: center;
+            gap: 1.5rem;
+            margin-top: 0;
+        }
+
+        #productosContainer.list-view .producto-precio {
+            font-size: 1.25rem;
+            white-space: nowrap;
+        }
+
+        #productosContainer.list-view .producto-overlay {
+            opacity: 0;
+        }
+
+        #productosContainer.list-view .producto-card:hover .producto-overlay {
+            opacity: 1;
+        }
+
+        @@media (max-width: 640px) {
+            #productosContainer.list-view .producto-card {
+                max-height: none;
+                flex-direction: column !important;
+            }
+            #productosContainer.list-view .producto-imagen {
+                width: 100%;
+                height: 120px;
+            }
+            #productosContainer.list-view .producto-info {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+        }
+
+        /* Panel expandible */
+        .info-panel {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease-out, padding 0.3s ease;
+        }
+        .info-panel.expanded {
+            max-height: 800px;
+            padding-top: 1.5rem;
+            padding-bottom: 1.5rem;
+        }
     </style>
 </head>
 
@@ -265,28 +349,227 @@
                     <!-- Acciones -->
                     <div class="flex flex-col sm:flex-row items-center gap-3">
                         @{
-                            var telefonoWpp = negocio?.Telefono.ToString()
-                                .Replace(" ", "")
-                                .Replace("(", "")
-                                .Replace(")", "")
-                                .Replace("-", "")
-                                .Replace("+", "") ?? "";
+                            var whatsappNum = !string.IsNullOrEmpty(negocio?.Whatsapp)
+                                ? negocio.Whatsapp.Replace(" ", "").Replace("-", "")
+                                : negocio?.Telefono.ToString().Replace(" ", "").Replace("(", "").Replace(")", "").Replace("-", "").Replace("+", "") ?? "";
 
                             var mensaje = Uri.EscapeDataString($"Hola {negocio?.Nombre}, me gustaría obtener más información.");
-                            var waUrl = $"https://wa.me/{telefonoWpp}?text={mensaje}";
+                            var waUrl = $"https://wa.me/57{whatsappNum}?text={mensaje}";
                         }
                         <a href="@waUrl"
                            target="_blank" rel="noopener"
                            class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 text-white font-semibold shadow-lg shadow-green-500/30 hover:shadow-xl hover:shadow-green-500/40 hover:-translate-y-0.5 transition-all duration-300">
                             <i class="fab fa-whatsapp text-xl"></i>
-                            <span>Contactar por WhatsApp</span>
+                            <span>WhatsApp</span>
                         </a>
-                        <button onclick="document.getElementById('filtros').scrollIntoView({behavior: 'smooth'})"
+                        <button id="toggleInfoPanel"
                                 class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gray-100 text-gray-700 font-semibold hover:bg-gray-200 transition-colors">
-                            <i class="fas fa-filter"></i>
-                            <span>Ver productos</span>
+                            <i class="fas fa-info-circle"></i>
+                            <span>Más información</span>
+                            <i class="fas fa-chevron-down transition-transform duration-300" id="toggleIcon"></i>
                         </button>
                     </div>
+                </div>
+
+                <!-- Panel expandible de información del local -->
+                <div id="infoPanel" class="info-panel border-t border-gray-100 mt-6 px-2">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <!-- Contacto -->
+                        <div>
+                            <h4 class="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                                <i class="fas fa-address-book text-green-500"></i> Contacto
+                            </h4>
+                            <div class="space-y-2 text-sm">
+                                @if (negocio?.Telefono > 0)
+                                {
+                                    <a href="tel:@negocio.Telefono" class="flex items-center gap-2 text-gray-600 hover:text-green-600">
+                                        <i class="fas fa-phone w-4"></i> @negocio.Telefono
+                                    </a>
+                                }
+                                @if (!string.IsNullOrEmpty(negocio?.Whatsapp))
+                                {
+                                    <a href="https://wa.me/57@negocio.Whatsapp" target="_blank" class="flex items-center gap-2 text-gray-600 hover:text-green-600">
+                                        <i class="fab fa-whatsapp w-4"></i> @negocio.Whatsapp
+                                    </a>
+                                }
+                                @if (!string.IsNullOrEmpty(negocio?.EmailContacto))
+                                {
+                                    <a href="mailto:@negocio.EmailContacto" class="flex items-center gap-2 text-gray-600 hover:text-blue-600">
+                                        <i class="fas fa-envelope w-4"></i> @negocio.EmailContacto
+                                    </a>
+                                }
+                                @if (!string.IsNullOrEmpty(negocio?.SitioWeb))
+                                {
+                                    <a href="@negocio.SitioWeb" target="_blank" class="flex items-center gap-2 text-gray-600 hover:text-blue-600">
+                                        <i class="fas fa-globe w-4"></i> Sitio web
+                                    </a>
+                                }
+                            </div>
+                        </div>
+
+                        <!-- Dirección -->
+                        <div>
+                            <h4 class="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                                <i class="fas fa-map-marker-alt text-red-500"></i> Ubicación
+                            </h4>
+                            <div class="text-sm text-gray-600">
+                                @if (!string.IsNullOrEmpty(negocio?.Direccion))
+                                {
+                                    <p class="mb-2">@negocio.Direccion</p>
+                                }
+                                @if (!string.IsNullOrEmpty(negocio?.Localizacion))
+                                {
+                                    <a href="https://www.google.com/maps?q=@negocio.Localizacion"
+                                       target="_blank"
+                                       class="inline-flex items-center gap-1 text-green-600 hover:text-green-700 font-medium">
+                                        <i class="fas fa-directions"></i> Cómo llegar
+                                    </a>
+                                }
+                            </div>
+                        </div>
+
+                        <!-- Horarios -->
+                        @{
+                            var tieneHorarios = !string.IsNullOrEmpty(negocio?.HorarioLunes) ||
+                                               !string.IsNullOrEmpty(negocio?.HorarioMartes) ||
+                                               !string.IsNullOrEmpty(negocio?.HorarioMiercoles) ||
+                                               !string.IsNullOrEmpty(negocio?.HorarioJueves) ||
+                                               !string.IsNullOrEmpty(negocio?.HorarioViernes) ||
+                                               !string.IsNullOrEmpty(negocio?.HorarioSabado) ||
+                                               !string.IsNullOrEmpty(negocio?.HorarioDomingo);
+                        }
+                        @if (tieneHorarios)
+                        {
+                            <div>
+                                <h4 class="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                                    <i class="fas fa-clock text-orange-500"></i> Horarios
+                                </h4>
+                                <div class="text-sm space-y-1">
+                                    @if (!string.IsNullOrEmpty(negocio?.HorarioLunes))
+                                    {
+                                        <div class="flex justify-between"><span class="text-gray-500">Lunes</span><span class="text-gray-700">@negocio.HorarioLunes</span></div>
+                                    }
+                                    @if (!string.IsNullOrEmpty(negocio?.HorarioMartes))
+                                    {
+                                        <div class="flex justify-between"><span class="text-gray-500">Martes</span><span class="text-gray-700">@negocio.HorarioMartes</span></div>
+                                    }
+                                    @if (!string.IsNullOrEmpty(negocio?.HorarioMiercoles))
+                                    {
+                                        <div class="flex justify-between"><span class="text-gray-500">Miércoles</span><span class="text-gray-700">@negocio.HorarioMiercoles</span></div>
+                                    }
+                                    @if (!string.IsNullOrEmpty(negocio?.HorarioJueves))
+                                    {
+                                        <div class="flex justify-between"><span class="text-gray-500">Jueves</span><span class="text-gray-700">@negocio.HorarioJueves</span></div>
+                                    }
+                                    @if (!string.IsNullOrEmpty(negocio?.HorarioViernes))
+                                    {
+                                        <div class="flex justify-between"><span class="text-gray-500">Viernes</span><span class="text-gray-700">@negocio.HorarioViernes</span></div>
+                                    }
+                                    @if (!string.IsNullOrEmpty(negocio?.HorarioSabado))
+                                    {
+                                        <div class="flex justify-between"><span class="text-gray-500">Sábado</span><span class="text-gray-700">@negocio.HorarioSabado</span></div>
+                                    }
+                                    @if (!string.IsNullOrEmpty(negocio?.HorarioDomingo))
+                                    {
+                                        <div class="flex justify-between"><span class="text-gray-500">Domingo</span><span class="text-gray-700">@negocio.HorarioDomingo</span></div>
+                                    }
+                                </div>
+                            </div>
+                        }
+
+                        <!-- Redes Sociales -->
+                        @{
+                            var tieneRedes = !string.IsNullOrEmpty(negocio?.Instagram) ||
+                                            !string.IsNullOrEmpty(negocio?.Facebook) ||
+                                            !string.IsNullOrEmpty(negocio?.Tiktok) ||
+                                            !string.IsNullOrEmpty(negocio?.Youtube) ||
+                                            !string.IsNullOrEmpty(negocio?.Twitter);
+                        }
+                        @if (tieneRedes)
+                        {
+                            <div>
+                                <h4 class="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                                    <i class="fas fa-share-alt text-purple-500"></i> Redes Sociales
+                                </h4>
+                                <div class="flex flex-wrap gap-2">
+                                    @if (!string.IsNullOrEmpty(negocio?.Instagram))
+                                    {
+                                        <a href="https://instagram.com/@negocio.Instagram" target="_blank"
+                                           class="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 via-pink-500 to-orange-400 flex items-center justify-center text-white hover:scale-110 transition-transform">
+                                            <i class="fab fa-instagram"></i>
+                                        </a>
+                                    }
+                                    @if (!string.IsNullOrEmpty(negocio?.Facebook))
+                                    {
+                                        <a href="@negocio.Facebook" target="_blank"
+                                           class="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white hover:scale-110 transition-transform">
+                                            <i class="fab fa-facebook-f"></i>
+                                        </a>
+                                    }
+                                    @if (!string.IsNullOrEmpty(negocio?.Tiktok))
+                                    {
+                                        <a href="https://tiktok.com/@@negocio.Tiktok" target="_blank"
+                                           class="w-10 h-10 rounded-xl bg-black flex items-center justify-center text-white hover:scale-110 transition-transform">
+                                            <i class="fab fa-tiktok"></i>
+                                        </a>
+                                    }
+                                    @if (!string.IsNullOrEmpty(negocio?.Youtube))
+                                    {
+                                        <a href="@negocio.Youtube" target="_blank"
+                                           class="w-10 h-10 rounded-xl bg-red-600 flex items-center justify-center text-white hover:scale-110 transition-transform">
+                                            <i class="fab fa-youtube"></i>
+                                        </a>
+                                    }
+                                    @if (!string.IsNullOrEmpty(negocio?.Twitter))
+                                    {
+                                        <a href="https://twitter.com/@negocio.Twitter" target="_blank"
+                                           class="w-10 h-10 rounded-xl bg-gray-800 flex items-center justify-center text-white hover:scale-110 transition-transform">
+                                            <i class="fab fa-x-twitter"></i>
+                                        </a>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+
+                    <!-- Galería -->
+                    @{
+                        var galeria = negocio?.Galeria ?? new List<BusinessLogic.Models.GaleriaLocal>();
+                        var galeriaAprobada = galeria.Where(g => g.Estado == BusinessLogic.Models.EstadoGaleria.Aprobada).ToList();
+                    }
+                    @if (galeriaAprobada.Any())
+                    {
+                        <div class="mt-6">
+                            <h4 class="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                                <i class="fas fa-images text-indigo-500"></i> Galería
+                                <span class="text-sm font-normal text-gray-400">(@galeriaAprobada.Count fotos)</span>
+                            </h4>
+                            <div class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
+                                @foreach (var img in galeriaAprobada.Take(8))
+                                {
+                                    <div class="aspect-square rounded-lg overflow-hidden cursor-pointer hover:opacity-80 transition-opacity"
+                                         onclick="abrirLightbox('@img.CloudinaryUrl')">
+                                        <img src="@img.CloudinaryUrl" alt="Galería" class="w-full h-full object-cover" loading="lazy" />
+                                    </div>
+                                }
+                                @if (galeriaAprobada.Count > 8)
+                                {
+                                    <div class="aspect-square rounded-lg bg-gray-100 flex items-center justify-center cursor-pointer hover:bg-gray-200 transition-colors"
+                                         onclick="verTodasLasImagenes()">
+                                        <span class="text-gray-600 font-medium text-sm">+@(galeriaAprobada.Count - 8)</span>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Mini mapa -->
+                    @if (!string.IsNullOrEmpty(negocio?.Localizacion))
+                    {
+                        <div class="mt-6 rounded-xl overflow-hidden border border-gray-200">
+                            <div id="miniMap" class="h-48 w-full"></div>
+                        </div>
+                    }
                 </div>
             </div>
         </div>
@@ -421,20 +704,21 @@
 
             <!-- GRID DE PRODUCTOS -->
             <section id="productosWrapper" class="flex-1 animate-fadeInUp animation-delay-200">
-                <div id="productosContainer" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+                <div id="productosContainer" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6" data-view="grid">
                     @{ var index = 0; }
                     @foreach (var producto in Model)
                     {
                         <div id="producto-@producto.Id"
-                             class="producto producto-card group bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100"
+                             class="producto producto-card group bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 flex flex-col"
                              data-categoria-id="@producto.Categoria"
                              data-subcategoria-id="@producto.IdSubCategoria"
                              data-precio="@producto.Precio"
                              data-nombre="@producto.Nombre?.ToLower()"
+                             data-imagen="@producto.ImagenUrl"
                              style="animation-delay: @(index * 50)ms">
 
                             <!-- Imagen del producto -->
-                            <div class="relative aspect-square overflow-hidden bg-gray-50">
+                            <div class="producto-imagen relative aspect-square overflow-hidden bg-gray-50">
                                 <img src="@producto.ImagenUrl"
                                      alt="@producto.Nombre"
                                      class="producto-image h-full w-full object-contain p-4"
@@ -456,24 +740,24 @@
                             </div>
 
                             <!-- Info del producto -->
-                            <div class="p-5">
-                                <h3 class="font-semibold text-gray-900 text-lg mb-2 line-clamp-2 group-hover:text-green-600 transition-colors">
+                            <div class="producto-info p-5 flex-1 flex flex-col">
+                                <h3 class="producto-nombre font-semibold text-gray-900 text-lg mb-2 line-clamp-2 group-hover:text-green-600 transition-colors">
                                     @producto.Nombre
                                 </h3>
 
-                                <div class="flex items-center justify-between">
+                                <div class="producto-acciones flex items-center justify-between mt-auto">
                                     <div>
-                                        <p class="text-2xl font-bold text-green-600">
+                                        <p class="producto-precio text-2xl font-bold text-green-600">
                                             $@producto.Precio
                                         </p>
                                         @if (producto.Unidad?.Nombre != null)
                                         {
-                                            <p class="text-sm text-gray-500">por @producto.Unidad.Nombre</p>
+                                            <p class="producto-unidad text-sm text-gray-500">por @producto.Unidad.Nombre</p>
                                         }
                                     </div>
 
                                     <a href="@Url.Action("ProductDetailLocal", "Productos", new { idlocal = negocio?.Id, idProducto = producto.Id })"
-                                       class="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-gray-900 to-gray-800 text-white text-sm font-medium hover:from-green-600 hover:to-emerald-600 transition-all duration-300 shadow-md hover:shadow-lg">
+                                       class="producto-btn flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-gray-900 to-gray-800 text-white text-sm font-medium hover:from-green-600 hover:to-emerald-600 transition-all duration-300 shadow-md hover:shadow-lg">
                                         Ver más
                                         <i class="fas fa-arrow-right text-xs"></i>
                                     </a>
@@ -507,6 +791,40 @@
        class="fab fixed bottom-6 right-6 w-16 h-16 rounded-full bg-gradient-to-r from-green-500 to-emerald-600 text-white flex items-center justify-center shadow-lg shadow-green-500/40 z-50">
         <i class="fab fa-whatsapp text-3xl"></i>
     </a>
+
+    <!-- Lightbox para galería -->
+    <div id="lightbox" class="fixed inset-0 z-[60] hidden bg-black/90 items-center justify-center" onclick="cerrarLightbox(event)">
+        <button onclick="cerrarLightbox()" class="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors">
+            <i class="fas fa-times text-xl"></i>
+        </button>
+        <img id="lightbox-img" src="" alt="Imagen" class="max-w-[90%] max-h-[90%] rounded-lg shadow-2xl" onclick="event.stopPropagation()" />
+    </div>
+
+    <!-- Modal de galería completa -->
+    @if (galeriaAprobada.Any())
+    {
+        <div id="galeria-modal" class="fixed inset-0 z-[55] hidden bg-black/80 overflow-y-auto">
+            <div class="min-h-screen px-4 py-8">
+                <div class="max-w-6xl mx-auto">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-xl font-bold text-white">Galería de @negocio?.Nombre</h3>
+                        <button onclick="cerrarModalGaleria()" class="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                        @foreach (var img in galeriaAprobada)
+                        {
+                            <div class="aspect-square rounded-xl overflow-hidden cursor-pointer hover:opacity-90 transition-opacity"
+                                 onclick="abrirLightbox('@img.CloudinaryUrl')">
+                                <img src="@img.CloudinaryUrl" alt="Galería" class="w-full h-full object-cover" loading="lazy" />
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
@@ -694,12 +1012,14 @@
             // Vista grid/lista
             $('#viewGrid').on('click', function() {
                 $(this).addClass('bg-white shadow-sm text-green-600').siblings().removeClass('bg-white shadow-sm text-green-600');
-                productosContainer.removeClass('grid-cols-1').addClass('sm:grid-cols-2 xl:grid-cols-3');
+                productosContainer.removeClass('list-view').addClass('sm:grid-cols-2 xl:grid-cols-3');
+                productosContainer.attr('data-view', 'grid');
             });
 
             $('#viewList').on('click', function() {
                 $(this).addClass('bg-white shadow-sm text-green-600').siblings().removeClass('bg-white shadow-sm text-green-600');
-                productosContainer.addClass('grid-cols-1').removeClass('sm:grid-cols-2 xl:grid-cols-3');
+                productosContainer.addClass('list-view').removeClass('sm:grid-cols-2 xl:grid-cols-3');
+                productosContainer.attr('data-view', 'list');
             });
 
             // --- Botón de Restablecer ---
@@ -727,8 +1047,107 @@
 
             // Inicializar
             actualizarRango();
+
+            // --- Panel de información expandible ---
+            $('#toggleInfoPanel').on('click', function() {
+                const panel = $('#infoPanel');
+                const icon = $('#toggleIcon');
+                panel.toggleClass('expanded');
+                icon.toggleClass('rotate-180');
+
+                // Inicializar mapa si se expande por primera vez
+                if (panel.hasClass('expanded') && !window.miniMapInitialized) {
+                    initMiniMap();
+                }
+            });
+        });
+
+        // --- Mini Mapa ---
+        let miniMapInitialized = false;
+        function initMiniMap() {
+            const mapElement = document.getElementById('miniMap');
+            if (!mapElement) return;
+
+            const localizacion = '@(negocio?.Localizacion ?? "")';
+            if (!localizacion || !localizacion.includes(',')) return;
+
+            const parts = localizacion.split(',');
+            const lat = parseFloat(parts[0]);
+            const lng = parseFloat(parts[1]);
+
+            if (isNaN(lat) || isNaN(lng)) return;
+
+            const position = { lat, lng };
+            const map = new google.maps.Map(mapElement, {
+                center: position,
+                zoom: 15,
+                mapTypeControl: false,
+                streetViewControl: false,
+                fullscreenControl: true,
+                styles: [
+                    { featureType: "poi", elementType: "labels", stylers: [{ visibility: "off" }] }
+                ]
+            });
+
+            new google.maps.Marker({
+                position: position,
+                map: map,
+                title: '@(negocio?.Nombre ?? "")',
+                icon: {
+                    url: 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="%2316a34a"><path d="M12 0C7.31 0 3.5 3.81 3.5 8.5c0 6.38 8.5 15.5 8.5 15.5s8.5-9.12 8.5-15.5C20.5 3.81 16.69 0 12 0zm0 12c-1.93 0-3.5-1.57-3.5-3.5S10.07 5 12 5s3.5 1.57 3.5 3.5S13.93 12 12 12z"/></svg>'),
+                    scaledSize: new google.maps.Size(40, 40)
+                }
+            });
+
+            window.miniMapInitialized = true;
+        }
+
+        // --- Funciones de Galería ---
+        function abrirLightbox(url) {
+            const lightbox = document.getElementById('lightbox');
+            const img = document.getElementById('lightbox-img');
+            img.src = url;
+            lightbox.classList.remove('hidden');
+            lightbox.classList.add('flex');
+            document.body.classList.add('overflow-hidden');
+        }
+
+        function cerrarLightbox(event) {
+            if (event && event.target !== document.getElementById('lightbox') && event.target !== document.querySelector('#lightbox button')) return;
+            const lightbox = document.getElementById('lightbox');
+            lightbox.classList.add('hidden');
+            lightbox.classList.remove('flex');
+            document.body.classList.remove('overflow-hidden');
+        }
+
+        function verTodasLasImagenes() {
+            const modal = document.getElementById('galeria-modal');
+            if (modal) {
+                modal.classList.remove('hidden');
+                document.body.classList.add('overflow-hidden');
+            }
+        }
+
+        function cerrarModalGaleria() {
+            const modal = document.getElementById('galeria-modal');
+            if (modal) {
+                modal.classList.add('hidden');
+                document.body.classList.remove('overflow-hidden');
+            }
+        }
+
+        // Cerrar con ESC
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                cerrarLightbox();
+                cerrarModalGaleria();
+            }
         });
     </script>
+    @if (!string.IsNullOrEmpty(negocio?.Localizacion))
+    {
+        <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAPudyk3G3YG7GOEpId4xMK_WFIEenOSp8&libraries=places"></script>
+    }
 </body>
 
 </html>

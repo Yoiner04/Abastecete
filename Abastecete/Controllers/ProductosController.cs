@@ -99,9 +99,15 @@ namespace Abastecete.Controllers
             }
 
             Producto producto = manejadorNegocios.ConsultarProductoNegocio(idProducto, neg.Id);
-
             ViewBag.SelectedProduct = producto;
 
+            // Obtener productos relacionados (otros productos del mismo local)
+            var todosProductos = manejadorProductos.ConsultarProductosLocal(neg.Id);
+            var productosRelacionados = todosProductos?
+                .Where(p => p.Id != idProducto)
+                .Take(8)
+                .ToList() ?? new List<Producto>();
+            ViewBag.ProductosRelacionados = productosRelacionados;
 
             return View(neg);
         }

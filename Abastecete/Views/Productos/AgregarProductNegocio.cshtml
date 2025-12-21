@@ -237,6 +237,11 @@
                             <div id="productLoader" class="hidden flex items-center gap-2 text-sm text-gray-500">
                                 <span class="spinner"></span> Cargando productos...
                             </div>
+                            <!-- Badge de marca del producto seleccionado -->
+                            <div id="marcaInfo" class="hidden flex items-center gap-2 px-3 py-2 bg-blue-50 rounded-lg border border-blue-100 animate-fadeIn">
+                                <i class="fas fa-tag text-blue-500"></i>
+                                <span class="text-sm text-blue-700">Marca: <strong id="marcaNombre">-</strong></span>
+                            </div>
                         </div>
 
                         <!-- Unidad de medida -->
@@ -310,7 +315,7 @@
                                     <thead>
                                         <tr class="bg-gray-50 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                                             <th class="px-4 py-3">Producto</th>
-                                            <th class="px-4 py-3">Categoría</th>
+                                            <th class="px-4 py-3">Marca</th>
                                             <th class="px-4 py-3">Unidad</th>
                                             <th class="px-4 py-3 text-right">Precio</th>
                                             <th class="px-4 py-3 text-center">Acción</th>
@@ -439,6 +444,7 @@
                 $("#subcategory").empty().append('<option value="">Seleccione una subcategoría</option>').prop("disabled", true);
                 $("#product").empty().append('<option value="">Primero seleccione una subcategoría</option>').prop("disabled", true);
                 $("#unit").empty().append('<option value="">Primero seleccione un producto</option>').prop("disabled", true);
+                $("#marcaInfo").addClass('hidden');
 
                 if (idCategoria) {
                     updateSteps(2);
@@ -475,6 +481,7 @@
                 // Reset dependientes
                 $("#product").empty().append('<option value="">Seleccione un producto</option>').prop("disabled", true);
                 $("#unit").empty().append('<option value="">Primero seleccione un producto</option>').prop("disabled", true);
+                $("#marcaInfo").addClass('hidden');
 
                 if (subCategoriaId) {
                     updateSteps(3);
@@ -488,7 +495,8 @@
                         success: function (response) {
                             $("#product").empty().append('<option value="">Seleccione un producto</option>');
                             $.each(response, function (index, item) {
-                                $("#product").append(`<option data-nombre="${item.nombre}" value="${item.id}">${item.nombre}</option>`);
+                                var marcaNombre = item.nombreMarca || 'Sin marca';
+                                $("#product").append(`<option data-nombre="${item.nombre}" data-marca="${marcaNombre}" value="${item.id}">${item.nombre}</option>`);
                             });
                             $("#product").prop("disabled", false);
                         },
@@ -507,8 +515,17 @@
             // Producto change
             $("#product").change(function () {
                 var productoId = $(this).val();
+                var marcaNombre = $(this).find('option:selected').data('marca');
 
                 $("#unit").empty().append('<option value="">Seleccione una unidad</option>').prop("disabled", true);
+
+                // Mostrar/ocultar info de marca
+                if (productoId && marcaNombre) {
+                    $("#marcaNombre").text(marcaNombre);
+                    $("#marcaInfo").removeClass('hidden');
+                } else {
+                    $("#marcaInfo").addClass('hidden');
+                }
 
                 if (productoId) {
                     updateSteps(4);
@@ -557,6 +574,7 @@
             let category = $("#category option:selected").data("nombre");
             let subcategory = $("#subcategory option:selected").data("nombre");
             let product = $("#product option:selected").data("nombre");
+            let marca = $("#product option:selected").data("marca") || "Sin marca";
             let unit = $("#unit option:selected").data("nombre");
 
             // Validaciones
@@ -606,11 +624,11 @@
                 <tr class="product-row hover:bg-green-50 transition-colors">
                     <td class="px-4 py-3" data-idproducto="${productid}">
                         <div class="font-medium text-gray-900">${product}</div>
-                        <div class="text-xs text-gray-500">${subcategory}</div>
+                        <div class="text-xs text-gray-500">${category} / ${subcategory}</div>
                     </td>
                     <td class="px-4 py-3">
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-700">
-                            ${category}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+                            <i class="fas fa-tag mr-1 text-[10px]"></i>${marca}
                         </span>
                     </td>
                     <td class="px-4 py-3" data-idunidad="${unitid}">

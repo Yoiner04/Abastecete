@@ -74,17 +74,9 @@
             transition: opacity 0.3s ease;
         }
 
-        /* Panel detalle */
+        /* Panel detalle - animación slide */
         .panel-detalle {
-            transition: transform 0.3s ease, opacity 0.3s ease;
-        }
-        .panel-detalle.hidden {
-            transform: translateX(100%);
-            opacity: 0;
-        }
-        .panel-detalle.visible {
-            transform: translateX(0);
-            opacity: 1;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         /* Botones de acción con tooltip */
@@ -346,56 +338,56 @@
 
                     <!-- Grid de productos -->
                     <div id="productosContainer"
-                        class="grid grid-cols-2 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4">
+                        class="grid grid-cols-3 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5">
 
                         @{ var index = 0; }
                         @foreach (var producto in ViewBag.productos)
                         {
                             var delayClass = $"delay-{Math.Min(index * 100, 500)}";
                             <div id="producto-@producto.Id"
-                                class="producto producto-card animate-fadeInUp @delayClass group relative flex flex-col rounded-xl border border-gray-100 bg-white overflow-hidden shadow-sm"
+                                class="producto producto-card animate-fadeInUp @delayClass group relative flex flex-col rounded-lg border border-gray-100 bg-white overflow-hidden shadow-sm"
                                 data-categoria-id="@producto.IdSubCategoria"
                                 data-precio="@producto.Precio"
                                 data-nombre="@producto.Nombre"
                                 data-imagen="@producto.ImagenUrl">
 
-                                <!-- Contenedor de imagen con overlay -->
-                                <div class="relative aspect-square overflow-hidden bg-gray-50">
+                                <!-- Contenedor de imagen compacto -->
+                                <div class="relative aspect-[4/3] overflow-hidden bg-gray-50">
                                     <img src="@producto.ImagenUrl"
                                          alt="@producto.Nombre"
-                                         class="producto-image h-full w-full object-contain p-2"
+                                         class="producto-image h-full w-full object-contain p-1"
                                          loading="lazy" />
 
                                     <!-- Overlay con acciones -->
-                                    <div class="producto-overlay absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent flex items-center justify-center gap-2">
+                                    <div class="producto-overlay absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent flex items-center justify-center gap-1">
                                         <button onclick="mostrarDetalle('@producto.Nombre.Replace("'", "\\'"))', '@producto.Precio', '@producto.ImagenUrl', @producto.Id)"
-                                                class="w-8 h-8 rounded-full bg-white/95 backdrop-blur-sm flex items-center justify-center text-gray-700 hover:bg-green-500 hover:text-white transition-all shadow-lg hover:scale-110"
+                                                class="w-6 h-6 rounded-full bg-white/95 backdrop-blur-sm flex items-center justify-center text-gray-700 hover:bg-green-500 hover:text-white transition-all shadow-lg hover:scale-110"
                                                 title="Ver detalle">
-                                            <i class="fas fa-eye text-xs"></i>
+                                            <i class="fas fa-eye text-[10px]"></i>
                                         </button>
                                         <button onclick="abrirModalEditar(@producto.Id, '@producto.Nombre.Replace("'", "\\'")', '@producto.Precio', '@producto.ImagenUrl')"
-                                                class="w-8 h-8 rounded-full bg-white/95 backdrop-blur-sm flex items-center justify-center text-gray-700 hover:bg-orange-500 hover:text-white transition-all shadow-lg hover:scale-110"
+                                                class="w-6 h-6 rounded-full bg-white/95 backdrop-blur-sm flex items-center justify-center text-gray-700 hover:bg-orange-500 hover:text-white transition-all shadow-lg hover:scale-110"
                                                 title="Editar producto">
-                                            <i class="fas fa-pen text-xs"></i>
+                                            <i class="fas fa-pen text-[10px]"></i>
                                         </button>
                                         <button onclick="confirmarEliminar(@producto.Id, '@producto.Nombre.Replace("'", "\\'")')"
-                                                class="w-8 h-8 rounded-full bg-white/95 backdrop-blur-sm flex items-center justify-center text-gray-700 hover:bg-red-500 hover:text-white transition-all shadow-lg hover:scale-110"
+                                                class="w-6 h-6 rounded-full bg-white/95 backdrop-blur-sm flex items-center justify-center text-gray-700 hover:bg-red-500 hover:text-white transition-all shadow-lg hover:scale-110"
                                                 title="Eliminar producto">
-                                            <i class="fas fa-trash text-xs"></i>
+                                            <i class="fas fa-trash text-[10px]"></i>
                                         </button>
                                     </div>
                                 </div>
 
-                                <!-- Info del producto -->
-                                <div class="p-2.5">
-                                    <h3 class="text-sm font-semibold text-gray-800 line-clamp-2 group-hover:text-green-600 transition-colors leading-tight">
+                                <!-- Info del producto compacta -->
+                                <div class="p-1.5">
+                                    <h3 class="text-xs font-medium text-gray-800 line-clamp-1 group-hover:text-green-600 transition-colors">
                                         @producto.Nombre
                                     </h3>
-                                    <div class="mt-1.5 flex items-center justify-between">
-                                        <p class="text-base font-bold text-orange-500">$@producto.Precio</p>
+                                    <div class="mt-0.5 flex items-center justify-between">
+                                        <p class="text-sm font-bold text-orange-500">$@producto.Precio</p>
                                         @if (producto.Unidad?.Nombre != null)
                                         {
-                                            <span class="text-xs text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded-full">@producto.Unidad.Nombre</span>
+                                            <span class="text-[10px] text-gray-500 bg-gray-100 px-1 py-0.5 rounded">@producto.Unidad.Nombre</span>
                                         }
                                     </div>
                                 </div>
@@ -675,40 +667,64 @@
             </div>
         </div>
 
-        <!-- Panel lateral de detalle de producto -->
+        <!-- Panel lateral de detalle de producto (Modal overlay) -->
+        <div id="detalleOverlay" class="fixed inset-0 bg-black/50 z-40 hidden" onclick="ocultarDetalle()"></div>
         <div id="detalleProducto"
-             class="panel-detalle hidden fixed right-0 top-0 h-full w-80 bg-white shadow-2xl z-40 overflow-y-auto border-l border-gray-200">
+             class="panel-detalle fixed right-0 top-0 h-full w-80 max-w-[90vw] bg-white shadow-2xl z-50 overflow-y-auto transform translate-x-full transition-transform duration-300 ease-out border-l border-gray-200">
 
             <!-- Header del panel -->
-            <div class="sticky top-0 bg-white border-b border-gray-100 p-4 flex items-center justify-between">
-                <h3 class="text-lg font-bold text-gray-800">Detalle del Producto</h3>
+            <div class="sticky top-0 bg-gradient-to-r from-[#23916A] to-emerald-500 px-4 py-3 flex items-center justify-between z-10">
+                <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                    <i class="fas fa-box text-xs"></i>
+                    Detalle del Producto
+                </h3>
                 <button onclick="ocultarDetalle()"
-                        class="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 transition-colors">
-                    <i class="fas fa-times"></i>
+                        class="w-7 h-7 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-white transition-colors">
+                    <i class="fas fa-times text-sm"></i>
                 </button>
             </div>
 
             <!-- Contenido del panel -->
             <div class="p-4">
-                <!-- Imagen -->
-                <div class="aspect-square rounded-xl overflow-hidden bg-gray-50 mb-4">
-                    <img id="detalleImagen" src="" alt="Producto" class="w-full h-full object-contain p-2" />
+                <!-- Imagen compacta -->
+                <div class="relative mb-4">
+                    <div class="aspect-square rounded-xl overflow-hidden bg-gray-50 border border-gray-200">
+                        <img id="detalleImagen" src="" alt="Producto" class="w-full h-full object-contain p-2" />
+                    </div>
+                    <!-- Badge del local pequeño -->
+                    <div class="absolute top-2 left-2 flex items-center gap-1.5 bg-white/95 backdrop-blur-sm px-2 py-1 rounded-full shadow text-xs">
+                        <div class="w-5 h-5 rounded-full overflow-hidden bg-gray-100 flex-shrink-0">
+                            @if (!string.IsNullOrWhiteSpace(Model.Negocio?.imagen?.Base64))
+                            {
+                                <img src="@Model.Negocio.imagen.Base64" alt="Logo" class="w-full h-full object-cover" />
+                            }
+                            else
+                            {
+                                <div class="w-full h-full flex items-center justify-center">
+                                    <i class="fas fa-store text-gray-400 text-[8px]"></i>
+                                </div>
+                            }
+                        </div>
+                        <span class="font-medium text-gray-600 truncate max-w-[100px]">@Model.Negocio?.Nombre</span>
+                    </div>
                 </div>
 
-                <!-- Info -->
-                <h4 id="detalleNombre" class="text-xl font-bold text-gray-800 mb-2"></h4>
-                <p id="detallePrecio" class="text-2xl font-bold text-orange-500 mb-4"></p>
+                <!-- Info del producto -->
+                <div class="mb-4">
+                    <h4 id="detalleNombre" class="text-base font-bold text-gray-800 mb-1 leading-snug"></h4>
+                    <p id="detallePrecio" class="text-2xl font-bold text-green-600"></p>
+                </div>
 
                 <!-- Acciones -->
-                <div class="space-y-3">
+                <div class="space-y-2">
                     <button id="btnEditarDetalle"
-                            class="w-full py-3 rounded-xl bg-orange-500 text-white font-semibold hover:bg-orange-600 transition-colors flex items-center justify-center gap-2">
-                        <i class="fas fa-pen"></i>
+                            class="w-full py-2.5 rounded-lg bg-orange-500 text-white text-sm font-semibold hover:bg-orange-600 transition-colors flex items-center justify-center gap-2">
+                        <i class="fas fa-pen text-xs"></i>
                         Editar producto
                     </button>
                     <button id="btnEliminarDetalle"
-                            class="w-full py-3 rounded-xl bg-red-500 text-white font-semibold hover:bg-red-600 transition-colors flex items-center justify-center gap-2">
-                        <i class="fas fa-trash"></i>
+                            class="w-full py-2.5 rounded-lg bg-white border border-red-200 text-red-600 text-sm font-semibold hover:bg-red-50 transition-colors flex items-center justify-center gap-2">
+                        <i class="fas fa-trash text-xs"></i>
                         Eliminar producto
                     </button>
                 </div>
@@ -951,14 +967,16 @@
         // ==========================================
         function mostrarDetalle(nombre, precio, imagen, id) {
             const detalleProducto = document.getElementById('detalleProducto');
+            const overlay = document.getElementById('detalleOverlay');
 
-            // Mostrar panel
-            detalleProducto.classList.remove('hidden');
-            detalleProducto.classList.add('visible');
+            // Mostrar overlay y panel
+            overlay.classList.remove('hidden');
+            detalleProducto.classList.remove('translate-x-full');
+            document.body.classList.add('overflow-hidden');
 
             // Actualizar contenido
             document.getElementById('detalleNombre').textContent = nombre;
-            document.getElementById('detallePrecio').textContent = `$${precio}`;
+            document.getElementById('detallePrecio').textContent = `$${Number(precio).toLocaleString('es-CO')}`;
             document.getElementById('detalleImagen').src = imagen;
 
             // Guardar ID actual
@@ -977,9 +995,12 @@
 
         function ocultarDetalle() {
             const detalleProducto = document.getElementById('detalleProducto');
+            const overlay = document.getElementById('detalleOverlay');
 
-            detalleProducto.classList.add('hidden');
-            detalleProducto.classList.remove('visible');
+            // Ocultar panel con animación
+            detalleProducto.classList.add('translate-x-full');
+            overlay.classList.add('hidden');
+            document.body.classList.remove('overflow-hidden');
 
             productoIdActual = null;
             detalleAbierto = false;

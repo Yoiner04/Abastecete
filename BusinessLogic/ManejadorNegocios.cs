@@ -35,8 +35,28 @@ namespace BusinessLogic
                 new Parametro("p_direccion_local", negocio.Direccion),
                 new Parametro("p_telefono_local", negocio.Telefono),
                 new Parametro("p_fotos_local", negocio.LogotipoId),
-                new Parametro("p_descripcion_local", negocio.Descripcion)
+                new Parametro("p_descripcion_local", negocio.Descripcion),
 
+                // Campos nuevos de contacto
+                new Parametro("p_email_contacto", negocio.EmailContacto),
+                new Parametro("p_whatsapp", negocio.Whatsapp),
+                new Parametro("p_sitio_web", negocio.SitioWeb),
+
+                // Redes sociales
+                new Parametro("p_instagram", negocio.Instagram),
+                new Parametro("p_facebook", negocio.Facebook),
+                new Parametro("p_tiktok", negocio.Tiktok),
+                new Parametro("p_youtube", negocio.Youtube),
+                new Parametro("p_twitter", negocio.Twitter),
+
+                // Horarios
+                new Parametro("p_horario_lunes", negocio.HorarioLunes),
+                new Parametro("p_horario_martes", negocio.HorarioMartes),
+                new Parametro("p_horario_miercoles", negocio.HorarioMiercoles),
+                new Parametro("p_horario_jueves", negocio.HorarioJueves),
+                new Parametro("p_horario_viernes", negocio.HorarioViernes),
+                new Parametro("p_horario_sabado", negocio.HorarioSabado),
+                new Parametro("p_horario_domingo", negocio.HorarioDomingo)
             };
             return conexion.EjecutarTransaccion("crear_local", parametros);
         }
@@ -56,17 +76,96 @@ namespace BusinessLogic
             }
 
             DataRow row = datos.Rows[0];
+            return MapearNegocioDesdeRow(row);
+        }
+
+        /// <summary>
+        /// Helper para leer columnas de forma segura
+        /// </summary>
+        private static string GetString(DataRow row, string columnName)
+        {
+            return row.Table.Columns.Contains(columnName) ? row[columnName]?.ToString() : null;
+        }
+
+        private static long GetLong(DataRow row, string columnName, long defaultValue = 0)
+        {
+            if (!row.Table.Columns.Contains(columnName) || row[columnName] == DBNull.Value)
+                return defaultValue;
+            return Convert.ToInt64(row[columnName]);
+        }
+
+        private static int GetInt(DataRow row, string columnName, int defaultValue = 0)
+        {
+            if (!row.Table.Columns.Contains(columnName) || row[columnName] == DBNull.Value)
+                return defaultValue;
+            return Convert.ToInt32(row[columnName]);
+        }
+
+        private static decimal? GetDecimal(DataRow row, string columnName)
+        {
+            if (!row.Table.Columns.Contains(columnName) || row[columnName] == DBNull.Value)
+                return null;
+            return Convert.ToDecimal(row[columnName]);
+        }
+
+        private static DateTime? GetDateTime(DataRow row, string columnName)
+        {
+            if (!row.Table.Columns.Contains(columnName) || row[columnName] == DBNull.Value)
+                return null;
+            return Convert.ToDateTime(row[columnName]);
+        }
+
+        /// <summary>
+        /// Mapea un DataRow a un objeto Negocio
+        /// </summary>
+        private Negocio MapearNegocioDesdeRow(DataRow row)
+        {
+            string fotosId = GetString(row, "FOTOS_LOCAL");
+            string bannerId = GetString(row, "BANNER_LOCAL");
+
             return new Negocio
             {
-                Id = Convert.ToInt32(row["PK_ID_LOCAL"]),
-                Nombre = row["NOMBRE_LOCAL"].ToString(),
-                Localizacion = row["LOCALIZACION"].ToString(),
-                Telefono = Convert.ToInt64(row["TELEFONO_LOCAL"]),
-                LogotipoId = row["FOTOS_LOCAL"].ToString(),
-                Descripcion = row["DESCRIPCION_LOCAL"].ToString(),
-                imagen = _manejadorMongo.ObtenerImagen(row["FOTOS_LOCAL"].ToString()),
-                BannerId = row["BANNER_LOCAL"].ToString(),
-                BannerImagen = _manejadorMongo.ObtenerImagen(row["BANNER_LOCAL"].ToString())
+                Id = GetInt(row, "PK_ID_LOCAL"),
+                Nombre = GetString(row, "NOMBRE_LOCAL"),
+                Localizacion = GetString(row, "LOCALIZACION"),
+                Direccion = GetString(row, "DIRECCION_LOCAL"),
+                Telefono = GetLong(row, "TELEFONO_LOCAL"),
+                LogotipoId = fotosId,
+                Descripcion = GetString(row, "DESCRIPCION_LOCAL"),
+                imagen = _manejadorMongo.ObtenerImagen(fotosId),
+                BannerId = bannerId,
+                BannerImagen = _manejadorMongo.ObtenerImagen(bannerId),
+                Estado = GetInt(row, "FK_ID_ESTADO_LOCAL"),
+
+                // Campos de contacto
+                EmailContacto = GetString(row, "EMAIL_CONTACTO"),
+                Whatsapp = GetString(row, "WHATSAPP"),
+                SitioWeb = GetString(row, "SITIO_WEB"),
+                Nit = GetString(row, "NIT"),
+
+                // Redes sociales
+                Instagram = GetString(row, "INSTAGRAM"),
+                Facebook = GetString(row, "FACEBOOK"),
+                Tiktok = GetString(row, "TIKTOK"),
+                Youtube = GetString(row, "YOUTUBE"),
+                Twitter = GetString(row, "TWITTER"),
+
+                // Horarios
+                HorarioLunes = GetString(row, "HORARIO_LUNES"),
+                HorarioMartes = GetString(row, "HORARIO_MARTES"),
+                HorarioMiercoles = GetString(row, "HORARIO_MIERCOLES"),
+                HorarioJueves = GetString(row, "HORARIO_JUEVES"),
+                HorarioViernes = GetString(row, "HORARIO_VIERNES"),
+                HorarioSabado = GetString(row, "HORARIO_SABADO"),
+                HorarioDomingo = GetString(row, "HORARIO_DOMINGO"),
+
+                // Coordenadas GPS
+                Latitud = GetDecimal(row, "LATITUD"),
+                Longitud = GetDecimal(row, "LONGITUD"),
+
+                // Auditoría
+                FechaRegistro = GetDateTime(row, "FECHA_REGISTRO"),
+                FechaActualizacion = GetDateTime(row, "FECHA_ACTUALIZACION")
             };
         }
 
@@ -104,58 +203,7 @@ namespace BusinessLogic
                 return null;
             }
 
-            DataRow row = datos.Rows[0];
-
-            var negocio = new Negocio
-            {
-                Id = Convert.ToInt32(row["PK_ID_LOCAL"]),
-                Nombre = row["NOMBRE_LOCAL"].ToString(),
-                Localizacion = row["LOCALIZACION"].ToString(),
-                Direccion = row["DIRECCION_LOCAL"] + "",
-                Telefono = row["TELEFONO_LOCAL"] != DBNull.Value ? Convert.ToInt64(row["TELEFONO_LOCAL"]) : 0,
-                LogotipoId = row["FOTOS_LOCAL"].ToString(),
-                Descripcion = row["DESCRIPCION_LOCAL"].ToString(),
-                imagen = _manejadorMongo.ObtenerImagen(row["FOTOS_LOCAL"].ToString()),
-                BannerId = row["BANNER_LOCAL"].ToString(),
-                BannerImagen = _manejadorMongo.ObtenerImagen(row["BANNER_LOCAL"].ToString()),
-                Estado = row["FK_ID_ESTADO_LOCAL"] != DBNull.Value ? Convert.ToInt32(row["FK_ID_ESTADO_LOCAL"]) : 0,
-
-                // Campos nuevos de contacto
-                EmailContacto = row.Table.Columns.Contains("EMAIL_CONTACTO") ? row["EMAIL_CONTACTO"]?.ToString() : null,
-                Whatsapp = row.Table.Columns.Contains("WHATSAPP") ? row["WHATSAPP"]?.ToString() : null,
-                SitioWeb = row.Table.Columns.Contains("SITIO_WEB") ? row["SITIO_WEB"]?.ToString() : null,
-                Nit = row.Table.Columns.Contains("NIT") ? row["NIT"]?.ToString() : null,
-
-                // Redes sociales
-                Instagram = row.Table.Columns.Contains("INSTAGRAM") ? row["INSTAGRAM"]?.ToString() : null,
-                Facebook = row.Table.Columns.Contains("FACEBOOK") ? row["FACEBOOK"]?.ToString() : null,
-                Tiktok = row.Table.Columns.Contains("TIKTOK") ? row["TIKTOK"]?.ToString() : null,
-                Youtube = row.Table.Columns.Contains("YOUTUBE") ? row["YOUTUBE"]?.ToString() : null,
-                Twitter = row.Table.Columns.Contains("TWITTER") ? row["TWITTER"]?.ToString() : null,
-
-                // Horarios
-                HorarioLunes = row.Table.Columns.Contains("HORARIO_LUNES") ? row["HORARIO_LUNES"]?.ToString() : null,
-                HorarioMartes = row.Table.Columns.Contains("HORARIO_MARTES") ? row["HORARIO_MARTES"]?.ToString() : null,
-                HorarioMiercoles = row.Table.Columns.Contains("HORARIO_MIERCOLES") ? row["HORARIO_MIERCOLES"]?.ToString() : null,
-                HorarioJueves = row.Table.Columns.Contains("HORARIO_JUEVES") ? row["HORARIO_JUEVES"]?.ToString() : null,
-                HorarioViernes = row.Table.Columns.Contains("HORARIO_VIERNES") ? row["HORARIO_VIERNES"]?.ToString() : null,
-                HorarioSabado = row.Table.Columns.Contains("HORARIO_SABADO") ? row["HORARIO_SABADO"]?.ToString() : null,
-                HorarioDomingo = row.Table.Columns.Contains("HORARIO_DOMINGO") ? row["HORARIO_DOMINGO"]?.ToString() : null,
-
-                // Coordenadas GPS
-                Latitud = row.Table.Columns.Contains("LATITUD") && row["LATITUD"] != DBNull.Value
-                    ? Convert.ToDecimal(row["LATITUD"]) : null,
-                Longitud = row.Table.Columns.Contains("LONGITUD") && row["LONGITUD"] != DBNull.Value
-                    ? Convert.ToDecimal(row["LONGITUD"]) : null,
-
-                // Auditoría
-                FechaRegistro = row.Table.Columns.Contains("FECHA_REGISTRO") && row["FECHA_REGISTRO"] != DBNull.Value
-                    ? Convert.ToDateTime(row["FECHA_REGISTRO"]) : null,
-                FechaActualizacion = row.Table.Columns.Contains("FECHA_ACTUALIZACION") && row["FECHA_ACTUALIZACION"] != DBNull.Value
-                    ? Convert.ToDateTime(row["FECHA_ACTUALIZACION"]) : null
-            };
-
-            return negocio;
+            return MapearNegocioDesdeRow(datos.Rows[0]);
         }
 
         public Producto ConsultarProductoNegocio(int idProducto, int IdLocal)
