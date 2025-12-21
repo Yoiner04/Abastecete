@@ -1,76 +1,283 @@
-﻿@{
+@{
     Layout = null;
     string correoIngresado = TempData["CorreoIngresado"] as string ?? "";
     bool mostrarCodigo = TempData["MostrarCodigo"] != null && (bool)TempData["MostrarCodigo"];
 }
 
+<!DOCTYPE html>
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Recuperar Contraseña - Abastécete</title>
+    <link rel="icon" type="image/x-icon" href="~/css/Images/Logo A naranja.png" />
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <style>
+        @@keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @@keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @@keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .animate-fadeIn { animation: fadeIn 0.5s ease-out forwards; }
+        .animate-slideIn { animation: slideIn 0.4s ease-out forwards; }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+
+        .input-group {
+            position: relative;
+        }
+        .input-group input {
+            padding-left: 3rem;
+        }
+        .input-group .input-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9ca3af;
+            transition: color 0.3s;
+        }
+        .input-group input:focus ~ .input-icon {
+            color: #23916A;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #23916A 0%, #1a6e50 100%);
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(35, 145, 106, 0.3);
+        }
+        .btn-primary:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        .spinner {
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 0.8s linear infinite;
+            display: inline-block;
+        }
+
+        .code-input {
+            letter-spacing: 0.5em;
+            font-family: monospace;
+            font-size: 1.5rem;
+            text-align: center;
+        }
+    </style>
 </head>
 
-<body class="relative flex items-center justify-center min-h-screen">
-
+<body class="relative flex items-center justify-center min-h-screen p-4">
+    <!-- Fondo con imagen -->
     <div class="absolute inset-0 bg-cover bg-center z-[-2]"
          style="background-image: url('/css/Images/fondo_olvidoContraseña.jpg');"></div>
+    <div class="absolute inset-0 bg-gradient-to-br from-black/80 via-black/70 to-emerald-900/50 z-[-1]"></div>
 
-    <div class="absolute inset-0 bg-black opacity-70 z-[-1]"></div>
-
-    <div class="bg-white shadow-lg rounded-lg flex max-w-4xl w-full">
-        <div class="w-1/2 bg-[#F8F1E6] p-8 flex flex-col justify-center items-center">
-            <img src="~/css/Images/Logo 2.png" alt="Logo Abastécete">
-            <h2 class="text-2xl font-bold text-[#23916A]">Recupera tu Contraseña</h2>
-            <p class="text-gray-600 text-center mt-2">Ingresa tu correo y recibirás un código para restablecer tu contraseña.</p>
+    <!-- Card principal -->
+    <div class="glass-card shadow-2xl rounded-3xl overflow-hidden max-w-md w-full animate-fadeIn">
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-[#23916A] to-emerald-600 px-8 py-10 text-center">
+            <div class="w-20 h-20 mx-auto mb-4 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
+                <i class="fas fa-lock text-3xl text-white"></i>
+            </div>
+            <h1 class="text-2xl font-bold text-white mb-2">Recuperar Contraseña</h1>
+            <p class="text-emerald-100 text-sm">
+                @if (mostrarCodigo)
+                {
+                    <span>Ingresa el código que enviamos a tu correo</span>
+                }
+                else
+                {
+                    <span>Te enviaremos un código para restablecer tu contraseña</span>
+                }
+            </p>
         </div>
 
-        <div class="w-1/2 p-8 flex flex-col justify-center">
-
+        <!-- Contenido -->
+        <div class="p-8">
+            <!-- Alertas -->
             @if (TempData["Error"] != null)
             {
-                <div class="alert alert-danger text-center bg-red-500 text-white p-3 rounded-md">
-                    @TempData["Error"]
+                <div class="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 flex items-start gap-3 animate-slideIn">
+                    <div class="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+                        <i class="fas fa-exclamation-circle text-red-500"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-red-800">@TempData["Error"]</p>
+                    </div>
                 </div>
             }
             @if (TempData["Success"] != null)
             {
-                <div class="alert alert-success text-center bg-green-500 text-white p-3 rounded-md">
-                    @TempData["Success"]
+                <div class="mb-6 p-4 rounded-xl bg-green-50 border border-green-200 flex items-start gap-3 animate-slideIn">
+                    <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+                        <i class="fas fa-check-circle text-green-500"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-green-800">@TempData["Success"]</p>
+                    </div>
                 </div>
             }
 
-            <form asp-action="RecuperarContrasenia" method="post" class="space-y-4">
-                <label for="Correo" class="block font-medium text-gray-700">Correo Electrónico</label>
-                <input type="email" id="Correo" name="Correo" value="@correoIngresado" placeholder="Ingresa tu correo"
-                       class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E6581E]" required>
-
-                <button type="submit"
-                        class="w-full bg-[#1E7D46] text-white font-bold py-3 rounded-lg hover:bg-[#165B32] transition duration-300">
-                    Enviar Código
-                </button>
-            </form>
-
-            @if (mostrarCodigo)
+            @if (!mostrarCodigo)
             {
-                <form asp-action="ValidarCodigoRecuperacion" method="post" class="space-y-4 mt-4">
-                    <label for="Codigo" class="block font-medium text-gray-700">Código de Recuperación</label>
-                    <input type="text" id="Codigo" name="Codigo" placeholder="Ingresa tu código"
-                           class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E6581E]" required>
+                <!-- Formulario de correo -->
+                <form id="formCorreo" asp-action="RecuperarContrasenia" method="post" class="space-y-6">
+                    <div>
+                        <label for="Correo" class="block text-sm font-semibold text-gray-700 mb-2">
+                            <i class="fas fa-envelope text-[#23916A] mr-2"></i>Correo Electrónico
+                        </label>
+                        <div class="input-group">
+                            <input type="email"
+                                   id="Correo"
+                                   name="Correo"
+                                   value="@correoIngresado"
+                                   placeholder="ejemplo@correo.com"
+                                   class="w-full px-4 py-4 pl-12 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#23916A] focus:ring-4 focus:ring-[#23916A]/10 transition-all text-gray-700"
+                                   required>
+                            <i class="fas fa-at input-icon"></i>
+                        </div>
+                    </div>
 
-                    <input type="hidden" name="Correo" value="@correoIngresado" />
-
-                    <button type="submit"
-                            class="w-full bg-[#1E7D46] text-white font-bold py-3 rounded-lg hover:bg-[#165B32] transition duration-300">
-                        Verificar Código
+                    <button type="submit" id="btnEnviar"
+                            class="btn-primary w-full text-white font-bold py-4 rounded-xl flex items-center justify-center gap-3 text-lg">
+                        <span id="btnEnviarText">Enviar Código</span>
+                        <span id="btnEnviarLoader" class="hidden">
+                            <span class="spinner"></span>
+                        </span>
+                        <i id="btnEnviarIcon" class="fas fa-paper-plane"></i>
                     </button>
                 </form>
             }
+            else
+            {
+                <!-- Formulario de código -->
+                <div class="animate-fadeIn">
+                    <!-- Indicador de correo enviado -->
+                    <div class="mb-6 p-4 rounded-xl bg-blue-50 border border-blue-200">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                                <i class="fas fa-envelope-open-text text-blue-500"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-blue-800">Código enviado a:</p>
+                                <p class="text-sm text-blue-600">@correoIngresado</p>
+                            </div>
+                        </div>
+                    </div>
 
-            <div class="mt-4 text-center">
-                <a href="@Url.Action("Login", "Login")" class="text-[#E6581E] font-semibold hover:underline">Volver al inicio de sesión</a>
+                    <form id="formCodigo" asp-action="ValidarCodigoRecuperacion" method="post" class="space-y-6">
+                        <div>
+                            <label for="Codigo" class="block text-sm font-semibold text-gray-700 mb-2">
+                                <i class="fas fa-key text-[#23916A] mr-2"></i>Código de 6 dígitos
+                            </label>
+                            <input type="text"
+                                   id="Codigo"
+                                   name="Codigo"
+                                   placeholder="000000"
+                                   maxlength="6"
+                                   pattern="[0-9]{6}"
+                                   class="code-input w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#23916A] focus:ring-4 focus:ring-[#23916A]/10 transition-all"
+                                   required>
+                            <p class="text-xs text-gray-500 mt-2 text-center">
+                                <i class="fas fa-clock mr-1"></i>El código expira en 5 minutos
+                            </p>
+                        </div>
+
+                        <input type="hidden" name="Correo" value="@correoIngresado" />
+
+                        <button type="submit" id="btnVerificar"
+                                class="btn-primary w-full text-white font-bold py-4 rounded-xl flex items-center justify-center gap-3 text-lg">
+                            <span id="btnVerificarText">Verificar Código</span>
+                            <span id="btnVerificarLoader" class="hidden">
+                                <span class="spinner"></span>
+                            </span>
+                            <i id="btnVerificarIcon" class="fas fa-check-circle"></i>
+                        </button>
+                    </form>
+
+                    <!-- Reenviar código -->
+                    <div class="mt-4 text-center">
+                        <p class="text-sm text-gray-500 mb-2">¿No recibiste el código?</p>
+                        <form asp-action="RecuperarContrasenia" method="post" class="inline">
+                            <input type="hidden" name="Correo" value="@correoIngresado" />
+                            <button type="submit" class="text-[#23916A] font-semibold hover:underline text-sm">
+                                <i class="fas fa-redo mr-1"></i>Reenviar código
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            }
+
+            <!-- Volver al login -->
+            <div class="mt-8 pt-6 border-t border-gray-100 text-center">
+                <a href="@Url.Action("Login", "Login")"
+                   class="inline-flex items-center gap-2 text-gray-600 hover:text-[#23916A] font-medium transition-colors">
+                    <i class="fas fa-arrow-left"></i>
+                    Volver al inicio de sesión
+                </a>
             </div>
         </div>
     </div>
+
+    <!-- Footer -->
+    <div class="fixed bottom-4 text-center w-full">
+        <p class="text-white/60 text-sm">© 2025 Abastécete. Todos los derechos reservados.</p>
+    </div>
+
+    <script>
+        // Loader para formulario de correo
+        document.getElementById('formCorreo')?.addEventListener('submit', function(e) {
+            const btn = document.getElementById('btnEnviar');
+            const text = document.getElementById('btnEnviarText');
+            const loader = document.getElementById('btnEnviarLoader');
+            const icon = document.getElementById('btnEnviarIcon');
+
+            btn.disabled = true;
+            text.textContent = 'Enviando...';
+            loader.classList.remove('hidden');
+            icon.classList.add('hidden');
+        });
+
+        // Loader para formulario de código
+        document.getElementById('formCodigo')?.addEventListener('submit', function(e) {
+            const btn = document.getElementById('btnVerificar');
+            const text = document.getElementById('btnVerificarText');
+            const loader = document.getElementById('btnVerificarLoader');
+            const icon = document.getElementById('btnVerificarIcon');
+
+            btn.disabled = true;
+            text.textContent = 'Verificando...';
+            loader.classList.remove('hidden');
+            icon.classList.add('hidden');
+        });
+
+        // Auto-focus y formato del código
+        const codigoInput = document.getElementById('Codigo');
+        if (codigoInput) {
+            codigoInput.focus();
+            codigoInput.addEventListener('input', function(e) {
+                this.value = this.value.replace(/[^0-9]/g, '');
+            });
+        }
+    </script>
 </body>
 </html>
