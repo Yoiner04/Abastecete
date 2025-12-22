@@ -104,6 +104,16 @@
                                         <span class="font-medium">Editar perfil</span>
                                     </a>
                                 </li>
+                                @if (!RolPermisos.TienePermiso("Ver Dashboard Admin", permisos))
+                                {
+                                    <li class="border-b border-gray-100">
+                                        <a href="@Url.Action("Index", "Analiticas")"
+                                            class="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-[#23916A]/10 hover:text-[#23916A] transition-colors duration-150 no-underline">
+                                            <i class="fas fa-chart-line text-[#23916A]"></i>
+                                            <span class="font-medium">Analíticas</span>
+                                        </a>
+                                    </li>
+                                }
                                 <li>
                                     <a href="@Url.Action("Logout", "Login")"
                                         class="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-red-50 hover:text-red-600 transition-colors duration-150 no-underline">
@@ -264,6 +274,15 @@
                             <a href="@Url.Action("Index", "Logs")" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium hover:bg-[#23916A]/10 hover:text-[#23916A] transition-all duration-200" style="color: #374151;">
                                 <i class="fas fa-clipboard-list text-xs" style="color: #23916A;"></i>
                                 Logs
+                            </a>
+                        </li>
+                    }
+                    @if (RolPermisos.TienePermiso("Ver Dashboard Admin", permisos))
+                    {
+                        <li>
+                            <a href="@Url.Action("DashboardAdmin", "Analiticas")" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium hover:bg-[#23916A]/10 hover:text-[#23916A] transition-all duration-200" style="color: #374151;">
+                                <i class="fas fa-chart-pie text-xs" style="color: #23916A;"></i>
+                                Dashboard
                             </a>
                         </li>
                     }

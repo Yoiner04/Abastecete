@@ -288,11 +288,6 @@
                             <div id="productLoader" class="hidden flex items-center gap-2 text-sm text-gray-500">
                                 <span class="spinner"></span> Cargando productos...
                             </div>
-                            <!-- Badge de marca del producto seleccionado -->
-                            <div id="marcaInfo" class="hidden flex items-center gap-2 px-3 py-2 bg-blue-50 rounded-lg border border-blue-100 animate-fadeIn">
-                                <i class="fas fa-tag text-blue-500"></i>
-                                <span class="text-sm text-blue-700">Marca: <strong id="marcaNombre">-</strong></span>
-                            </div>
                         </div>
 
                         <!-- Unidad de medida -->
@@ -309,6 +304,23 @@
                             </div>
                             <div id="unitLoader" class="hidden flex items-center gap-2 text-sm text-gray-500">
                                 <span class="spinner"></span> Cargando unidades...
+                            </div>
+                        </div>
+
+                        <!-- Marca -->
+                        <div class="space-y-2">
+                            <label class="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                                <i class="fas fa-tag text-indigo-500"></i>
+                                Marca <span class="text-red-500">*</span>
+                            </label>
+                            <div class="select-wrapper">
+                                <select id="marca" disabled
+                                    class="custom-select w-full px-4 py-3 rounded-xl border-2 border-gray-200 bg-white focus:border-green-500 focus:outline-none transition-all">
+                                    <option value="">Primero seleccione un producto</option>
+                                </select>
+                            </div>
+                            <div id="marcaLoader" class="hidden flex items-center gap-2 text-sm text-gray-500">
+                                <span class="spinner"></span> Cargando marcas...
                             </div>
                         </div>
 
@@ -574,22 +586,16 @@
             // Producto change
             $("#product").change(function () {
                 var productoId = $(this).val();
-                var marcaNombre = $(this).find('option:selected').data('marca');
 
                 $("#unit").empty().append('<option value="">Seleccione una unidad</option>').prop("disabled", true);
-
-                // Mostrar/ocultar info de marca
-                if (productoId && marcaNombre) {
-                    $("#marcaNombre").text(marcaNombre);
-                    $("#marcaInfo").removeClass('hidden');
-                } else {
-                    $("#marcaInfo").addClass('hidden');
-                }
+                $("#marca").empty().append('<option value="">Seleccione una marca</option>').prop("disabled", true);
 
                 if (productoId) {
                     updateSteps(4);
                     $("#unitLoader").removeClass('hidden');
+                    $("#marcaLoader").removeClass('hidden');
 
+                    // Cargar unidades
                     $.ajax({
                         url: "/Unidad/ConsultarUnidades",
                         type: "GET",
@@ -607,6 +613,26 @@
                         },
                         complete: function() {
                             $("#unitLoader").addClass('hidden');
+                        }
+                    });
+
+                    // Cargar marcas disponibles
+                    $.ajax({
+                        url: "/Marcas/ListarMarcas",
+                        type: "GET",
+                        dataType: "json",
+                        success: function (response) {
+                            $("#marca").empty().append('<option value="">Seleccione una marca</option>');
+                            $.each(response, function (index, item) {
+                                $("#marca").append(`<option data-nombre="${item.nombre}" value="${item.id}">${item.nombre}</option>`);
+                            });
+                            $("#marca").prop("disabled", false);
+                        },
+                        error: function() {
+                            showToast("Error al cargar marcas", "error");
+                        },
+                        complete: function() {
+                            $("#marcaLoader").addClass('hidden');
                         }
                     });
                 } else {
@@ -642,12 +668,13 @@
             let subcategoryid = $("#subcategory").val();
             let productid = $("#product").val();
             let unitid = $("#unit").val();
+            let marcaid = $("#marca").val();
             let price = $("#price").val();
 
             let category = $("#category option:selected").data("nombre");
             let subcategory = $("#subcategory option:selected").data("nombre");
             let product = $("#product option:selected").data("nombre");
-            let marca = $("#product option:selected").data("marca") || "Sin marca";
+            let marca = $("#marca option:selected").data("nombre") || "Sin marca";
             let unit = $("#unit option:selected").data("nombre");
 
             // Validaciones
@@ -671,16 +698,22 @@
                 $("#unit").focus();
                 return;
             }
+            if (!marcaid) {
+                showToast("Seleccione una marca", "error");
+                $("#marca").focus();
+                return;
+            }
             if (!price || price <= 0) {
                 showToast("Ingrese un precio válido", "error");
                 $("#price").focus();
                 return;
             }
 
-            // Verificar duplicados
+            // Verificar duplicados (mismo producto + misma unidad + misma marca)
             let isDuplicate = false;
             $("#productTableBody tr").each(function() {
                 if ($(this).find("td:eq(0)").data("idproducto") == productid &&
+                    $(this).find("td:eq(1)").data("idmarca") == marcaid &&
                     $(this).find("td:eq(2)").data("idunidad") == unitid) {
                     isDuplicate = true;
                     return false;
@@ -688,7 +721,7 @@
             });
 
             if (isDuplicate) {
-                showToast("Este producto ya fue agregado con la misma unidad", "error");
+                showToast("Este producto ya fue agregado con la misma marca y unidad", "error");
                 return;
             }
 
@@ -699,8 +732,8 @@
                         <div class="font-medium text-gray-900">${product}</div>
                         <div class="text-xs text-gray-500">${category} / ${subcategory}</div>
                     </td>
-                    <td class="px-4 py-3">
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+                    <td class="px-4 py-3" data-idmarca="${marcaid}">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-700">
                             <i class="fas fa-tag mr-1 text-[10px]"></i>${marca}
                         </span>
                     </td>
@@ -726,6 +759,7 @@
             // Limpiar formulario parcialmente (mantener categoría y subcategoría)
             $("#product").val("");
             $("#unit").empty().append('<option value="">Primero seleccione un producto</option>').prop("disabled", true);
+            $("#marca").empty().append('<option value="">Primero seleccione un producto</option>').prop("disabled", true);
             $("#price").val("");
             updateSteps(3);
         }
@@ -748,6 +782,7 @@
                 let celdas = $(this).find("td");
                 productos.push({
                     producto: celdas.eq(0).data('idproducto'),
+                    marca: celdas.eq(1).data('idmarca'),
                     medida: celdas.eq(2).data('idunidad'),
                     valor: parseFloat(celdas.eq(3).data('idprecio'))
                 });

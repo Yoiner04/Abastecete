@@ -241,7 +241,8 @@ namespace BusinessLogic
                 new Parametro("producto_id", producto.producto),
                 new Parametro("medida", producto.medida),
                 new Parametro("valor", producto.valor),
-                new Parametro("local_id", producto.local)
+                new Parametro("local_id", producto.local),
+                new Parametro("marca_id", producto.marca > 0 ? producto.marca : 1)
             };
 
             return conexion.EjecutarTransaccion("agregar_productos_local", parametros);

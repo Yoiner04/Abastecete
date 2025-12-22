@@ -31,7 +31,7 @@ namespace Abastecete.Controllers
 
         public IActionResult Index()
         {
-            return View();
+            return RedirectToAction("Principal");
         }
 
         public IActionResult Privacy()

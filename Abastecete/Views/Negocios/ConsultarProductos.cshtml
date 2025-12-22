@@ -745,11 +745,30 @@
                                     @producto.Nombre
                                 </h3>
 
+                                @if (producto.TieneMultiplesMarcas)
+                                {
+                                    <div class="mb-2 flex items-center gap-2">
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-700">
+                                            <i class="fas fa-tags mr-1 text-[10px]"></i>@producto.CantidadMarcas marcas
+                                        </span>
+                                    </div>
+                                }
+
                                 <div class="producto-acciones flex items-center justify-between mt-auto">
                                     <div>
-                                        <p class="producto-precio text-2xl font-bold text-green-600">
-                                            $@producto.Precio
-                                        </p>
+                                        @if (producto.TieneMultiplesMarcas && producto.PrecioMinimo.HasValue)
+                                        {
+                                            <p class="text-xs text-gray-500 mb-0.5">Desde</p>
+                                            <p class="producto-precio text-2xl font-bold text-green-600">
+                                                $@producto.PrecioMinimo.Value.ToString("N0")
+                                            </p>
+                                        }
+                                        else
+                                        {
+                                            <p class="producto-precio text-2xl font-bold text-green-600">
+                                                $@producto.Precio
+                                            </p>
+                                        }
                                         @if (producto.Unidad?.Nombre != null)
                                         {
                                             <p class="producto-unidad text-sm text-gray-500">por @producto.Unidad.Nombre</p>

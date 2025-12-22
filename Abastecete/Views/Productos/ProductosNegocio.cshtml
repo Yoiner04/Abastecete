@@ -450,6 +450,11 @@
                                                 title="Ver detalle">
                                             <i class="fas fa-eye text-[10px]"></i>
                                         </button>
+                                        <button onclick="abrirModalMarcas(@producto.Id, '@producto.Nombre.Replace("'", "\\'")')"
+                                                class="w-6 h-6 rounded-full bg-white/95 backdrop-blur-sm flex items-center justify-center text-gray-700 hover:bg-indigo-500 hover:text-white transition-all shadow-lg hover:scale-110"
+                                                title="Gestionar marcas">
+                                            <i class="fas fa-tags text-[10px]"></i>
+                                        </button>
                                         <button onclick="abrirModalEditar(@producto.Id, '@producto.Nombre.Replace("'", "\\'")', '@producto.Precio', '@producto.ImagenUrl')"
                                                 class="w-6 h-6 rounded-full bg-white/95 backdrop-blur-sm flex items-center justify-center text-gray-700 hover:bg-orange-500 hover:text-white transition-all shadow-lg hover:scale-110"
                                                 title="Editar producto">
@@ -973,6 +978,86 @@
         </div>
     </div>
 
+    <!-- Modal de gestión de marcas -->
+    <div id="marcas-modal" class="fixed inset-0 z-50 hidden bg-black/50 transition-opacity duration-300">
+        <div class="flex min-h-screen items-center justify-center p-4">
+            <div class="w-full max-w-lg rounded-2xl bg-white shadow-xl overflow-hidden">
+                <!-- Header -->
+                <div class="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                                <i class="fas fa-tags"></i>
+                                Gestionar Marcas
+                            </h2>
+                            <p id="marcas-producto-nombre" class="text-sm text-white/80"></p>
+                        </div>
+                        <button onclick="cerrarModalMarcas()"
+                                class="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-white transition-colors">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="p-6">
+                    <input type="hidden" id="marcas-producto-id" />
+
+                    <!-- Lista de marcas actuales -->
+                    <div class="mb-6">
+                        <h4 class="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                            <i class="fas fa-list text-indigo-500"></i>
+                            Marcas configuradas
+                        </h4>
+                        <div id="marcas-lista" class="space-y-2 max-h-48 overflow-y-auto">
+                            <!-- Las marcas se cargan dinámicamente -->
+                        </div>
+                        <div id="marcas-vacio" class="hidden py-6 text-center">
+                            <i class="fas fa-box-open text-3xl text-gray-300 mb-2"></i>
+                            <p class="text-sm text-gray-500">Este producto no tiene marcas configuradas</p>
+                        </div>
+                    </div>
+
+                    <!-- Formulario para agregar nueva marca -->
+                    <div class="border-t border-gray-200 pt-4">
+                        <h4 class="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                            <i class="fas fa-plus-circle text-green-500"></i>
+                            Agregar nueva marca
+                        </h4>
+                        <div class="grid grid-cols-2 gap-3 mb-3">
+                            <div>
+                                <label class="block text-xs text-gray-500 mb-1">Marca</label>
+                                <select id="nueva-marca-select" class="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none">
+                                    <option value="">Seleccionar marca</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs text-gray-500 mb-1">Precio</label>
+                                <div class="relative">
+                                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">$</span>
+                                    <input type="number" id="nueva-marca-precio" min="0" step="100" placeholder="0"
+                                           class="w-full pl-7 pr-3 py-2 rounded-lg border border-gray-200 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none" />
+                                </div>
+                            </div>
+                        </div>
+                        <button onclick="agregarMarcaProducto()"
+                                class="w-full py-2.5 rounded-lg bg-indigo-600 text-white font-medium text-sm hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2">
+                            <i class="fas fa-plus"></i>
+                            Agregar marca
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div class="bg-gray-50 px-6 py-4 flex justify-end">
+                    <button onclick="cerrarModalMarcas()"
+                            class="px-6 py-2.5 rounded-lg bg-gray-200 text-gray-700 font-medium text-sm hover:bg-gray-300 transition-colors">
+                        Cerrar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal de todas las imágenes de galería -->
     <div id="galeria-modal" class="fixed inset-0 z-50 hidden bg-black/80 overflow-y-auto">
         <div class="min-h-screen py-8 px-4">
@@ -1343,11 +1428,229 @@
             if (e.key === 'Escape') {
                 cerrarModalEditar();
                 cerrarModalEliminar();
+                cerrarModalMarcas();
                 cerrarLightbox();
                 cerrarGaleriaModal();
                 ocultarDetalle();
             }
         });
+
+        // ==========================================
+        // MODAL DE GESTIÓN DE MARCAS
+        // ==========================================
+        const idLocalActual = @Model.Negocio.Id;
+        let todasLasMarcas = [];
+
+        async function cargarTodasLasMarcas() {
+            try {
+                const response = await fetch('/Productos/ListarTodasLasMarcas');
+                if (response.ok) {
+                    todasLasMarcas = await response.json();
+                    actualizarSelectMarcas();
+                }
+            } catch (error) {
+                console.error('Error cargando marcas:', error);
+            }
+        }
+
+        function actualizarSelectMarcas(marcasExistentes = []) {
+            const select = document.getElementById('nueva-marca-select');
+            select.innerHTML = '<option value="">Seleccionar marca</option>';
+
+            const marcasExistentesIds = marcasExistentes.map(m => m.idMarca);
+
+            todasLasMarcas.forEach(marca => {
+                if (!marcasExistentesIds.includes(marca.id)) {
+                    select.innerHTML += `<option value="${marca.id}">${marca.nombre}</option>`;
+                }
+            });
+        }
+
+        async function abrirModalMarcas(idProducto, nombreProducto) {
+            const modal = document.getElementById('marcas-modal');
+            document.getElementById('marcas-producto-id').value = idProducto;
+            document.getElementById('marcas-producto-nombre').textContent = nombreProducto;
+
+            // Cargar todas las marcas si aún no se han cargado
+            if (todasLasMarcas.length === 0) {
+                await cargarTodasLasMarcas();
+            }
+
+            // Cargar marcas del producto
+            await cargarMarcasProducto(idProducto);
+
+            modal.classList.remove('hidden');
+            document.body.classList.add('overflow-hidden');
+        }
+
+        function cerrarModalMarcas() {
+            const modal = document.getElementById('marcas-modal');
+            modal.classList.add('hidden');
+            document.body.classList.remove('overflow-hidden');
+            document.getElementById('nueva-marca-precio').value = '';
+            document.getElementById('nueva-marca-select').value = '';
+        }
+
+        async function cargarMarcasProducto(idProducto) {
+            const lista = document.getElementById('marcas-lista');
+            const vacio = document.getElementById('marcas-vacio');
+
+            lista.innerHTML = '<div class="text-center py-4"><i class="fas fa-spinner fa-spin text-indigo-500"></i> Cargando...</div>';
+
+            try {
+                const response = await fetch(`/Productos/ListarMarcasProducto?idLocal=${idLocalActual}&idProducto=${idProducto}`);
+                if (response.ok) {
+                    const marcas = await response.json();
+
+                    if (marcas.length === 0) {
+                        lista.innerHTML = '';
+                        vacio.classList.remove('hidden');
+                    } else {
+                        vacio.classList.add('hidden');
+                        lista.innerHTML = marcas.map(m => `
+                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg group" data-marca-id="${m.id}">
+                                <div class="flex items-center gap-3">
+                                    ${m.logoMarca ? `<img src="${m.logoMarca}" class="w-8 h-8 rounded-full object-cover" />` : '<div class="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center"><i class="fas fa-tag text-indigo-500 text-xs"></i></div>'}
+                                    <div>
+                                        <p class="font-medium text-gray-800 text-sm">${m.nombreMarca}</p>
+                                        <p class="text-xs text-gray-500">${m.disponible ? 'Disponible' : 'No disponible'}</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span class="font-bold text-green-600">$${Number(m.precio).toLocaleString('es-CO')}</span>
+                                    <button onclick="editarMarcaProducto(${m.id}, ${m.precio})"
+                                            class="w-7 h-7 rounded-full bg-orange-100 text-orange-600 hover:bg-orange-200 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                                            title="Editar precio">
+                                        <i class="fas fa-pen text-xs"></i>
+                                    </button>
+                                    <button onclick="eliminarMarcaProducto(${m.id})"
+                                            class="w-7 h-7 rounded-full bg-red-100 text-red-600 hover:bg-red-200 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                                            title="Eliminar marca">
+                                        <i class="fas fa-trash text-xs"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        `).join('');
+                    }
+
+                    // Actualizar select de marcas (excluir las que ya tiene)
+                    actualizarSelectMarcas(marcas);
+                }
+            } catch (error) {
+                console.error('Error cargando marcas del producto:', error);
+                lista.innerHTML = '<div class="text-center py-4 text-red-500"><i class="fas fa-exclamation-circle"></i> Error al cargar marcas</div>';
+            }
+        }
+
+        async function agregarMarcaProducto() {
+            const idProducto = document.getElementById('marcas-producto-id').value;
+            const idMarca = document.getElementById('nueva-marca-select').value;
+            const precio = document.getElementById('nueva-marca-precio').value;
+
+            if (!idMarca) {
+                mostrarNotificacion('Selecciona una marca', 'error');
+                return;
+            }
+            if (!precio || precio <= 0) {
+                mostrarNotificacion('Ingresa un precio válido', 'error');
+                return;
+            }
+
+            try {
+                const formData = new URLSearchParams();
+                formData.append('idLocal', idLocalActual);
+                formData.append('idProducto', idProducto);
+                formData.append('idMarca', idMarca);
+                formData.append('precio', precio);
+
+                const response = await fetch('/Productos/AgregarMarcaProducto', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    mostrarNotificacion('Marca agregada correctamente', 'success');
+                    document.getElementById('nueva-marca-precio').value = '';
+                    document.getElementById('nueva-marca-select').value = '';
+                    await cargarMarcasProducto(idProducto);
+                } else {
+                    mostrarNotificacion(result.mensaje || 'Error al agregar marca', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarNotificacion('Error al agregar marca', 'error');
+            }
+        }
+
+        function editarMarcaProducto(id, precioActual) {
+            const nuevoPrecio = prompt('Nuevo precio:', precioActual);
+            if (nuevoPrecio !== null && nuevoPrecio > 0) {
+                actualizarMarcaProducto(id, nuevoPrecio);
+            }
+        }
+
+        async function actualizarMarcaProducto(id, precio) {
+            try {
+                const formData = new URLSearchParams();
+                formData.append('id', id);
+                formData.append('precio', precio);
+                formData.append('stock', 0);
+                formData.append('disponible', true);
+
+                const response = await fetch('/Productos/ActualizarMarcaProducto', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    mostrarNotificacion('Precio actualizado', 'success');
+                    const idProducto = document.getElementById('marcas-producto-id').value;
+                    await cargarMarcasProducto(idProducto);
+                } else {
+                    mostrarNotificacion(result.mensaje || 'Error al actualizar', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarNotificacion('Error al actualizar', 'error');
+            }
+        }
+
+        async function eliminarMarcaProducto(id) {
+            if (!confirm('¿Eliminar esta marca del producto?')) return;
+
+            try {
+                const response = await fetch(`/Productos/EliminarMarcaProducto?id=${id}`, {
+                    method: 'DELETE'
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    mostrarNotificacion('Marca eliminada', 'success');
+                    const idProducto = document.getElementById('marcas-producto-id').value;
+                    await cargarMarcasProducto(idProducto);
+                } else {
+                    mostrarNotificacion(result.mensaje || 'Error al eliminar', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarNotificacion('Error al eliminar', 'error');
+            }
+        }
+
+        // Cerrar modal de marcas al hacer clic fuera
+        document.getElementById('marcas-modal').addEventListener('click', function(e) {
+            if (e.target === this) cerrarModalMarcas();
+        });
+
+        // Cargar marcas disponibles al iniciar
+        cargarTodasLasMarcas();
     </script>
 
 

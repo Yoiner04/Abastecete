@@ -523,5 +523,163 @@ namespace Abastecete.Controllers
         }
 
         #endregion
+
+        #region Producto-Marca (Múltiples marcas por producto)
+
+        private readonly ManejadorProductoMarca manejadorProductoMarca = new ManejadorProductoMarca();
+
+        /// <summary>
+        /// Lista las marcas asociadas a un producto en un local específico
+        /// </summary>
+        [HttpGet]
+        public IActionResult ListarMarcasProducto(int idLocal, int idProducto)
+        {
+            try
+            {
+                var marcas = manejadorProductoMarca.ListarMarcasProducto(idLocal, idProducto);
+                return Json(marcas.Select(m => new
+                {
+                    id = m.Id,
+                    idLocal = m.IdLocal,
+                    idMarca = m.IdMarca,
+                    nombreMarca = m.NombreMarca,
+                    logoMarca = m.LogoMarca,
+                    precio = m.Precio,
+                    stock = m.Stock,
+                    disponible = m.Disponible
+                }));
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error al listar marcas del producto: {ex.Message}");
+                return BadRequest(new { mensaje = "Error al obtener marcas del producto" });
+            }
+        }
+
+        /// <summary>
+        /// Lista todas las marcas disponibles en el sistema
+        /// </summary>
+        [HttpGet]
+        public IActionResult ListarTodasLasMarcas()
+        {
+            try
+            {
+                var marcas = manejadorProductoMarca.ListarTodasLasMarcas();
+                return Json(marcas.Select(m => new
+                {
+                    id = m.Id,
+                    nombre = m.Nombre,
+                    descripcion = m.Descripcion,
+                    logoUrl = m.LogoUrl
+                }));
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error al listar marcas: {ex.Message}");
+                return BadRequest(new { mensaje = "Error al obtener marcas" });
+            }
+        }
+
+        /// <summary>
+        /// Agrega una marca a un producto en un local específico
+        /// </summary>
+        [HttpPost]
+        public IActionResult AgregarMarcaProducto(int idLocal, int idProducto, int idMarca, decimal precio, int stock = 0, bool disponible = true)
+        {
+            try
+            {
+                var id = manejadorProductoMarca.AgregarMarcaProducto(idLocal, idProducto, idMarca, precio, stock, disponible);
+                if (id > 0)
+                    return Json(new { success = true, id, mensaje = "Marca agregada correctamente" });
+
+                return BadRequest(new { success = false, mensaje = "Error al agregar marca" });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error al agregar marca al producto: {ex.Message}");
+                return BadRequest(new { success = false, mensaje = "Error al agregar marca al producto" });
+            }
+        }
+
+        /// <summary>
+        /// Actualiza el precio/stock de una marca de un producto
+        /// </summary>
+        [HttpPost]
+        public IActionResult ActualizarMarcaProducto(int id, decimal precio, int stock, bool disponible)
+        {
+            try
+            {
+                var success = manejadorProductoMarca.ActualizarMarcaProducto(id, precio, stock, disponible);
+                if (success)
+                    return Json(new { success = true, mensaje = "Marca actualizada correctamente" });
+
+                return BadRequest(new { success = false, mensaje = "Error al actualizar marca" });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error al actualizar marca del producto: {ex.Message}");
+                return BadRequest(new { success = false, mensaje = "Error al actualizar marca" });
+            }
+        }
+
+        /// <summary>
+        /// Elimina una marca de un producto
+        /// </summary>
+        [HttpDelete]
+        public IActionResult EliminarMarcaProducto(int id)
+        {
+            try
+            {
+                var success = manejadorProductoMarca.EliminarMarcaProducto(id);
+                if (success)
+                    return Json(new { success = true, mensaje = "Marca eliminada correctamente" });
+
+                return BadRequest(new { success = false, mensaje = "Error al eliminar marca" });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error al eliminar marca del producto: {ex.Message}");
+                return BadRequest(new { success = false, mensaje = "Error al eliminar marca" });
+            }
+        }
+
+        /// <summary>
+        /// Guarda múltiples marcas para un producto en un local
+        /// </summary>
+        [HttpPost]
+        public IActionResult GuardarMarcasProducto(int idLocal, int idProducto, [FromBody] List<ProductoMarcaRequest> marcas)
+        {
+            try
+            {
+                var listaProductoMarca = marcas.Select(m => new ProductoMarca
+                {
+                    IdMarca = m.IdMarca,
+                    Precio = m.Precio,
+                    Stock = m.Stock,
+                    Disponible = m.Disponible
+                }).ToList();
+
+                var success = manejadorProductoMarca.GuardarMarcasProducto(idLocal, idProducto, listaProductoMarca);
+                if (success)
+                    return Json(new { success = true, mensaje = "Marcas guardadas correctamente" });
+
+                return BadRequest(new { success = false, mensaje = "Error al guardar marcas" });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error al guardar marcas del producto: {ex.Message}");
+                return BadRequest(new { success = false, mensaje = "Error al guardar marcas" });
+            }
+        }
+
+        public class ProductoMarcaRequest
+        {
+            public int IdMarca { get; set; }
+            public decimal Precio { get; set; }
+            public int Stock { get; set; }
+            public bool Disponible { get; set; } = true;
+        }
+
+        #endregion
     }
 }

@@ -37,5 +37,31 @@ namespace BusinessLogic.Models
         public int IdLocal { get; set; }
 
         public ImagenModel ImagenLocal { get; set; }
+
+        // Soporte para múltiples marcas
+        public List<ProductoMarca> Marcas { get; set; } = new List<ProductoMarca>();
+        public decimal? PrecioMinimo { get; set; }
+        public decimal? PrecioMaximo { get; set; }
+        public int CantidadMarcas { get; set; }
+
+        /// <summary>
+        /// Indica si el producto tiene múltiples marcas disponibles
+        /// </summary>
+        public bool TieneMultiplesMarcas => CantidadMarcas > 1;
+
+        /// <summary>
+        /// Obtiene el texto de precio para mostrar (ej: "Desde $5.000" o "$5.000")
+        /// </summary>
+        public string PrecioDisplay
+        {
+            get
+            {
+                if (TieneMultiplesMarcas && PrecioMinimo.HasValue)
+                {
+                    return $"Desde ${PrecioMinimo.Value:N0}";
+                }
+                return $"${Precio}";
+            }
+        }
     }
 }

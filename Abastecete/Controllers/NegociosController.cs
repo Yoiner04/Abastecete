@@ -101,6 +101,19 @@ namespace Abastecete.Controllers
                 neg.Galeria = _manejadorGaleria.ListarGaleria(neg.Id);
             }
 
+            // Cargar marcas para cada producto (del local actual)
+            var manejadorProductoMarca = new ManejadorProductoMarca();
+            foreach (var producto in productos)
+            {
+                producto.Marcas = manejadorProductoMarca.ListarMarcasProducto(idLocal, producto.Id);
+                if (producto.Marcas.Any())
+                {
+                    producto.PrecioMinimo = producto.Marcas.Min(m => m.Precio);
+                    producto.PrecioMaximo = producto.Marcas.Max(m => m.Precio);
+                    producto.CantidadMarcas = producto.Marcas.Count;
+                }
+            }
+
             ViewBag.negocio = neg;
             ViewBag.categorias = cat;
             ViewBag.GoogleMapsApiKey = _configuration["GoogleMaps:ApiKey"];
