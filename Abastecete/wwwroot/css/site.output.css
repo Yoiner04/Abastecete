@@ -960,10 +960,6 @@ body {
   top: 0.75rem;
 }
 
-.top-36 {
-  top: 9rem;
-}
-
 .top-4 {
   top: 1rem;
 }
@@ -986,10 +982,6 @@ body {
 
 .z-20 {
   z-index: 20;
-}
-
-.z-30 {
-  z-index: 30;
 }
 
 .z-40 {
@@ -5015,10 +5007,6 @@ body {
 }
 
 @media (min-width: 768px) {
-  .md\:top-40 {
-    top: 10rem;
-  }
-
   .md\:col-span-2 {
     grid-column: span 2 / span 2;
   }
