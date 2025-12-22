@@ -41,10 +41,24 @@ namespace Abastecete.Controllers
         }
 
         [HttpGet]
-        public IActionResult Consultar()
+        public IActionResult Consultar(int? idCategoria)
         {
+            List<Categoria> categorias = _manejadorCategorias.ConsultarCategorias();
+            List<Membresia> membresias = _manejadorMembresias.consultarTiposMembresia();
+
+            // Si no se especifica categoría, usar la primera disponible
+            int categoriaId = idCategoria ?? (categorias.FirstOrDefault()?.Id ?? 0);
+
+            Categoria categoriaActual = _manejadorCategorias.ObtenerCategoria(categoriaId);
+            List<Negocio> negocios = _manejadorNegocios.ConsultarNegocioCategoria(categoriaId, "");
+
+            ViewBag.categorias = categorias;
+            ViewBag.membresias = membresias;
+            ViewBag.categoria = categoriaActual;
+            ViewBag.membresia = "";
             ViewBag.GoogleMapsApiKey = _configuration["GoogleMaps:ApiKey"];
-            return View();
+
+            return View(negocios ?? new List<Negocio>());
         }
 
         [HttpPost]
@@ -80,6 +94,13 @@ namespace Abastecete.Controllers
             List<Producto> productos = _manejadorProductos.ConsultarProductosLocal(idLocal);
             Negocio neg = _manejadorNegocios.ConsultarNegocioPoId(idLocal);
             List<Categoria> cat = _manejadorNegocios.ConsultarCategoriasLocal(idLocal);
+
+            // Cargar galería del local
+            if (neg != null && neg.Id > 0)
+            {
+                neg.Galeria = _manejadorGaleria.ListarGaleria(neg.Id);
+            }
+
             ViewBag.negocio = neg;
             ViewBag.categorias = cat;
             ViewBag.GoogleMapsApiKey = _configuration["GoogleMaps:ApiKey"];
