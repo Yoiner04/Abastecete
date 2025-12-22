@@ -880,6 +880,10 @@ body {
   bottom: 1rem;
 }
 
+.bottom-44 {
+  bottom: 11rem;
+}
+
 .bottom-6 {
   bottom: 1.5rem;
 }
@@ -930,6 +934,10 @@ body {
 
 .right-4 {
   right: 1rem;
+}
+
+.right-5 {
+  right: 1.25rem;
 }
 
 .right-6 {
@@ -1002,6 +1010,10 @@ body {
 
 .z-\[60\] {
   z-index: 60;
+}
+
+.z-\[9999\] {
+  z-index: 9999;
 }
 
 .order-1 {
@@ -1419,10 +1431,6 @@ body {
 
 .max-h-full {
   max-height: 100%;
-}
-
-.min-h-\[80vh\] {
-  min-height: 80vh;
 }
 
 .min-h-full {
@@ -2161,6 +2169,11 @@ body {
 
 .bg-\[\#23916A\]\/10 {
   background-color: rgb(35 145 106 / 0.1);
+}
+
+.bg-\[\#25D366\] {
+  --tw-bg-opacity: 1;
+  background-color: rgb(37 211 102 / var(--tw-bg-opacity, 1));
 }
 
 .bg-\[\#F4F1E9\] {
@@ -3620,11 +3633,6 @@ body {
   --tw-shadow: var(--tw-shadow-colored);
 }
 
-.shadow-green-500\/40 {
-  --tw-shadow-color: rgb(34 197 94 / 0.4);
-  --tw-shadow: var(--tw-shadow-colored);
-}
-
 .shadow-orange-500\/30 {
   --tw-shadow-color: rgb(249 115 22 / 0.3);
   --tw-shadow: var(--tw-shadow-colored);
@@ -4571,11 +4579,6 @@ body {
   --tw-ring-color: rgb(16 185 129 / 0.2);
 }
 
-.focus\:ring-green-400:focus {
-  --tw-ring-opacity: 1;
-  --tw-ring-color: rgb(74 222 128 / var(--tw-ring-opacity, 1));
-}
-
 .focus\:ring-green-500:focus {
   --tw-ring-opacity: 1;
   --tw-ring-color: rgb(34 197 94 / var(--tw-ring-opacity, 1));
@@ -4973,6 +4976,10 @@ body {
     width: 50%;
   }
 
+  .md\:w-auto {
+    width: auto;
+  }
+
   .md\:grid-cols-2 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -5046,6 +5053,10 @@ body {
 
   .lg\:top-12 {
     top: 3rem;
+  }
+
+  .lg\:top-36 {
+    top: 9rem;
   }
 
   .lg\:top-6 {
@@ -5128,6 +5139,10 @@ body {
 
   .lg\:h-full {
     height: 100%;
+  }
+
+  .lg\:max-h-\[calc\(100vh-10rem\)\] {
+    max-height: calc(100vh - 10rem);
   }
 
   .lg\:w-1\/2 {
@@ -5230,6 +5245,10 @@ body {
     --tw-space-y-reverse: 0;
     margin-top: calc(1.5rem * calc(1 - var(--tw-space-y-reverse)));
     margin-bottom: calc(1.5rem * var(--tw-space-y-reverse));
+  }
+
+  .lg\:overflow-y-auto {
+    overflow-y: auto;
   }
 
   .lg\:border-l {

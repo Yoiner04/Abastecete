@@ -18,8 +18,9 @@ namespace Abastecete.Controllers
         private readonly ManejadorTipoUnidad manejadorTipoUnidad;
         private readonly ManejadorGaleriaLocal manejadorGaleria;
         private readonly ManejadorSuscripciones manejadorSuscripciones;
+        private readonly IConfiguration _configuration;
 
-        public ProductosController()
+        public ProductosController(IConfiguration configuration)
         {
             manejadorNegocios = new ManejadorNegocios();
             manejadorProductos = new ManejadorProductos();
@@ -30,6 +31,7 @@ namespace Abastecete.Controllers
             manejadorTipoUnidad = new ManejadorTipoUnidad();
             manejadorGaleria = new ManejadorGaleriaLocal();
             manejadorSuscripciones = new ManejadorSuscripciones();
+            _configuration = configuration;
         }
 
         public IActionResult Consultar()
@@ -114,6 +116,7 @@ namespace Abastecete.Controllers
                 .Take(8)
                 .ToList() ?? new List<Producto>();
             ViewBag.ProductosRelacionados = productosRelacionados;
+            ViewBag.GoogleMapsApiKey = _configuration["GoogleMaps:ApiKey"];
 
             return View(neg);
         }

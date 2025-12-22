@@ -265,6 +265,53 @@ namespace Abastecete.Controllers
             return RedirectToAction("Actualizar", "Usuarios");
         }
 
+        public class CambiarContraseniaRequest
+        {
+            public string ContraseniaActual { get; set; }
+            public string NuevaContrasenia { get; set; }
+            public string ConfirmarContrasenia { get; set; }
+        }
+
+        [HttpPost]
+        public IActionResult CambiarContrasenia([FromBody] CambiarContraseniaRequest request)
+        {
+            var idUsuario = HttpContext.Session.GetInt32("idUsuario");
+
+            if (idUsuario == null)
+            {
+                return Json(new { success = false, mensaje = "Sesión expirada. Por favor inicia sesión nuevamente." });
+            }
+
+            // Validaciones
+            if (string.IsNullOrEmpty(request.ContraseniaActual))
+            {
+                return Json(new { success = false, mensaje = "Debes ingresar tu contraseña actual." });
+            }
+
+            if (string.IsNullOrEmpty(request.NuevaContrasenia))
+            {
+                return Json(new { success = false, mensaje = "Debes ingresar una nueva contraseña." });
+            }
+
+            if (request.NuevaContrasenia.Length < 8)
+            {
+                return Json(new { success = false, mensaje = "La nueva contraseña debe tener al menos 8 caracteres." });
+            }
+
+            if (request.NuevaContrasenia != request.ConfirmarContrasenia)
+            {
+                return Json(new { success = false, mensaje = "Las contraseñas no coinciden." });
+            }
+
+            var resultado = manejadorU.CambiarContraseniaVerificada(
+                idUsuario.Value,
+                request.ContraseniaActual,
+                request.NuevaContrasenia
+            );
+
+            return Json(new { success = resultado.exito, mensaje = resultado.mensaje });
+        }
+
         [HttpPost]
         public IActionResult Registrar(Usuario usuario)
         {

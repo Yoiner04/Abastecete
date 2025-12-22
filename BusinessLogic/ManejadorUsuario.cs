@@ -224,6 +224,21 @@ namespace BusinessLogic
             return conexion.EjecutarTransaccion("recuperar_contrasenia", parametros);
         }
 
+        /// <summary>
+        /// Cambia la contraseña del usuario verificando la contraseña actual
+        /// </summary>
+        public (bool exito, string mensaje) CambiarContraseniaVerificada(int userId, string contraseniaActual, string nuevaContrasenia)
+        {
+            List<Parametro> parametros = new List<Parametro>
+            {
+                new Parametro("p_id_usuario", userId),
+                new Parametro("p_contrasenia_actual", Seguridad.Encriptar(contraseniaActual)),
+                new Parametro("p_nueva_contrasenia", Seguridad.Encriptar(nuevaContrasenia))
+            };
+
+            return conexion.EjecutarTransaccionConMensaje("cambiar_contrasenia_verificada", parametros);
+        }
+
 
 
 

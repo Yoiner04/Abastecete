@@ -43,6 +43,7 @@ namespace Abastecete.Controllers
         [HttpGet]
         public IActionResult Consultar()
         {
+            ViewBag.GoogleMapsApiKey = _configuration["GoogleMaps:ApiKey"];
             return View();
         }
 
@@ -61,6 +62,7 @@ namespace Abastecete.Controllers
             ViewBag.membresia = membre;
             ViewBag.categoria = _manejadorCategorias.ObtenerCategoria(idCategoria);
             ViewBag.Categorias = categorias;
+            ViewBag.GoogleMapsApiKey = _configuration["GoogleMaps:ApiKey"];
             return View(negocios);
         }
 
@@ -80,6 +82,7 @@ namespace Abastecete.Controllers
             List<Categoria> cat = _manejadorNegocios.ConsultarCategoriasLocal(idLocal);
             ViewBag.negocio = neg;
             ViewBag.categorias = cat;
+            ViewBag.GoogleMapsApiKey = _configuration["GoogleMaps:ApiKey"];
             return View(productos);
         }
 
@@ -108,6 +111,7 @@ namespace Abastecete.Controllers
                 ne.Galeria = _manejadorGaleria.ListarGaleria(ne.Id);
             }
 
+            ViewBag.GoogleMapsApiKey = _configuration["GoogleMaps:ApiKey"];
             return View(ne);
         }
 
