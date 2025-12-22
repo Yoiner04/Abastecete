@@ -281,15 +281,22 @@ namespace Abastecete.Controllers
             Console.WriteLine($"CodigoReferido: {usuario?.CodigoReferido}");
             Console.WriteLine("======================");
 
-            bool result = manejadorU.RegistrarUsuario(usuario);
+            var resultado = manejadorU.RegistrarUsuarioConMensaje(usuario);
 
-            if (result)
+            if (resultado.exito)
             {
+                TempData["SuccessMessage"] = "Registro exitoso. Ahora puedes iniciar sesión.";
                 return RedirectToAction("Login", "Login");
             }
             else
             {
-                ModelState.AddModelError("", "No se pudo registrar el usuario. Intente nuevamente.");
+                // Mostrar mensaje específico del SP
+                ModelState.AddModelError("", resultado.mensaje ?? "No se pudo registrar el usuario. Intente nuevamente.");
+
+                // Recargar tipos de documento para la vista
+                List<TipoDocumento> tiposDocumento = TipoDocumento.ObtenerTipoDocumentos();
+                ViewBag.TiposDocumento = tiposDocumento;
+
                 return View(usuario);
             }
         }

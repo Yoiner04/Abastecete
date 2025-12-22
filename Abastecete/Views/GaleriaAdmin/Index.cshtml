@@ -224,6 +224,46 @@
     </div>
 </div>
 
+<!-- Modal Aprobar -->
+<div id="modal-aprobar" class="modal hidden fixed inset-0 z-50 overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen px-4 py-8">
+        <div class="fixed inset-0 bg-black/50 backdrop-blur-sm" onclick="cerrarModalAprobar()"></div>
+        <div class="relative bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-gray-900">
+                    <i class="fas fa-check-circle text-green-500 mr-2"></i>
+                    Aprobar Imagen
+                </h3>
+                <button onclick="cerrarModalAprobar()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <input type="hidden" id="aprobar-id">
+
+            <div class="mb-6">
+                <div class="flex items-center justify-center w-16 h-16 mx-auto mb-4 rounded-full bg-green-100">
+                    <i class="fas fa-image text-green-600 text-2xl"></i>
+                </div>
+                <p class="text-center text-gray-600">
+                    ¿Aprobar esta imagen? Sera visible para todos los usuarios.
+                </p>
+            </div>
+
+            <div class="flex gap-3 pt-4 border-t border-gray-200">
+                <button onclick="cerrarModalAprobar()"
+                        class="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium">
+                    Cancelar
+                </button>
+                <button onclick="confirmarAprobar()" id="btn-aprobar"
+                        class="flex-1 px-4 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium">
+                    <i class="fas fa-check mr-2"></i>Aprobar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Modal Rechazo -->
 <div id="modal-rechazo" class="modal hidden fixed inset-0 z-50 overflow-y-auto">
     <div class="flex items-center justify-center min-h-screen px-4 py-8">
@@ -330,9 +370,21 @@
         document.getElementById('modal-imagen').classList.add('hidden');
     }
 
-    // =============== APROBAR IMAGEN ===============
+    // =============== MODAL APROBAR ===============
     function aprobarImagen(id) {
-        if (!confirm('¿Aprobar esta imagen? Sera visible para todos los usuarios.')) return;
+        document.getElementById('aprobar-id').value = id;
+        document.getElementById('modal-aprobar').classList.remove('hidden');
+    }
+
+    function cerrarModalAprobar() {
+        document.getElementById('modal-aprobar').classList.add('hidden');
+    }
+
+    function confirmarAprobar() {
+        const id = document.getElementById('aprobar-id').value;
+        const btn = document.getElementById('btn-aprobar');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Aprobando...';
 
         fetch('/GaleriaAdmin/Aprobar', {
             method: 'POST',
@@ -342,13 +394,18 @@
         .then(response => response.json())
         .then(data => {
             if (data.success) {
+                cerrarModalAprobar();
                 showToast('success', 'Aprobada', 'Imagen aprobada correctamente');
                 setTimeout(() => location.reload(), 1000);
             } else {
                 showToast('error', 'Error', data.mensaje || 'No se pudo aprobar');
             }
         })
-        .catch(() => showToast('error', 'Error', 'Error de conexion'));
+        .catch(() => showToast('error', 'Error', 'Error de conexion'))
+        .finally(() => {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-check mr-2"></i>Aprobar';
+        });
     }
 
     // =============== MODAL RECHAZO ===============
@@ -461,6 +518,7 @@
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
             cerrarModalImagen();
+            cerrarModalAprobar();
             cerrarModalRechazo();
         }
     });

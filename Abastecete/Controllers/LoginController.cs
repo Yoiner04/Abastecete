@@ -20,6 +20,7 @@ namespace ConnectionProject.Controllers
         private readonly ManejadorUsuario _manejadorUsuario;
         private readonly ManejadorImagenes manejadorImagenes;
         private readonly EmailService _emailService;
+        private readonly ManejadorLogs _manejadorLogs;
         public static int rol = 0;
 
         public LoginController()
@@ -27,6 +28,45 @@ namespace ConnectionProject.Controllers
             _manejadorUsuario = new ManejadorUsuario();
             manejadorImagenes = new ManejadorImagenes();
             _emailService = new EmailService();
+            _manejadorLogs = new ManejadorLogs();
+        }
+
+        private void RegistrarLogAutenticacion(int? usuarioId, string nombreUsuario, string tipoAccion, string resultado, string mensajeError = null)
+        {
+            try
+            {
+                Console.WriteLine($"[AUTH LOG] Iniciando registro: usuario={nombreUsuario}, accion={tipoAccion}, resultado={resultado}");
+
+                var ipCliente = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+                var forwardedFor = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+                if (!string.IsNullOrEmpty(forwardedFor))
+                    ipCliente = forwardedFor.Split(',').First().Trim();
+
+                var userAgent = HttpContext.Request.Headers["User-Agent"].FirstOrDefault() ?? "";
+
+                bool exito = _manejadorLogs.RegistrarLog(
+                    usuarioId,
+                    nombreUsuario ?? "Anonimo",
+                    ModulosAuditoria.AUTENTICACION,
+                    tipoAccion,
+                    usuarioId,
+                    tipoAccion == TiposAccionAuditoria.LOGIN ? "Inicio de sesion" : "Cierre de sesion",
+                    null,
+                    null,
+                    ipCliente,
+                    userAgent,
+                    resultado,
+                    mensajeError,
+                    "Login",
+                    tipoAccion == TiposAccionAuditoria.LOGIN ? "Login" : "Logout"
+                );
+
+                Console.WriteLine($"[AUTH LOG] Resultado del registro: {exito}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[AUTH LOG ERROR] {ex.Message}");
+            }
         }
 
         public IActionResult Login()
@@ -79,6 +119,7 @@ namespace ConnectionProject.Controllers
 
             if (data.Rows.Count == 0)
             {
+                RegistrarLogAutenticacion(null, usuario.Correo, TiposAccionAuditoria.LOGIN, "ERROR", "Credenciales incorrectas");
                 TempData["Error"] = "Credenciales incorrectas. Por favor, verifica tu usuario y contraseña.";
                 return View(usuario);
             }
@@ -91,16 +132,20 @@ namespace ConnectionProject.Controllers
                 switch (idRol)
                 {
                     case 97:
+                        RegistrarLogAutenticacion(null, usuario.Correo, TiposAccionAuditoria.LOGIN, "ERROR", "Cuenta inhabilitada");
                         TempData["Error"] = "Tu cuenta ha sido inhabilitada.";
                         return View(usuario);
                     case 98:
+                        RegistrarLogAutenticacion(null, usuario.Correo, TiposAccionAuditoria.LOGIN, "ERROR", "Correo no valido");
                         TempData["Error"] = "Correo electrónico no válido.";
                         return View(usuario);
                     case 99:
+                        RegistrarLogAutenticacion(null, usuario.Correo, TiposAccionAuditoria.LOGIN, "ERROR", "Contrasena incorrecta");
                         TempData["Error"] = "Contraseña incorrecta. Si fallas 5 veces, tu cuenta será bloqueada.";
                         HttpContext.Session.SetString("LastLoginError", usuario.Correo);
                         return View(usuario);
                     case 0:
+                        RegistrarLogAutenticacion(null, usuario.Correo, TiposAccionAuditoria.LOGIN, "ERROR", "Cuenta bloqueada por intentos fallidos");
                         TempData["Error"] = "Tu cuenta ha sido bloqueada por demasiados intentos fallidos. Inténtalo en una hora.";
                         return View(usuario);
                 }
@@ -133,6 +178,10 @@ namespace ConnectionProject.Controllers
                 // Login exitoso
                 HttpContext.Session.Remove("LastLoginError");
                 GuardarPermisosRol(idRol);
+
+                // Registrar login exitoso
+                RegistrarLogAutenticacion(idUsuario, usuario.Correo, TiposAccionAuditoria.LOGIN, "EXITO");
+
                 Console.WriteLine($"[LOGIN TIMING] Permisos loaded: {sw.ElapsedMilliseconds}ms");
                 Console.WriteLine($"[LOGIN TIMING] TOTAL: {swTotal.ElapsedMilliseconds}ms");
                 return Redirect("~/Home/Principal");
@@ -147,6 +196,13 @@ namespace ConnectionProject.Controllers
 
         public IActionResult Logout()
         {
+            // Obtener datos del usuario antes de limpiar la sesion
+            var usuarioId = HttpContext.Session.GetInt32("idUsuario");
+            var nombreUsuario = HttpContext.Session.GetString("nombreUsuario") ?? "Usuario";
+
+            // Registrar logout antes de limpiar sesion
+            RegistrarLogAutenticacion(usuarioId, nombreUsuario, TiposAccionAuditoria.LOGOUT, "EXITO");
+
             HttpContext.Session.Clear();
 
             Response.Cookies.Delete(".AspNetCore.Session");

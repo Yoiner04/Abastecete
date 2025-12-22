@@ -102,6 +102,20 @@ namespace BusinessLogic
                     Estado = row.Table.Columns.Contains("ESTADO") && row["ESTADO"] != DBNull.Value
                         ? Convert.ToInt32(row["ESTADO"])
                         : 1,
+                    // Campos de límites
+                    Duracion = row.Table.Columns.Contains("DURACION_OFERTA") && row["DURACION_OFERTA"] != DBNull.Value
+                        ? Convert.ToInt32(row["DURACION_OFERTA"])
+                        : 24,
+                    Cantidad = row.Table.Columns.Contains("CANTIDAD_PRODUCTOS") && row["CANTIDAD_PRODUCTOS"] != DBNull.Value
+                        ? Convert.ToInt32(row["CANTIDAD_PRODUCTOS"])
+                        : 0,
+                    OfertasFlashSimultaneas = row.Table.Columns.Contains("OFERTAS_FLASH_SIMULTANEAS") && row["OFERTAS_FLASH_SIMULTANEAS"] != DBNull.Value
+                        ? Convert.ToInt32(row["OFERTAS_FLASH_SIMULTANEAS"])
+                        : 1,
+                    OfertasFlashTotal = row.Table.Columns.Contains("OFERTAS_FLASH_TOTAL") && row["OFERTAS_FLASH_TOTAL"] != DBNull.Value
+                        ? Convert.ToInt32(row["OFERTAS_FLASH_TOTAL"])
+                        : 0,
+                    // Costos por período
                     Costo_trimestral = row.Table.Columns.Contains("COSTO_TRIMESTRE") && row["COSTO_TRIMESTRE"] != DBNull.Value
                         ? float.Parse(row["COSTO_TRIMESTRE"].ToString())
                         : 0,

@@ -50,6 +50,7 @@ namespace Abastecete.Controllers
         /// </summary>
         [HttpPost]
         [RequierePermiso("Administrar Galeria")]
+        [Auditar(ModulosAuditoria.GALERIA, TiposAccionAuditoria.UPDATE, ParametroId = "id")]
         public IActionResult Aprobar(int id)
         {
             if (id <= 0)
@@ -80,6 +81,7 @@ namespace Abastecete.Controllers
         /// </summary>
         [HttpPost]
         [RequierePermiso("Administrar Galeria")]
+        [Auditar(ModulosAuditoria.GALERIA, TiposAccionAuditoria.UPDATE, ParametroId = "id", ParametroDescripcion = "motivo")]
         public IActionResult Rechazar(int id, string motivo)
         {
             if (id <= 0)
@@ -110,6 +112,7 @@ namespace Abastecete.Controllers
         /// </summary>
         [HttpPost]
         [RequierePermiso("Administrar Galeria")]
+        [Auditar(ModulosAuditoria.GALERIA, TiposAccionAuditoria.DELETE, ParametroId = "id")]
         public IActionResult Eliminar(int id)
         {
             if (id <= 0)

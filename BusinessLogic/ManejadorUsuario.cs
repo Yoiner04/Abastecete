@@ -17,6 +17,12 @@ namespace BusinessLogic
 
         public bool RegistrarUsuario(Usuario usuario)
         {
+            var resultado = RegistrarUsuarioConMensaje(usuario);
+            return resultado.exito;
+        }
+
+        public (bool exito, string mensaje) RegistrarUsuarioConMensaje(Usuario usuario)
+        {
             List<Parametro> parametros = new List<Parametro>()
             {
                 new Parametro("p_nombre", usuario.Persona.Nombre),
@@ -29,7 +35,7 @@ namespace BusinessLogic
                 new Parametro("p_codigo_referido_usuario", usuario.CodigoReferido),
                 new Parametro("p_fk_id_metodo_autenticacion", 1)
             };
-            return conexion.EjecutarTransaccion("crear_usuario_persona", parametros);
+            return conexion.EjecutarTransaccionConMensaje("crear_usuario_persona", parametros);
         }
 
         public DataTable Login(string nombreUsuario, string contrasenia)

@@ -1,47 +1,197 @@
-﻿@model List<BusinessLogic.Models.Membresia>
+@model List<BusinessLogic.Models.Membresia>
+@{
+    Layout = null;
+}
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Abastecete</title>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/Abastecete.styles.css" asp-append-version="true" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seleccionar Membresia - Abastecete</title>
     <link rel="icon" type="image/x-icon" href="~/css/Images/Logo A naranja.png" />
-    <link rel="stylesheet" href="styles.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
-    <link rel="stylesheet" href="~/css/styles.css" asp-append-version="true" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/1.6.3/flowbite.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @@keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fadeInUp { animation: fadeInUp 0.5s ease-out forwards; }
+        .delay-100 { animation-delay: 0.1s; }
+        .delay-200 { animation-delay: 0.2s; }
+        .delay-300 { animation-delay: 0.3s; }
 
+        .step-circle {
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        .step-circle.active {
+            background: linear-gradient(135deg, #23916A, #1a7a58);
+            color: white;
+            box-shadow: 0 4px 12px rgba(35, 145, 106, 0.4);
+        }
+        .step-circle.completed {
+            background: #23916A;
+            color: white;
+        }
+        .step-circle.inactive {
+            background: #e5e7eb;
+            color: #9ca3af;
+        }
+        .step-line {
+            height: 3px;
+            flex: 1;
+            max-width: 80px;
+        }
+
+        .membresia-card {
+            transition: all 0.3s ease;
+        }
+        .membresia-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        .membresia-card.selected {
+            border-color: #23916A;
+            box-shadow: 0 0 0 3px rgba(35, 145, 106, 0.2);
+        }
+    </style>
 </head>
 
-<body class="bg-gray-100 py-10">
-    <br />
-    <div class="mx-auto max-w-6xl px-4">
-        <div class="mt-10 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+<body class="bg-gray-100 min-h-screen">
+    <!-- Header Principal -->
+    <header class="bg-gradient-to-r from-[#23916A] to-emerald-600 shadow-lg">
+        <div class="max-w-6xl mx-auto px-4 py-5">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <a href="@Url.Action("Crear", "Negocios")"
+                       class="w-10 h-10 rounded-xl bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors">
+                        <i class="fas fa-arrow-left text-white"></i>
+                    </a>
+                    <div>
+                        <h1 class="text-2xl font-bold text-white">Selecciona tu Membresia</h1>
+                        <p class="text-white/70 text-sm">Elige el plan que mejor se adapte a tu negocio</p>
+                    </div>
+                </div>
+                <a href="@Url.Action("Principal", "Home")" class="hidden sm:block bg-white rounded-xl px-3 py-2">
+                    <img src="~/images/LOGO FINAL.png" alt="Abastecete" class="h-10" />
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Stepper -->
+    <div class="bg-white shadow-sm border-b">
+        <div class="max-w-6xl mx-auto px-4 py-5">
+            <div class="flex items-center justify-center gap-3">
+                <div class="flex items-center gap-2">
+                    <div class="step-circle completed">
+                        <i class="fas fa-check text-sm"></i>
+                    </div>
+                    <span class="text-sm font-medium text-gray-800 hidden sm:inline">Informacion</span>
+                </div>
+                <div class="step-line bg-[#23916A]"></div>
+                <div class="flex items-center gap-2">
+                    <div class="step-circle active">2</div>
+                    <span class="text-sm font-medium text-gray-800 hidden sm:inline">Membresia</span>
+                </div>
+                <div class="step-line bg-gray-200"></div>
+                <div class="flex items-center gap-2">
+                    <div class="step-circle inactive">3</div>
+                    <span class="text-sm font-medium text-gray-400 hidden sm:inline">Confirmar</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contenido Principal -->
+    <main class="max-w-6xl mx-auto px-4 py-8">
+        <!-- Info -->
+        <div class="animate-fadeInUp text-center mb-8">
+            <div class="inline-flex items-center gap-2 bg-emerald-50 text-emerald-700 px-4 py-2 rounded-full text-sm mb-4">
+                <i class="fas fa-info-circle"></i>
+                <span>Puedes cambiar tu membresia en cualquier momento</span>
+            </div>
+        </div>
+
+        <!-- Grid de Membresias -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            @{ int index = 0; }
             @foreach (var membresia in Model)
             {
-                <div class="flex flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-md transition hover:shadow-lg">
-                    <div class="h-48 w-full overflow-hidden">
-                        <img src="~/images/@(membresia.Nombre).png" alt="Membresía @membresia.Nombre" class="h-full w-full object-cover">
+                var delay = index * 100;
+                <div class="animate-fadeInUp membresia-card bg-white rounded-2xl border-2 border-gray-200 overflow-hidden"
+                     style="animation-delay: @(delay)ms; opacity: 0;">
+                    <!-- Imagen -->
+                    <div class="h-48 w-full overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200">
+                        <img src="~/images/@(membresia.Nombre).png"
+                             alt="Membresia @membresia.Nombre"
+                             class="h-full w-full object-cover"
+                             onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\'h-full w-full flex items-center justify-center\'><i class=\'fas fa-crown text-6xl text-[#23916A]/30\'></i></div>';">
                     </div>
 
-                    <div class="flex flex-col items-center justify-between space-y-4 p-4 text-center">
-                        <h3 class="text-lg font-bold text-gray-800">@membresia.Nombre</h3>
+                    <!-- Contenido -->
+                    <div class="p-6">
+                        <div class="text-center mb-4">
+                            <h3 class="text-xl font-bold text-gray-800 mb-2">@membresia.Nombre</h3>
+                            <p class="text-gray-500 text-sm">
+                                @if (membresia.Nombre == "Proveedor")
+                                {
+                                    @:Ideal para distribuidores y mayoristas
+                                }
+                                else if (membresia.Nombre == "Cultivador")
+                                {
+                                    @:Perfecto para productores agricolas
+                                }
+                                else if (membresia.Nombre == "Empresa")
+                                {
+                                    @:Para negocios y comercios establecidos
+                                }
+                            </p>
+                        </div>
 
+                        <!-- Beneficios genericos -->
+                        <ul class="space-y-2 mb-6 text-sm">
+                            <li class="flex items-center gap-2 text-gray-600">
+                                <i class="fas fa-check text-[#23916A]"></i>
+                                <span>Multiples planes disponibles</span>
+                            </li>
+                            <li class="flex items-center gap-2 text-gray-600">
+                                <i class="fas fa-check text-[#23916A]"></i>
+                                <span>Publica tus productos</span>
+                            </li>
+                            <li class="flex items-center gap-2 text-gray-600">
+                                <i class="fas fa-check text-[#23916A]"></i>
+                                <span>Crea ofertas flash</span>
+                            </li>
+                        </ul>
+
+                        <!-- Boton -->
                         <a href="@Url.Action("Publicar", "Membresias", new { nombre = membresia.Nombre })"
-                           class="w-full rounded-full bg-[#F6580F] py-2 text-sm font-semibold text-white uppercase transition hover:bg-[#15803D]">
-                            Seleccionar
+                           class="block w-full py-3 px-4 bg-gradient-to-r from-[#23916A] to-emerald-500 text-white text-center font-semibold rounded-xl hover:shadow-lg hover:scale-[1.02] transition-all">
+                            <i class="fas fa-arrow-right mr-2"></i>Ver Planes
                         </a>
                     </div>
                 </div>
-
-
+                index++;
             }
         </div>
-    </div>
-    
 
+        <!-- Boton Volver -->
+        <div class="mt-8 text-center">
+            <a href="@Url.Action("Crear", "Negocios")"
+               class="inline-flex items-center gap-2 text-gray-600 hover:text-[#23916A] transition-colors">
+                <i class="fas fa-arrow-left"></i>
+                <span>Volver al paso anterior</span>
+            </a>
+        </div>
+    </main>
 </body>
 </html>

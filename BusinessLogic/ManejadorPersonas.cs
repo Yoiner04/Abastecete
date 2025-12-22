@@ -44,7 +44,7 @@ namespace BusinessLogic
                     Apellido = row["APELLIDOS"].ToString(),
                     Correo = row["CORREO"].ToString(),
                     Telefono = row["TELEFONO"].ToString(),
-                    Documento = Convert.ToInt32(row["DOCUMENTO_IDENTIDAD"].ToString()),
+                    Documento = Convert.ToInt64(row["DOCUMENTO_IDENTIDAD"].ToString()),
                     Estado = row["ESTADO"].ToString()
                 });
             }

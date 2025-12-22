@@ -25,7 +25,6 @@
     @{
         string permisos = HttpContextAccessor.HttpContext.Session.GetString("permisos");
         string membresia = HttpContextAccessor.HttpContext.Session.GetString("membresia") ?? "0";
-        bool ocultarPublicarOferta = (membresia == "11" || membresia == "12" || membresia == "13");
     }
     <!-- Header Principal Modernizado -->
     <header id="header" class="fixed top-0 left-0 w-full z-40 shadow-lg transition-shadow duration-300" style="background-color: #F4F1E9;">
@@ -157,7 +156,7 @@
                             </a>
                         </li>
                     }
-                    @if (RolPermisos.TienePermiso("Mi negocio", permisos) && !ocultarPublicarOferta)
+                    @if (RolPermisos.TienePermiso("Mi negocio", permisos))
                     {
                         <li>
                             <a href="@Url.Action("Crear", "OfertasFlash")" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium hover:bg-[#F66623]/10 hover:text-[#F66623] transition-all duration-200" style="color: #374151;">
@@ -256,6 +255,15 @@
                             <a href="@Url.Action("Index", "GaleriaAdmin")" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium hover:bg-[#23916A]/10 hover:text-[#23916A] transition-all duration-200" style="color: #374151;">
                                 <i class="fas fa-images text-xs" style="color: #23916A;"></i>
                                 Galeria
+                            </a>
+                        </li>
+                    }
+                    @if (RolPermisos.TienePermiso("Ver Logs Sistema", permisos))
+                    {
+                        <li>
+                            <a href="@Url.Action("Index", "Logs")" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium hover:bg-[#23916A]/10 hover:text-[#23916A] transition-all duration-200" style="color: #374151;">
+                                <i class="fas fa-clipboard-list text-xs" style="color: #23916A;"></i>
+                                Logs
                             </a>
                         </li>
                     }

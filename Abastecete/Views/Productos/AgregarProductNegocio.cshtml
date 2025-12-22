@@ -1,4 +1,8 @@
 @using BusinessLogic.Models
+@{
+    var limites = ViewBag.LimitesMembresia as LimitesMembresia;
+    var productosDisponibles = limites?.ProductosIlimitados == true ? int.MaxValue : (limites?.LimiteProductos - limites?.ProductosActuales ?? 0);
+}
 <!DOCTYPE html>
 <html lang="es">
 
@@ -137,14 +141,61 @@
                         Agregar Productos
                     </h1>
                 </div>
-                <div class="flex items-center gap-2 text-sm text-gray-500">
-                    <i class="fas fa-box"></i>
-                    <span id="productCount" class="font-semibold text-green-600">0</span>
-                    <span>productos agregados</span>
+                <div class="flex items-center gap-4">
+                    <!-- Indicador de límite -->
+                    @if (limites != null && limites.TieneSuscripcionActiva)
+                    {
+                        <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl @(limites.ProductosIlimitados ? "bg-green-100 text-green-700" : productosDisponibles <= 3 ? "bg-amber-100 text-amber-700" : "bg-green-100 text-green-700")">
+                            <i class="fas fa-box text-xs"></i>
+                            <span class="text-sm font-medium">
+                                @if (limites.ProductosIlimitados)
+                                {
+                                    <span>Ilimitado</span>
+                                }
+                                else
+                                {
+                                    <span>@limites.ProductosActuales/@limites.LimiteProductos productos</span>
+                                }
+                            </span>
+                        </div>
+                    }
+                    <div class="flex items-center gap-2 text-sm text-gray-500">
+                        <i class="fas fa-shopping-cart"></i>
+                        <span id="productCount" class="font-semibold text-green-600">0</span>
+                        <span class="hidden sm:inline">en lista</span>
+                    </div>
                 </div>
             </div>
         </div>
     </header>
+
+    <!-- Banner de límite (visible si hay pocos productos disponibles) -->
+    @if (limites != null && limites.TieneSuscripcionActiva && !limites.ProductosIlimitados && productosDisponibles <= 5)
+    {
+        <div class="bg-amber-50 border-b border-amber-200">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2 text-amber-700">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <span class="text-sm font-medium">
+                            @if (productosDisponibles == 0)
+                            {
+                                <span>Has alcanzado el límite de productos de tu plan.</span>
+                            }
+                            else
+                            {
+                                <span>Solo puedes agregar <strong>@productosDisponibles</strong> producto(s) más con tu plan actual.</span>
+                            }
+                        </span>
+                    </div>
+                    <a href="@Url.Action("MiMembresia", "Negocios")" class="text-sm font-semibold text-amber-700 hover:text-amber-800 flex items-center gap-1">
+                        <span>Mejorar plan</span>
+                        <i class="fas fa-arrow-right text-xs"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    }
 
     <!-- Progress Steps -->
     <div class="bg-white border-b border-gray-100 py-4">
@@ -374,6 +425,14 @@
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
+        // Configuración de límites desde el servidor
+        const limitConfig = {
+            productosDisponibles: @(limites?.ProductosIlimitados == true ? "Infinity" : productosDisponibles.ToString()),
+            productosActuales: @(limites?.ProductosActuales ?? 0),
+            limiteProductos: @(limites?.LimiteProductos ?? 0),
+            esIlimitado: @(limites?.ProductosIlimitados == true ? "true" : "false")
+        };
+
         // Actualizar pasos visuales
         function updateSteps(step) {
             for (let i = 1; i <= 4; i++) {
@@ -565,6 +624,20 @@
 
         // Agregar producto
         function addProduct() {
+            // Validar límite de productos
+            const productosEnLista = $('#productTableBody tr').length;
+            const totalDespuesDeAgregar = limitConfig.productosActuales + productosEnLista + 1;
+
+            if (!limitConfig.esIlimitado && totalDespuesDeAgregar > limitConfig.limiteProductos) {
+                const disponibles = Math.max(0, limitConfig.limiteProductos - limitConfig.productosActuales - productosEnLista);
+                if (disponibles <= 0) {
+                    showToast("Has alcanzado el límite de productos de tu plan. Mejora tu membresía para agregar más.", "error");
+                } else {
+                    showToast(`Solo puedes agregar ${disponibles} producto(s) más con tu plan actual.`, "error");
+                }
+                return;
+            }
+
             let categoryid = $("#category").val();
             let subcategoryid = $("#subcategory").val();
             let productid = $("#product").val();

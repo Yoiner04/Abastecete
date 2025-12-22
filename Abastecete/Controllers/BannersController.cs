@@ -56,6 +56,7 @@ namespace Abastecete.Controllers
 
         [HttpPost]
         [RequierePermiso("Administrar Banners")]
+        [Auditar(ModulosAuditoria.BANNERS, TiposAccionAuditoria.CREATE, ParametroDescripcion = "imagen")]
         public IActionResult AgregarBannerProveedor(IFormFile imagen)
         {
             if (imagen == null)
@@ -98,6 +99,7 @@ namespace Abastecete.Controllers
 
         [HttpDelete]
         [RequierePermiso("Administrar Banners")]
+        [Auditar(ModulosAuditoria.BANNERS, TiposAccionAuditoria.DELETE, ParametroId = "id")]
         public IActionResult EliminarBannerProveedor(int id)
         {
             if (id <= 0)
@@ -141,6 +143,7 @@ namespace Abastecete.Controllers
 
         [HttpPost]
         [RequierePermiso("Administrar Banners")]
+        [Auditar(ModulosAuditoria.BANNERS, TiposAccionAuditoria.CREATE, ParametroDescripcion = "formato")]
         public IActionResult AgregarBannerInicio(IFormFile imagen, string formato)
         {
             if (imagen == null || string.IsNullOrWhiteSpace(formato))
@@ -183,6 +186,7 @@ namespace Abastecete.Controllers
 
         [HttpDelete]
         [RequierePermiso("Administrar Banners")]
+        [Auditar(ModulosAuditoria.BANNERS, TiposAccionAuditoria.DELETE, ParametroId = "id")]
         public IActionResult EliminarBannerInicio(int id)
         {
             if (id <= 0)
@@ -225,6 +229,7 @@ namespace Abastecete.Controllers
 
         [HttpPost]
         [RequierePermiso("Administrar Banners")]
+        [Auditar(ModulosAuditoria.BANNERS, TiposAccionAuditoria.CREATE, ParametroId = "categoriaId")]
         public IActionResult AgregarBannerCategoria(IFormFile imagen, int categoriaId, string formato)
         {
             if (imagen == null || categoriaId <= 0 || string.IsNullOrWhiteSpace(formato))
@@ -263,6 +268,7 @@ namespace Abastecete.Controllers
 
         [HttpDelete]
         [RequierePermiso("Administrar Banners")]
+        [Auditar(ModulosAuditoria.BANNERS, TiposAccionAuditoria.DELETE, ParametroId = "id")]
         public IActionResult EliminarBannerCategoria(int id)
         {
             if (id <= 0)
@@ -305,6 +311,7 @@ namespace Abastecete.Controllers
 
         [HttpPost]
         [RequierePermiso("Administrar Banners")]
+        [Auditar(ModulosAuditoria.BANNERS, TiposAccionAuditoria.CREATE)]
         public IActionResult AgregarBannerSesion(IFormFile imagen)
         {
             if (imagen == null)
@@ -371,6 +378,7 @@ namespace Abastecete.Controllers
 
         [HttpPost]
         [RequierePermiso("Administrar Banners")]
+        [Auditar(ModulosAuditoria.BANNERS, TiposAccionAuditoria.CREATE)]
         public IActionResult AgregarBannerOfertas(IFormFile imagen)
         {
             if (imagen == null)

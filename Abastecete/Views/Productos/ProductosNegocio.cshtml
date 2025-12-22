@@ -295,6 +295,80 @@
     </div>
 
     <main class="w-full px-4 sm:px-6 lg:px-8 py-4">
+        @{
+            var limites = ViewBag.LimitesMembresia as BusinessLogic.Models.LimitesMembresia;
+            var errorMsg = TempData["Error"] as string;
+            var successMsg = TempData["Success"] as string;
+        }
+
+        <!-- Notificaciones de TempData -->
+        @if (!string.IsNullOrEmpty(errorMsg))
+        {
+            <div class="mb-4 px-4 py-3 rounded-xl bg-red-50 border border-red-200 text-red-700 flex items-center gap-3">
+                <i class="fas fa-exclamation-circle text-red-500"></i>
+                <span>@errorMsg</span>
+            </div>
+        }
+        @if (!string.IsNullOrEmpty(successMsg))
+        {
+            <div class="mb-4 px-4 py-3 rounded-xl bg-green-50 border border-green-200 text-green-700 flex items-center gap-3">
+                <i class="fas fa-check-circle text-green-500"></i>
+                <span>@successMsg</span>
+            </div>
+        }
+
+        <!-- Banner de membresía -->
+        @if (limites != null)
+        {
+            if (!limites.TieneSuscripcionActiva)
+            {
+                <!-- Membresía vencida o sin membresía -->
+                <div class="mb-4 px-4 py-4 rounded-xl bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
+                                <i class="fas fa-exclamation-triangle text-lg"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold">Sin membresía activa</h4>
+                                <p class="text-sm text-white/90">Activa tu plan para agregar productos y crear ofertas</p>
+                            </div>
+                        </div>
+                        <a href="@Url.Action("MiMembresia", "Negocios")"
+                           class="inline-flex items-center gap-2 px-4 py-2 bg-white text-red-600 rounded-xl font-semibold text-sm hover:bg-red-50 transition-colors shadow-sm">
+                            <i class="fas fa-crown"></i>
+                            Activar Membresía
+                        </a>
+                    </div>
+                </div>
+            }
+            else if (limites.ProximoAVencer)
+            {
+                <!-- Membresía próxima a vencer -->
+                <div class="mb-4 px-4 py-4 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow-lg">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
+                                <i class="fas fa-clock text-lg"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold">Tu membresía vence pronto</h4>
+                                <p class="text-sm text-white/90">
+                                    <span class="font-semibold">@limites.NombreMembresia</span> -
+                                    @(limites.DiasRestantes == 1 ? "Vence mañana" : $"Quedan {limites.DiasRestantes} días")
+                                </p>
+                            </div>
+                        </div>
+                        <a href="@Url.Action("MiMembresia", "Negocios")"
+                           class="inline-flex items-center gap-2 px-4 py-2 bg-white text-orange-600 rounded-xl font-semibold text-sm hover:bg-orange-50 transition-colors shadow-sm">
+                            <i class="fas fa-sync-alt"></i>
+                            Renovar Ahora
+                        </a>
+                    </div>
+                </div>
+            }
+        }
+
         <!-- Layout principal: Productos + Panel del Local -->
         <div class="flex flex-col lg:flex-row gap-4">
 
@@ -320,12 +394,23 @@
                                 <span class="hidden sm:inline">Solicitud</span>
                             </a>
 
-                            <a href="@Url.Action("AgregarProductNegocio", "Productos")"
-                               class="action-btn flex items-center gap-1.5 h-9 px-3 rounded-xl bg-orange-500 text-white hover:bg-orange-600 transition-all shadow-sm text-sm"
-                               data-tooltip="Agregar producto">
-                                <i class="fas fa-plus text-sm"></i>
-                                <span class="hidden sm:inline">Agregar</span>
-                            </a>
+                            @if (limites != null && limites.PuedeAgregarProductos)
+                            {
+                                <a href="@Url.Action("AgregarProductNegocio", "Productos")"
+                                   class="action-btn flex items-center gap-1.5 h-9 px-3 rounded-xl bg-orange-500 text-white hover:bg-orange-600 transition-all shadow-sm text-sm"
+                                   data-tooltip="Agregar producto">
+                                    <i class="fas fa-plus text-sm"></i>
+                                    <span class="hidden sm:inline">Agregar</span>
+                                </a>
+                            }
+                            else
+                            {
+                                <span class="action-btn flex items-center gap-1.5 h-9 px-3 rounded-xl bg-gray-300 text-gray-500 cursor-not-allowed text-sm"
+                                      title="@(limites?.TieneSuscripcionActiva == true ? "Límite de productos alcanzado" : "Activa tu membresía")">
+                                    <i class="fas fa-lock text-sm"></i>
+                                    <span class="hidden sm:inline">Agregar</span>
+                                </span>
+                            }
 
                             <a href="@Url.Action("EditarNegocio", "Negocios")"
                                class="action-btn flex items-center gap-1.5 h-9 px-3 rounded-xl bg-green-500 text-white hover:bg-green-600 transition-all shadow-sm text-sm"
@@ -656,12 +741,70 @@
                             </div>
                         }
 
-                        <!-- Botón editar negocio -->
-                        <a href="@Url.Action("EditarNegocio", "Negocios")"
-                           class="block w-full py-2.5 rounded-xl bg-gradient-to-r from-[#23916A] to-emerald-500 text-white text-center font-medium text-sm hover:shadow-lg transition-all">
-                            <i class="fas fa-pen-to-square mr-1.5"></i>
-                            Editar mi negocio
-                        </a>
+                        <!-- Indicadores de uso de membresía -->
+                        @if (limites != null && limites.TieneSuscripcionActiva)
+                        {
+                            <div class="mb-4">
+                                <h5 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Tu Plan</h5>
+                                <div class="bg-gray-50 rounded-xl p-3 space-y-3">
+                                    <!-- Nombre del plan -->
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-sm font-medium text-gray-700">@limites.NombreMembresia</span>
+                                        <span class="text-xs text-gray-500">@limites.DiasRestantes días</span>
+                                    </div>
+
+                                    <!-- Barra de productos -->
+                                    <div>
+                                        <div class="flex items-center justify-between text-xs mb-1">
+                                            <span class="text-gray-600">Productos</span>
+                                            <span class="font-medium @(limites.PorcentajeProductosUsados >= 100 ? "text-red-600" : limites.PorcentajeProductosUsados >= 80 ? "text-amber-600" : "text-green-600")">
+                                                @limites.TextoUsoProductos
+                                            </span>
+                                        </div>
+                                        @if (!limites.ProductosIlimitados)
+                                        {
+                                            <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+                                                <div class="h-full rounded-full transition-all @(limites.PorcentajeProductosUsados >= 100 ? "bg-red-500" : limites.PorcentajeProductosUsados >= 80 ? "bg-amber-500" : "bg-green-500")"
+                                                     style="width: @Math.Min(limites.PorcentajeProductosUsados, 100)%"></div>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <div class="h-2 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full"></div>
+                                        }
+                                    </div>
+
+                                    <!-- Ofertas activas -->
+                                    <div class="flex items-center justify-between text-xs">
+                                        <span class="text-gray-600">Ofertas activas</span>
+                                        <span class="font-medium text-gray-700">@limites.TextoOfertasActivas</span>
+                                    </div>
+
+                                    <!-- Ofertas del período -->
+                                    @if (!limites.OfertasIlimitadas)
+                                    {
+                                        <div class="flex items-center justify-between text-xs">
+                                            <span class="text-gray-600">Ofertas este período</span>
+                                            <span class="font-medium @(limites.PorcentajeOfertasUsadas >= 100 ? "text-red-600" : "text-gray-700")">@limites.TextoOfertasPeriodo</span>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        }
+
+                        <!-- Botones de acción -->
+                        <div class="space-y-2">
+                            <a href="@Url.Action("MiMembresia", "Negocios")"
+                               class="block w-full py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-center font-medium text-sm hover:shadow-lg hover:shadow-purple-500/30 transition-all">
+                                <i class="fas fa-crown mr-1.5"></i>
+                                Mi Membresía
+                            </a>
+                            <a href="@Url.Action("EditarNegocio", "Negocios")"
+                               class="block w-full py-2.5 rounded-xl bg-gradient-to-r from-[#23916A] to-emerald-500 text-white text-center font-medium text-sm hover:shadow-lg transition-all">
+                                <i class="fas fa-pen-to-square mr-1.5"></i>
+                                Editar mi negocio
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>

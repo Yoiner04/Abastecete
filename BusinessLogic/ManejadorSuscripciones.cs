@@ -174,6 +174,160 @@ namespace BusinessLogic
             return 0;
         }
 
+        /// <summary>
+        /// Obtiene los límites de membresía y uso actual de un local
+        /// </summary>
+        public LimitesMembresia ObtenerLimitesMembresia(int idLocal)
+        {
+            List<Parametro> parametros = new List<Parametro>
+            {
+                new Parametro("p_id_local", idLocal)
+            };
+
+            DataTable datos = conexion.EjecutarConsulta("obtener_limites_membresia", parametros);
+
+            if (datos.Rows.Count > 0)
+            {
+                DataRow row = datos.Rows[0];
+                return new LimitesMembresia
+                {
+                    TieneSuscripcionActiva = Convert.ToInt32(row["TieneSuscripcionActiva"]) == 1,
+                    DiasRestantes = Convert.ToInt32(row["DiasRestantes"]),
+                    FechaVencimiento = row["FechaVencimiento"] != DBNull.Value
+                        ? Convert.ToDateTime(row["FechaVencimiento"])
+                        : (DateTime?)null,
+                    NombreMembresia = row["NombreMembresia"]?.ToString(),
+                    LimiteProductos = Convert.ToInt32(row["LimiteProductos"]),
+                    LimiteOfertasSimultaneas = Convert.ToInt32(row["LimiteOfertasSimultaneas"]),
+                    LimiteOfertasTotal = Convert.ToInt32(row["LimiteOfertasTotal"]),
+                    DuracionOfertaHoras = Convert.ToInt32(row["DuracionOfertaHoras"]),
+                    ProductosActuales = Convert.ToInt32(row["ProductosActuales"]),
+                    OfertasActivas = Convert.ToInt32(row["OfertasActivas"]),
+                    OfertasUsadasPeriodo = Convert.ToInt32(row["OfertasUsadasPeriodo"]),
+                    PuedeAgregarProductos = Convert.ToInt32(row["PuedeAgregarProductos"]) == 1,
+                    PuedeCrearOferta = Convert.ToInt32(row["PuedeCrearOferta"]) == 1
+                };
+            }
+
+            // Si no hay datos, retornar un objeto vacío indicando que no tiene membresía
+            return new LimitesMembresia
+            {
+                TieneSuscripcionActiva = false,
+                DiasRestantes = 0,
+                NombreMembresia = null,
+                PuedeAgregarProductos = false,
+                PuedeCrearOferta = false
+            };
+        }
+
+        /// <summary>
+        /// Valida si un local puede agregar más productos según su membresía
+        /// </summary>
+        public ValidacionProducto ValidarLimiteProductos(int idLocal)
+        {
+            var limites = ObtenerLimitesMembresia(idLocal);
+
+            if (!limites.TieneSuscripcionActiva)
+            {
+                return new ValidacionProducto
+                {
+                    PuedeAgregar = false,
+                    ProductosActuales = limites.ProductosActuales,
+                    LimiteMaximo = 0,
+                    Mensaje = "No tienes una membresía activa. Activa o renueva tu plan para agregar productos."
+                };
+            }
+
+            if (limites.ProductosIlimitados)
+            {
+                return new ValidacionProducto
+                {
+                    PuedeAgregar = true,
+                    ProductosActuales = limites.ProductosActuales,
+                    LimiteMaximo = 0,
+                    Mensaje = "Sin límite de productos"
+                };
+            }
+
+            if (limites.ProductosActuales >= limites.LimiteProductos)
+            {
+                return new ValidacionProducto
+                {
+                    PuedeAgregar = false,
+                    ProductosActuales = limites.ProductosActuales,
+                    LimiteMaximo = limites.LimiteProductos,
+                    Mensaje = $"Has alcanzado el límite de {limites.LimiteProductos} productos de tu plan. Mejora tu membresía para agregar más."
+                };
+            }
+
+            return new ValidacionProducto
+            {
+                PuedeAgregar = true,
+                ProductosActuales = limites.ProductosActuales,
+                LimiteMaximo = limites.LimiteProductos,
+                Mensaje = $"Puedes agregar productos. Usados: {limites.ProductosActuales}/{limites.LimiteProductos}"
+            };
+        }
+
+        /// <summary>
+        /// Valida si un local puede crear más ofertas flash según su membresía
+        /// </summary>
+        public ValidacionOferta ValidarLimiteOfertas(int idLocal)
+        {
+            var limites = ObtenerLimitesMembresia(idLocal);
+
+            if (!limites.TieneSuscripcionActiva)
+            {
+                return new ValidacionOferta
+                {
+                    PuedeCrear = false,
+                    Mensaje = "No tienes una membresía activa. Activa o renueva tu plan para crear ofertas.",
+                    DuracionHoras = 24
+                };
+            }
+
+            // Verificar límite de simultáneas
+            if (limites.OfertasActivas >= limites.LimiteOfertasSimultaneas)
+            {
+                return new ValidacionOferta
+                {
+                    PuedeCrear = false,
+                    Mensaje = $"Ya tienes {limites.OfertasActivas} ofertas activas. Tu plan permite máximo {limites.LimiteOfertasSimultaneas}.",
+                    OfertasActivas = limites.OfertasActivas,
+                    LimiteSimultaneas = limites.LimiteOfertasSimultaneas,
+                    OfertasUsadas = limites.OfertasUsadasPeriodo,
+                    LimiteTotal = limites.LimiteOfertasTotal,
+                    DuracionHoras = limites.DuracionOfertaHoras
+                };
+            }
+
+            // Verificar límite total (si aplica)
+            if (limites.LimiteOfertasTotal > 0 && limites.OfertasUsadasPeriodo >= limites.LimiteOfertasTotal)
+            {
+                return new ValidacionOferta
+                {
+                    PuedeCrear = false,
+                    Mensaje = $"Has usado {limites.OfertasUsadasPeriodo} de {limites.LimiteOfertasTotal} ofertas permitidas en tu suscripción.",
+                    OfertasActivas = limites.OfertasActivas,
+                    LimiteSimultaneas = limites.LimiteOfertasSimultaneas,
+                    OfertasUsadas = limites.OfertasUsadasPeriodo,
+                    LimiteTotal = limites.LimiteOfertasTotal,
+                    DuracionHoras = limites.DuracionOfertaHoras
+                };
+            }
+
+            return new ValidacionOferta
+            {
+                PuedeCrear = true,
+                Mensaje = "Puedes crear ofertas.",
+                OfertasActivas = limites.OfertasActivas,
+                LimiteSimultaneas = limites.LimiteOfertasSimultaneas,
+                OfertasUsadas = limites.OfertasUsadasPeriodo,
+                LimiteTotal = limites.LimiteOfertasTotal,
+                DuracionHoras = limites.DuracionOfertaHoras
+            };
+        }
+
         #region Métodos de mapeo privados
 
         private Suscripcion MapearSuscripcion(DataRow row)

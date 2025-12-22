@@ -17,6 +17,7 @@ namespace Abastecete.Controllers
         private readonly ManejadorImagenes manejadorImagenes;
         private readonly ManejadorTipoUnidad manejadorTipoUnidad;
         private readonly ManejadorGaleriaLocal manejadorGaleria;
+        private readonly ManejadorSuscripciones manejadorSuscripciones;
 
         public ProductosController()
         {
@@ -28,6 +29,7 @@ namespace Abastecete.Controllers
             manejadorImagenes = new ManejadorImagenes();
             manejadorTipoUnidad = new ManejadorTipoUnidad();
             manejadorGaleria = new ManejadorGaleriaLocal();
+            manejadorSuscripciones = new ManejadorSuscripciones();
         }
 
         public IActionResult Consultar()
@@ -78,6 +80,10 @@ namespace Abastecete.Controllers
             // Cargar galería aprobada del local
             negocio.Galeria = manejadorGaleria.ListarGaleriaAprobada(negocio.Id);
 
+            // Obtener límites de membresía para mostrar en la UI
+            var limites = manejadorSuscripciones.ObtenerLimitesMembresia(negocio.Id);
+            ViewBag.LimitesMembresia = limites;
+
             ViewBag.productos = productos;
 
             var negocioPersona = new NegocioPersona
@@ -121,6 +127,36 @@ namespace Abastecete.Controllers
         [HttpGet]
         public IActionResult AgregarProductNegocio()
         {
+            var personaIdNullable = HttpContext.Session.GetInt32("PersonaId");
+            if (personaIdNullable == null)
+            {
+                return RedirectToAction("Login", "Login");
+            }
+
+            Negocio negocio = manejadorNegocios.ConsultarNegocio(personaIdNullable.Value);
+            if (negocio == null)
+            {
+                return RedirectToAction("Crear", "Negocios");
+            }
+
+            // Validar límites de membresía
+            var limites = manejadorSuscripciones.ObtenerLimitesMembresia(negocio.Id);
+            ViewBag.LimitesMembresia = limites;
+
+            // Si no tiene membresía activa, redirigir a Mi Membresía
+            if (!limites.TieneSuscripcionActiva)
+            {
+                TempData["Error"] = "No tienes una membresía activa. Activa o renueva tu plan para agregar productos.";
+                return RedirectToAction("MiMembresia", "Negocios");
+            }
+
+            // Verificar si puede agregar más productos
+            if (!limites.PuedeAgregarProductos)
+            {
+                TempData["Error"] = $"Has alcanzado el límite de {limites.LimiteProductos} productos de tu plan '{limites.NombreMembresia}'. Mejora tu membresía para agregar más.";
+                return RedirectToAction("ProductosNegocio");
+            }
+
             List<Categoria> categorias = manejadorCategorias.ConsultarCategorias();
             ViewBag.categorias = categorias;
             return View();
@@ -145,23 +181,61 @@ namespace Abastecete.Controllers
         {
             try
             {
+                var personaIdNullable = HttpContext.Session.GetInt32("PersonaId");
+                if (personaIdNullable == null)
+                {
+                    return Json(new { success = false, mensaje = "Sesión expirada. Por favor inicia sesión nuevamente." });
+                }
+
+                var negocio = manejadorNegocios.ConsultarNegocio(personaIdNullable.Value);
+                if (negocio == null)
+                {
+                    return Json(new { success = false, mensaje = "No se encontró tu negocio." });
+                }
+
                 var productos = JsonConvert.DeserializeObject<List<productoLocal>>(productosJson);
-                var localId = manejadorNegocios.ConsultarNegocio(HttpContext.Session.GetInt32("idUsuario").Value);
+
+                // Validar límites de membresía antes de agregar
+                var limites = manejadorSuscripciones.ObtenerLimitesMembresia(negocio.Id);
+
+                if (!limites.TieneSuscripcionActiva)
+                {
+                    return Json(new { success = false, mensaje = "No tienes una membresía activa. Activa o renueva tu plan para agregar productos." });
+                }
+
+                // Verificar si puede agregar la cantidad de productos solicitada
+                if (!limites.ProductosIlimitados)
+                {
+                    int productosDisponibles = limites.LimiteProductos - limites.ProductosActuales;
+                    if (productos.Count > productosDisponibles)
+                    {
+                        return Json(new {
+                            success = false,
+                            mensaje = $"Solo puedes agregar {productosDisponibles} producto(s) más. Tienes {limites.ProductosActuales}/{limites.LimiteProductos} productos. Mejora tu plan para agregar más."
+                        });
+                    }
+                }
+
+                int productosAgregados = 0;
                 foreach (var producto in productos)
                 {
-                    producto.local = localId.Id;
+                    producto.local = negocio.Id;
                     bool resultado = manejadorNegocios.AgregarProductosLocal(producto);
-                    if (!resultado)
+                    if (resultado)
+                    {
+                        productosAgregados++;
+                    }
+                    else
                     {
                         Console.WriteLine($"Error al agregar el producto {producto.producto} al local {producto.local}");
                     }
                 }
 
-                return Json(new { mensaje = "Productos registrados con éxito." });
+                return Json(new { success = true, mensaje = $"{productosAgregados} producto(s) registrado(s) con éxito." });
             }
             catch (Exception ex)
             {
-                return Json(new { mensaje = "Error al registrar productos: " + ex.Message });
+                return Json(new { success = false, mensaje = "Error al registrar productos: " + ex.Message });
             }
         }
 

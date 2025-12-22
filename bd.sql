@@ -72,17 +72,19 @@ BEGIN
 END//
 DELIMITER ;
 
--- Volcando estructura para evento abastecete.actualizar_estado_membresia
+-- Volcando estructura para evento abastecete.actualizar_estado_suscripcion
 DELIMITER //
-CREATE EVENT `actualizar_estado_membresia` ON SCHEDULE EVERY 1 MINUTE STARTS '2025-01-23 09:50:02' ON COMPLETION NOT PRESERVE ENABLE DO BEGIN
-    -- Cambiar el estado a 2 (inactivo) si la FECHA_FIN es menor que la fecha actual
-    UPDATE membresia
-    SET ESTADO = 2
+CREATE EVENT `actualizar_estado_suscripcion` ON SCHEDULE EVERY 1 HOUR STARTS '2025-12-20 19:46:20' ON COMPLETION PRESERVE ENABLE DO BEGIN
+    -- Cambiar el estado a 0 (inactivo) si la FECHA_FIN es menor que la fecha actual
+    UPDATE suscripcion
+    SET ESTADO = 0
     WHERE FECHA_FIN < NOW() AND ESTADO = 1;
 
-    -- Opcional: Log para seguimiento
-    INSERT INTO logs_membresia (mensaje, fecha_registro)
-    VALUES ('Se actualizaron membresías vencidas a inactivas', NOW());
+    -- Log para seguimiento
+    INSERT INTO logs_sistema (MODULO, ACCION, DESCRIPCION, FECHA_REGISTRO)
+    VALUES ('SUSCRIPCIONES', 'AUTO_UPDATE',
+            CONCAT('Suscripciones vencidas actualizadas a inactivas: ', ROW_COUNT()),
+            NOW());
 END//
 DELIMITER ;
 
@@ -112,140 +114,18 @@ BEGIN
 END//
 DELIMITER ;
 
--- Volcando estructura para procedimiento abastecete.actualizar_membresia_usuario
+-- Volcando estructura para procedimiento abastecete.agregar_imagen_galeria
 DELIMITER //
-CREATE PROCEDURE `actualizar_membresia_usuario`(
-    IN `p_usuario_id` INT,                   -- ID del usuario cuya membresía se va a actualizar
-    IN `p_fk_id_tipo_membresia` INT,         -- ID del tipo de nueva membresía
-    IN `p_dias_duracion` INT,                -- Número de días que dura la membresía
-    OUT `mensaje` VARCHAR(500),              -- Mensaje de resultado
-    OUT `resultado` INT                      -- Resultado de la operación
+CREATE PROCEDURE `agregar_imagen_galeria`(
+    IN p_id_local INT,
+    IN p_cloudinary_url VARCHAR(500),
+    IN p_cloudinary_public_id VARCHAR(255)
 )
 BEGIN
-    DECLARE v_costo DECIMAL(10,2);
-    DECLARE v_pago_existente INT;
-    DECLARE v_fecha_inicio DATETIME;
-    DECLARE v_fecha_fin DATETIME;
-    DECLARE v_membresia_id INT;
-    DECLARE v_finalizar BOOLEAN DEFAULT FALSE; -- Bandera para detener el flujo
+    INSERT INTO galeria_local (FK_ID_LOCAL, CLOUDINARY_URL, CLOUDINARY_PUBLIC_ID, ESTADO, FECHA_SUBIDA)
+    VALUES (p_id_local, p_cloudinary_url, p_cloudinary_public_id, 0, NOW());
 
-    -- Manejo de errores
-    DECLARE EXIT HANDLER FOR SQLEXCEPTION
-    BEGIN
-        ROLLBACK; -- Rollback si hay un error
-        SET mensaje = 'Ocurrió un error al actualizar la membresía.';
-        SET resultado = 0;
-    END;
-
-    -- Inicializar resultado
-    SET resultado = 0;
-
-    -- Iniciar transacción
-    START TRANSACTION;
-
-    -- Verificar si el usuario existe
-    IF NOT EXISTS (SELECT 1 FROM usuario WHERE PK_ID_USUARIO = p_usuario_id) THEN
-        SET mensaje = 'El usuario no existe.';
-        SET v_finalizar = TRUE;
-    END IF;
-
-    -- Verificar si la membresía especificada existe
-    IF NOT v_finalizar AND NOT EXISTS (SELECT 1 FROM tipo_membresia WHERE PK_ID_TIPO_MEMBRESIA = p_fk_id_tipo_membresia) THEN
-        SET mensaje = 'La membresía especificada no existe.';
-        SET v_finalizar = TRUE;
-    END IF;
-
-    -- Si no se debe finalizar, verificar el costo de la membresía
-    IF NOT v_finalizar THEN
-        SELECT COSTO INTO v_costo
-        FROM tipo_membresia
-        WHERE PK_ID_TIPO_MEMBRESIA = p_fk_id_tipo_membresia;
-
-        -- Si la membresía es de pago, verificar si hay un pago confirmado y tomar la fecha
-        IF v_costo > 0 THEN
-            SELECT FECHA_PAGO INTO v_fecha_inicio
-            FROM pagos
-            WHERE FK_ID_USUARIO = p_usuario_id 
-            AND FK_ID_TIPO_MEMBRESIA = p_fk_id_tipo_membresia
-            AND ESTADO_PAGO = 'CONFIRMADO'
-            ORDER BY FECHA_PAGO DESC
-            LIMIT 1;
-
-            -- Validar si existe un pago confirmado
-            IF v_fecha_inicio IS NULL THEN
-                SET mensaje = 'Debe realizar un pago confirmado para esta membresía.';
-                SET v_finalizar = TRUE;
-            END IF;
-        ELSE
-            -- Si es una membresía gratuita, usar la fecha actual como inicio
-            SET v_fecha_inicio = NOW();
-        END IF;
-
-        -- Calcular la fecha de finalización usando la duración proporcionada
-        SET v_fecha_fin = DATE_ADD(v_fecha_inicio, INTERVAL p_dias_duracion DAY);
-    END IF;
-
-    -- Si no hay errores, proceder con la actualización
-    IF NOT v_finalizar THEN
-        -- Insertar la nueva membresía en la tabla membresia
-        INSERT INTO membresia (FK_ID_TIPO_MEMBRESIA, FECHA_INICIO, FECHA_FIN, ESTADO)
-        VALUES (p_fk_id_tipo_membresia, v_fecha_inicio, v_fecha_fin, 1);
-
-        -- Obtener el ID de la membresía recién creada
-        SET v_membresia_id = LAST_INSERT_ID();
-
-        -- Actualizar la membresía actual del usuario
-        UPDATE usuario 
-        SET FK_ID_MEMBRESIA = v_membresia_id
-        WHERE PK_ID_USUARIO = p_usuario_id;
-
-        -- Confirmar éxito
-        SET mensaje = 'Membresía actualizada correctamente.';
-        SET resultado = 1;
-    END IF;
-
-    -- Confirmar o revertir la transacción
-    IF v_finalizar THEN
-        ROLLBACK;
-    ELSE
-        COMMIT;
-    END IF;
-END//
-DELIMITER ;
-
--- Volcando estructura para procedimiento abastecete.agregar_local_favorito
-DELIMITER //
-CREATE PROCEDURE `agregar_local_favorito`(
-  IN `p_usuario_id` INT,          -- ID del usuario
-  IN `p_local_id` INT,            -- ID del local que se desea agregar como favorito
-  OUT `mensaje` VARCHAR(500),     -- Mensaje de respuesta
-  OUT `resultado` INT             -- Resultado de la operación
-)
-BEGIN
-  -- Inicializar el resultado
-  SET resultado = 0;
-
-  -- Verificar si el usuario existe
-  IF NOT EXISTS (SELECT 1 FROM usuario WHERE PK_ID_USUARIO = p_usuario_id) THEN
-    SET mensaje = 'El usuario no existe.';
-  
-  -- Verificar si el local existe
-  ELSEIF NOT EXISTS (SELECT 1 FROM local WHERE PK_ID_LOCAL = p_local_id) THEN
-    SET mensaje = 'El local no existe.';
-  
-  -- Verificar si el local ya está en los favoritos del usuario
-  ELSEIF EXISTS (SELECT 1 FROM favoritos WHERE FK_ID_USUARIO = p_usuario_id AND FK_ID_LOCAL = p_local_id) THEN
-    SET mensaje = 'El local ya está en tus favoritos.';
-  
-  ELSE
-    -- Insertar el nuevo local favorito
-    INSERT INTO favoritos (FK_ID_USUARIO, FK_ID_LOCAL)
-    VALUES (p_usuario_id, p_local_id);
-
-    -- Confirmar éxito
-    SET mensaje = 'Local agregado a favoritos con éxito.';
-    SET resultado = 1;
-  END IF;
+    SELECT LAST_INSERT_ID() AS id_galeria;
 END//
 DELIMITER ;
 
@@ -316,105 +196,6 @@ BEGIN
 END//
 DELIMITER ;
 
--- Volcando estructura para procedimiento abastecete.asignar_membresia_usuario
-DELIMITER //
-CREATE PROCEDURE `asignar_membresia_usuario`(
-    IN `p_usuario_id` INT,                   
-    IN `p_fk_id_tipo_membresia` INT,         
-    IN `p_fecha_inicio` DATETIME,            
-    OUT `mensaje` VARCHAR(255),             
-    OUT `resultado` INT                      
-)
-BEGIN
-    DECLARE v_costo DECIMAL(10,2);
-    DECLARE v_pago_existente INT;
-    DECLARE v_fecha_inicio DATETIME;
-    DECLARE v_fecha_fin DATETIME;
-    DECLARE v_finalizar BOOLEAN DEFAULT FALSE; -- Bandera para detener el flujo
-
-    -- Manejo de errores
-    DECLARE EXIT HANDLER FOR SQLEXCEPTION
-    BEGIN
-        ROLLBACK; -- Rollback si hay un error
-        SET mensaje = 'Ocurrió un error al asignar la membresía.';
-        SET resultado = 0;
-    END;
-
-    -- Inicializar resultado
-    SET resultado = 0;
-
-    -- Iniciar transacción
-    START TRANSACTION;
-
-    -- Verificar si el usuario existe
-    IF NOT EXISTS (SELECT 1 FROM usuario WHERE PK_ID_USUARIO = p_usuario_id) THEN
-        SET mensaje = 'El usuario no existe.';
-        SET v_finalizar = TRUE;
-    END IF;
-
-    -- Verificar si el tipo de membresía existe
-    IF NOT v_finalizar AND NOT EXISTS (SELECT 1 FROM tipo_membresia WHERE PK_ID_TIPO_MEMBRESIA = p_fk_id_tipo_membresia) THEN
-        SET mensaje = 'La membresía especificada no existe.';
-        SET v_finalizar = TRUE;
-    END IF;
-
-    -- Obtener el costo de la membresía
-    IF NOT v_finalizar THEN
-        SELECT COSTO INTO v_costo
-        FROM tipo_membresia
-        WHERE PK_ID_TIPO_MEMBRESIA = p_fk_id_tipo_membresia;
-
-        -- Verificar si la membresía es de pago
-        IF v_costo > 0 THEN
-            -- Buscar pago confirmado y obtener su fecha de pago
-            SELECT FECHA_PAGO INTO v_fecha_inicio
-            FROM pagos
-            WHERE FK_ID_USUARIO = p_usuario_id
-            AND FK_ID_TIPO_MEMBRESIA = p_fk_id_tipo_membresia
-            AND ESTADO_PAGO = 'CONFIRMADO'
-            ORDER BY FECHA_PAGO DESC
-            LIMIT 1;
-
-            -- Si no existe un pago confirmado
-            IF v_fecha_inicio IS NULL THEN
-                SET mensaje = 'Debe realizar un pago confirmado para obtener esta membresía.';
-                SET v_finalizar = TRUE;
-            END IF;
-
-            -- Calcular la fecha de finalización sumando 30 días
-            SET v_fecha_fin = DATE_ADD(v_fecha_inicio, INTERVAL 30 DAY);
-        ELSE
-            -- Si la membresía es gratuita, asignar fecha actual como inicio y dejar FECHA_FIN en NULL
-            SET v_fecha_inicio = NOW();
-            SET v_fecha_fin = NULL;
-        END IF;
-    END IF;
-
-    -- Asignar la membresía al usuario si todo está correcto
-    IF NOT v_finalizar THEN
-        -- Insertar la nueva membresía en la tabla membresia
-        INSERT INTO membresia (FK_ID_TIPO_MEMBRESIA, FECHA_INICIO, FECHA_FIN, ESTADO)
-        VALUES (p_fk_id_tipo_membresia, v_fecha_inicio, v_fecha_fin, 1);
-
-        -- Actualizar la membresía del usuario
-        UPDATE usuario
-        SET FK_ID_MEMBRESIA = LAST_INSERT_ID()
-        WHERE PK_ID_USUARIO = p_usuario_id;
-
-        -- Confirmar éxito
-        SET mensaje = 'Membresía asignada correctamente.';
-        SET resultado = 1;
-    END IF;
-
-    -- Confirmar o revertir la transacción
-    IF v_finalizar THEN
-        ROLLBACK;
-    ELSE
-        COMMIT;
-    END IF;
-END//
-DELIMITER ;
-
 -- Volcando estructura para procedimiento abastecete.asignar_permiso_rol
 DELIMITER //
 CREATE PROCEDURE `asignar_permiso_rol`(
@@ -443,36 +224,6 @@ BEGIN
       SET ESTADO_PERMISO_ROL = 0
       WHERE PFK_ID_ROL = p_id_rol AND PFK_ID_PERMISO = p_id_permiso;
     END IF;
-  END IF;
-END//
-DELIMITER ;
-
--- Volcando estructura para procedimiento abastecete.asignar_producto_a_usuario
-DELIMITER //
-CREATE PROCEDURE `asignar_producto_a_usuario`(
-  IN `p_fk_id_usuario` INT,
-  IN `p_fk_id_producto` INT,
-  OUT `mensaje` VARCHAR(500)
-)
-BEGIN
-  DECLARE usuario_existe INT;
-  DECLARE producto_existe INT;
-
-  -- Verificar si el usuario existe
-  SELECT COUNT(*) INTO usuario_existe FROM usuario WHERE PK_ID_USUARIO = p_fk_id_usuario;
-
-  -- Verificar si el producto existe
-  SELECT COUNT(*) INTO producto_existe FROM producto WHERE PK_ID_PRODUCTO = p_fk_id_producto;
-
-  IF usuario_existe = 0 THEN
-    SET mensaje = 'El usuario especificado no existe.';
-  ELSEIF producto_existe = 0 THEN
-    SET mensaje = 'El producto especificado no existe.';
-  ELSE
-    -- Insertar en la tabla de relación producto_usuario
-    INSERT INTO producto_usuario (FK_ID_USUARIO, FK_ID_PRODUCTO)
-    VALUES (p_fk_id_usuario, p_fk_id_producto);
-    SET mensaje = 'Producto asignado al usuario con éxito.';
   END IF;
 END//
 DELIMITER ;
@@ -812,24 +563,6 @@ BEGIN
 END//
 DELIMITER ;
 
--- Volcando estructura para procedimiento abastecete.consultar_estado
-DELIMITER //
-CREATE PROCEDURE `consultar_estado`()
-BEGIN
- 
-  SELECT * FROM estado;
-END//
-DELIMITER ;
-
--- Volcando estructura para procedimiento abastecete.consultar_estado_local
-DELIMITER //
-CREATE PROCEDURE `consultar_estado_local`()
-BEGIN
-  
-  SELECT * FROM estado_local;
-END//
-DELIMITER ;
-
 -- Volcando estructura para procedimiento abastecete.consultar_historial_membresia
 DELIMITER //
 CREATE PROCEDURE `consultar_historial_membresia`(
@@ -1001,6 +734,54 @@ BEGIN
 END//
 DELIMITER ;
 
+-- Volcando estructura para procedimiento abastecete.consultar_logs_sistema
+DELIMITER //
+CREATE PROCEDURE `consultar_logs_sistema`(
+    IN p_fecha_desde DATETIME,
+    IN p_fecha_hasta DATETIME,
+    IN p_modulo VARCHAR(50),
+    IN p_tipo_accion VARCHAR(10),
+    IN p_id_usuario INT,
+    IN p_termino_busqueda VARCHAR(100),
+    IN p_pagina INT,
+    IN p_registros_por_pagina INT
+)
+BEGIN
+    DECLARE v_offset INT;
+    SET v_offset = (p_pagina - 1) * p_registros_por_pagina;
+
+    SELECT
+        l.PK_ID_LOG AS Id,
+        l.FK_ID_USUARIO AS UsuarioId,
+        l.NOMBRE_USUARIO AS NombreUsuario,
+        l.MODULO AS Modulo,
+        l.TIPO_ACCION AS TipoAccion,
+        l.ENTIDAD_ID AS EntidadId,
+        l.ENTIDAD_DESCRIPCION AS EntidadDescripcion,
+        l.DATOS_ANTERIORES AS DatosAnteriores,
+        l.DATOS_NUEVOS AS DatosNuevos,
+        l.IP_CLIENTE AS IpCliente,
+        l.USER_AGENT AS UserAgent,
+        l.FECHA_REGISTRO AS FechaRegistro,
+        l.RESULTADO AS Resultado,
+        l.MENSAJE_ERROR AS MensajeError,
+        l.CONTROLLER AS Controller,
+        l.ACTION AS Action
+    FROM logs_sistema l
+    WHERE
+        (p_fecha_desde IS NULL OR l.FECHA_REGISTRO >= p_fecha_desde)
+        AND (p_fecha_hasta IS NULL OR l.FECHA_REGISTRO <= p_fecha_hasta)
+        AND (p_modulo IS NULL OR p_modulo = '' OR l.MODULO = p_modulo)
+        AND (p_tipo_accion IS NULL OR p_tipo_accion = '' OR l.TIPO_ACCION = p_tipo_accion)
+        AND (p_id_usuario IS NULL OR p_id_usuario = 0 OR l.FK_ID_USUARIO = p_id_usuario)
+        AND (p_termino_busqueda IS NULL OR p_termino_busqueda = ''
+             OR l.NOMBRE_USUARIO LIKE CONCAT('%', p_termino_busqueda, '%')
+             OR l.ENTIDAD_DESCRIPCION LIKE CONCAT('%', p_termino_busqueda, '%'))
+    ORDER BY l.FECHA_REGISTRO DESC
+    LIMIT p_registros_por_pagina OFFSET v_offset;
+END//
+DELIMITER ;
+
 -- Volcando estructura para procedimiento abastecete.consultar_marcas
 DELIMITER //
 CREATE PROCEDURE `consultar_marcas`()
@@ -1055,25 +836,53 @@ BEGIN
 END//
 DELIMITER ;
 
--- Volcando estructura para procedimiento abastecete.consultar_membresia
+-- Volcando estructura para procedimiento abastecete.consultar_negocio
 DELIMITER //
-CREATE PROCEDURE `consultar_membresia`()
+CREATE PROCEDURE `consultar_negocio`(
+    IN p_id_persona INT
+)
 BEGIN
-  
-  SELECT 
-    m.*, 
-    tm.NOMBRE AS tipo_membresia
-  FROM membresia m
-  JOIN tipo_membresia tm ON m.FK_ID_TIPO_MEMBRESIA = tm.PK_ID_TIPO_MEMBRESIA;
-END//
-DELIMITER ;
-
--- Volcando estructura para procedimiento abastecete.consultar_metodo_autenticacion
-DELIMITER //
-CREATE PROCEDURE `consultar_metodo_autenticacion`()
-BEGIN
-  
-  SELECT * FROM metodo_autenticacion;
+    SELECT
+        l.PK_ID_LOCAL,
+        l.NOMBRE_LOCAL,
+        l.LOCALIZACION,
+        l.DIRECCION_LOCAL,
+        l.TELEFONO_LOCAL,
+        l.FOTOS_LOCAL,
+        l.DESCRIPCION_LOCAL,
+        l.BANNER_LOCAL,
+        l.FK_ID_ESTADO_LOCAL,
+        l.EMAIL_CONTACTO,
+        l.WHATSAPP,
+        l.SITIO_WEB,
+        l.NIT,
+        l.INSTAGRAM,
+        l.FACEBOOK,
+        l.TIKTOK,
+        l.YOUTUBE,
+        l.TWITTER,
+        l.HORARIO_LUNES,
+        l.HORARIO_MARTES,
+        l.HORARIO_MIERCOLES,
+        l.HORARIO_JUEVES,
+        l.HORARIO_VIERNES,
+        l.HORARIO_SABADO,
+        l.HORARIO_DOMINGO,
+        l.LATITUD,
+        l.LONGITUD,
+        l.FECHA_REGISTRO,
+        l.FECHA_ACTUALIZACION,
+        s.PK_ID_SUSCRIPCION,
+        s.FK_ID_TIPO_MEMBRESIA,
+        s.FECHA_INICIO AS SUSCRIPCION_FECHA_INICIO,
+        s.FECHA_FIN AS SUSCRIPCION_FECHA_FIN,
+        s.ESTADO AS SUSCRIPCION_ESTADO,
+        tm.NOMBRE AS TIPO_MEMBRESIA_NOMBRE
+    FROM `local` l
+    LEFT JOIN suscripcion s ON s.PK_ID_SUSCRIPCION = l.FK_ID_SUSCRIPCION_ACTIVA
+    LEFT JOIN tipo_membresia tm ON tm.PK_ID_TIPO_MEMBRESIA = s.FK_ID_TIPO_MEMBRESIA
+    WHERE l.FK_ID_PERSONA = p_id_persona
+    LIMIT 1;
 END//
 DELIMITER ;
 
@@ -1282,12 +1091,13 @@ BEGIN
             p.NOMBRE_PRODUCTO,
             pl.VALOR_PRODUCTS_LOCAL,
             p.IMAGEN_URL,
-            u.NOMBRE_UNIDAD
+            COALESCE(u.NOMBRE_UNIDAD, '') AS NOMBRE_UNIDAD
         FROM productoslocal pl
         INNER JOIN producto p ON pl.FK_ID_PRODUCTO = p.PK_ID_PRODUCTO
-        INNER JOIN unidad u ON p.FK_ID_UNIDAD = u.PK_ID_UNIDAD
+        LEFT JOIN unidad u ON pl.FK_ID_UNIDAD = u.ID_UNIDAD
         WHERE pl.FK_ID_PRODUCTO = p_id_producto
-          AND pl.FK_ID_LOCAL = p_id_local;
+          AND pl.FK_ID_LOCAL = p_id_local
+        LIMIT 1;
         SET mensaje = 'Producto encontrado';
         SET resultado = 1;
     ELSE
@@ -1582,6 +1392,39 @@ BEGIN
 END//
 DELIMITER ;
 
+-- Volcando estructura para procedimiento abastecete.contar_galeria_pendientes
+DELIMITER //
+CREATE PROCEDURE `contar_galeria_pendientes`()
+BEGIN
+    SELECT COUNT(*) AS total_pendientes FROM galeria_local WHERE ESTADO = 0;
+END//
+DELIMITER ;
+
+-- Volcando estructura para procedimiento abastecete.contar_logs_sistema
+DELIMITER //
+CREATE PROCEDURE `contar_logs_sistema`(
+    IN p_fecha_desde DATETIME,
+    IN p_fecha_hasta DATETIME,
+    IN p_modulo VARCHAR(50),
+    IN p_tipo_accion VARCHAR(10),
+    IN p_id_usuario INT,
+    IN p_termino_busqueda VARCHAR(100)
+)
+BEGIN
+    SELECT COUNT(*) AS TotalRegistros
+    FROM logs_sistema l
+    WHERE
+        (p_fecha_desde IS NULL OR l.FECHA_REGISTRO >= p_fecha_desde)
+        AND (p_fecha_hasta IS NULL OR l.FECHA_REGISTRO <= p_fecha_hasta)
+        AND (p_modulo IS NULL OR p_modulo = '' OR l.MODULO = p_modulo)
+        AND (p_tipo_accion IS NULL OR p_tipo_accion = '' OR l.TIPO_ACCION = p_tipo_accion)
+        AND (p_id_usuario IS NULL OR p_id_usuario = 0 OR l.FK_ID_USUARIO = p_id_usuario)
+        AND (p_termino_busqueda IS NULL OR p_termino_busqueda = ''
+             OR l.NOMBRE_USUARIO LIKE CONCAT('%', p_termino_busqueda, '%')
+             OR l.ENTIDAD_DESCRIPCION LIKE CONCAT('%', p_termino_busqueda, '%'));
+END//
+DELIMITER ;
+
 -- Volcando estructura para procedimiento abastecete.contar_usuarios
 DELIMITER //
 CREATE PROCEDURE `contar_usuarios`(
@@ -1664,93 +1507,112 @@ BEGIN
 END//
 DELIMITER ;
 
--- Volcando estructura para procedimiento abastecete.crear_detallemedida
-DELIMITER //
-CREATE PROCEDURE `crear_detallemedida`(
-	IN `id_producto` INT,
-	IN `id_unidad` INT,
-	IN `valor` INT
-)
-BEGIN
-	INSERT INTO detallemedida (detallemedida.FK_ID_PRODUCTO,detallemedida.FK_ID_UNIDAD,detallemedida.VALOR) 
-	VALUES (id_producto,id_unidad,valor);
-END//
-DELIMITER ;
-
--- Volcando estructura para procedimiento abastecete.crear_estado
-DELIMITER //
-CREATE PROCEDURE `crear_estado`(
-  IN `p_nombre_estado` VARCHAR(50),
-  OUT `mensaje` VARCHAR(500),
-  OUT `resultado` INT
-)
-BEGIN
-  SET resultado = 0;
-
-  -- Verificar si el estado ya existe
-  IF EXISTS (SELECT 1 FROM estado WHERE NOMBRE_ESTADO = p_nombre_estado) THEN
-    SET mensaje = 'El estado ya existe.';
-  ELSE
-    -- Insertar el nuevo estado
-    INSERT INTO estado (NOMBRE_ESTADO)
-    VALUES (p_nombre_estado);
-
-    -- Si todo fue exitoso
-    SET resultado = 1;
-    SET mensaje = 'Estado agregado exitosamente.';
-  END IF;
-END//
-DELIMITER ;
-
--- Volcando estructura para procedimiento abastecete.crear_estado_local
-DELIMITER //
-CREATE PROCEDURE `crear_estado_local`(
-  IN `p_nombre_estado` VARCHAR(50),
-  OUT `mensaje` VARCHAR(500)
-)
-BEGIN
-  -- Insertar un nuevo estado de local
-  INSERT INTO estado_local (NOMBRE_ESTADO)
-  VALUES (p_nombre_estado);
-  SET mensaje = 'Estado de local creado con éxito.';
-END//
-DELIMITER ;
-
 -- Volcando estructura para procedimiento abastecete.crear_local
 DELIMITER //
 CREATE PROCEDURE `crear_local`(
-	IN `p_fk_id_persona` INT,
-	IN `p_fk_id_estado_local` INT,
-	IN `p_fk_id_tipomembresia` INT,
-	IN `p_localizacion` VARCHAR(100),
-	IN `p_nombre_local` VARCHAR(100),
-	IN `p_direccion_local` VARCHAR(200),
-	IN `p_telefono_local` VARCHAR(20),
-	IN `p_fotos_local` LONGTEXT,
-	IN `p_descripcion_local` VARCHAR(200)
+    IN p_fk_id_persona INT,
+    IN p_fk_id_estado_local INT,
+    IN p_fk_id_tipomembresia INT,
+    IN p_localizacion VARCHAR(100),
+    IN p_nombre_local VARCHAR(100),
+    IN p_direccion_local VARCHAR(200),
+    IN p_telefono_local BIGINT,
+    IN p_fotos_local VARCHAR(255),
+    IN p_descripcion_local VARCHAR(1000),
+    -- Campos nuevos de contacto
+    IN p_email_contacto VARCHAR(100),
+    IN p_whatsapp VARCHAR(20),
+    IN p_sitio_web VARCHAR(255),
+    -- Redes sociales
+    IN p_instagram VARCHAR(100),
+    IN p_facebook VARCHAR(255),
+    IN p_tiktok VARCHAR(100),
+    IN p_youtube VARCHAR(255),
+    IN p_twitter VARCHAR(100),
+    -- Horarios
+    IN p_horario_lunes VARCHAR(20),
+    IN p_horario_martes VARCHAR(20),
+    IN p_horario_miercoles VARCHAR(20),
+    IN p_horario_jueves VARCHAR(20),
+    IN p_horario_viernes VARCHAR(20),
+    IN p_horario_sabado VARCHAR(20),
+    IN p_horario_domingo VARCHAR(20)
 )
 BEGIN
-    DECLARE persona_existe INT;
-    DECLARE estado_local_existe INT;
-    DECLARE nuevo_local_id INT;
+    DECLARE v_id_local INT;
 
-    -- Verificar si la persona existe
-    SELECT COUNT(*) INTO persona_existe FROM persona WHERE PK_ID_PERSONA = p_fk_id_persona;
+    INSERT INTO `local` (
+        FK_ID_PERSONA,
+        FK_ID_ESTADO_LOCAL,
+        LOCALIZACION,
+        NOMBRE_LOCAL,
+        DIRECCION_LOCAL,
+        TELEFONO_LOCAL,
+        FOTOS_LOCAL,
+        DESCRIPCION_LOCAL,
+        EMAIL_CONTACTO,
+        WHATSAPP,
+        SITIO_WEB,
+        INSTAGRAM,
+        FACEBOOK,
+        TIKTOK,
+        YOUTUBE,
+        TWITTER,
+        HORARIO_LUNES,
+        HORARIO_MARTES,
+        HORARIO_MIERCOLES,
+        HORARIO_JUEVES,
+        HORARIO_VIERNES,
+        HORARIO_SABADO,
+        HORARIO_DOMINGO,
+        FECHA_REGISTRO
+    ) VALUES (
+        p_fk_id_persona,
+        p_fk_id_estado_local,
+        p_localizacion,
+        p_nombre_local,
+        p_direccion_local,
+        p_telefono_local,
+        p_fotos_local,
+        p_descripcion_local,
+        p_email_contacto,
+        p_whatsapp,
+        p_sitio_web,
+        p_instagram,
+        p_facebook,
+        p_tiktok,
+        p_youtube,
+        p_twitter,
+        p_horario_lunes,
+        p_horario_martes,
+        p_horario_miercoles,
+        p_horario_jueves,
+        p_horario_viernes,
+        p_horario_sabado,
+        p_horario_domingo,
+        NOW()
+    );
 
-    -- Verificar si el estado del local existe
-    SELECT COUNT(*) INTO estado_local_existe FROM estado WHERE PK_ID_ESTADO = p_fk_id_estado_local;
+    SET v_id_local = LAST_INSERT_ID();
 
-    IF persona_existe > 0 AND estado_local_existe > 0 THEN
-        -- Insertar el nuevo local sin la ciudad
-        INSERT INTO local (FK_ID_PERSONA, FK_ID_ESTADO_LOCAL, FK_ID_TIPOMEMBRESIA, LOCALIZACION, NOMBRE_LOCAL, DIRECCION_LOCAL, TELEFONO_LOCAL, FOTOS_LOCAL, DESCRIPCION_LOCAL)
-        VALUES (p_fk_id_persona, p_fk_id_estado_local, p_fk_id_tipomembresia, p_localizacion, p_nombre_local, p_direccion_local, p_telefono_local, p_fotos_local, p_descripcion_local);
-
-        -- Obtener el ID del nuevo local insertado
-        SET nuevo_local_id = LAST_INSERT_ID();
-
-        -- Llamar al procedimiento crear_membresia automáticamente para este local
-        CALL crear_membresia_local(nuevo_local_id, p_fk_id_estado_local);
+    -- Crear suscripción inicial (si se pasa tipo membresía)
+    IF p_fk_id_tipomembresia IS NOT NULL AND p_fk_id_tipomembresia > 0 THEN
+        INSERT INTO suscripcion (
+            FK_ID_LOCAL,
+            FK_ID_TIPO_MEMBRESIA,
+            FECHA_INICIO,
+            FECHA_FIN,
+            ESTADO
+        ) VALUES (
+            v_id_local,
+            p_fk_id_tipomembresia,
+            NOW(),
+            DATE_ADD(NOW(), INTERVAL 30 DAY),
+            'Activa'
+        );
     END IF;
+
+    SELECT v_id_local AS id_local;
 END//
 DELIMITER ;
 
@@ -1793,62 +1655,6 @@ BEGIN
         SET resultado = LAST_INSERT_ID();
         SET mensaje = 'Marca creada exitosamente';
     END IF;
-END//
-DELIMITER ;
-
--- Volcando estructura para procedimiento abastecete.crear_membresia_local
-DELIMITER //
-CREATE PROCEDURE `crear_membresia_local`(
-	IN `p_local` INT,
-	IN `p_estado` INT
-)
-BEGIN
-  DECLARE estado_existe INT;
-  DECLARE local_existe INT;
-
-  -- Verificar si el estado existe
-  SELECT COUNT(*) INTO estado_existe FROM estado WHERE PK_ID_ESTADO = p_estado;
-
-  -- Verificar si el local existe
-  SELECT COUNT(*) INTO local_existe FROM local WHERE PK_ID_LOCAL = p_local;
-
-  IF estado_existe = 0 THEN
-    -- Emitir un error y detener la ejecución
-    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El estado especificado no existe.';
-  ELSEIF local_existe = 0 THEN
-    -- Emitir un error y detener la ejecución
-    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El local especificado no existe.';
-  ELSE
-    -- Insertar la nueva membresía con FECHA_INICIO como el momento actual y FECHA_FIN un mes después
-    INSERT INTO membresia_local (FK_ID_LOCAL, FECHA_INICIO, FECHA_FIN, ESTADO)
-    VALUES (p_local, NOW(), DATE_ADD(NOW(), INTERVAL 1 MONTH), p_estado);
-  END IF;
-
-END//
-DELIMITER ;
-
--- Volcando estructura para procedimiento abastecete.crear_metodo_autenticacion
-DELIMITER //
-CREATE PROCEDURE `crear_metodo_autenticacion`(
-  IN `p_nombre_metodo` VARCHAR(50),
-  OUT `mensaje` VARCHAR(500),
-  OUT `resultado` INT
-)
-BEGIN
-  SET resultado = 0;
-
-  -- Verificar si el método de autenticación ya existe
-  IF EXISTS (SELECT 1 FROM metodo_autenticacion WHERE NOMBRE = p_nombre_metodo) THEN
-    SET mensaje = 'El método de autenticación ya existe.';
-  ELSE
-    -- Insertar el nuevo método de autenticación
-    INSERT INTO metodo_autenticacion (NOMBRE)
-    VALUES (p_nombre_metodo);
-
-    -- Si todo fue exitoso
-    SET resultado = 1;
-    SET mensaje = 'Método de autenticación agregado exitosamente.';
-  END IF;
 END//
 DELIMITER ;
 
@@ -2648,51 +2454,65 @@ BEGIN
 END//
 DELIMITER ;
 
--- Volcando estructura para procedimiento abastecete.editar_estado_local
-DELIMITER //
-CREATE PROCEDURE `editar_estado_local`(
-  IN `p_id_estado_local` INT,
-  IN `p_nombre_estado` VARCHAR(50),
-  OUT `mensaje` VARCHAR(500)
-)
-BEGIN
-  IF EXISTS (SELECT 1 FROM estado_local WHERE PK_ID_ESTADO_LOCAL = p_id_estado_local) THEN
-    -- Actualizar el estado de local
-    UPDATE estado_local
-    SET NOMBRE_ESTADO = p_nombre_estado
-    WHERE PK_ID_ESTADO_LOCAL = p_id_estado_local;
-    SET mensaje = 'Estado de local actualizado con éxito.';
-  ELSE
-    SET mensaje = 'El estado de local especificado no existe.';
-  END IF;
-END//
-DELIMITER ;
-
 -- Volcando estructura para procedimiento abastecete.editar_local
 DELIMITER //
 CREATE PROCEDURE `editar_local`(
-	IN `p_id_local` INT,
-	IN `p_telefono_local` VARCHAR(20),
-	IN `p_nombre_local` VARCHAR(50),
-	IN `p_direccion_local` VARCHAR(50),
-	IN `p_localizacion_local` VARCHAR(50),
-	IN `p_fotos_local` VARCHAR(50),
-	IN `p_descripcion_local` VARCHAR(50),
-	IN `p_banner_local` VARCHAR(100)
+    IN p_id_local INT,
+    IN p_nombre_local VARCHAR(100),
+    IN p_direccion_local VARCHAR(200),
+    IN p_localizacion_local VARCHAR(100),
+    IN p_telefono_local VARCHAR(20),
+    IN p_fotos_local LONGTEXT,
+    IN p_descripcion_local VARCHAR(1000),
+    IN p_banner_local VARCHAR(50),
+    IN p_email_contacto VARCHAR(100),
+    IN p_whatsapp VARCHAR(20),
+    IN p_sitio_web VARCHAR(255),
+    IN p_nit VARCHAR(20),
+    IN p_instagram VARCHAR(100),
+    IN p_facebook VARCHAR(255),
+    IN p_tiktok VARCHAR(100),
+    IN p_youtube VARCHAR(255),
+    IN p_twitter VARCHAR(100),
+    IN p_horario_lunes VARCHAR(20),
+    IN p_horario_martes VARCHAR(20),
+    IN p_horario_miercoles VARCHAR(20),
+    IN p_horario_jueves VARCHAR(20),
+    IN p_horario_viernes VARCHAR(20),
+    IN p_horario_sabado VARCHAR(20),
+    IN p_horario_domingo VARCHAR(20),
+    IN p_latitud DECIMAL(10,8),
+    IN p_longitud DECIMAL(11,8)
 )
 BEGIN
-  IF EXISTS (SELECT 1 FROM local WHERE PK_ID_LOCAL = p_id_local) THEN
-    UPDATE local
-    SET 
+    UPDATE `local` SET
         NOMBRE_LOCAL = p_nombre_local,
         DIRECCION_LOCAL = p_direccion_local,
         LOCALIZACION = p_localizacion_local,
         TELEFONO_LOCAL = p_telefono_local,
         FOTOS_LOCAL = p_fotos_local,
         DESCRIPCION_LOCAL = p_descripcion_local,
-        BANNER_LOCAL = p_banner_local
+        BANNER_LOCAL = p_banner_local,
+        EMAIL_CONTACTO = p_email_contacto,
+        WHATSAPP = p_whatsapp,
+        SITIO_WEB = p_sitio_web,
+        NIT = p_nit,
+        INSTAGRAM = p_instagram,
+        FACEBOOK = p_facebook,
+        TIKTOK = p_tiktok,
+        YOUTUBE = p_youtube,
+        TWITTER = p_twitter,
+        HORARIO_LUNES = p_horario_lunes,
+        HORARIO_MARTES = p_horario_martes,
+        HORARIO_MIERCOLES = p_horario_miercoles,
+        HORARIO_JUEVES = p_horario_jueves,
+        HORARIO_VIERNES = p_horario_viernes,
+        HORARIO_SABADO = p_horario_sabado,
+        HORARIO_DOMINGO = p_horario_domingo,
+        LATITUD = p_latitud,
+        LONGITUD = p_longitud,
+        FECHA_ACTUALIZACION = NOW()
     WHERE PK_ID_LOCAL = p_id_local;
-  END IF;
 END//
 DELIMITER ;
 
@@ -3230,20 +3050,15 @@ BEGIN
 END//
 DELIMITER ;
 
--- Volcando estructura para procedimiento abastecete.eliminar_estado_local
+-- Volcando estructura para procedimiento abastecete.eliminar_imagen_galeria
 DELIMITER //
-CREATE PROCEDURE `eliminar_estado_local`(
-  IN `p_id_estado_local` INT,
-  OUT `mensaje` VARCHAR(500)
+CREATE PROCEDURE `eliminar_imagen_galeria`(
+    IN p_id_galeria INT
 )
 BEGIN
-  IF EXISTS (SELECT 1 FROM estado_local WHERE PK_ID_ESTADO_LOCAL = p_id_estado_local) THEN
-    -- Eliminar el estado de local
-    DELETE FROM estado_local WHERE PK_ID_ESTADO_LOCAL = p_id_estado_local;
-    SET mensaje = 'Estado de local eliminado con éxito.';
-  ELSE
-    SET mensaje = 'El estado de local especificado no existe.';
-  END IF;
+    SELECT CLOUDINARY_PUBLIC_ID INTO @public_id FROM galeria_local WHERE PK_ID_GALERIA = p_id_galeria;
+    DELETE FROM galeria_local WHERE PK_ID_GALERIA = p_id_galeria;
+    SELECT @public_id AS cloudinary_public_id;
 END//
 DELIMITER ;
 
@@ -3260,42 +3075,6 @@ BEGIN
     SET mensaje = 'Local eliminado con éxito.';
   ELSE
     SET mensaje = 'El local especificado no existe.';
-  END IF;
-END//
-DELIMITER ;
-
--- Volcando estructura para procedimiento abastecete.eliminar_local_favorito
-DELIMITER //
-CREATE PROCEDURE `eliminar_local_favorito`(
-  IN `p_usuario_id` INT,          -- ID del usuario
-  IN `p_local_id` INT,            -- ID del local que se desea eliminar de favoritos
-  OUT `mensaje` VARCHAR(500),     -- Mensaje de respuesta
-  OUT `resultado` INT             -- Resultado de la operación
-)
-BEGIN
-  -- Inicializar el resultado
-  SET resultado = 0;
-
-  -- Verificar si el usuario existe
-  IF NOT EXISTS (SELECT 1 FROM usuario WHERE PK_ID_USUARIO = p_usuario_id) THEN
-    SET mensaje = 'El usuario no existe.';
-  
-  -- Verificar si el local existe
-  ELSEIF NOT EXISTS (SELECT 1 FROM local WHERE PK_ID_LOCAL = p_local_id) THEN
-    SET mensaje = 'El local no existe.';
-  
-  -- Verificar si el local está en los favoritos del usuario
-  ELSEIF NOT EXISTS (SELECT 1 FROM favoritos WHERE FK_ID_USUARIO = p_usuario_id AND FK_ID_LOCAL = p_local_id) THEN
-    SET mensaje = 'El local no está en tu lista de favoritos.';
-  
-  ELSE
-    -- Eliminar el local de favoritos
-    DELETE FROM favoritos
-    WHERE FK_ID_USUARIO = p_usuario_id AND FK_ID_LOCAL = p_local_id;
-
-    -- Confirmar éxito
-    SET mensaje = 'Local eliminado de favoritos con éxito.';
-    SET resultado = 1;
   END IF;
 END//
 DELIMITER ;
@@ -3685,6 +3464,29 @@ WHERE TIEMPO_OFERTA_FLASH <= NOW()
 AND ESTADO_OFERTA_FLASH = 1//
 DELIMITER ;
 
+-- Volcando estructura para tabla abastecete.galeria_local
+CREATE TABLE IF NOT EXISTS `galeria_local` (
+  `PK_ID_GALERIA` int NOT NULL AUTO_INCREMENT,
+  `FK_ID_LOCAL` int NOT NULL,
+  `CLOUDINARY_URL` varchar(500) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `CLOUDINARY_PUBLIC_ID` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `ESTADO` int DEFAULT '0' COMMENT '0=Pendiente, 1=Aprobada, 2=Rechazada',
+  `FECHA_SUBIDA` datetime DEFAULT CURRENT_TIMESTAMP,
+  `FECHA_REVISION` datetime DEFAULT NULL,
+  `FK_ID_USUARIO_REVISOR` int DEFAULT NULL,
+  `MOTIVO_RECHAZO` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  PRIMARY KEY (`PK_ID_GALERIA`),
+  KEY `idx_galeria_local` (`FK_ID_LOCAL`),
+  KEY `idx_galeria_estado` (`ESTADO`),
+  KEY `FK_galeria_revisor` (`FK_ID_USUARIO_REVISOR`),
+  CONSTRAINT `FK_galeria_local` FOREIGN KEY (`FK_ID_LOCAL`) REFERENCES `local` (`PK_ID_LOCAL`) ON DELETE CASCADE,
+  CONSTRAINT `FK_galeria_revisor` FOREIGN KEY (`FK_ID_USUARIO_REVISOR`) REFERENCES `usuario` (`PK_ID_USUARIO`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Volcando datos para la tabla abastecete.galeria_local: ~1 rows (aproximadamente)
+INSERT INTO `galeria_local` (`PK_ID_GALERIA`, `FK_ID_LOCAL`, `CLOUDINARY_URL`, `CLOUDINARY_PUBLIC_ID`, `ESTADO`, `FECHA_SUBIDA`, `FECHA_REVISION`, `FK_ID_USUARIO_REVISOR`, `MOTIVO_RECHAZO`) VALUES
+	(1, 28, 'https://res.cloudinary.com/dwl5ggfhd/image/upload/v1766353804/galeria/locales/xtx4pvn7tyockpdhge4x.jpg', 'galeria/locales/xtx4pvn7tyockpdhge4x', 1, '2025-12-21 21:50:05', '2025-12-21 22:31:12', 2, NULL);
+
 -- Volcando estructura para procedimiento abastecete.generar_token_recuperacion
 DELIMITER //
 CREATE PROCEDURE `generar_token_recuperacion`(IN p_fk_id_usuario INT)
@@ -3749,7 +3551,7 @@ CREATE TABLE IF NOT EXISTS `historial_membresia` (
   CONSTRAINT `FK_historial_local` FOREIGN KEY (`FK_ID_LOCAL`) REFERENCES `local` (`PK_ID_LOCAL`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla abastecete.historial_membresia: ~14 rows (aproximadamente)
+-- Volcando datos para la tabla abastecete.historial_membresia: ~25 rows (aproximadamente)
 INSERT INTO `historial_membresia` (`PK_ID_HISTORIAL`, `FK_ID_LOCAL`, `FK_ID_SUSCRIPCION`, `FK_ID_TIPO_ANTERIOR`, `FK_ID_TIPO_NUEVO`, `TIPO_CAMBIO`, `FECHA_CAMBIO`, `FECHA_INICIO_PERIODO`, `FECHA_FIN_PERIODO`, `MONTO`, `PERIODO`, `NOTAS`) VALUES
 	(1, 1, 1, NULL, 12, 'MIGRACION', '2025-12-19 05:42:03', '2025-02-20 10:05:41', '2025-03-20 10:05:41', NULL, NULL, 'Registro inicial migrado automáticamente'),
 	(2, 3, 2, NULL, 18, 'MIGRACION', '2025-12-19 05:42:03', '2025-02-20 10:43:17', '2025-03-20 10:43:17', NULL, NULL, 'Registro inicial migrado automáticamente'),
@@ -3764,7 +3566,73 @@ INSERT INTO `historial_membresia` (`PK_ID_HISTORIAL`, `FK_ID_LOCAL`, `FK_ID_SUSC
 	(11, 35, 11, NULL, 11, 'MIGRACION', '2025-12-19 05:42:03', '2025-07-22 01:28:20', '2025-08-22 01:28:20', NULL, NULL, 'Registro inicial migrado automáticamente'),
 	(12, 36, 12, NULL, 13, 'MIGRACION', '2025-12-19 05:42:03', '2025-08-20 22:11:19', '2025-09-20 22:11:19', NULL, NULL, 'Registro inicial migrado automáticamente'),
 	(13, 37, 13, NULL, 11, 'MIGRACION', '2025-12-19 05:42:03', '2025-08-21 01:20:45', '2025-09-21 01:20:45', NULL, NULL, 'Registro inicial migrado automáticamente'),
-	(16, 36, 16, 13, 11, 'DOWNGRADE', '2025-12-20 13:19:13', '2025-12-20 13:19:13', '2026-01-20 13:19:13', 0.00, 'MENSUAL', 'Cambio de membresía desde panel de administración');
+	(16, 36, 16, 13, 11, 'DOWNGRADE', '2025-12-20 13:19:13', '2025-12-20 13:19:13', '2026-01-20 13:19:13', 0.00, 'MENSUAL', 'Cambio de membresía desde panel de administración'),
+	(17, 23, 17, NULL, 13, 'ALTA', '2025-12-21 19:26:58', '2025-12-21 19:26:58', '2026-01-21 19:26:58', 0.00, 'MENSUAL', 'Cambio de plan desde Mi Membresía'),
+	(18, 23, 18, 13, 13, 'RENOVACION', '2025-12-21 19:29:16', '2025-12-21 19:29:16', '2026-01-21 19:29:16', 0.00, 'MENSUAL', 'Cambio de plan desde Mi Membresía'),
+	(19, 23, 19, 13, 11, 'DOWNGRADE', '2025-12-21 19:34:10', '2025-12-21 19:34:10', '2026-01-21 19:34:10', 0.00, 'MENSUAL', 'Cambio de plan desde Mi Membresía'),
+	(20, 23, 20, 11, 13, 'UPGRADE', '2025-12-21 19:37:44', '2025-12-21 19:37:44', '2026-01-21 19:37:44', 0.00, 'MENSUAL', 'Cambio de plan desde Mi Membresía'),
+	(21, 23, 21, 13, 13, 'RENOVACION', '2025-12-21 19:38:13', '2025-12-21 19:38:13', '2026-01-21 19:38:13', 0.00, 'MENSUAL', 'Cambio de plan desde Mi Membresía'),
+	(22, 23, 22, 13, 13, 'RENOVACION', '2025-12-21 21:17:35', '2025-12-21 21:17:35', '2026-01-21 21:17:35', 0.00, 'MENSUAL', 'Cambio de plan desde Mi Membresía'),
+	(23, 23, 23, 13, 12, 'DOWNGRADE', '2025-12-21 21:21:37', '2025-12-21 21:21:37', '2026-01-21 21:21:37', 0.00, 'MENSUAL', 'Cambio de plan desde Mi Membresía'),
+	(24, 28, 24, NULL, 13, 'ALTA', '2025-12-21 21:53:49', '2025-12-21 21:53:49', '2026-01-21 21:53:49', 0.00, 'MENSUAL', 'Cambio de plan desde Mi Membresía'),
+	(25, 28, 25, 13, 12, 'DOWNGRADE', '2025-12-21 21:54:12', '2025-12-21 21:54:12', '2026-01-21 21:54:12', 0.00, 'MENSUAL', 'Cambio de plan desde Mi Membresía'),
+	(26, 28, 26, 12, 13, 'UPGRADE', '2025-12-21 22:32:49', '2025-12-21 22:32:49', '2026-01-21 22:32:49', 0.00, 'MENSUAL', 'Cambio de plan desde Mi Membresía'),
+	(27, 28, 28, NULL, 13, 'ALTA', '2025-12-21 22:51:01', '2025-12-21 22:51:01', '2026-01-21 22:51:01', 0.00, 'MENSUAL', 'Cambio de plan desde Mi Membresía');
+
+-- Volcando estructura para procedimiento abastecete.insertar_log_sistema
+DELIMITER //
+CREATE PROCEDURE `insertar_log_sistema`(
+    IN p_id_usuario INT,
+    IN p_nombre_usuario VARCHAR(200),
+    IN p_modulo VARCHAR(50),
+    IN p_tipo_accion VARCHAR(10),
+    IN p_entidad_id INT,
+    IN p_entidad_descripcion VARCHAR(255),
+    IN p_datos_anteriores JSON,
+    IN p_datos_nuevos JSON,
+    IN p_ip_cliente VARCHAR(45),
+    IN p_user_agent VARCHAR(500),
+    IN p_resultado VARCHAR(10),
+    IN p_mensaje_error VARCHAR(500),
+    IN p_controller VARCHAR(100),
+    IN p_action VARCHAR(100)
+)
+BEGIN
+    INSERT INTO logs_sistema (
+        FK_ID_USUARIO,
+        NOMBRE_USUARIO,
+        MODULO,
+        TIPO_ACCION,
+        ENTIDAD_ID,
+        ENTIDAD_DESCRIPCION,
+        DATOS_ANTERIORES,
+        DATOS_NUEVOS,
+        IP_CLIENTE,
+        USER_AGENT,
+        RESULTADO,
+        MENSAJE_ERROR,
+        CONTROLLER,
+        ACTION
+    ) VALUES (
+        p_id_usuario,
+        p_nombre_usuario,
+        p_modulo,
+        p_tipo_accion,
+        p_entidad_id,
+        p_entidad_descripcion,
+        p_datos_anteriores,
+        p_datos_nuevos,
+        p_ip_cliente,
+        p_user_agent,
+        p_resultado,
+        p_mensaje_error,
+        p_controller,
+        p_action
+    );
+
+    SELECT LAST_INSERT_ID() AS id_log;
+END//
+DELIMITER ;
 
 -- Volcando estructura para evento abastecete.limpiar_bloqueos_usuario
 DELIMITER //
@@ -3779,32 +3647,71 @@ CREATE EVENT `limpiar_bloqueos_usuario` ON SCHEDULE EVERY 5 MINUTE STARTS '2025-
 END//
 DELIMITER ;
 
--- Volcando estructura para procedimiento abastecete.listar_favoritos_usuario
+-- Volcando estructura para procedimiento abastecete.listar_galeria_local
 DELIMITER //
-CREATE PROCEDURE `listar_favoritos_usuario`(
-  IN `p_usuario_id` INT,       
-  OUT `mensaje` VARCHAR(500),         
-  OUT `resultado` INT                 
+CREATE PROCEDURE `listar_galeria_local`(
+    IN p_id_local INT
 )
 BEGIN
-  -- Inicializar el resultado
-  SET resultado = 0;
+    SELECT
+        PK_ID_GALERIA,
+        FK_ID_LOCAL,
+        CLOUDINARY_URL,
+        CLOUDINARY_PUBLIC_ID,
+        ESTADO,
+        FECHA_SUBIDA,
+        FECHA_REVISION,
+        FK_ID_USUARIO_REVISOR,
+        MOTIVO_RECHAZO
+    FROM galeria_local
+    WHERE FK_ID_LOCAL = p_id_local
+    ORDER BY FECHA_SUBIDA DESC;
+END//
+DELIMITER ;
 
-  -- Verificar si el usuario existe
-  IF NOT EXISTS (SELECT 1 FROM usuario WHERE PK_ID_USUARIO = p_usuario_id) THEN
-    SET mensaje = 'El usuario no existe.';
-  
-  ELSE
-    -- Obtener la lista de locales favoritos del usuario
-    SELECT l.PK_ID_LOCAL, l.NOMBRE_LOCAL, l.DIRECCION_LOCAL, l.BARRIO_LOCAL, l.TELEFONO_LOCAL, l.FOTOS_LOCAL
-    FROM favoritos f
-    JOIN local l ON f.FK_ID_LOCAL = l.PK_ID_LOCAL
-    WHERE f.FK_ID_USUARIO = p_usuario_id;
+-- Volcando estructura para procedimiento abastecete.listar_galeria_pendientes
+DELIMITER //
+CREATE PROCEDURE `listar_galeria_pendientes`()
+BEGIN
+    SELECT
+        g.PK_ID_GALERIA,
+        g.FK_ID_LOCAL,
+        g.CLOUDINARY_URL,
+        g.CLOUDINARY_PUBLIC_ID,
+        g.ESTADO,
+        g.FECHA_SUBIDA,
+        l.NOMBRE_LOCAL,
+        p.NOMBRES AS PROPIETARIO_NOMBRE,
+        p.APELLIDOS AS PROPIETARIO_APELLIDO
+    FROM galeria_local g
+    INNER JOIN `local` l ON l.PK_ID_LOCAL = g.FK_ID_LOCAL
+    INNER JOIN persona p ON p.PK_ID_PERSONA = l.FK_ID_PERSONA
+    WHERE g.ESTADO = 0
+    ORDER BY g.FECHA_SUBIDA ASC;
+END//
+DELIMITER ;
 
-    -- Confirmar que la operación fue exitosa
-    SET mensaje = 'Favoritos listados con éxito.';
-    SET resultado = 1;
-  END IF;
+-- Volcando estructura para procedimiento abastecete.listar_locales_membresia
+DELIMITER //
+CREATE PROCEDURE `listar_locales_membresia`()
+BEGIN
+    SELECT
+        l.PK_ID_LOCAL,
+        l.NOMBRE_LOCAL,
+        l.DIRECCION,
+        l.TELEFONO,
+        l.CLOUDINARY_URL,
+        tm.NOMBRE AS TIPO_MEMBRESIA,
+        s.FECHA_INICIO,
+        s.FECHA_FIN,
+        s.ESTADO AS ESTADO_SUSCRIPCION,
+        DATEDIFF(s.FECHA_FIN, NOW()) AS DIAS_RESTANTES
+    FROM local l
+    INNER JOIN suscripcion s ON s.PK_ID_SUSCRIPCION = l.FK_ID_SUSCRIPCION_ACTIVA
+    INNER JOIN tipo_membresia tm ON tm.PK_ID_TIPO_MEMBRESIA = s.FK_ID_TIPO_MEMBRESIA
+    WHERE s.ESTADO = 1
+    AND NOW() BETWEEN s.FECHA_INICIO AND s.FECHA_FIN
+    ORDER BY l.NOMBRE_LOCAL;
 END//
 DELIMITER ;
 
@@ -3820,7 +3727,27 @@ CREATE TABLE IF NOT EXISTS `local` (
   `FOTOS_LOCAL` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci,
   `BANNER_LOCAL` varchar(50) DEFAULT NULL,
   `IMAGENES_LOCAL` varchar(150) DEFAULT NULL,
-  `DESCRIPCION_LOCAL` varchar(50) DEFAULT NULL,
+  `DESCRIPCION_LOCAL` varchar(1000) DEFAULT NULL,
+  `EMAIL_CONTACTO` varchar(100) DEFAULT NULL,
+  `WHATSAPP` varchar(20) DEFAULT NULL,
+  `SITIO_WEB` varchar(255) DEFAULT NULL,
+  `NIT` varchar(20) DEFAULT NULL,
+  `INSTAGRAM` varchar(100) DEFAULT NULL,
+  `FACEBOOK` varchar(255) DEFAULT NULL,
+  `TIKTOK` varchar(100) DEFAULT NULL,
+  `YOUTUBE` varchar(255) DEFAULT NULL,
+  `TWITTER` varchar(100) DEFAULT NULL,
+  `HORARIO_LUNES` varchar(20) DEFAULT NULL,
+  `HORARIO_MARTES` varchar(20) DEFAULT NULL,
+  `HORARIO_MIERCOLES` varchar(20) DEFAULT NULL,
+  `HORARIO_JUEVES` varchar(20) DEFAULT NULL,
+  `HORARIO_VIERNES` varchar(20) DEFAULT NULL,
+  `HORARIO_SABADO` varchar(20) DEFAULT NULL,
+  `HORARIO_DOMINGO` varchar(20) DEFAULT NULL,
+  `LATITUD` decimal(10,8) DEFAULT NULL,
+  `LONGITUD` decimal(11,8) DEFAULT NULL,
+  `FECHA_REGISTRO` datetime DEFAULT CURRENT_TIMESTAMP,
+  `FECHA_ACTUALIZACION` datetime DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
   `FK_ID_SUSCRIPCION_ACTIVA` int DEFAULT NULL,
   PRIMARY KEY (`PK_ID_LOCAL`),
   KEY `FK_local_persona` (`FK_ID_PERSONA`),
@@ -3833,21 +3760,21 @@ CREATE TABLE IF NOT EXISTS `local` (
 ) ENGINE=InnoDB AUTO_INCREMENT=38 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Volcando datos para la tabla abastecete.local: ~14 rows (aproximadamente)
-INSERT INTO `local` (`PK_ID_LOCAL`, `FK_ID_PERSONA`, `FK_ID_ESTADO_LOCAL`, `NOMBRE_LOCAL`, `LOCALIZACION`, `DIRECCION_LOCAL`, `TELEFONO_LOCAL`, `FOTOS_LOCAL`, `BANNER_LOCAL`, `IMAGENES_LOCAL`, `DESCRIPCION_LOCAL`, `FK_ID_SUSCRIPCION_ACTIVA`) VALUES
-	(1, 6, 1, 'Verduras don pepe', 'Pablo VI', 'Calle 12', '3123687285', '', NULL, NULL, NULL, 1),
-	(3, 6, 1, 'pepito', 'abbas', 'calle 24', '21414', '', NULL, NULL, NULL, 2),
-	(21, 12, 1, 'Donas Micha', '1.6153858,-75.60423639999999', 'Florencia, Caquetá, Colombia', '78456', '', NULL, NULL, NULL, 3),
-	(22, 24, 1, 'Horizons', '1.6234506622739668,-75.60409692513122', 'Florencia, Caquetá, Colombia', '3204440787', '', NULL, NULL, NULL, NULL),
-	(23, 25, 1, 'Horizons', '1.6234506622739668,-75.60409692513122', 'Florencia, Caquetá, Colombia', '3204440787', '683e1755f65d6c711a287e84', '683436604765d87a461b341a', NULL, 'Negocio realizado para la comunidad', 4),
-	(24, 30, 1, 'blablabla blebleble', '1.6222087305724857, -75.61084289841457', 'Florencia caqueta', '3204440787', '', NULL, NULL, NULL, 5),
-	(26, 34, 1, 'Coratiendas', '1.6123400192086215,-75.60642508255614', 'Florencia, Caquetá, Colombia', '3652547', '', NULL, NULL, NULL, 6),
-	(27, 36, 1, 'EdifiK', '4.3356027,-74.3683957', 'Carrera 13 # 18-26, Fusagasugá, Cundinamarca, Colombia', '3103348519', '', NULL, NULL, NULL, 7),
-	(28, 37, 1, 'K-OS', '1.6234506622739668,-75.60409692513122', 'Florencia, Caquetá, Colombia', '3204440787', '6833960e9c313657f5e02550', '6834362b4765d87a461b3408', NULL, 'Pq si', 8),
-	(29, 38, 1, 'Prome', '1.6234506622739668,-75.60409692513122', 'Florencia, Caquetá, Colombia', '3204440787', '', NULL, NULL, NULL, 9),
-	(34, 40, 1, 'Pan pa\' ya', '1.6046943720574707,-75.60290677490232', 'Cra. 15a #2d-115, Florencia, Caquetá', '3204440787', '6850ac1dac6622168168c557', '683436264765d87a461b3405', NULL, 'panaderia de pan', 10),
-	(35, 50, 1, 'Abastecible', '2.9339860379526495,-75.27426106872556', 'Los pinos', '3112929178', '687ee8f4ac6622168168c559', '683436264765d87a461b3405', NULL, 'Pinos', 11),
-	(36, 51, 1, 'Websen', NULL, 'Fusagasugá', '3103348519', '68a648005c46ee78254291cf', '683436264765d87a461b3405', NULL, NULL, 16),
-	(37, 36, 1, 'Edifik', NULL, 'villa counrty', '3103348519', '68a674485c46ee78254291d1', NULL, NULL, NULL, 13);
+INSERT INTO `local` (`PK_ID_LOCAL`, `FK_ID_PERSONA`, `FK_ID_ESTADO_LOCAL`, `NOMBRE_LOCAL`, `LOCALIZACION`, `DIRECCION_LOCAL`, `TELEFONO_LOCAL`, `FOTOS_LOCAL`, `BANNER_LOCAL`, `IMAGENES_LOCAL`, `DESCRIPCION_LOCAL`, `EMAIL_CONTACTO`, `WHATSAPP`, `SITIO_WEB`, `NIT`, `INSTAGRAM`, `FACEBOOK`, `TIKTOK`, `YOUTUBE`, `TWITTER`, `HORARIO_LUNES`, `HORARIO_MARTES`, `HORARIO_MIERCOLES`, `HORARIO_JUEVES`, `HORARIO_VIERNES`, `HORARIO_SABADO`, `HORARIO_DOMINGO`, `LATITUD`, `LONGITUD`, `FECHA_REGISTRO`, `FECHA_ACTUALIZACION`, `FK_ID_SUSCRIPCION_ACTIVA`) VALUES
+	(1, 6, 1, 'Verduras don pepe', 'Pablo VI', 'Calle 12', '3123687285', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-12-20 20:19:09', NULL, 1),
+	(3, 6, 1, 'pepito', 'abbas', 'calle 24', '21414', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-12-20 20:19:09', NULL, 2),
+	(21, 12, 1, 'Donas Micha', '1.6153858,-75.60423639999999', 'Florencia, Caquetá, Colombia', '78456', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-12-20 20:19:09', NULL, 3),
+	(22, 24, 1, 'Horizons', '1.6234506622739668,-75.60409692513122', 'Florencia, Caquetá, Colombia', '3204440787', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-12-20 20:19:09', NULL, NULL),
+	(23, 25, 1, 'Horizons', '1.6234506622739668,-75.60409692513122', 'Florencia, Caquetá, Colombia', '3204440787', '683e1755f65d6c711a287e84', '683436604765d87a461b341a', NULL, 'Negocio realizado para la comunidad', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-12-20 20:19:09', '2025-12-21 21:21:37', 23),
+	(24, 30, 1, 'blablabla blebleble', '1.6222087305724857, -75.61084289841457', 'Florencia caqueta', '3204440787', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-12-20 20:19:09', NULL, 5),
+	(26, 34, 1, 'Coratiendas', '1.6123400192086215,-75.60642508255614', 'Florencia, Caquetá, Colombia', '3652547', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-12-20 20:19:09', NULL, 6),
+	(27, 36, 1, 'EdifiK', '4.3356027,-74.3683957', 'Carrera 13 # 18-26, Fusagasugá, Cundinamarca, Colombia', '3103348519', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-12-20 20:19:09', NULL, 7),
+	(28, 37, 1, 'K-OS', '1.6234506622739668,-75.60409692513122', 'Florencia, Caquetá, Colombia', '3204440787', '6833960e9c313657f5e02550', '6834362b4765d87a461b3408', NULL, 'Pq si', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', NULL, NULL, '2025-12-20 20:19:09', '2025-12-21 22:51:01', 28),
+	(29, 38, 1, 'Prome', '1.6234506622739668,-75.60409692513122', 'Florencia, Caquetá, Colombia', '3204440787', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-12-20 20:19:09', NULL, 9),
+	(34, 40, 1, 'Pan pa\' ya', '1.6046943720574707,-75.60290677490232', 'Cra. 15a #2d-115, Florencia, Caquetá', '3204440787', '6850ac1dac6622168168c557', '683436264765d87a461b3405', NULL, 'panaderia de pan', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-12-20 20:19:09', NULL, 10),
+	(35, 50, 1, 'Abastecible', '2.9339860379526495,-75.27426106872556', 'Los pinos', '3112929178', '687ee8f4ac6622168168c559', '683436264765d87a461b3405', NULL, 'Pinos', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-12-20 20:19:09', NULL, 11),
+	(36, 51, 1, 'Websen', NULL, 'Fusagasugá', '3103348519', '68a648005c46ee78254291cf', '683436264765d87a461b3405', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-12-20 20:19:09', NULL, 16),
+	(37, 36, 1, 'Edifik', NULL, 'villa counrty', '3103348519', '68a674485c46ee78254291d1', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-12-20 20:19:09', NULL, 13);
 
 -- Volcando estructura para tabla abastecete.localcategoria
 CREATE TABLE IF NOT EXISTS `localcategoria` (
@@ -4151,39 +4078,34 @@ BEGIN
 END//
 DELIMITER ;
 
--- Volcando estructura para tabla abastecete.logs_membresia
-CREATE TABLE IF NOT EXISTS `logs_membresia` (
-  `ID_LOG` int NOT NULL AUTO_INCREMENT,
-  `MENSAJE` varchar(255) DEFAULT NULL,
-  `FECHA_REGISTRO` datetime DEFAULT NULL,
-  PRIMARY KEY (`ID_LOG`)
-) ENGINE=InnoDB AUTO_INCREMENT=84 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+-- Volcando estructura para tabla abastecete.logs_sistema
+CREATE TABLE IF NOT EXISTS `logs_sistema` (
+  `PK_ID_LOG` int NOT NULL AUTO_INCREMENT,
+  `FK_ID_USUARIO` int DEFAULT NULL,
+  `NOMBRE_USUARIO` varchar(200) DEFAULT NULL,
+  `MODULO` varchar(50) NOT NULL,
+  `TIPO_ACCION` enum('CREATE','UPDATE','DELETE','LOGIN','LOGOUT') NOT NULL,
+  `ENTIDAD_ID` int DEFAULT NULL,
+  `ENTIDAD_DESCRIPCION` varchar(255) DEFAULT NULL,
+  `DATOS_ANTERIORES` json DEFAULT NULL,
+  `DATOS_NUEVOS` json DEFAULT NULL,
+  `IP_CLIENTE` varchar(45) DEFAULT NULL,
+  `USER_AGENT` varchar(500) DEFAULT NULL,
+  `FECHA_REGISTRO` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `RESULTADO` enum('EXITO','ERROR') NOT NULL DEFAULT 'EXITO',
+  `MENSAJE_ERROR` varchar(500) DEFAULT NULL,
+  `CONTROLLER` varchar(100) DEFAULT NULL,
+  `ACTION` varchar(100) DEFAULT NULL,
+  PRIMARY KEY (`PK_ID_LOG`),
+  KEY `IDX_logs_fecha` (`FECHA_REGISTRO` DESC),
+  KEY `IDX_logs_usuario` (`FK_ID_USUARIO`),
+  KEY `IDX_logs_modulo` (`MODULO`),
+  KEY `IDX_logs_tipo_accion` (`TIPO_ACCION`),
+  KEY `IDX_logs_entidad` (`MODULO`,`ENTIDAD_ID`),
+  CONSTRAINT `FK_logs_usuario` FOREIGN KEY (`FK_ID_USUARIO`) REFERENCES `usuario` (`PK_ID_USUARIO`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla abastecete.logs_membresia: ~23 rows (aproximadamente)
-INSERT INTO `logs_membresia` (`ID_LOG`, `MENSAJE`, `FECHA_REGISTRO`) VALUES
-	(61, 'Se actualizaron membresías vencidas a inactivas', '2025-02-20 14:28:02'),
-	(62, 'Se actualizaron membresías vencidas a inactivas', '2025-02-20 14:29:02'),
-	(63, 'Se actualizaron membresías vencidas a inactivas', '2025-02-20 14:30:02'),
-	(64, 'Se actualizaron membresías vencidas a inactivas', '2025-02-20 14:31:02'),
-	(65, 'Se actualizaron membresías vencidas a inactivas', '2025-02-20 14:32:02'),
-	(66, 'Se actualizaron membresías vencidas a inactivas', '2025-02-20 14:33:02'),
-	(67, 'Se actualizaron membresías vencidas a inactivas', '2025-02-20 14:34:02'),
-	(68, 'Se actualizaron membresías vencidas a inactivas', '2025-02-20 14:35:02'),
-	(69, 'Se actualizaron membresías vencidas a inactivas', '2025-02-20 14:36:02'),
-	(70, 'Se actualizaron membresías vencidas a inactivas', '2025-02-20 14:37:02'),
-	(71, 'Se actualizaron membresías vencidas a inactivas', '2025-02-20 14:38:02'),
-	(72, 'Se actualizaron membresías vencidas a inactivas', '2025-02-20 14:39:02'),
-	(73, 'Se actualizaron membresías vencidas a inactivas', '2025-02-20 14:40:02'),
-	(74, 'Se actualizaron membresías vencidas a inactivas', '2025-02-20 14:41:02'),
-	(75, 'Se actualizaron membresías vencidas a inactivas', '2025-02-20 14:42:02'),
-	(76, 'Se actualizaron membresías vencidas a inactivas', '2025-02-20 14:43:02'),
-	(77, 'Se actualizaron membresías vencidas a inactivas', '2025-02-20 14:44:02'),
-	(78, 'Se actualizaron membresías vencidas a inactivas', '2025-02-20 14:45:02'),
-	(79, 'Se actualizaron membresías vencidas a inactivas', '2025-02-20 14:46:02'),
-	(80, 'Se actualizaron membresías vencidas a inactivas', '2025-02-20 14:47:02'),
-	(81, 'Se actualizaron membresías vencidas a inactivas', '2025-02-20 14:48:43'),
-	(82, 'Se actualizaron membresías vencidas a inactivas', '2025-02-20 14:49:02'),
-	(83, 'Se actualizaron membresías vencidas a inactivas', '2025-02-20 14:50:02');
+-- Volcando datos para la tabla abastecete.logs_sistema: ~0 rows (aproximadamente)
 
 -- Volcando estructura para tabla abastecete.marca
 CREATE TABLE IF NOT EXISTS `marca` (
@@ -4201,36 +4123,6 @@ CREATE TABLE IF NOT EXISTS `marca` (
 -- Volcando datos para la tabla abastecete.marca: ~1 rows (aproximadamente)
 INSERT INTO `marca` (`PK_ID_MARCA`, `NOMBRE`, `DESCRIPCION`, `LOGO_URL`, `CLOUDINARY_PUBLIC_ID`, `ACTIVO`, `FECHA_REGISTRO`) VALUES
 	(1, 'Sin Marca', 'Productos sin marca específica', NULL, NULL, 1, '2025-12-19 03:16:12');
-
--- Volcando estructura para tabla abastecete.membresia_local_deprecated
-CREATE TABLE IF NOT EXISTS `membresia_local_deprecated` (
-  `PK_ID_MEMBRESIA` int NOT NULL AUTO_INCREMENT,
-  `FK_ID_LOCAL` int DEFAULT NULL,
-  `ESTADO` int NOT NULL,
-  `FECHA_INICIO` datetime NOT NULL,
-  `FECHA_FIN` datetime DEFAULT NULL,
-  PRIMARY KEY (`PK_ID_MEMBRESIA`),
-  KEY `FK_membresia_estado` (`ESTADO`),
-  KEY `FK_membresia_local` (`FK_ID_LOCAL`),
-  CONSTRAINT `FK_membresia_estado` FOREIGN KEY (`ESTADO`) REFERENCES `estado` (`PK_ID_ESTADO`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `FK_membresia_local` FOREIGN KEY (`FK_ID_LOCAL`) REFERENCES `local` (`PK_ID_LOCAL`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=37 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- Volcando datos para la tabla abastecete.membresia_local_deprecated: ~13 rows (aproximadamente)
-INSERT INTO `membresia_local_deprecated` (`PK_ID_MEMBRESIA`, `FK_ID_LOCAL`, `ESTADO`, `FECHA_INICIO`, `FECHA_FIN`) VALUES
-	(2, 1, 1, '2025-02-20 10:05:41', '2025-03-20 10:05:41'),
-	(3, 3, 1, '2025-02-20 10:43:17', '2025-03-20 10:43:17'),
-	(21, 21, 1, '2025-03-22 11:18:16', '2025-04-22 11:18:16'),
-	(23, 23, 1, '2025-03-31 20:15:55', '2025-04-30 20:15:55'),
-	(24, 24, 1, '2025-04-01 15:31:50', '2025-05-01 15:31:50'),
-	(25, 26, 1, '2025-04-02 20:33:17', '2025-05-02 20:33:17'),
-	(26, 27, 1, '2025-04-10 03:18:21', '2025-05-10 03:18:21'),
-	(27, 28, 1, '2025-04-21 15:28:29', '2025-05-21 15:28:29'),
-	(28, 29, 1, '2025-04-26 09:25:06', '2025-05-26 09:25:06'),
-	(33, 34, 1, '2025-06-16 23:43:32', '2025-07-16 23:43:32'),
-	(34, 35, 1, '2025-07-22 01:28:20', '2025-08-22 01:28:20'),
-	(35, 36, 1, '2025-08-20 22:11:19', '2025-09-20 22:11:19'),
-	(36, 37, 1, '2025-08-21 01:20:45', '2025-09-21 01:20:45');
 
 -- Volcando estructura para tabla abastecete.metodo_autenticacion
 CREATE TABLE IF NOT EXISTS `metodo_autenticacion` (
@@ -4345,6 +4237,24 @@ BEGIN
     AND s.FECHA_FIN > NOW()
     ORDER BY s.FECHA_CREACION DESC
     LIMIT 1;
+END//
+DELIMITER ;
+
+-- Volcando estructura para procedimiento abastecete.obtener_todas_membresias
+DELIMITER //
+CREATE PROCEDURE `obtener_todas_membresias`()
+BEGIN
+    SELECT
+        PK_ID_TIPO_MEMBRESIA,
+        NOMBRE,
+        COSTO AS COSTO_MES,
+        COSTO_TRIMESTRAL AS COSTO_TRIMESTRE,
+        COSTO_SEMESTRAL AS COSTO_SEMESTRE,
+        COSTO_ANUAL AS COSTO_ANIO,
+        ESTADO
+    FROM tipo_membresia
+    WHERE ESTADO = 1
+    ORDER BY NOMBRE;
 END//
 DELIMITER ;
 
@@ -4475,9 +4385,9 @@ CREATE TABLE IF NOT EXISTS `permiso` (
   `NOMBRE_PERMISO` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
   `ESTADO_PERMISO` tinyint NOT NULL,
   PRIMARY KEY (`PK_ID_PERMISO`)
-) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla abastecete.permiso: ~11 rows (aproximadamente)
+-- Volcando datos para la tabla abastecete.permiso: ~12 rows (aproximadamente)
 INSERT INTO `permiso` (`PK_ID_PERMISO`, `NOMBRE_PERMISO`, `ESTADO_PERMISO`) VALUES
 	(2, 'Administrar Categorias', 1),
 	(3, 'Administrar Usuarios', 1),
@@ -4489,7 +4399,8 @@ INSERT INTO `permiso` (`PK_ID_PERMISO`, `NOMBRE_PERMISO`, `ESTADO_PERMISO`) VALU
 	(9, 'Administrar Banners', 1),
 	(11, 'Administrar Marcas', 1),
 	(12, 'Administrar Productos', 1),
-	(13, 'Ver Logs Sistema', 1);
+	(13, 'Ver Logs Sistema', 1),
+	(14, 'Administrar Galeria', 1);
 
 -- Volcando estructura para tabla abastecete.permiso_de_rol
 CREATE TABLE IF NOT EXISTS `permiso_de_rol` (
@@ -4502,9 +4413,9 @@ CREATE TABLE IF NOT EXISTS `permiso_de_rol` (
   KEY `FK_permiso_de_rol_permiso` (`PFK_ID_PERMISO`),
   CONSTRAINT `FK_permiso_de_rol_permiso` FOREIGN KEY (`PFK_ID_PERMISO`) REFERENCES `permiso` (`PK_ID_PERMISO`),
   CONSTRAINT `FK_permiso_de_rol_rol` FOREIGN KEY (`PFK_ID_ROL`) REFERENCES `rol` (`PK_ID_ROL`)
-) ENGINE=InnoDB AUTO_INCREMENT=38 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=39 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla abastecete.permiso_de_rol: ~29 rows (aproximadamente)
+-- Volcando datos para la tabla abastecete.permiso_de_rol: ~30 rows (aproximadamente)
 INSERT INTO `permiso_de_rol` (`PK_ID_PERMISO_ROL`, `PFK_ID_ROL`, `PFK_ID_PERMISO`, `ESTADO_PERMISO_ROL`) VALUES
 	(2, 1, 2, 1),
 	(3, 3, 4, 1),
@@ -4534,7 +4445,8 @@ INSERT INTO `permiso_de_rol` (`PK_ID_PERMISO_ROL`, `PFK_ID_ROL`, `PFK_ID_PERMISO
 	(34, 8, 11, 1),
 	(35, 1, 12, 1),
 	(36, 8, 12, 1),
-	(37, 1, 13, 1);
+	(37, 1, 13, 1),
+	(38, 1, 14, 1);
 
 -- Volcando estructura para tabla abastecete.persona
 CREATE TABLE IF NOT EXISTS `persona` (
@@ -4585,7 +4497,8 @@ INSERT INTO `persona` (`PK_ID_PERSONA`, `NOMBRES`, `APELLIDOS`, `TELEFONO`, `COR
 	(49, 'Gran', 'ATEKE', '3253655225', 'atekegran@gmail.com', 1234567891, 1, 1, NULL, NULL),
 	(50, 'Sebastian', 'Sierra', '3253655226', 'sebsirra13@gmail.com', 1234567892, 1, 1, NULL, NULL),
 	(51, 'WEBSEN', 'WEBSEN', '3253655227', 'websencol@gmail.com', 1234567893, 1, 1, NULL, NULL),
-	(52, 'Dana', 'Nabia', '3253655228', 'dananabia2000@gmail.com', 1234567894, 1, 1, NULL, NULL);
+	(52, 'Dana', 'Nabia', '3253655228', 'dananabia2000@gmail.com', 1234567894, 1, 1, NULL, NULL),
+	(56, 'juan', 'asado', '3204050072', 'prueba123@gmail.com', 10051241478, 1, 1, 'COD3464077', NULL);
 
 -- Volcando estructura para tabla abastecete.producto
 CREATE TABLE IF NOT EXISTS `producto` (
@@ -5625,6 +5538,24 @@ CREATE EVENT `resetear_intentos_fallidos` ON SCHEDULE EVERY 5 MINUTE STARTS '202
 END//
 DELIMITER ;
 
+-- Volcando estructura para procedimiento abastecete.revisar_imagen_galeria
+DELIMITER //
+CREATE PROCEDURE `revisar_imagen_galeria`(
+    IN p_id_galeria INT,
+    IN p_estado INT,
+    IN p_id_revisor INT,
+    IN p_motivo_rechazo VARCHAR(255)
+)
+BEGIN
+    UPDATE galeria_local SET
+        ESTADO = p_estado,
+        FECHA_REVISION = NOW(),
+        FK_ID_USUARIO_REVISOR = p_id_revisor,
+        MOTIVO_RECHAZO = CASE WHEN p_estado = 2 THEN p_motivo_rechazo ELSE NULL END
+    WHERE PK_ID_GALERIA = p_id_galeria;
+END//
+DELIMITER ;
+
 -- Volcando estructura para tabla abastecete.rol
 CREATE TABLE IF NOT EXISTS `rol` (
   `PK_ID_ROL` int NOT NULL AUTO_INCREMENT,
@@ -5738,22 +5669,33 @@ CREATE TABLE IF NOT EXISTS `suscripcion` (
   CONSTRAINT `FK_suscripcion_tipo` FOREIGN KEY (`FK_ID_TIPO_MEMBRESIA`) REFERENCES `tipo_membresia` (`PK_ID_TIPO_MEMBRESIA`)
 ) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla abastecete.suscripcion: ~14 rows (aproximadamente)
+-- Volcando datos para la tabla abastecete.suscripcion: ~25 rows (aproximadamente)
 INSERT INTO `suscripcion` (`PK_ID_SUSCRIPCION`, `FK_ID_LOCAL`, `FK_ID_TIPO_MEMBRESIA`, `ESTADO`, `FECHA_INICIO`, `FECHA_FIN`, `FECHA_CREACION`, `MONTO_PAGADO`, `METODO_PAGO`, `PERIODO`, `NOTAS`) VALUES
-	(1, 1, 12, 1, '2025-02-20 10:05:41', '2025-03-20 10:05:41', '2025-12-19 05:42:03', NULL, NULL, 'MENSUAL', 'Migrado automáticamente desde membresia_local'),
-	(2, 3, 18, 1, '2025-02-20 10:43:17', '2025-03-20 10:43:17', '2025-12-19 05:42:03', NULL, NULL, 'MENSUAL', 'Migrado automáticamente desde membresia_local'),
-	(3, 21, 17, 1, '2025-03-22 11:18:16', '2025-04-22 11:18:16', '2025-12-19 05:42:03', NULL, NULL, 'MENSUAL', 'Migrado automáticamente desde membresia_local'),
-	(4, 23, 13, 1, '2025-03-31 20:15:55', '2025-04-30 20:15:55', '2025-12-19 05:42:03', NULL, NULL, 'MENSUAL', 'Migrado automáticamente desde membresia_local'),
-	(5, 24, 16, 1, '2025-04-01 15:31:50', '2025-05-01 15:31:50', '2025-12-19 05:42:03', NULL, NULL, 'MENSUAL', 'Migrado automáticamente desde membresia_local'),
-	(6, 26, 16, 1, '2025-04-02 20:33:17', '2025-05-02 20:33:17', '2025-12-19 05:42:03', NULL, NULL, 'MENSUAL', 'Migrado automáticamente desde membresia_local'),
-	(7, 27, 13, 1, '2025-04-10 03:18:21', '2025-05-10 03:18:21', '2025-12-19 05:42:03', NULL, NULL, 'MENSUAL', 'Migrado automáticamente desde membresia_local'),
-	(8, 28, 11, 1, '2025-04-21 15:28:29', '2025-05-21 15:28:29', '2025-12-19 05:42:03', NULL, NULL, 'MENSUAL', 'Migrado automáticamente desde membresia_local'),
-	(9, 29, 19, 1, '2025-04-26 09:25:06', '2025-05-26 09:25:06', '2025-12-19 05:42:03', NULL, NULL, 'MENSUAL', 'Migrado automáticamente desde membresia_local'),
-	(10, 34, 11, 1, '2025-06-16 23:43:32', '2025-07-16 23:43:32', '2025-12-19 05:42:03', NULL, NULL, 'MENSUAL', 'Migrado automáticamente desde membresia_local'),
-	(11, 35, 11, 1, '2025-07-22 01:28:20', '2025-08-22 01:28:20', '2025-12-19 05:42:03', NULL, NULL, 'MENSUAL', 'Migrado automáticamente desde membresia_local'),
+	(1, 1, 12, 0, '2025-02-20 10:05:41', '2025-03-20 10:05:41', '2025-12-19 05:42:03', NULL, NULL, 'MENSUAL', 'Migrado automáticamente desde membresia_local'),
+	(2, 3, 18, 0, '2025-02-20 10:43:17', '2025-03-20 10:43:17', '2025-12-19 05:42:03', NULL, NULL, 'MENSUAL', 'Migrado automáticamente desde membresia_local'),
+	(3, 21, 17, 0, '2025-03-22 11:18:16', '2025-04-22 11:18:16', '2025-12-19 05:42:03', NULL, NULL, 'MENSUAL', 'Migrado automáticamente desde membresia_local'),
+	(4, 23, 13, 0, '2025-03-31 20:15:55', '2025-04-30 20:15:55', '2025-12-19 05:42:03', NULL, NULL, 'MENSUAL', 'Migrado automáticamente desde membresia_local'),
+	(5, 24, 16, 0, '2025-04-01 15:31:50', '2025-05-01 15:31:50', '2025-12-19 05:42:03', NULL, NULL, 'MENSUAL', 'Migrado automáticamente desde membresia_local'),
+	(6, 26, 16, 0, '2025-04-02 20:33:17', '2025-05-02 20:33:17', '2025-12-19 05:42:03', NULL, NULL, 'MENSUAL', 'Migrado automáticamente desde membresia_local'),
+	(7, 27, 13, 0, '2025-04-10 03:18:21', '2025-05-10 03:18:21', '2025-12-19 05:42:03', NULL, NULL, 'MENSUAL', 'Migrado automáticamente desde membresia_local'),
+	(8, 28, 11, 0, '2025-04-21 15:28:29', '2025-05-21 15:28:29', '2025-12-19 05:42:03', NULL, NULL, 'MENSUAL', 'Migrado automáticamente desde membresia_local'),
+	(9, 29, 19, 0, '2025-04-26 09:25:06', '2025-05-26 09:25:06', '2025-12-19 05:42:03', NULL, NULL, 'MENSUAL', 'Migrado automáticamente desde membresia_local'),
+	(10, 34, 11, 0, '2025-06-16 23:43:32', '2025-07-16 23:43:32', '2025-12-19 05:42:03', NULL, NULL, 'MENSUAL', 'Migrado automáticamente desde membresia_local'),
+	(11, 35, 11, 0, '2025-07-22 01:28:20', '2025-08-22 01:28:20', '2025-12-19 05:42:03', NULL, NULL, 'MENSUAL', 'Migrado automáticamente desde membresia_local'),
 	(12, 36, 13, 0, '2025-08-20 22:11:19', '2025-09-20 22:11:19', '2025-12-19 05:42:03', NULL, NULL, 'MENSUAL', 'Migrado automáticamente desde membresia_local'),
-	(13, 37, 11, 1, '2025-08-21 01:20:45', '2025-09-21 01:20:45', '2025-12-19 05:42:03', NULL, NULL, 'MENSUAL', 'Migrado automáticamente desde membresia_local'),
-	(16, 36, 11, 1, '2025-12-20 13:19:13', '2026-01-20 13:19:13', '2025-12-20 13:19:13', 0.00, 'Admin - Cambio Manual', 'MENSUAL', 'Cambio de membresía desde panel de administración');
+	(13, 37, 11, 0, '2025-08-21 01:20:45', '2025-09-21 01:20:45', '2025-12-19 05:42:03', NULL, NULL, 'MENSUAL', 'Migrado automáticamente desde membresia_local'),
+	(16, 36, 11, 1, '2025-12-20 13:19:13', '2026-01-20 13:19:13', '2025-12-20 13:19:13', 0.00, 'Admin - Cambio Manual', 'MENSUAL', 'Cambio de membresía desde panel de administración'),
+	(17, 23, 13, 0, '2025-12-21 19:26:58', '2026-01-21 19:26:58', '2025-12-21 19:26:58', 0.00, 'ePayco - Ref: FREE', 'MENSUAL', 'Cambio de plan desde Mi Membresía'),
+	(18, 23, 13, 0, '2025-12-21 19:29:16', '2026-01-21 19:29:16', '2025-12-21 19:29:16', 0.00, 'ePayco - Ref: FREE', 'MENSUAL', 'Cambio de plan desde Mi Membresía'),
+	(19, 23, 11, 0, '2025-12-21 19:34:10', '2026-01-21 19:34:10', '2025-12-21 19:34:10', 0.00, 'ePayco - Ref: FREE', 'MENSUAL', 'Cambio de plan desde Mi Membresía'),
+	(20, 23, 13, 0, '2025-12-21 19:37:44', '2026-01-21 19:37:44', '2025-12-21 19:37:44', 0.00, 'ePayco - Ref: FREE', 'MENSUAL', 'Cambio de plan desde Mi Membresía'),
+	(21, 23, 13, 0, '2025-12-21 19:38:13', '2026-01-21 19:38:13', '2025-12-21 19:38:13', 0.00, 'ePayco - Ref: FREE', 'MENSUAL', 'Cambio de plan desde Mi Membresía'),
+	(22, 23, 13, 0, '2025-12-21 21:17:35', '2026-01-21 21:17:35', '2025-12-21 21:17:35', 0.00, 'ePayco - Ref: GRATIS', 'MENSUAL', 'Cambio de plan desde Mi Membresía'),
+	(23, 23, 12, 1, '2025-12-21 21:21:37', '2026-01-21 21:21:37', '2025-12-21 21:21:37', 0.00, 'ePayco - Ref: GRATIS', 'MENSUAL', 'Cambio de plan desde Mi Membresía'),
+	(24, 28, 13, 0, '2025-12-21 21:53:49', '2026-01-21 21:53:49', '2025-12-21 21:53:49', 0.00, 'ePayco - Ref: GRATIS', 'MENSUAL', 'Cambio de plan desde Mi Membresía'),
+	(25, 28, 12, 0, '2025-12-21 21:54:12', '2026-01-21 21:54:12', '2025-12-21 21:54:12', 0.00, 'ePayco - Ref: GRATIS', 'MENSUAL', 'Cambio de plan desde Mi Membresía'),
+	(26, 28, 13, 0, '2025-12-21 22:32:49', '2026-01-21 22:32:49', '2025-12-21 22:32:49', 0.00, 'ePayco - Ref: GRATIS', 'MENSUAL', 'Cambio de plan desde Mi Membresía'),
+	(28, 28, 13, 1, '2025-12-21 22:51:01', '2026-01-21 22:51:01', '2025-12-21 22:51:01', 0.00, 'ePayco - Ref: GRATIS', 'MENSUAL', 'Cambio de plan desde Mi Membresía');
 
 -- Volcando estructura para tabla abastecete.tipo_documento
 CREATE TABLE IF NOT EXISTS `tipo_documento` (
@@ -5882,7 +5824,7 @@ CREATE TABLE IF NOT EXISTS `usuario` (
   CONSTRAINT `FK_usuario_tipo_autenticacion` FOREIGN KEY (`TIPO_AUTENTICACION`) REFERENCES `metodo_autenticacion` (`PK_ID_METODO_AUTENTICACION`)
 ) ENGINE=InnoDB AUTO_INCREMENT=53 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla abastecete.usuario: ~26 rows (aproximadamente)
+-- Volcando datos para la tabla abastecete.usuario: ~27 rows (aproximadamente)
 INSERT INTO `usuario` (`PK_ID_USUARIO`, `FK_ID_PERSONA`, `FK_ID_ROL`, `NOMBRE_USUARIO`, `CONTRASENIA`, `TOKEN_RECUPERACION`, `FECHA_EXPIRACION_TOKEN`, `TIPO_AUTENTICACION`, `INTENTOS_FALLIDOS`, `FECHA_BLOQUEO`, `CORREO_VERIFICADO`, `ESTADO`, `CLIENTES_REFERIDOS_TOTAL`, `INTENTOS_RECUPERACION`, `FECHA_ULTIMO_INTENTO_RECUPERACION`) VALUES
 	(2, 2, 1, 'kevin12@gmail.com', 'stCAUXlvlTCDOFCW3+AFGw==', NULL, NULL, 1, 0, NULL, 0, 1, 0, 0, NULL),
 	(4, 4, 1, 'sebastian@gmail.com', 'MApNL/Xu9KjSguqWMlk1aA==', NULL, NULL, 1, 0, NULL, 0, 1, 0, 0, NULL),
@@ -5892,7 +5834,7 @@ INSERT INTO `usuario` (`PK_ID_USUARIO`, `FK_ID_PERSONA`, `FK_ID_ROL`, `NOMBRE_US
 	(12, 12, 2, 'yoiner.mh04@gmail.com', 'xOBcl5JnPT+4p9sI5fpiGQ==', 'f7917a01-efcf-11ef-8a42-00155d007000', '2025-02-20 16:21:36', 2, 0, NULL, 0, 1, 0, 0, NULL),
 	(23, 23, 1, 'johans.ramirez@udla.edu.co', 'BGpwluhHTW0TzB09JfYwqw==', NULL, NULL, 1, 0, NULL, 0, 1, 0, 0, NULL),
 	(24, 24, 3, 'da.navia@udla.edu.co', 'BGpwluhHTW0TzB09JfYwqw==', 'dc9ff21a-0687-11f0-806b-d843ae9e6717', '2025-03-21 14:13:24', 1, 0, NULL, 0, 1, 0, 0, NULL),
-	(25, 25, 2, 'johan05182002.com@gmail.com', 'BGpwluhHTW0TzB09JfYwqw==', NULL, NULL, 1, 0, NULL, 0, 1, 0, 0, NULL),
+	(25, 25, 2, 'johan05182002.com@gmail.com', 'y3rFyft55CWVYwszuPNHUA==', NULL, NULL, 1, 0, NULL, 0, 1, 0, 0, '2025-12-21 17:58:01'),
 	(26, 26, 3, 'armuca@gmail.com', 'BGpwluhHTW0TzB09JfYwqw==', NULL, NULL, 1, 0, NULL, 0, 1, 0, 0, NULL),
 	(27, 27, 3, 'c@gmail.com', 'BGpwluhHTW0TzB09JfYwqw==', NULL, NULL, 1, 0, NULL, 0, 1, 0, 0, NULL),
 	(30, 30, 2, 'may13xd@gmail.com', 'zTLp/d8kn9F+qgWExhUrfA==', NULL, NULL, 1, 0, NULL, 0, 1, 0, 0, NULL),
@@ -5909,7 +5851,8 @@ INSERT INTO `usuario` (`PK_ID_USUARIO`, `FK_ID_PERSONA`, `FK_ID_ROL`, `NOMBRE_US
 	(49, 49, 3, 'atekegran@gmail.com', 'stCAUXlvlTCDOFCW3+AFGw==', NULL, NULL, 2, 0, NULL, 0, 1, 0, 0, NULL),
 	(50, 50, 2, 'sebsirra13@gmail.com', 'stCAUXlvlTCDOFCW3+AFGw==', NULL, NULL, 2, 0, NULL, 0, 1, 0, 0, NULL),
 	(51, 51, 2, 'websencol@gmail.com', 'stCAUXlvlTCDOFCW3+AFGw==', NULL, NULL, 2, 0, NULL, 0, 1, 0, 0, NULL),
-	(52, 52, 3, 'dananabia2000@gmail.com', 'stCAUXlvlTCDOFCW3+AFGw==', NULL, NULL, 2, 0, NULL, 0, 1, 0, 0, NULL);
+	(52, 52, 3, 'dananabia2000@gmail.com', 'stCAUXlvlTCDOFCW3+AFGw==', NULL, NULL, 2, 0, NULL, 0, 1, 0, 0, NULL),
+	(54, 56, 3, 'prueba123@gmail.com', 'y3rFyft55CWVYwszuPNHUA==', NULL, NULL, 1, 0, NULL, 0, 1, 0, 0, NULL);
 
 -- Volcando estructura para procedimiento abastecete.validar_limite_ofertas_flash
 DELIMITER //

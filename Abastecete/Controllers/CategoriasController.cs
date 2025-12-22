@@ -34,6 +34,7 @@ namespace Abastecete.Controllers
 
         [HttpPost]
         [RequierePermiso("Administrar Categorias")]
+        [Auditar(ModulosAuditoria.CATEGORIAS, TiposAccionAuditoria.CREATE, ParametroDescripcion = "Nombre")]
         public IActionResult Crear(IFormFile Imagen, string Nombre, int Estado, IFormFile Banner)
         {
             var imagenUrl = manejadorImagenes.SubirImagen(Imagen);
@@ -53,6 +54,7 @@ namespace Abastecete.Controllers
 
         [HttpPost]
         [RequierePermiso("Administrar Categorias")]
+        [Auditar(ModulosAuditoria.CATEGORIAS, TiposAccionAuditoria.UPDATE, ParametroId = "Id", ParametroDescripcion = "Nombre")]
         public IActionResult EditarCategoria(int Id, IFormFile Imagen, string Nombre, int Estado, IFormFile Banner)
         {
             Categoria categoriaActual = manejadorCategorias.ObtenerCategoria(Id);

@@ -30,6 +30,8 @@ namespace BusinessLogic.Models
             "CREATE" => "Creación",
             "UPDATE" => "Actualización",
             "DELETE" => "Eliminación",
+            "LOGIN" => "Inicio de sesión",
+            "LOGOUT" => "Cierre de sesión",
             _ => TipoAccion
         };
 
@@ -38,6 +40,8 @@ namespace BusinessLogic.Models
             "CREATE" => "fa-plus-circle text-green-600",
             "UPDATE" => "fa-edit text-blue-600",
             "DELETE" => "fa-trash text-red-600",
+            "LOGIN" => "fa-sign-in-alt text-teal-600",
+            "LOGOUT" => "fa-sign-out-alt text-orange-600",
             _ => "fa-circle text-gray-400"
         };
 
@@ -54,6 +58,11 @@ namespace BusinessLogic.Models
             "MARCAS" => "bg-pink-100 text-pink-700",
             "OFERTAS_FLASH" => "bg-red-100 text-red-700",
             "BANNERS" => "bg-indigo-100 text-indigo-700",
+            "AUTENTICACION" => "bg-teal-100 text-teal-700",
+            "GALERIA" => "bg-cyan-100 text-cyan-700",
+            "NEGOCIOS" => "bg-emerald-100 text-emerald-700",
+            "CATEGORIAS" => "bg-lime-100 text-lime-700",
+            "SUBCATEGORIAS" => "bg-green-100 text-green-700",
             _ => "bg-gray-100 text-gray-700"
         };
     }
@@ -73,11 +82,14 @@ namespace BusinessLogic.Models
         public const string CATEGORIAS = "CATEGORIAS";
         public const string SUBCATEGORIAS = "SUBCATEGORIAS";
         public const string ROLES = "ROLES";
+        public const string AUTENTICACION = "AUTENTICACION";
+        public const string GALERIA = "GALERIA";
+        public const string NEGOCIOS = "NEGOCIOS";
 
         public static string[] Todos => new[]
         {
-            PRODUCTOS, USUARIOS, LOCALES, MEMBRESIAS,
-            MARCAS, OFERTAS_FLASH, BANNERS, CATEGORIAS
+            AUTENTICACION, PRODUCTOS, USUARIOS, LOCALES, MEMBRESIAS,
+            MARCAS, OFERTAS_FLASH, BANNERS, CATEGORIAS, GALERIA, NEGOCIOS
         };
     }
 
@@ -89,5 +101,7 @@ namespace BusinessLogic.Models
         public const string CREATE = "CREATE";
         public const string UPDATE = "UPDATE";
         public const string DELETE = "DELETE";
+        public const string LOGIN = "LOGIN";
+        public const string LOGOUT = "LOGOUT";
     }
 }

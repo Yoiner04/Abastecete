@@ -1,5 +1,6 @@
 using BusinessLogic;
 using BusinessLogic.Models;
+using BusinessLogic.Utilidades;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Http;
@@ -16,9 +17,11 @@ namespace Abastecete.Controllers
         private readonly ManejadorCategorias _manejadorCategorias;
         private readonly ManejadorImagenes _manejadorImagenes;
         private readonly ManejadorGaleriaLocal _manejadorGaleria;
+        private readonly ManejadorSuscripciones _manejadorSuscripciones;
+        private readonly IConfiguration _configuration;
 
 
-        public NegociosController()
+        public NegociosController(IConfiguration configuration)
         {
             _manejadorNegocios = new ManejadorNegocios();
             _manejadorMembresias = new ManejadorMembresias();
@@ -26,11 +29,14 @@ namespace Abastecete.Controllers
             _manejadorCategorias = new ManejadorCategorias();
             _manejadorImagenes = new ManejadorImagenes();
             _manejadorGaleria = new ManejadorGaleriaLocal();
+            _manejadorSuscripciones = new ManejadorSuscripciones();
+            _configuration = configuration;
         }
 
         [HttpGet]
         public IActionResult Crear()
         {
+            ViewBag.GoogleMapsApiKey = _configuration["GoogleMaps:ApiKey"];
             return View();
         }
 
@@ -106,6 +112,7 @@ namespace Abastecete.Controllers
         }
 
         [HttpPost]
+        [Auditar(ModulosAuditoria.NEGOCIOS, TiposAccionAuditoria.UPDATE, ParametroDescripcion = "Nombre")]
         public IActionResult EditarNegocio(Negocio a, List<IFormFile>? imagenesGaleria)
         {
             var personaId = HttpContext.Session.GetInt32("PersonaId");
@@ -198,6 +205,7 @@ namespace Abastecete.Controllers
         /// Elimina una imagen de la galería del local
         /// </summary>
         [HttpPost]
+        [Auditar(ModulosAuditoria.GALERIA, TiposAccionAuditoria.DELETE, ParametroId = "id")]
         public IActionResult EliminarImagenGaleria(int id)
         {
             var personaId = HttpContext.Session.GetInt32("PersonaId");
@@ -224,6 +232,7 @@ namespace Abastecete.Controllers
         }
 
         [HttpPost]
+        [Auditar(ModulosAuditoria.NEGOCIOS, TiposAccionAuditoria.CREATE, ParametroDescripcion = "Nombre")]
         public IActionResult GuardarDatosNegocio(Negocio negocio, IFormFile logo_archivo)
         {
             var personaId = HttpContext.Session.GetInt32("PersonaId");
@@ -312,6 +321,174 @@ namespace Abastecete.Controllers
             }
         }
 
+        /// <summary>
+        /// Vista de Mi Membresía - muestra la suscripción actual, días restantes, historial
+        /// y opciones para renovar o cambiar de plan
+        /// </summary>
+        [HttpGet]
+        public IActionResult MiMembresia()
+        {
+            var personaId = HttpContext.Session.GetInt32("PersonaId");
+            if (!personaId.HasValue)
+            {
+                return RedirectToAction("Login", "Login");
+            }
+
+            Negocio negocio = _manejadorNegocios.ConsultarNegocio(personaId.Value);
+            if (negocio == null)
+            {
+                return RedirectToAction("Crear");
+            }
+
+            // Obtener suscripción activa
+            var suscripcionActiva = _manejadorSuscripciones.ObtenerSuscripcionActiva(negocio.Id);
+
+            // Obtener historial de membresías
+            var historial = _manejadorSuscripciones.ObtenerHistorial(negocio.Id);
+
+            // Obtener todas las membresías disponibles para cambiar plan
+            var membresiasDisponibles = _manejadorMembresias.ObtenerTodasMembresias();
+
+            ViewBag.Negocio = negocio;
+            ViewBag.SuscripcionActiva = suscripcionActiva;
+            ViewBag.Historial = historial;
+            ViewBag.MembresiasDisponibles = membresiasDisponibles;
+            ViewBag.EpaycoPublicKey = _configuration["Epayco:PublicKey"];
+
+            return View();
+        }
+
+        /// <summary>
+        /// Procesa la renovación de membresía después del pago exitoso con ePayco
+        /// </summary>
+        [HttpGet]
+        public IActionResult CompletarRenovacion(string periodo, decimal monto, string ref_payco)
+        {
+            var personaId = HttpContext.Session.GetInt32("PersonaId");
+            if (!personaId.HasValue)
+            {
+                return RedirectToAction("Login", "Login");
+            }
+
+            Negocio negocio = _manejadorNegocios.ConsultarNegocio(personaId.Value);
+            if (negocio == null)
+            {
+                return RedirectToAction("Crear");
+            }
+
+            var suscripcionActiva = _manejadorSuscripciones.ObtenerSuscripcionActiva(negocio.Id);
+            if (suscripcionActiva == null)
+            {
+                TempData["Error"] = "No se encontró una suscripción activa para renovar.";
+                return RedirectToAction("MiMembresia");
+            }
+
+            try
+            {
+                var resultado = _manejadorSuscripciones.RenovarSuscripcion(
+                    suscripcionActiva.Id,
+                    periodo.ToUpper(),
+                    monto,
+                    $"ePayco - Ref: {ref_payco}"
+                );
+
+                if (resultado.IdSuscripcion > 0)
+                {
+                    TempData["Success"] = $"¡Membresía renovada exitosamente! Nueva fecha de vencimiento: {resultado.NuevaFechaFin:dd/MM/yyyy}";
+                }
+                else
+                {
+                    TempData["Error"] = "Hubo un problema al procesar la renovación. Contacta a soporte.";
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error renovando suscripción: {ex.Message}");
+                TempData["Error"] = "Error al procesar la renovación.";
+            }
+
+            return RedirectToAction("MiMembresia");
+        }
+
+        /// <summary>
+        /// Procesa el cambio de plan después del pago exitoso con ePayco
+        /// </summary>
+        [HttpGet]
+        public IActionResult CompletarCambioPlan(int tipoMembresiaId, string periodo, decimal monto, string ref_payco)
+        {
+            var personaId = HttpContext.Session.GetInt32("PersonaId");
+            if (!personaId.HasValue)
+            {
+                return RedirectToAction("Login", "Login");
+            }
+
+            Negocio negocio = _manejadorNegocios.ConsultarNegocio(personaId.Value);
+            if (negocio == null)
+            {
+                return RedirectToAction("Crear");
+            }
+
+            try
+            {
+                var resultado = _manejadorSuscripciones.CrearSuscripcion(
+                    negocio.Id,
+                    tipoMembresiaId,
+                    periodo.ToUpper(),
+                    monto,
+                    $"ePayco - Ref: {ref_payco}",
+                    "Cambio de plan desde Mi Membresía"
+                );
+
+                if (resultado.IdSuscripcion > 0)
+                {
+                    string mensaje = resultado.TipoCambio switch
+                    {
+                        "UPGRADE" => "¡Plan mejorado exitosamente!",
+                        "DOWNGRADE" => "Plan cambiado exitosamente.",
+                        _ => "¡Membresía activada exitosamente!"
+                    };
+                    TempData["Success"] = mensaje;
+                }
+                else
+                {
+                    TempData["Error"] = "Hubo un problema al procesar el cambio de plan. Contacta a soporte.";
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error cambiando plan: {ex.Message}");
+                TempData["Error"] = "Error al procesar el cambio de plan.";
+            }
+
+            return RedirectToAction("MiMembresia");
+        }
+
+        /// <summary>
+        /// API para obtener los precios de una membresía específica
+        /// </summary>
+        [HttpGet]
+        public IActionResult ObtenerPreciosMembresia(int id)
+        {
+            var membresia = _manejadorMembresias.ObtenerMembresia(id);
+            if (membresia == null)
+            {
+                return NotFound();
+            }
+
+            return Json(new
+            {
+                id = membresia.Id,
+                nombre = membresia.Nombre,
+                mensual = membresia.Costo,
+                trimestral = membresia.Costo_trimestral,
+                semestral = membresia.Costo_semestral,
+                anual = membresia.Costo_anual,
+                descripcion = membresia.Descripcion,
+                cantidad = membresia.Cantidad,
+                ofertasSimultaneas = membresia.OfertasFlashSimultaneas,
+                ofertasTotal = membresia.OfertasFlashTotal
+            });
+        }
 
 
     }
