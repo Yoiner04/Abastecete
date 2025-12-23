@@ -1,7 +1,7 @@
 -- --------------------------------------------------------
--- Host:                         167.71.91.199
--- Versión del servidor:         8.0.42-0ubuntu0.24.10.1 - (Ubuntu)
--- SO del servidor:              Linux
+-- Host:                         127.0.0.1
+-- Versión del servidor:         8.0.39 - MySQL Community Server - GPL
+-- SO del servidor:              Win64
 -- HeidiSQL Versión:             12.10.0.7000
 -- --------------------------------------------------------
 
@@ -3603,6 +3603,28 @@ INSERT INTO `estado` (`PK_ID_ESTADO`, `NOMBRE_ESTADO`) VALUES
 	(1, 'Activo'),
 	(2, 'Inactivo');
 
+-- Volcando estructura para tabla abastecete.evento_analitica
+CREATE TABLE IF NOT EXISTS `evento_analitica` (
+  `PK_ID_EVENTO` bigint NOT NULL AUTO_INCREMENT,
+  `FK_ID_LOCAL` int NOT NULL,
+  `FK_ID_PRODUCTO` int DEFAULT NULL,
+  `TIPO_EVENTO` enum('VISITA_LOCAL','VISITA_PRODUCTO','CLIC_WHATSAPP','BUSQUEDA_APARICION','CLIC_TELEFONO','COMPARTIR') NOT NULL,
+  `IP_VISITANTE` varchar(45) DEFAULT NULL,
+  `USER_AGENT` varchar(500) DEFAULT NULL,
+  `REFERRER` varchar(500) DEFAULT NULL,
+  `FECHA_EVENTO` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`PK_ID_EVENTO`),
+  KEY `idx_evento_local` (`FK_ID_LOCAL`),
+  KEY `idx_evento_fecha` (`FECHA_EVENTO`),
+  KEY `idx_evento_tipo` (`TIPO_EVENTO`),
+  KEY `idx_evento_local_fecha` (`FK_ID_LOCAL`,`FECHA_EVENTO`),
+  KEY `fk_evento_producto` (`FK_ID_PRODUCTO`),
+  CONSTRAINT `fk_evento_local` FOREIGN KEY (`FK_ID_LOCAL`) REFERENCES `local` (`PK_ID_LOCAL`) ON DELETE CASCADE,
+  CONSTRAINT `fk_evento_producto` FOREIGN KEY (`FK_ID_PRODUCTO`) REFERENCES `producto` (`PK_ID_PRODUCTO`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- Volcando datos para la tabla abastecete.evento_analitica: ~0 rows (aproximadamente)
+
 -- Volcando estructura para evento abastecete.expirar_ofertas_flash
 DELIMITER //
 CREATE EVENT `expirar_ofertas_flash` ON SCHEDULE EVERY 1 HOUR STARTS '2025-03-04 02:00:00' ON COMPLETION NOT PRESERVE ENABLE COMMENT 'Elimina ofertas flash cuando su tiempo haya expirado' DO UPDATE oferta_flash
@@ -3615,13 +3637,13 @@ DELIMITER ;
 CREATE TABLE IF NOT EXISTS `galeria_local` (
   `PK_ID_GALERIA` int NOT NULL AUTO_INCREMENT,
   `FK_ID_LOCAL` int NOT NULL,
-  `CLOUDINARY_URL` varchar(500) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `CLOUDINARY_PUBLIC_ID` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `CLOUDINARY_URL` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `CLOUDINARY_PUBLIC_ID` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `ESTADO` int DEFAULT '0' COMMENT '0=Pendiente, 1=Aprobada, 2=Rechazada',
   `FECHA_SUBIDA` datetime DEFAULT CURRENT_TIMESTAMP,
   `FECHA_REVISION` datetime DEFAULT NULL,
   `FK_ID_USUARIO_REVISOR` int DEFAULT NULL,
-  `MOTIVO_RECHAZO` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `MOTIVO_RECHAZO` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`PK_ID_GALERIA`),
   KEY `idx_galeria_local` (`FK_ID_LOCAL`),
   KEY `idx_galeria_estado` (`ESTADO`),
@@ -3630,7 +3652,7 @@ CREATE TABLE IF NOT EXISTS `galeria_local` (
   CONSTRAINT `FK_galeria_revisor` FOREIGN KEY (`FK_ID_USUARIO_REVISOR`) REFERENCES `usuario` (`PK_ID_USUARIO`) ON DELETE SET NULL
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Volcando datos para la tabla abastecete.galeria_local: ~1 rows (aproximadamente)
+-- Volcando datos para la tabla abastecete.galeria_local: ~0 rows (aproximadamente)
 INSERT INTO `galeria_local` (`PK_ID_GALERIA`, `FK_ID_LOCAL`, `CLOUDINARY_URL`, `CLOUDINARY_PUBLIC_ID`, `ESTADO`, `FECHA_SUBIDA`, `FECHA_REVISION`, `FK_ID_USUARIO_REVISOR`, `MOTIVO_RECHAZO`) VALUES
 	(1, 28, 'https://res.cloudinary.com/dwl5ggfhd/image/upload/v1766353804/galeria/locales/xtx4pvn7tyockpdhge4x.jpg', 'galeria/locales/xtx4pvn7tyockpdhge4x', 1, '2025-12-21 21:50:05', '2025-12-21 22:31:12', 2, NULL);
 
@@ -3696,9 +3718,9 @@ CREATE TABLE IF NOT EXISTS `historial_membresia` (
   KEY `IDX_historial_local` (`FK_ID_LOCAL`),
   KEY `IDX_historial_fecha` (`FECHA_CAMBIO`),
   CONSTRAINT `FK_historial_local` FOREIGN KEY (`FK_ID_LOCAL`) REFERENCES `local` (`PK_ID_LOCAL`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=28 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=29 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla abastecete.historial_membresia: ~25 rows (aproximadamente)
+-- Volcando datos para la tabla abastecete.historial_membresia: ~26 rows (aproximadamente)
 INSERT INTO `historial_membresia` (`PK_ID_HISTORIAL`, `FK_ID_LOCAL`, `FK_ID_SUSCRIPCION`, `FK_ID_TIPO_ANTERIOR`, `FK_ID_TIPO_NUEVO`, `TIPO_CAMBIO`, `FECHA_CAMBIO`, `FECHA_INICIO_PERIODO`, `FECHA_FIN_PERIODO`, `MONTO`, `PERIODO`, `NOTAS`) VALUES
 	(1, 1, 1, NULL, 12, 'MIGRACION', '2025-12-19 05:42:03', '2025-02-20 10:05:41', '2025-03-20 10:05:41', NULL, NULL, 'Registro inicial migrado automáticamente'),
 	(2, 3, 2, NULL, 18, 'MIGRACION', '2025-12-19 05:42:03', '2025-02-20 10:43:17', '2025-03-20 10:43:17', NULL, NULL, 'Registro inicial migrado automáticamente'),
@@ -3724,7 +3746,8 @@ INSERT INTO `historial_membresia` (`PK_ID_HISTORIAL`, `FK_ID_LOCAL`, `FK_ID_SUSC
 	(24, 28, 24, NULL, 13, 'ALTA', '2025-12-21 21:53:49', '2025-12-21 21:53:49', '2026-01-21 21:53:49', 0.00, 'MENSUAL', 'Cambio de plan desde Mi Membresía'),
 	(25, 28, 25, 13, 12, 'DOWNGRADE', '2025-12-21 21:54:12', '2025-12-21 21:54:12', '2026-01-21 21:54:12', 0.00, 'MENSUAL', 'Cambio de plan desde Mi Membresía'),
 	(26, 28, 26, 12, 13, 'UPGRADE', '2025-12-21 22:32:49', '2025-12-21 22:32:49', '2026-01-21 22:32:49', 0.00, 'MENSUAL', 'Cambio de plan desde Mi Membresía'),
-	(27, 28, 28, NULL, 13, 'ALTA', '2025-12-21 22:51:01', '2025-12-21 22:51:01', '2026-01-21 22:51:01', 0.00, 'MENSUAL', 'Cambio de plan desde Mi Membresía');
+	(27, 28, 28, NULL, 13, 'ALTA', '2025-12-21 22:51:01', '2025-12-21 22:51:01', '2026-01-21 22:51:01', 0.00, 'MENSUAL', 'Cambio de plan desde Mi Membresía'),
+	(28, 38, 30, NULL, 13, 'ALTA', '2025-12-22 21:44:14', '2025-12-22 21:44:14', '2026-01-22 21:44:14', 0.00, 'MENSUAL', 'Cambio de plan desde Mi Membresía');
 
 -- Volcando estructura para procedimiento abastecete.insertar_log_sistema
 DELIMITER //
@@ -3907,9 +3930,9 @@ CREATE TABLE IF NOT EXISTS `local` (
   CONSTRAINT `FK_local_estado` FOREIGN KEY (`FK_ID_ESTADO_LOCAL`) REFERENCES `estado` (`PK_ID_ESTADO`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `FK_local_persona` FOREIGN KEY (`FK_ID_PERSONA`) REFERENCES `persona` (`PK_ID_PERSONA`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `FK_local_suscripcion_activa` FOREIGN KEY (`FK_ID_SUSCRIPCION_ACTIVA`) REFERENCES `suscripcion` (`PK_ID_SUSCRIPCION`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=38 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=39 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla abastecete.local: ~14 rows (aproximadamente)
+-- Volcando datos para la tabla abastecete.local: ~15 rows (aproximadamente)
 INSERT INTO `local` (`PK_ID_LOCAL`, `FK_ID_PERSONA`, `FK_ID_ESTADO_LOCAL`, `NOMBRE_LOCAL`, `LOCALIZACION`, `DIRECCION_LOCAL`, `TELEFONO_LOCAL`, `FOTOS_LOCAL`, `BANNER_LOCAL`, `IMAGENES_LOCAL`, `DESCRIPCION_LOCAL`, `EMAIL_CONTACTO`, `WHATSAPP`, `SITIO_WEB`, `NIT`, `INSTAGRAM`, `FACEBOOK`, `TIKTOK`, `YOUTUBE`, `TWITTER`, `HORARIO_LUNES`, `HORARIO_MARTES`, `HORARIO_MIERCOLES`, `HORARIO_JUEVES`, `HORARIO_VIERNES`, `HORARIO_SABADO`, `HORARIO_DOMINGO`, `LATITUD`, `LONGITUD`, `FECHA_REGISTRO`, `FECHA_ACTUALIZACION`, `FK_ID_SUSCRIPCION_ACTIVA`) VALUES
 	(1, 6, 1, 'Verduras don pepe', 'Pablo VI', 'Calle 12', '3123687285', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-12-20 20:19:09', NULL, 1),
 	(3, 6, 1, 'pepito', 'abbas', 'calle 24', '21414', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-12-20 20:19:09', NULL, 2),
@@ -3919,12 +3942,13 @@ INSERT INTO `local` (`PK_ID_LOCAL`, `FK_ID_PERSONA`, `FK_ID_ESTADO_LOCAL`, `NOMB
 	(24, 30, 1, 'blablabla blebleble', '1.6222087305724857, -75.61084289841457', 'Florencia caqueta', '3204440787', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-12-20 20:19:09', NULL, 5),
 	(26, 34, 1, 'Coratiendas', '1.6123400192086215,-75.60642508255614', 'Florencia, Caquetá, Colombia', '3652547', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-12-20 20:19:09', NULL, 6),
 	(27, 36, 1, 'EdifiK', '4.3356027,-74.3683957', 'Carrera 13 # 18-26, Fusagasugá, Cundinamarca, Colombia', '3103348519', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-12-20 20:19:09', NULL, 7),
-	(28, 37, 1, 'K-OS', '1.6234506622739668,-75.60409692513122', 'Florencia, Caquetá, Colombia', '3204440787', '6833960e9c313657f5e02550', '6834362b4765d87a461b3408', NULL, 'Pq si', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', NULL, NULL, '2025-12-20 20:19:09', '2025-12-21 22:51:01', 28),
+	(28, 37, 1, 'K-OS', '1.6234506622739668,-75.60409692513122', 'Florencia, Caquetá, Colombia', '3204440787', 'https://res.cloudinary.com/dwl5ggfhd/image/upload/v1766456390/abastecete/yo5y7twlhmw5g9aqcbnc.png', '6834362b4765d87a461b3408', NULL, 'Pq si', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', NULL, NULL, '2025-12-20 20:19:09', '2025-12-22 21:19:53', 28),
 	(29, 38, 1, 'Prome', '1.6234506622739668,-75.60409692513122', 'Florencia, Caquetá, Colombia', '3204440787', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-12-20 20:19:09', NULL, 9),
 	(34, 40, 1, 'Pan pa\' ya', '1.6046943720574707,-75.60290677490232', 'Cra. 15a #2d-115, Florencia, Caquetá', '3204440787', '6850ac1dac6622168168c557', '683436264765d87a461b3405', NULL, 'panaderia de pan', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-12-20 20:19:09', NULL, 10),
 	(35, 50, 1, 'Abastecible', '2.9339860379526495,-75.27426106872556', 'Los pinos', '3112929178', '687ee8f4ac6622168168c559', '683436264765d87a461b3405', NULL, 'Pinos', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-12-20 20:19:09', NULL, 11),
 	(36, 51, 1, 'Websen', NULL, 'Fusagasugá', '3103348519', '68a648005c46ee78254291cf', '683436264765d87a461b3405', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-12-20 20:19:09', NULL, 16),
-	(37, 36, 1, 'Edifik', NULL, 'villa counrty', '3103348519', '68a674485c46ee78254291d1', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-12-20 20:19:09', NULL, 13);
+	(37, 36, 1, 'Edifik', NULL, 'villa counrty', '3103348519', '68a674485c46ee78254291d1', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-12-20 20:19:09', NULL, 13),
+	(38, 57, 1, 'Habitta ', '4.344581584102627,-74.36225406825542', 'Centro Comercial Plaza Santa Cruz, Calle 7 #5-32, Sabaneta, Fusagasugá, Cundinamarca, Colombia', '0', 'https://res.cloudinary.com/dwl5ggfhd/image/upload/v1766457801/abastecete/knelxikcruwszxbpn7oq.png', '', NULL, 'Empresa inmobiliaria ', '', '+57 310 3348519', '', '', '@habitta.col', 'https://web.facebook.com/people/Habitta-Col/61582169653971/', '@habittacol', 'https://www.youtube.com/@habitta_inmobiliaria', '', '', '', '', '', '', '', '', NULL, NULL, '2025-12-22 21:43:48', '2025-12-22 21:47:33', 30);
 
 -- Volcando estructura para tabla abastecete.localcategoria
 CREATE TABLE IF NOT EXISTS `localcategoria` (
@@ -4253,9 +4277,9 @@ CREATE TABLE IF NOT EXISTS `logs_sistema` (
   KEY `IDX_logs_tipo_accion` (`TIPO_ACCION`),
   KEY `IDX_logs_entidad` (`MODULO`,`ENTIDAD_ID`),
   CONSTRAINT `FK_logs_usuario` FOREIGN KEY (`FK_ID_USUARIO`) REFERENCES `usuario` (`PK_ID_USUARIO`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=41 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla abastecete.logs_sistema: ~13 rows (aproximadamente)
+-- Volcando datos para la tabla abastecete.logs_sistema: ~40 rows (aproximadamente)
 INSERT INTO `logs_sistema` (`PK_ID_LOG`, `FK_ID_USUARIO`, `NOMBRE_USUARIO`, `MODULO`, `TIPO_ACCION`, `ENTIDAD_ID`, `ENTIDAD_DESCRIPCION`, `DATOS_ANTERIORES`, `DATOS_NUEVOS`, `IP_CLIENTE`, `USER_AGENT`, `FECHA_REGISTRO`, `RESULTADO`, `MENSAJE_ERROR`, `CONTROLLER`, `ACTION`) VALUES
 	(1, 54, 'prueba123@gmail.com', 'AUTENTICACION', 'LOGIN', 54, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-22 05:25:06', 'EXITO', '', 'Login', 'Login'),
 	(2, 54, 'Usuario', 'AUTENTICACION', 'LOGOUT', 54, 'Cierre de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-22 05:27:25', 'EXITO', '', 'Login', 'Logout'),
@@ -4271,7 +4295,32 @@ INSERT INTO `logs_sistema` (`PK_ID_LOG`, `FK_ID_USUARIO`, `NOMBRE_USUARIO`, `MOD
 	(12, 2, 'kevin12@gmail.com', 'AUTENTICACION', 'LOGIN', 2, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-22 12:49:16', 'EXITO', '', 'Login', 'Login'),
 	(13, 2, 'kevin12@gmail.com', 'AUTENTICACION', 'LOGIN', 2, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-22 17:47:46', 'EXITO', '', 'Login', 'Login'),
 	(14, 2, 'kevin12@gmail.com', 'AUTENTICACION', 'LOGIN', 2, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-22 18:09:27', 'EXITO', '', 'Login', 'Login'),
-	(15, 2, 'kevin12@gmail.com', 'AUTENTICACION', 'LOGIN', 2, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-22 18:09:56', 'EXITO', '', 'Login', 'Login');
+	(15, 2, 'kevin12@gmail.com', 'AUTENTICACION', 'LOGIN', 2, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-22 18:09:56', 'EXITO', '', 'Login', 'Login'),
+	(16, 2, 'kevin12@gmail.com', 'AUTENTICACION', 'LOGIN', 2, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-22 21:18:04', 'EXITO', '', 'Login', 'Login'),
+	(17, 2, 'Usuario', 'AUTENTICACION', 'LOGOUT', 2, 'Cierre de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-22 21:19:28', 'EXITO', '', 'Login', 'Logout'),
+	(18, 37, 'hola@gmail.com', 'AUTENTICACION', 'LOGIN', 37, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-22 21:19:31', 'EXITO', '', 'Login', 'Login'),
+	(19, 37, 'Usuario ID: 37', 'NEGOCIOS', 'UPDATE', 28, 'K-OS', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-22 21:19:53', 'EXITO', '', 'Negocios', 'EditarNegocio'),
+	(20, 37, 'Usuario', 'AUTENTICACION', 'LOGOUT', 37, 'Cierre de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-22 21:20:37', 'EXITO', '', 'Login', 'Logout'),
+	(21, 2, 'kevin12@gmail.com', 'AUTENTICACION', 'LOGIN', 2, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-22 21:20:40', 'EXITO', '', 'Login', 'Login'),
+	(22, 2, 'Usuario ID: 2', 'MARCAS', 'CREATE', 1, 'Postobon', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-22 21:22:40', 'EXITO', '', 'Marcas', 'Crear'),
+	(23, 2, 'Usuario', 'AUTENTICACION', 'LOGOUT', 2, 'Cierre de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-22 21:25:31', 'EXITO', '', 'Login', 'Logout'),
+	(24, 2, 'kevin12@gmail.com', 'AUTENTICACION', 'LOGIN', 2, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-22 21:25:44', 'EXITO', '', 'Login', 'Login'),
+	(25, 2, 'Usuario', 'AUTENTICACION', 'LOGOUT', 2, 'Cierre de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-22 21:26:04', 'EXITO', '', 'Login', 'Logout'),
+	(26, 55, 'prueba1234@gmail.com', 'AUTENTICACION', 'LOGIN', 55, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-22 21:27:48', 'EXITO', '', 'Login', 'Login'),
+	(27, 55, 'Usuario', 'AUTENTICACION', 'LOGOUT', 55, 'Cierre de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-22 21:27:51', 'EXITO', '', 'Login', 'Logout'),
+	(28, 2, 'kevin12@gmail.com', 'AUTENTICACION', 'LOGIN', 2, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-22 21:27:53', 'EXITO', '', 'Login', 'Login'),
+	(29, 2, 'Usuario', 'AUTENTICACION', 'LOGOUT', 2, 'Cierre de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-22 21:28:46', 'EXITO', '', 'Login', 'Logout'),
+	(30, 37, 'hola@gmail.com', 'AUTENTICACION', 'LOGIN', 37, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-22 21:28:49', 'EXITO', '', 'Login', 'Login'),
+	(31, 37, 'Usuario', 'AUTENTICACION', 'LOGOUT', 37, 'Cierre de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-22 21:39:14', 'EXITO', '', 'Login', 'Logout'),
+	(32, 55, 'prueba1234@gmail.com', 'AUTENTICACION', 'LOGIN', 55, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-22 21:39:17', 'EXITO', '', 'Login', 'Login'),
+	(33, 55, 'Usuario ID: 55', 'NEGOCIOS', 'CREATE', 0, 'Habitta ', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-22 21:43:23', 'EXITO', '', 'Negocios', 'GuardarDatosNegocio'),
+	(34, 55, 'prueba1234@gmail.com', 'AUTENTICACION', 'LOGIN', 55, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-22 21:43:50', 'EXITO', '', 'Login', 'Login'),
+	(35, 55, 'Usuario ID: 55', 'NEGOCIOS', 'UPDATE', 38, 'Habitta ', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-22 21:46:40', 'EXITO', '', 'Negocios', 'EditarNegocio'),
+	(36, 55, 'Usuario ID: 55', 'NEGOCIOS', 'UPDATE', 38, 'Habitta ', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-22 21:47:33', 'EXITO', '', 'Negocios', 'EditarNegocio'),
+	(37, 55, 'Usuario', 'AUTENTICACION', 'LOGOUT', 55, 'Cierre de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-22 21:48:18', 'EXITO', '', 'Login', 'Logout'),
+	(38, 37, 'hola@gmail.com', 'AUTENTICACION', 'LOGIN', 37, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-22 21:54:08', 'EXITO', '', 'Login', 'Login'),
+	(39, 37, 'Usuario', 'AUTENTICACION', 'LOGOUT', 37, 'Cierre de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-22 22:03:45', 'EXITO', '', 'Login', 'Logout'),
+	(40, 2, 'kevin12@gmail.com', 'AUTENTICACION', 'LOGIN', 2, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-22 22:03:49', 'EXITO', '', 'Login', 'Login');
 
 -- Volcando estructura para tabla abastecete.marca
 CREATE TABLE IF NOT EXISTS `marca` (
@@ -4286,7 +4335,7 @@ CREATE TABLE IF NOT EXISTS `marca` (
   UNIQUE KEY `uk_marca_nombre` (`NOMBRE`)
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla abastecete.marca: ~1 rows (aproximadamente)
+-- Volcando datos para la tabla abastecete.marca: ~0 rows (aproximadamente)
 INSERT INTO `marca` (`PK_ID_MARCA`, `NOMBRE`, `DESCRIPCION`, `LOGO_URL`, `CLOUDINARY_PUBLIC_ID`, `ACTIVO`, `FECHA_REGISTRO`) VALUES
 	(1, 'Sin Marca', 'Productos sin marca específica', NULL, NULL, 1, '2025-12-19 03:16:12');
 
@@ -4330,6 +4379,47 @@ BEGIN
 END//
 DELIMITER ;
 
+-- Volcando estructura para procedimiento abastecete.obtener_comparativa_periodo
+DELIMITER //
+CREATE PROCEDURE `obtener_comparativa_periodo`(
+    IN p_id_local INT,
+    IN p_fecha_inicio DATE,
+    IN p_fecha_fin DATE
+)
+BEGIN
+    DECLARE v_dias INT;
+    DECLARE v_fecha_inicio_anterior DATE;
+    DECLARE v_fecha_fin_anterior DATE;
+
+    -- Calcular días del período
+    SET v_dias = DATEDIFF(p_fecha_fin, p_fecha_inicio) + 1;
+    SET v_fecha_fin_anterior = DATE_SUB(p_fecha_inicio, INTERVAL 1 DAY);
+    SET v_fecha_inicio_anterior = DATE_SUB(v_fecha_fin_anterior, INTERVAL v_dias - 1 DAY);
+
+    -- Período actual
+    SELECT
+        'actual' as periodo,
+        COALESCE(SUM(VISITAS_LOCAL), 0) AS visitas,
+        COALESCE(SUM(CLICS_WHATSAPP), 0) AS clics_whatsapp,
+        COALESCE(SUM(VISITAS_PRODUCTOS), 0) AS visitas_productos
+    FROM resumen_analitica_diario
+    WHERE FK_ID_LOCAL = p_id_local
+      AND FECHA BETWEEN p_fecha_inicio AND p_fecha_fin
+
+    UNION ALL
+
+    -- Período anterior
+    SELECT
+        'anterior' as periodo,
+        COALESCE(SUM(VISITAS_LOCAL), 0) AS visitas,
+        COALESCE(SUM(CLICS_WHATSAPP), 0) AS clics_whatsapp,
+        COALESCE(SUM(VISITAS_PRODUCTOS), 0) AS visitas_productos
+    FROM resumen_analitica_diario
+    WHERE FK_ID_LOCAL = p_id_local
+      AND FECHA BETWEEN v_fecha_inicio_anterior AND v_fecha_fin_anterior;
+END//
+DELIMITER ;
+
 -- Volcando estructura para procedimiento abastecete.obtener_duracion_oferta
 DELIMITER //
 CREATE PROCEDURE `obtener_duracion_oferta`(
@@ -4341,6 +4431,50 @@ BEGIN
     LEFT JOIN suscripcion s ON l.FK_ID_SUSCRIPCION_ACTIVA = s.PK_ID_SUSCRIPCION AND s.ESTADO = 1
     LEFT JOIN tipo_membresia tm ON s.FK_ID_TIPO_MEMBRESIA = tm.PK_ID_TIPO_MEMBRESIA
     WHERE l.PK_ID_LOCAL = p_id_local;
+END//
+DELIMITER ;
+
+-- Volcando estructura para procedimiento abastecete.obtener_estadisticas_diarias_local
+DELIMITER //
+CREATE PROCEDURE `obtener_estadisticas_diarias_local`(
+    IN p_id_local INT,
+    IN p_fecha_inicio DATE,
+    IN p_fecha_fin DATE
+)
+BEGIN
+    SELECT
+        FECHA as fecha,
+        VISITAS_LOCAL as visitas,
+        VISITAS_PRODUCTOS as visitas_productos,
+        CLICS_WHATSAPP as clics_whatsapp,
+        CLICS_TELEFONO as clics_telefono,
+        APARICIONES_BUSQUEDA as apariciones_busqueda,
+        COMPARTIDOS as compartidos
+    FROM resumen_analitica_diario
+    WHERE FK_ID_LOCAL = p_id_local
+      AND FECHA BETWEEN p_fecha_inicio AND p_fecha_fin
+    ORDER BY FECHA ASC;
+END//
+DELIMITER ;
+
+-- Volcando estructura para procedimiento abastecete.obtener_estadisticas_local
+DELIMITER //
+CREATE PROCEDURE `obtener_estadisticas_local`(
+    IN p_id_local INT,
+    IN p_fecha_inicio DATE,
+    IN p_fecha_fin DATE
+)
+BEGIN
+    SELECT
+        COALESCE(SUM(VISITAS_LOCAL), 0) AS total_visitas,
+        COALESCE(SUM(VISITAS_PRODUCTOS), 0) AS total_visitas_productos,
+        COALESCE(SUM(CLICS_WHATSAPP), 0) AS total_clics_whatsapp,
+        COALESCE(SUM(CLICS_TELEFONO), 0) AS total_clics_telefono,
+        COALESCE(SUM(APARICIONES_BUSQUEDA), 0) AS total_apariciones_busqueda,
+        COALESCE(SUM(COMPARTIDOS), 0) AS total_compartidos
+    FROM resumen_analitica_diario
+    WHERE FK_ID_LOCAL = p_id_local
+      AND FECHA BETWEEN p_fecha_inicio AND p_fecha_fin;
 END//
 DELIMITER ;
 
@@ -4414,6 +4548,30 @@ BEGIN
     LEFT JOIN suscripcion s ON l.FK_ID_SUSCRIPCION_ACTIVA = s.PK_ID_SUSCRIPCION
     LEFT JOIN tipo_membresia tm ON s.FK_ID_TIPO_MEMBRESIA = tm.PK_ID_TIPO_MEMBRESIA
     WHERE l.PK_ID_LOCAL = p_id_local;
+END//
+DELIMITER ;
+
+-- Volcando estructura para procedimiento abastecete.obtener_productos_mas_vistos
+DELIMITER //
+CREATE PROCEDURE `obtener_productos_mas_vistos`(
+    IN p_id_local INT,
+    IN p_fecha_inicio DATE,
+    IN p_fecha_fin DATE,
+    IN p_limite INT
+)
+BEGIN
+    SELECT
+        p.PK_ID_PRODUCTO as id_producto,
+        p.NOMBRE as nombre_producto,
+        p.IMAGEN_URL as imagen_url,
+        COALESCE(SUM(rpv.VISTAS), 0) as total_vistas
+    FROM producto p
+    LEFT JOIN resumen_producto_vistas rpv ON p.PK_ID_PRODUCTO = rpv.FK_ID_PRODUCTO
+        AND rpv.FECHA BETWEEN p_fecha_inicio AND p_fecha_fin
+    WHERE p.FK_ID_LOCAL = p_id_local
+    GROUP BY p.PK_ID_PRODUCTO, p.NOMBRE, p.IMAGEN_URL
+    ORDER BY total_vistas DESC
+    LIMIT p_limite;
 END//
 DELIMITER ;
 
@@ -4717,9 +4875,9 @@ CREATE TABLE IF NOT EXISTS `persona` (
   KEY `idx_persona_documento` (`DOCUMENTO_IDENTIDAD`,`FK_ID_TIPO_DOCUMENTO`),
   KEY `idx_persona_codigo_referido` (`CODIGO_REFERIDO`),
   CONSTRAINT `FK_persona_tipo_documento` FOREIGN KEY (`FK_ID_TIPO_DOCUMENTO`) REFERENCES `tipo_documento` (`PK_ID_TIPO_DOCUMENTO`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=57 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=58 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla abastecete.persona: ~29 rows (aproximadamente)
+-- Volcando datos para la tabla abastecete.persona: ~30 rows (aproximadamente)
 INSERT INTO `persona` (`PK_ID_PERSONA`, `NOMBRES`, `APELLIDOS`, `TELEFONO`, `CORREO`, `DOCUMENTO_IDENTIDAD`, `ESTADO`, `FK_ID_TIPO_DOCUMENTO`, `CODIGO_REFERIDO`, `CODIGO_REFERIDO_USUARIO`) VALUES
 	(2, 'Kevin', 'Benavidez', '3123687284', 'kevin12@gmail.com', 1080360, 1, 1, 'COD659438', NULL),
 	(3, 'Sebastian', 'Sierra', '312361', 'sierra@gmail.com', 1020, 1, 1, 'COD638751', NULL),
@@ -4749,7 +4907,8 @@ INSERT INTO `persona` (`PK_ID_PERSONA`, `NOMBRES`, `APELLIDOS`, `TELEFONO`, `COR
 	(50, 'Sebastian', 'Sierra', '3253655226', 'sebsirra13@gmail.com', 1234567892, 1, 1, NULL, NULL),
 	(51, 'WEBSEN', 'WEBSEN', '3253655227', 'websencol@gmail.com', 1234567893, 1, 1, NULL, NULL),
 	(52, 'Dana', 'Nabia', '3253655228', 'dananabia2000@gmail.com', 1234567894, 1, 1, NULL, NULL),
-	(56, 'juan', 'asado', '3204050072', 'prueba123@gmail.com', 10051241478, 1, 1, 'COD3464077', NULL);
+	(56, 'juan', 'asado', '3204050072', 'prueba123@gmail.com', 10051241478, 1, 1, 'COD3464077', NULL),
+	(57, 'prueba 1', 'prueba 2', '3002588798', 'prueba1234@gmail.com', 1111111111, 1, 1, 'COD9347108', NULL);
 
 -- Volcando estructura para tabla abastecete.producto
 CREATE TABLE IF NOT EXISTS `producto` (
@@ -5428,6 +5587,54 @@ BEGIN
 END//
 DELIMITER ;
 
+-- Volcando estructura para tabla abastecete.producto_marca
+CREATE TABLE IF NOT EXISTS `producto_marca` (
+  `PK_ID` int NOT NULL AUTO_INCREMENT,
+  `FK_ID_PRODUCTO` int NOT NULL,
+  `FK_ID_MARCA` int NOT NULL,
+  `FK_ID_LOCAL` int NOT NULL,
+  `PRECIO` decimal(12,2) NOT NULL,
+  `STOCK` int DEFAULT '0',
+  `DISPONIBLE` tinyint DEFAULT '1',
+  `FECHA_REGISTRO` datetime DEFAULT CURRENT_TIMESTAMP,
+  `FECHA_ACTUALIZACION` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`PK_ID`),
+  UNIQUE KEY `uk_producto_marca` (`FK_ID_PRODUCTO`,`FK_ID_MARCA`),
+  KEY `fk_pm_marca` (`FK_ID_MARCA`),
+  KEY `fk_pm_local` (`FK_ID_LOCAL`),
+  CONSTRAINT `fk_pm_local` FOREIGN KEY (`FK_ID_LOCAL`) REFERENCES `local` (`PK_ID_LOCAL`) ON DELETE CASCADE,
+  CONSTRAINT `fk_pm_marca` FOREIGN KEY (`FK_ID_MARCA`) REFERENCES `marca` (`PK_ID_MARCA`) ON DELETE CASCADE,
+  CONSTRAINT `fk_pm_producto` FOREIGN KEY (`FK_ID_PRODUCTO`) REFERENCES `producto` (`PK_ID_PRODUCTO`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=32 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- Volcando datos para la tabla abastecete.producto_marca: ~25 rows (aproximadamente)
+INSERT INTO `producto_marca` (`PK_ID`, `FK_ID_PRODUCTO`, `FK_ID_MARCA`, `FK_ID_LOCAL`, `PRECIO`, `STOCK`, `DISPONIBLE`, `FECHA_REGISTRO`, `FECHA_ACTUALIZACION`) VALUES
+	(1, 1, 1, 28, 5000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
+	(2, 5, 1, 28, 7000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
+	(3, 34, 1, 28, 10000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
+	(4, 224, 1, 34, 2000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
+	(5, 227, 1, 35, 3000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
+	(6, 13, 1, 35, 4200.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
+	(7, 429, 1, 35, 11000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
+	(8, 462, 1, 35, 13500.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
+	(9, 90, 1, 35, 60000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
+	(10, 81, 1, 36, 10000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
+	(11, 189, 1, 36, 10000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
+	(12, 192, 1, 36, 20000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
+	(13, 360, 1, 36, 5000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
+	(14, 110, 1, 36, 13000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
+	(15, 111, 1, 36, 20000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
+	(16, 113, 1, 36, 8000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
+	(17, 267, 1, 36, 1000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
+	(18, 269, 1, 36, 2000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
+	(19, 173, 1, 36, 150000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
+	(20, 84, 1, 27, 20000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
+	(21, 355, 1, 27, 7000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
+	(22, 410, 1, 27, 2000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
+	(23, 535, 1, 27, 8000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
+	(24, 143, 1, 27, 6000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
+	(25, 205, 1, 28, 5000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04');
+
 -- Volcando estructura para procedimiento abastecete.realizar_pago_membresia
 DELIMITER //
 CREATE PROCEDURE `realizar_pago_membresia`(
@@ -5595,6 +5802,52 @@ CREATE TABLE IF NOT EXISTS `referencias` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Volcando datos para la tabla abastecete.referencias: ~0 rows (aproximadamente)
+
+-- Volcando estructura para procedimiento abastecete.registrar_evento_analitica
+DELIMITER //
+CREATE PROCEDURE `registrar_evento_analitica`(
+    IN p_id_local INT,
+    IN p_id_producto INT,
+    IN p_tipo_evento VARCHAR(50),
+    IN p_ip_visitante VARCHAR(45),
+    IN p_user_agent VARCHAR(500),
+    IN p_referrer VARCHAR(500)
+)
+BEGIN
+    -- Insertar evento individual
+    INSERT INTO evento_analitica (FK_ID_LOCAL, FK_ID_PRODUCTO, TIPO_EVENTO, IP_VISITANTE, USER_AGENT, REFERRER)
+    VALUES (p_id_local, p_id_producto, p_tipo_evento, p_ip_visitante, p_user_agent, p_referrer);
+
+    -- Actualizar resumen diario
+    INSERT INTO resumen_analitica_diario (FK_ID_LOCAL, FECHA, VISITAS_LOCAL, VISITAS_PRODUCTOS, CLICS_WHATSAPP, CLICS_TELEFONO, APARICIONES_BUSQUEDA, COMPARTIDOS)
+    VALUES (
+        p_id_local,
+        CURDATE(),
+        IF(p_tipo_evento = 'VISITA_LOCAL', 1, 0),
+        IF(p_tipo_evento = 'VISITA_PRODUCTO', 1, 0),
+        IF(p_tipo_evento = 'CLIC_WHATSAPP', 1, 0),
+        IF(p_tipo_evento = 'CLIC_TELEFONO', 1, 0),
+        IF(p_tipo_evento = 'BUSQUEDA_APARICION', 1, 0),
+        IF(p_tipo_evento = 'COMPARTIR', 1, 0)
+    )
+    ON DUPLICATE KEY UPDATE
+        VISITAS_LOCAL = VISITAS_LOCAL + IF(p_tipo_evento = 'VISITA_LOCAL', 1, 0),
+        VISITAS_PRODUCTOS = VISITAS_PRODUCTOS + IF(p_tipo_evento = 'VISITA_PRODUCTO', 1, 0),
+        CLICS_WHATSAPP = CLICS_WHATSAPP + IF(p_tipo_evento = 'CLIC_WHATSAPP', 1, 0),
+        CLICS_TELEFONO = CLICS_TELEFONO + IF(p_tipo_evento = 'CLIC_TELEFONO', 1, 0),
+        APARICIONES_BUSQUEDA = APARICIONES_BUSQUEDA + IF(p_tipo_evento = 'BUSQUEDA_APARICION', 1, 0),
+        COMPARTIDOS = COMPARTIDOS + IF(p_tipo_evento = 'COMPARTIR', 1, 0);
+
+    -- Si es vista de producto, actualizar resumen de producto
+    IF p_tipo_evento = 'VISITA_PRODUCTO' AND p_id_producto IS NOT NULL THEN
+        INSERT INTO resumen_producto_vistas (FK_ID_PRODUCTO, FK_ID_LOCAL, FECHA, VISTAS)
+        VALUES (p_id_producto, p_id_local, CURDATE(), 1)
+        ON DUPLICATE KEY UPDATE VISTAS = VISTAS + 1;
+    END IF;
+
+    SELECT 1 AS resultado;
+END//
+DELIMITER ;
 
 -- Volcando estructura para procedimiento abastecete.registrar_pago
 DELIMITER //
@@ -5789,6 +6042,41 @@ CREATE EVENT `resetear_intentos_fallidos` ON SCHEDULE EVERY 5 MINUTE STARTS '202
 END//
 DELIMITER ;
 
+-- Volcando estructura para tabla abastecete.resumen_analitica_diario
+CREATE TABLE IF NOT EXISTS `resumen_analitica_diario` (
+  `PK_ID_RESUMEN` int NOT NULL AUTO_INCREMENT,
+  `FK_ID_LOCAL` int NOT NULL,
+  `FECHA` date NOT NULL,
+  `VISITAS_LOCAL` int NOT NULL DEFAULT '0',
+  `VISITAS_PRODUCTOS` int NOT NULL DEFAULT '0',
+  `CLICS_WHATSAPP` int NOT NULL DEFAULT '0',
+  `CLICS_TELEFONO` int NOT NULL DEFAULT '0',
+  `APARICIONES_BUSQUEDA` int NOT NULL DEFAULT '0',
+  `COMPARTIDOS` int NOT NULL DEFAULT '0',
+  PRIMARY KEY (`PK_ID_RESUMEN`),
+  UNIQUE KEY `uk_local_fecha` (`FK_ID_LOCAL`,`FECHA`),
+  KEY `idx_resumen_fecha` (`FECHA`),
+  CONSTRAINT `fk_resumen_local` FOREIGN KEY (`FK_ID_LOCAL`) REFERENCES `local` (`PK_ID_LOCAL`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- Volcando datos para la tabla abastecete.resumen_analitica_diario: ~0 rows (aproximadamente)
+
+-- Volcando estructura para tabla abastecete.resumen_producto_vistas
+CREATE TABLE IF NOT EXISTS `resumen_producto_vistas` (
+  `PK_ID_RESUMEN` int NOT NULL AUTO_INCREMENT,
+  `FK_ID_PRODUCTO` int NOT NULL,
+  `FK_ID_LOCAL` int NOT NULL,
+  `FECHA` date NOT NULL,
+  `VISTAS` int NOT NULL DEFAULT '0',
+  PRIMARY KEY (`PK_ID_RESUMEN`),
+  UNIQUE KEY `uk_producto_fecha` (`FK_ID_PRODUCTO`,`FECHA`),
+  KEY `idx_producto_local` (`FK_ID_LOCAL`),
+  CONSTRAINT `fk_resumen_producto` FOREIGN KEY (`FK_ID_PRODUCTO`) REFERENCES `producto` (`PK_ID_PRODUCTO`) ON DELETE CASCADE,
+  CONSTRAINT `fk_resumen_producto_local` FOREIGN KEY (`FK_ID_LOCAL`) REFERENCES `local` (`PK_ID_LOCAL`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- Volcando datos para la tabla abastecete.resumen_producto_vistas: ~0 rows (aproximadamente)
+
 -- Volcando estructura para procedimiento abastecete.revisar_imagen_galeria
 DELIMITER //
 CREATE PROCEDURE `revisar_imagen_galeria`(
@@ -5821,6 +6109,421 @@ INSERT INTO `rol` (`PK_ID_ROL`, `NOMBRE_ROL`) VALUES
 	(3, 'Cliente'),
 	(7, 'Prueba'),
 	(8, 'Director de Proyecto');
+
+-- Volcando estructura para procedimiento abastecete.sp_actualizar_marca_producto
+DELIMITER //
+CREATE PROCEDURE `sp_actualizar_marca_producto`(
+    IN p_id INT,
+    IN p_precio DECIMAL(12,2),
+    IN p_stock INT,
+    IN p_disponible TINYINT
+)
+BEGIN
+    UPDATE producto_marca
+    SET PRECIO = p_precio,
+        STOCK = COALESCE(p_stock, STOCK),
+        DISPONIBLE = COALESCE(p_disponible, DISPONIBLE),
+        FECHA_ACTUALIZACION = CURRENT_TIMESTAMP
+    WHERE PK_ID = p_id;
+
+    SELECT ROW_COUNT() as FilasAfectadas;
+END//
+DELIMITER ;
+
+-- Volcando estructura para procedimiento abastecete.sp_agregar_marca_producto
+DELIMITER //
+CREATE PROCEDURE `sp_agregar_marca_producto`(
+    IN p_id_local INT,
+    IN p_id_producto INT,
+    IN p_id_marca INT,
+    IN p_precio DECIMAL(12,2),
+    IN p_stock INT,
+    IN p_disponible TINYINT
+)
+BEGIN
+    INSERT INTO producto_marca (FK_ID_LOCAL, FK_ID_PRODUCTO, FK_ID_MARCA, PRECIO, STOCK, DISPONIBLE)
+    VALUES (p_id_local, p_id_producto, p_id_marca, p_precio, COALESCE(p_stock, 0), COALESCE(p_disponible, 1))
+    ON DUPLICATE KEY UPDATE
+        PRECIO = p_precio,
+        STOCK = COALESCE(p_stock, STOCK),
+        DISPONIBLE = COALESCE(p_disponible, DISPONIBLE),
+        FECHA_ACTUALIZACION = CURRENT_TIMESTAMP;
+
+    SELECT LAST_INSERT_ID() as Id;
+END//
+DELIMITER ;
+
+-- Volcando estructura para procedimiento abastecete.sp_comparar_estadisticas_globales
+DELIMITER //
+CREATE PROCEDURE `sp_comparar_estadisticas_globales`(
+    IN p_fecha_inicio_actual DATE,
+    IN p_fecha_fin_actual DATE,
+    IN p_fecha_inicio_anterior DATE,
+    IN p_fecha_fin_anterior DATE
+)
+BEGIN
+    SELECT
+        -- Período actual
+        COALESCE((SELECT SUM(CANTIDAD) FROM resumen_analitica_diario
+                  WHERE FECHA BETWEEN p_fecha_inicio_actual AND p_fecha_fin_actual
+                  AND TIPO_EVENTO = 'VISITA_LOCAL'), 0) AS VisitasActual,
+
+        COALESCE((SELECT SUM(CANTIDAD) FROM resumen_analitica_diario
+                  WHERE FECHA BETWEEN p_fecha_inicio_actual AND p_fecha_fin_actual
+                  AND TIPO_EVENTO = 'CLIC_WHATSAPP'), 0) AS WhatsappActual,
+
+        (SELECT COUNT(*) FROM persona
+         WHERE FECHA_REGISTRO BETWEEN p_fecha_inicio_actual AND DATE_ADD(p_fecha_fin_actual, INTERVAL 1 DAY)) AS NuevosUsuariosActual,
+
+        (SELECT COUNT(*) FROM local
+         WHERE FECHA_REGISTRO BETWEEN p_fecha_inicio_actual AND DATE_ADD(p_fecha_fin_actual, INTERVAL 1 DAY)) AS NuevosLocalesActual,
+
+        -- Período anterior
+        COALESCE((SELECT SUM(CANTIDAD) FROM resumen_analitica_diario
+                  WHERE FECHA BETWEEN p_fecha_inicio_anterior AND p_fecha_fin_anterior
+                  AND TIPO_EVENTO = 'VISITA_LOCAL'), 0) AS VisitasAnterior,
+
+        COALESCE((SELECT SUM(CANTIDAD) FROM resumen_analitica_diario
+                  WHERE FECHA BETWEEN p_fecha_inicio_anterior AND p_fecha_fin_anterior
+                  AND TIPO_EVENTO = 'CLIC_WHATSAPP'), 0) AS WhatsappAnterior,
+
+        (SELECT COUNT(*) FROM persona
+         WHERE FECHA_REGISTRO BETWEEN p_fecha_inicio_anterior AND DATE_ADD(p_fecha_fin_anterior, INTERVAL 1 DAY)) AS NuevosUsuariosAnterior,
+
+        (SELECT COUNT(*) FROM local
+         WHERE FECHA_REGISTRO BETWEEN p_fecha_inicio_anterior AND DATE_ADD(p_fecha_fin_anterior, INTERVAL 1 DAY)) AS NuevosLocalesAnterior;
+END//
+DELIMITER ;
+
+-- Volcando estructura para procedimiento abastecete.sp_consultar_productos_local_con_marcas
+DELIMITER //
+CREATE PROCEDURE `sp_consultar_productos_local_con_marcas`(
+    IN p_id_local INT
+)
+BEGIN
+    SELECT
+        p.PK_ID_PRODUCTO as Id,
+        p.NOMBRE as Nombre,
+        p.DESCRIPCION as Descripcion,
+        p.IMAGEN as ImagenUrl,
+        p.CLOUDINARY_PUBLIC_ID as CloudinaryPublicId,
+        p.SKU as SKU,
+        p.FK_ID_SUB_CATEGORIA as IdSubCategoria,
+        sc.NOMBRE as NombreSubCategoria,
+        sc.FK_ID_CATEGORIA as Categoria,
+        c.NOMBRE as NombreCategoria,
+        u.PK_ID_UNIDAD as IdUnidad,
+        u.NOMBRE as NombreUnidad,
+        tu.PK_ID_TIPO_UNIDAD as IdTipoUnidad,
+        tu.NOMBRE as NombreTipoUnidad,
+        -- Datos de marcas del local específico
+        (SELECT MIN(pm.PRECIO) FROM producto_marca pm WHERE pm.FK_ID_LOCAL = p_id_local AND pm.FK_ID_PRODUCTO = p.PK_ID_PRODUCTO AND pm.DISPONIBLE = 1) as PrecioMinimo,
+        (SELECT MAX(pm.PRECIO) FROM producto_marca pm WHERE pm.FK_ID_LOCAL = p_id_local AND pm.FK_ID_PRODUCTO = p.PK_ID_PRODUCTO AND pm.DISPONIBLE = 1) as PrecioMaximo,
+        (SELECT COUNT(*) FROM producto_marca pm WHERE pm.FK_ID_LOCAL = p_id_local AND pm.FK_ID_PRODUCTO = p.PK_ID_PRODUCTO AND pm.DISPONIBLE = 1) as CantidadMarcas,
+        -- Para compatibilidad: mantener el precio original
+        pl.VALOR_PRODUCTS_LOCAL as Precio,
+        p.FK_ID_MARCA as IdMarca,
+        m.NOMBRE as NombreMarca
+    FROM productoslocal pl
+    INNER JOIN producto p ON pl.FK_ID_PRODUCTO = p.PK_ID_PRODUCTO
+    INNER JOIN sub_categoria sc ON p.FK_ID_SUB_CATEGORIA = sc.PK_ID_SUB_CATEGORIA
+    INNER JOIN categoria c ON sc.FK_ID_CATEGORIA = c.PK_ID_CATEGORIA
+    LEFT JOIN unidad u ON p.FK_ID_UNIDAD = u.PK_ID_UNIDAD
+    LEFT JOIN tipo_unidad tu ON u.FK_ID_TIPO_UNIDAD = tu.PK_ID_TIPO_UNIDAD
+    LEFT JOIN marca m ON p.FK_ID_MARCA = m.PK_ID_MARCA
+    WHERE pl.FK_ID_LOCAL = p_id_local
+    ORDER BY p.NOMBRE;
+END//
+DELIMITER ;
+
+-- Volcando estructura para procedimiento abastecete.sp_eliminar_marcas_producto
+DELIMITER //
+CREATE PROCEDURE `sp_eliminar_marcas_producto`(
+    IN p_id_producto INT
+)
+BEGIN
+    DELETE FROM producto_marca WHERE FK_ID_PRODUCTO = p_id_producto;
+    SELECT ROW_COUNT() as FilasAfectadas;
+END//
+DELIMITER ;
+
+-- Volcando estructura para procedimiento abastecete.sp_eliminar_marca_producto
+DELIMITER //
+CREATE PROCEDURE `sp_eliminar_marca_producto`(
+    IN p_id INT
+)
+BEGIN
+    DELETE FROM producto_marca WHERE PK_ID = p_id;
+    SELECT ROW_COUNT() as FilasAfectadas;
+END//
+DELIMITER ;
+
+-- Volcando estructura para procedimiento abastecete.sp_listar_marcas_producto
+DELIMITER //
+CREATE PROCEDURE `sp_listar_marcas_producto`(
+    IN p_id_local INT,
+    IN p_id_producto INT
+)
+BEGIN
+    SELECT
+        pm.PK_ID as Id,
+        pm.FK_ID_LOCAL as IdLocal,
+        pm.FK_ID_PRODUCTO as IdProducto,
+        pm.FK_ID_MARCA as IdMarca,
+        m.NOMBRE as NombreMarca,
+        m.LOGO_URL as LogoMarca,
+        pm.PRECIO as Precio,
+        pm.STOCK as Stock,
+        pm.DISPONIBLE as Disponible,
+        pm.FECHA_REGISTRO as FechaRegistro,
+        pm.FECHA_ACTUALIZACION as FechaActualizacion
+    FROM producto_marca pm
+    INNER JOIN marca m ON pm.FK_ID_MARCA = m.PK_ID_MARCA
+    WHERE pm.FK_ID_LOCAL = p_id_local
+      AND pm.FK_ID_PRODUCTO = p_id_producto
+    ORDER BY pm.PRECIO ASC;
+END//
+DELIMITER ;
+
+-- Volcando estructura para procedimiento abastecete.sp_listar_todas_marcas
+DELIMITER //
+CREATE PROCEDURE `sp_listar_todas_marcas`()
+BEGIN
+    SELECT
+        PK_ID_MARCA as Id,
+        NOMBRE as Nombre,
+        DESCRIPCION as Descripcion,
+        LOGO_URL as LogoUrl,
+        CLOUDINARY_PUBLIC_ID as CloudinaryPublicId,
+        ACTIVA as Activa
+    FROM marca
+    WHERE ACTIVA = 1
+    ORDER BY NOMBRE;
+END//
+DELIMITER ;
+
+-- Volcando estructura para procedimiento abastecete.sp_obtener_actividad_reciente
+DELIMITER //
+CREATE PROCEDURE `sp_obtener_actividad_reciente`(
+    IN p_limite INT
+)
+BEGIN
+    SELECT
+        ea.PK_ID_EVENTO AS IdEvento,
+        ea.TIPO_EVENTO AS TipoEvento,
+        ea.FECHA_HORA AS FechaHora,
+        l.NOMBRE AS NombreLocal,
+        l.PK_ID_LOCAL AS IdLocal,
+        p.NOMBRE_PRODUCTO AS NombreProducto,
+        ea.FK_ID_PRODUCTO AS IdProducto
+    FROM evento_analitica ea
+    INNER JOIN local l ON ea.FK_ID_LOCAL = l.PK_ID_LOCAL
+    LEFT JOIN producto p ON ea.FK_ID_PRODUCTO = p.PK_ID_PRODUCTO
+    ORDER BY ea.FECHA_HORA DESC
+    LIMIT p_limite;
+END//
+DELIMITER ;
+
+-- Volcando estructura para procedimiento abastecete.sp_obtener_distribucion_membresias
+DELIMITER //
+CREATE PROCEDURE `sp_obtener_distribucion_membresias`()
+BEGIN
+    SELECT
+        tm.NOMBRE_MEMBRESIA AS NombreMembresia,
+        tm.PK_ID_MEMBRESIA AS IdMembresia,
+        COUNT(s.PK_ID_SUSCRIPCION) AS CantidadSuscripciones,
+        COALESCE(SUM(CASE WHEN s.ESTADO = 'Activa' THEN 1 ELSE 0 END), 0) AS Activas,
+        COALESCE(SUM(CASE WHEN s.ESTADO = 'Pendiente' THEN 1 ELSE 0 END), 0) AS Pendientes,
+        COALESCE(SUM(CASE WHEN s.ESTADO = 'Vencida' THEN 1 ELSE 0 END), 0) AS Vencidas
+    FROM tipo_membresia tm
+    LEFT JOIN suscripcion s ON tm.PK_ID_MEMBRESIA = s.FK_ID_TIPO_MEMBRESIA
+    WHERE tm.ACTIVO = 1
+    GROUP BY tm.PK_ID_MEMBRESIA, tm.NOMBRE_MEMBRESIA
+    ORDER BY CantidadSuscripciones DESC;
+END//
+DELIMITER ;
+
+-- Volcando estructura para procedimiento abastecete.sp_obtener_estadisticas_diarias_globales
+DELIMITER //
+CREATE PROCEDURE `sp_obtener_estadisticas_diarias_globales`(
+    IN p_fecha_inicio DATE,
+    IN p_fecha_fin DATE
+)
+BEGIN
+    -- Generar todas las fechas del rango
+    WITH RECURSIVE fechas AS (
+        SELECT p_fecha_inicio AS fecha
+        UNION ALL
+        SELECT DATE_ADD(fecha, INTERVAL 1 DAY)
+        FROM fechas
+        WHERE fecha < p_fecha_fin
+    )
+    SELECT
+        f.fecha AS Fecha,
+        COALESCE(SUM(CASE WHEN rad.TIPO_EVENTO = 'VISITA_LOCAL' THEN rad.CANTIDAD ELSE 0 END), 0) AS Visitas,
+        COALESCE(SUM(CASE WHEN rad.TIPO_EVENTO = 'CLIC_WHATSAPP' THEN rad.CANTIDAD ELSE 0 END), 0) AS ClicsWhatsapp,
+        COALESCE(SUM(CASE WHEN rad.TIPO_EVENTO = 'VISITA_PRODUCTO' THEN rad.CANTIDAD ELSE 0 END), 0) AS VisitasProductos,
+        -- Nuevos usuarios por día
+        (SELECT COUNT(*) FROM persona WHERE DATE(FECHA_REGISTRO) = f.fecha) AS NuevosUsuarios,
+        -- Nuevos locales por día
+        (SELECT COUNT(*) FROM local WHERE DATE(FECHA_REGISTRO) = f.fecha) AS NuevosLocales
+    FROM fechas f
+    LEFT JOIN resumen_analitica_diario rad ON f.fecha = rad.FECHA
+    GROUP BY f.fecha
+    ORDER BY f.fecha;
+END//
+DELIMITER ;
+
+-- Volcando estructura para procedimiento abastecete.sp_obtener_estadisticas_globales
+DELIMITER //
+CREATE PROCEDURE `sp_obtener_estadisticas_globales`(
+    IN p_fecha_inicio DATE,
+    IN p_fecha_fin DATE
+)
+BEGIN
+    SELECT
+        -- Totales de locales
+        (SELECT COUNT(*) FROM local WHERE ACTIVO = 1) AS TotalLocalesActivos,
+        (SELECT COUNT(*) FROM local) AS TotalLocales,
+
+        -- Totales de usuarios
+        (SELECT COUNT(*) FROM usuario WHERE ACTIVO = 1) AS TotalUsuariosActivos,
+        (SELECT COUNT(*) FROM usuario) AS TotalUsuarios,
+
+        -- Usuarios registrados en el período
+        (SELECT COUNT(*) FROM persona WHERE FECHA_REGISTRO BETWEEN p_fecha_inicio AND DATE_ADD(p_fecha_fin, INTERVAL 1 DAY)) AS NuevosUsuariosPeriodo,
+
+        -- Locales registrados en el período
+        (SELECT COUNT(*) FROM local WHERE FECHA_REGISTRO BETWEEN p_fecha_inicio AND DATE_ADD(p_fecha_fin, INTERVAL 1 DAY)) AS NuevosLocalesPeriodo,
+
+        -- Totales de productos
+        (SELECT COUNT(*) FROM producto WHERE ACTIVO = 1) AS TotalProductosActivos,
+
+        -- Estadísticas de eventos
+        COALESCE((SELECT SUM(CANTIDAD) FROM resumen_analitica_diario
+                  WHERE FECHA BETWEEN p_fecha_inicio AND p_fecha_fin
+                  AND TIPO_EVENTO = 'VISITA_LOCAL'), 0) AS TotalVisitasLocales,
+
+        COALESCE((SELECT SUM(CANTIDAD) FROM resumen_analitica_diario
+                  WHERE FECHA BETWEEN p_fecha_inicio AND p_fecha_fin
+                  AND TIPO_EVENTO = 'CLIC_WHATSAPP'), 0) AS TotalClicsWhatsapp,
+
+        COALESCE((SELECT SUM(CANTIDAD) FROM resumen_analitica_diario
+                  WHERE FECHA BETWEEN p_fecha_inicio AND p_fecha_fin
+                  AND TIPO_EVENTO = 'VISITA_PRODUCTO'), 0) AS TotalVisitasProductos,
+
+        COALESCE((SELECT SUM(CANTIDAD) FROM resumen_analitica_diario
+                  WHERE FECHA BETWEEN p_fecha_inicio AND p_fecha_fin
+                  AND TIPO_EVENTO = 'BUSQUEDA_APARICION'), 0) AS TotalBusquedas;
+END//
+DELIMITER ;
+
+-- Volcando estructura para procedimiento abastecete.sp_obtener_locales_mas_visitados
+DELIMITER //
+CREATE PROCEDURE `sp_obtener_locales_mas_visitados`(
+    IN p_fecha_inicio DATE,
+    IN p_fecha_fin DATE,
+    IN p_limite INT
+)
+BEGIN
+    SELECT
+        l.PK_ID_LOCAL AS IdLocal,
+        l.NOMBRE AS NombreLocal,
+        l.LOGO_URL AS LogoUrl,
+        l.DIRECCION AS Direccion,
+        COALESCE(SUM(rad.CANTIDAD), 0) AS TotalVisitas
+    FROM local l
+    LEFT JOIN resumen_analitica_diario rad ON l.PK_ID_LOCAL = rad.FK_ID_LOCAL
+        AND rad.TIPO_EVENTO = 'VISITA_LOCAL'
+        AND rad.FECHA BETWEEN p_fecha_inicio AND p_fecha_fin
+    WHERE l.ACTIVO = 1
+    GROUP BY l.PK_ID_LOCAL, l.NOMBRE, l.LOGO_URL, l.DIRECCION
+    ORDER BY TotalVisitas DESC
+    LIMIT p_limite;
+END//
+DELIMITER ;
+
+-- Volcando estructura para procedimiento abastecete.sp_obtener_producto_detalle_marcas
+DELIMITER //
+CREATE PROCEDURE `sp_obtener_producto_detalle_marcas`(
+    IN p_id_local INT,
+    IN p_id_producto INT
+)
+BEGIN
+    -- Primero los datos del producto
+    SELECT
+        p.PK_ID_PRODUCTO as Id,
+        p.NOMBRE as Nombre,
+        p.DESCRIPCION as Descripcion,
+        p.IMAGEN as ImagenUrl,
+        p.CLOUDINARY_PUBLIC_ID as CloudinaryPublicId,
+        p.SKU as SKU,
+        p.FK_ID_SUB_CATEGORIA as IdSubCategoria,
+        sc.NOMBRE as NombreSubCategoria,
+        sc.FK_ID_CATEGORIA as Categoria,
+        c.NOMBRE as NombreCategoria,
+        u.PK_ID_UNIDAD as IdUnidad,
+        u.NOMBRE as NombreUnidad,
+        tu.PK_ID_TIPO_UNIDAD as IdTipoUnidad,
+        tu.NOMBRE as NombreTipoUnidad,
+        p_id_local as IdLocal
+    FROM producto p
+    INNER JOIN sub_categoria sc ON p.FK_ID_SUB_CATEGORIA = sc.PK_ID_SUB_CATEGORIA
+    INNER JOIN categoria c ON sc.FK_ID_CATEGORIA = c.PK_ID_CATEGORIA
+    LEFT JOIN unidad u ON p.FK_ID_UNIDAD = u.PK_ID_UNIDAD
+    LEFT JOIN tipo_unidad tu ON u.FK_ID_TIPO_UNIDAD = tu.PK_ID_TIPO_UNIDAD
+    WHERE p.PK_ID_PRODUCTO = p_id_producto;
+
+    -- Luego las marcas disponibles en este local
+    SELECT
+        pm.PK_ID as Id,
+        pm.FK_ID_MARCA as IdMarca,
+        m.NOMBRE as NombreMarca,
+        m.LOGO_URL as LogoMarca,
+        pm.PRECIO as Precio,
+        pm.STOCK as Stock,
+        pm.DISPONIBLE as Disponible
+    FROM producto_marca pm
+    INNER JOIN marca m ON pm.FK_ID_MARCA = m.PK_ID_MARCA
+    WHERE pm.FK_ID_LOCAL = p_id_local
+      AND pm.FK_ID_PRODUCTO = p_id_producto
+    ORDER BY pm.PRECIO ASC;
+END//
+DELIMITER ;
+
+-- Volcando estructura para procedimiento abastecete.sp_obtener_rango_precios_producto
+DELIMITER //
+CREATE PROCEDURE `sp_obtener_rango_precios_producto`(
+    IN p_id_local INT,
+    IN p_id_producto INT
+)
+BEGIN
+    SELECT
+        MIN(PRECIO) as PrecioMinimo,
+        MAX(PRECIO) as PrecioMaximo,
+        COUNT(*) as CantidadMarcas
+    FROM producto_marca
+    WHERE FK_ID_LOCAL = p_id_local
+      AND FK_ID_PRODUCTO = p_id_producto
+      AND DISPONIBLE = 1;
+END//
+DELIMITER ;
+
+-- Volcando estructura para procedimiento abastecete.sp_producto_tiene_multiples_marcas
+DELIMITER //
+CREATE PROCEDURE `sp_producto_tiene_multiples_marcas`(
+    IN p_id_local INT,
+    IN p_id_producto INT
+)
+BEGIN
+    SELECT
+        COUNT(*) as CantidadMarcas,
+        (COUNT(*) > 1) as TieneMultiplesMarcas
+    FROM producto_marca
+    WHERE FK_ID_LOCAL = p_id_local
+      AND FK_ID_PRODUCTO = p_id_producto;
+END//
+DELIMITER ;
 
 -- Volcando estructura para tabla abastecete.sub_categoria
 CREATE TABLE IF NOT EXISTS `sub_categoria` (
@@ -5918,9 +6621,9 @@ CREATE TABLE IF NOT EXISTS `suscripcion` (
   KEY `IDX_suscripcion_fecha_fin` (`FECHA_FIN`),
   CONSTRAINT `FK_suscripcion_local` FOREIGN KEY (`FK_ID_LOCAL`) REFERENCES `local` (`PK_ID_LOCAL`) ON DELETE CASCADE,
   CONSTRAINT `FK_suscripcion_tipo` FOREIGN KEY (`FK_ID_TIPO_MEMBRESIA`) REFERENCES `tipo_membresia` (`PK_ID_TIPO_MEMBRESIA`)
-) ENGINE=InnoDB AUTO_INCREMENT=29 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=31 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla abastecete.suscripcion: ~25 rows (aproximadamente)
+-- Volcando datos para la tabla abastecete.suscripcion: ~27 rows (aproximadamente)
 INSERT INTO `suscripcion` (`PK_ID_SUSCRIPCION`, `FK_ID_LOCAL`, `FK_ID_TIPO_MEMBRESIA`, `ESTADO`, `FECHA_INICIO`, `FECHA_FIN`, `FECHA_CREACION`, `MONTO_PAGADO`, `METODO_PAGO`, `PERIODO`, `NOTAS`) VALUES
 	(1, 1, 12, 0, '2025-02-20 10:05:41', '2025-03-20 10:05:41', '2025-12-19 05:42:03', NULL, NULL, 'MENSUAL', 'Migrado automáticamente desde membresia_local'),
 	(2, 3, 18, 0, '2025-02-20 10:43:17', '2025-03-20 10:43:17', '2025-12-19 05:42:03', NULL, NULL, 'MENSUAL', 'Migrado automáticamente desde membresia_local'),
@@ -5946,7 +6649,9 @@ INSERT INTO `suscripcion` (`PK_ID_SUSCRIPCION`, `FK_ID_LOCAL`, `FK_ID_TIPO_MEMBR
 	(24, 28, 13, 0, '2025-12-21 21:53:49', '2026-01-21 21:53:49', '2025-12-21 21:53:49', 0.00, 'ePayco - Ref: GRATIS', 'MENSUAL', 'Cambio de plan desde Mi Membresía'),
 	(25, 28, 12, 0, '2025-12-21 21:54:12', '2026-01-21 21:54:12', '2025-12-21 21:54:12', 0.00, 'ePayco - Ref: GRATIS', 'MENSUAL', 'Cambio de plan desde Mi Membresía'),
 	(26, 28, 13, 0, '2025-12-21 22:32:49', '2026-01-21 22:32:49', '2025-12-21 22:32:49', 0.00, 'ePayco - Ref: GRATIS', 'MENSUAL', 'Cambio de plan desde Mi Membresía'),
-	(28, 28, 13, 1, '2025-12-21 22:51:01', '2026-01-21 22:51:01', '2025-12-21 22:51:01', 0.00, 'ePayco - Ref: GRATIS', 'MENSUAL', 'Cambio de plan desde Mi Membresía');
+	(28, 28, 13, 1, '2025-12-21 22:51:01', '2026-01-21 22:51:01', '2025-12-21 22:51:01', 0.00, 'ePayco - Ref: GRATIS', 'MENSUAL', 'Cambio de plan desde Mi Membresía'),
+	(29, 38, 13, 0, '2025-12-22 21:43:48', '2026-01-21 21:43:48', '2025-12-22 21:43:48', NULL, NULL, 'MENSUAL', NULL),
+	(30, 38, 13, 1, '2025-12-22 21:44:14', '2026-01-22 21:44:14', '2025-12-22 21:44:14', 0.00, 'ePayco - Ref: GRATIS', 'MENSUAL', 'Cambio de plan desde Mi Membresía');
 
 -- Volcando estructura para tabla abastecete.tipo_documento
 CREATE TABLE IF NOT EXISTS `tipo_documento` (
@@ -6073,9 +6778,9 @@ CREATE TABLE IF NOT EXISTS `usuario` (
   CONSTRAINT `FK_usuario_persona` FOREIGN KEY (`FK_ID_PERSONA`) REFERENCES `persona` (`PK_ID_PERSONA`),
   CONSTRAINT `FK_usuario_rol` FOREIGN KEY (`FK_ID_ROL`) REFERENCES `rol` (`PK_ID_ROL`),
   CONSTRAINT `FK_usuario_tipo_autenticacion` FOREIGN KEY (`TIPO_AUTENTICACION`) REFERENCES `metodo_autenticacion` (`PK_ID_METODO_AUTENTICACION`)
-) ENGINE=InnoDB AUTO_INCREMENT=55 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=56 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla abastecete.usuario: ~27 rows (aproximadamente)
+-- Volcando datos para la tabla abastecete.usuario: ~28 rows (aproximadamente)
 INSERT INTO `usuario` (`PK_ID_USUARIO`, `FK_ID_PERSONA`, `FK_ID_ROL`, `NOMBRE_USUARIO`, `CONTRASENIA`, `TOKEN_RECUPERACION`, `FECHA_EXPIRACION_TOKEN`, `TIPO_AUTENTICACION`, `INTENTOS_FALLIDOS`, `FECHA_BLOQUEO`, `CORREO_VERIFICADO`, `ESTADO`, `CLIENTES_REFERIDOS_TOTAL`, `INTENTOS_RECUPERACION`, `FECHA_ULTIMO_INTENTO_RECUPERACION`) VALUES
 	(2, 2, 1, 'kevin12@gmail.com', 'stCAUXlvlTCDOFCW3+AFGw==', NULL, NULL, 1, 0, NULL, 0, 1, 0, 0, NULL),
 	(4, 4, 1, 'sebastian@gmail.com', 'MApNL/Xu9KjSguqWMlk1aA==', NULL, NULL, 1, 0, NULL, 0, 1, 0, 0, NULL),
@@ -6085,7 +6790,7 @@ INSERT INTO `usuario` (`PK_ID_USUARIO`, `FK_ID_PERSONA`, `FK_ID_ROL`, `NOMBRE_US
 	(12, 12, 2, 'yoiner.mh04@gmail.com', 'xOBcl5JnPT+4p9sI5fpiGQ==', 'f7917a01-efcf-11ef-8a42-00155d007000', '2025-02-20 16:21:36', 2, 0, NULL, 0, 1, 0, 0, NULL),
 	(23, 23, 1, 'johans.ramirez@udla.edu.co', 'BGpwluhHTW0TzB09JfYwqw==', NULL, NULL, 1, 0, NULL, 0, 1, 0, 0, NULL),
 	(24, 24, 3, 'da.navia@udla.edu.co', 'BGpwluhHTW0TzB09JfYwqw==', 'dc9ff21a-0687-11f0-806b-d843ae9e6717', '2025-03-21 14:13:24', 1, 0, NULL, 0, 1, 0, 0, NULL),
-	(25, 25, 2, 'johan05182002.com@gmail.com', 'y3rFyft55CWVYwszuPNHUA==', NULL, NULL, 1, 0, NULL, 0, 1, 0, 0, '2025-12-21 17:58:01'),
+	(25, 25, 2, 'johan05182002.com@gmail.com', 'y3rFyft55CWVYwszuPNHUA==', '118520', '2025-12-22 21:53:23', 1, 0, NULL, 0, 1, 0, 1, '2025-12-22 21:48:23'),
 	(26, 26, 3, 'armuca@gmail.com', 'BGpwluhHTW0TzB09JfYwqw==', NULL, NULL, 1, 0, NULL, 0, 1, 0, 0, NULL),
 	(27, 27, 3, 'c@gmail.com', 'BGpwluhHTW0TzB09JfYwqw==', NULL, NULL, 1, 0, NULL, 0, 1, 0, 0, NULL),
 	(30, 30, 2, 'may13xd@gmail.com', 'zTLp/d8kn9F+qgWExhUrfA==', NULL, NULL, 1, 0, NULL, 0, 1, 0, 0, NULL),
@@ -6103,7 +6808,8 @@ INSERT INTO `usuario` (`PK_ID_USUARIO`, `FK_ID_PERSONA`, `FK_ID_ROL`, `NOMBRE_US
 	(50, 50, 2, 'sebsirra13@gmail.com', 'stCAUXlvlTCDOFCW3+AFGw==', NULL, NULL, 2, 0, NULL, 0, 1, 0, 0, NULL),
 	(51, 51, 2, 'websencol@gmail.com', 'stCAUXlvlTCDOFCW3+AFGw==', NULL, NULL, 2, 0, NULL, 0, 1, 0, 0, NULL),
 	(52, 52, 3, 'dananabia2000@gmail.com', 'stCAUXlvlTCDOFCW3+AFGw==', NULL, NULL, 2, 0, NULL, 0, 1, 0, 0, NULL),
-	(54, 56, 3, 'prueba123@gmail.com', 'y3rFyft55CWVYwszuPNHUA==', NULL, NULL, 1, 0, NULL, 0, 1, 0, 0, NULL);
+	(54, 56, 3, 'prueba123@gmail.com', 'y3rFyft55CWVYwszuPNHUA==', NULL, NULL, 1, 0, NULL, 0, 1, 0, 0, NULL),
+	(55, 57, 2, 'prueba1234@gmail.com', 'y3rFyft55CWVYwszuPNHUA==', NULL, NULL, 1, 0, NULL, 0, 1, 0, 0, NULL);
 
 -- Volcando estructura para procedimiento abastecete.validar_limite_ofertas_flash
 DELIMITER //

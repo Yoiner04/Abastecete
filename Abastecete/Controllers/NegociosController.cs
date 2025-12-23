@@ -168,7 +168,19 @@ namespace Abastecete.Controllers
             // Subir nuevo logotipo si se proporcionó
             if (a.logotipoArchivo != null && a.logotipoArchivo.Length > 0)
             {
-                a.LogotipoId = _manejadorImagenes.updateImage(a.logotipoArchivo, actual.LogotipoId ?? "");
+                // Eliminar logotipo anterior de Cloudinary
+                if (!string.IsNullOrEmpty(actual.CloudinaryPublicIdLogotipo))
+                {
+                    _manejadorImagenes.EliminarImagenCloudinary(actual.CloudinaryPublicIdLogotipo);
+                }
+
+                // Subir nuevo logotipo
+                var resultado = _manejadorImagenes.SubirImagenCompleto(a.logotipoArchivo, "negocios/logotipos");
+                if (resultado.Success)
+                {
+                    a.LogotipoId = resultado.SecureUrl;
+                    a.CloudinaryPublicIdLogotipo = resultado.PublicId;
+                }
             }
 
             // Guardar cambios del negocio

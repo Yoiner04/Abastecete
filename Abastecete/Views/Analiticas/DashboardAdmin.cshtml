@@ -1,8 +1,104 @@
 @model BusinessLogic.Models.DashboardAdmin
 @{
     var periodoSeleccionado = ViewBag.PeriodoSeleccionado as string ?? "7d";
+    ViewData["Title"] = "Dashboard Administrador - Abastecete";
+    ViewData["Description"] = "Panel de control con estadísticas globales del sistema Abastecete. Monitorea usuarios, locales, visitas y actividad.";
 }
 
+<!-- Skeleton de carga -->
+<div id="skeleton-dashboard" class="animate-pulse">
+    <!-- Header skeleton -->
+    <div class="bg-white border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 bg-gray-200 rounded"></div>
+                    <div>
+                        <div class="h-6 bg-gray-200 rounded w-48 mb-2"></div>
+                        <div class="h-4 bg-gray-200 rounded w-36"></div>
+                    </div>
+                </div>
+                <div class="w-40 h-10 bg-gray-200 rounded-lg"></div>
+            </div>
+        </div>
+    </div>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <!-- Stats cards skeleton -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            @for (int i = 0; i < 4; i++)
+            {
+                <div class="bg-white rounded-xl shadow-sm p-5 border border-gray-100">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <div class="h-4 bg-gray-200 rounded w-24 mb-2"></div>
+                            <div class="h-8 bg-gray-200 rounded w-16"></div>
+                        </div>
+                        <div class="w-12 h-12 bg-gray-200 rounded-full"></div>
+                    </div>
+                    <div class="mt-3 h-4 bg-gray-200 rounded w-32"></div>
+                </div>
+            }
+        </div>
+        <!-- Second row skeleton -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+            @for (int i = 0; i < 3; i++)
+            {
+                <div class="bg-white rounded-xl shadow-sm p-5 border border-gray-100">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 bg-gray-200 rounded-full"></div>
+                        <div>
+                            <div class="h-4 bg-gray-200 rounded w-28 mb-2"></div>
+                            <div class="h-6 bg-gray-200 rounded w-16"></div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+        <!-- Charts skeleton -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+            <div class="lg:col-span-2 bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                <div class="h-6 bg-gray-200 rounded w-40 mb-4"></div>
+                <div class="h-72 bg-gray-200 rounded"></div>
+            </div>
+            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                <div class="h-6 bg-gray-200 rounded w-28 mb-4"></div>
+                <div class="space-y-4">
+                    @for (int i = 0; i < 3; i++)
+                    {
+                        <div>
+                            <div class="h-4 bg-gray-200 rounded w-full mb-2"></div>
+                            <div class="h-2 bg-gray-200 rounded w-full"></div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+        <!-- Bottom row skeleton -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            @for (int i = 0; i < 2; i++)
+            {
+                <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                    <div class="h-6 bg-gray-200 rounded w-40 mb-4"></div>
+                    <div class="space-y-3">
+                        @for (int j = 0; j < 5; j++)
+                        {
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-gray-200 rounded-lg"></div>
+                                <div class="flex-1">
+                                    <div class="h-4 bg-gray-200 rounded w-3/4 mb-1"></div>
+                                    <div class="h-3 bg-gray-200 rounded w-1/2"></div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Contenido real (oculto inicialmente) -->
+<div id="content-dashboard" class="hidden">
 <!-- Header con barra blanca -->
 <div class="bg-white border-b border-gray-200">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
@@ -314,6 +410,7 @@
         </div>
     </div>
 </div>
+</div>
 
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -419,6 +516,14 @@
         // Cambio de período
         document.getElementById('selectPeriodo').addEventListener('change', function() {
             window.location.href = '@Url.Action("DashboardAdmin", "Analiticas")?periodo=' + this.value;
+        });
+
+        // Mostrar contenido y ocultar skeleton cuando la página esté lista
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(function() {
+                document.getElementById('skeleton-dashboard').classList.add('hidden');
+                document.getElementById('content-dashboard').classList.remove('hidden');
+            }, 300);
         });
     </script>
 }

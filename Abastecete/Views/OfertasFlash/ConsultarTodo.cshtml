@@ -1,7 +1,92 @@
 ﻿@model List<BusinessLogic.Models.OfertaFlash>
 
-<!-- OFERTAS FLASH -->
-<section class="off-section p-6 lg:p-10" id="ofertas-container">
+@{
+    ViewData["Title"] = "Ofertas Flash - Abastecete";
+    ViewData["Description"] = "Descubre ofertas de tiempo limitado de proveedores locales. No te pierdas los mejores descuentos.";
+}
+
+<!-- SKELETON LOADER -->
+<div id="skeleton-ofertas" class="animate-pulse p-6 lg:p-10">
+    <!-- Header Skeleton -->
+    <div class="flex justify-between items-center mb-4 pl-10 pr-10">
+        <div class="h-8 bg-gray-200 rounded w-64"></div>
+        <div class="h-6 bg-gray-200 rounded w-32"></div>
+    </div>
+
+    <!-- Grid Skeleton -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Skeleton Card 1 -->
+        <div class="bg-white p-4 rounded-lg shadow-md">
+            <div class="aspect-square bg-gray-200 rounded-md mb-4"></div>
+            <div class="space-y-3">
+                <div class="h-6 bg-gray-200 rounded w-3/4 mx-auto"></div>
+                <div class="h-4 bg-gray-200 rounded w-full"></div>
+                <div class="h-4 bg-gray-200 rounded w-2/3 mx-auto"></div>
+                <div class="h-6 bg-gray-200 rounded w-1/2 mx-auto mt-4"></div>
+            </div>
+        </div>
+
+        <!-- Skeleton Card 2 -->
+        <div class="bg-white p-4 rounded-lg shadow-md">
+            <div class="aspect-square bg-gray-200 rounded-md mb-4"></div>
+            <div class="space-y-3">
+                <div class="h-6 bg-gray-200 rounded w-3/4 mx-auto"></div>
+                <div class="h-4 bg-gray-200 rounded w-full"></div>
+                <div class="h-4 bg-gray-200 rounded w-2/3 mx-auto"></div>
+                <div class="h-6 bg-gray-200 rounded w-1/2 mx-auto mt-4"></div>
+            </div>
+        </div>
+
+        <!-- Skeleton Card 3 -->
+        <div class="bg-white p-4 rounded-lg shadow-md">
+            <div class="aspect-square bg-gray-200 rounded-md mb-4"></div>
+            <div class="space-y-3">
+                <div class="h-6 bg-gray-200 rounded w-3/4 mx-auto"></div>
+                <div class="h-4 bg-gray-200 rounded w-full"></div>
+                <div class="h-4 bg-gray-200 rounded w-2/3 mx-auto"></div>
+                <div class="h-6 bg-gray-200 rounded w-1/2 mx-auto mt-4"></div>
+            </div>
+        </div>
+
+        <!-- Skeleton Card 4 -->
+        <div class="bg-white p-4 rounded-lg shadow-md">
+            <div class="aspect-square bg-gray-200 rounded-md mb-4"></div>
+            <div class="space-y-3">
+                <div class="h-6 bg-gray-200 rounded w-3/4 mx-auto"></div>
+                <div class="h-4 bg-gray-200 rounded w-full"></div>
+                <div class="h-4 bg-gray-200 rounded w-2/3 mx-auto"></div>
+                <div class="h-6 bg-gray-200 rounded w-1/2 mx-auto mt-4"></div>
+            </div>
+        </div>
+
+        <!-- Skeleton Card 5 -->
+        <div class="bg-white p-4 rounded-lg shadow-md">
+            <div class="aspect-square bg-gray-200 rounded-md mb-4"></div>
+            <div class="space-y-3">
+                <div class="h-6 bg-gray-200 rounded w-3/4 mx-auto"></div>
+                <div class="h-4 bg-gray-200 rounded w-full"></div>
+                <div class="h-4 bg-gray-200 rounded w-2/3 mx-auto"></div>
+                <div class="h-6 bg-gray-200 rounded w-1/2 mx-auto mt-4"></div>
+            </div>
+        </div>
+
+        <!-- Skeleton Card 6 -->
+        <div class="bg-white p-4 rounded-lg shadow-md">
+            <div class="aspect-square bg-gray-200 rounded-md mb-4"></div>
+            <div class="space-y-3">
+                <div class="h-6 bg-gray-200 rounded w-3/4 mx-auto"></div>
+                <div class="h-4 bg-gray-200 rounded w-full"></div>
+                <div class="h-4 bg-gray-200 rounded w-2/3 mx-auto"></div>
+                <div class="h-6 bg-gray-200 rounded w-1/2 mx-auto mt-4"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CONTENIDO REAL -->
+<div id="content-ofertas" class="hidden">
+    <!-- OFERTAS FLASH -->
+    <section class="off-section p-6 lg:p-10" id="ofertas-container">
     <!-- Encabezado -->
     <div class="flex justify-between items-center mb-4">
         <h2 class="text-lg font-bold text-gray-800 pl-10">Todas las Ofertas Flash</h2>
@@ -45,8 +130,16 @@
         }
     </div>
 </section>
+</div>
 
 <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(function() {
+            document.getElementById('skeleton-ofertas').classList.add('hidden');
+            document.getElementById('content-ofertas').classList.remove('hidden');
+        }, 300);
+    });
+
     function actualizarContadores() {
         document.querySelectorAll(".countdown-timer").forEach(timer => {
             const expirationTime = new Date(timer.dataset.expiration).getTime();

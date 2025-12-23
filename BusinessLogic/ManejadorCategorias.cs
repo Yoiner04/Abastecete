@@ -82,7 +82,9 @@ namespace BusinessLogic
                 new Parametro("p_nombre_categoria", categoria.Nombre),
                 new Parametro("p_estado_categoria", categoria.Estado),
                 new Parametro("p_imagen_categoria", categoria.ImagenId ?? ""),
-                new Parametro("p_banner_categoria", categoria.BannerId ?? "")
+                new Parametro("p_cloudinary_public_id_imagen", categoria.CloudinaryPublicIdImagen ?? ""),
+                new Parametro("p_banner_categoria", categoria.BannerId ?? ""),
+                new Parametro("p_cloudinary_public_id_banner", categoria.CloudinaryPublicIdBanner ?? "")
             };
 
             var mensaje = new Parametro("mensaje", DBNull.Value);
@@ -102,7 +104,9 @@ namespace BusinessLogic
                 new Parametro("p_nombre_categoria", categoria.Nombre),
                 new Parametro("p_estado_categoria", categoria.Estado),
                 new Parametro("p_imagen_categoria", categoria.ImagenId ?? ""),
-                new Parametro("p_banner_categoria", categoria.BannerId ?? "")
+                new Parametro("p_cloudinary_public_id_imagen", categoria.CloudinaryPublicIdImagen ?? ""),
+                new Parametro("p_banner_categoria", categoria.BannerId ?? ""),
+                new Parametro("p_cloudinary_public_id_banner", categoria.CloudinaryPublicIdBanner ?? "")
             };
 
             var mensaje = new Parametro("mensaje", "");
@@ -132,6 +136,8 @@ namespace BusinessLogic
             DataRow row = datos.Rows[0];
             string imagenId = row["IMAGEN_CATEGORIA"] + "";
             string bannerId = row["BANNER_CATEGORIA"] + "";
+            string cloudinaryPublicIdImagen = row.Table.Columns.Contains("CLOUDINARY_PUBLIC_ID_IMAGEN") ? row["CLOUDINARY_PUBLIC_ID_IMAGEN"]?.ToString() : null;
+            string cloudinaryPublicIdBanner = row.Table.Columns.Contains("CLOUDINARY_PUBLIC_ID_BANNER") ? row["CLOUDINARY_PUBLIC_ID_BANNER"]?.ToString() : null;
 
             return new Categoria
             {
@@ -140,6 +146,8 @@ namespace BusinessLogic
                 Estado = Convert.ToInt32(row["ESTADO_CATEGORIA"]),
                 ImagenId = imagenId,
                 BannerId = bannerId,
+                CloudinaryPublicIdImagen = cloudinaryPublicIdImagen,
+                CloudinaryPublicIdBanner = cloudinaryPublicIdBanner,
                 Imagen = manejadorMongo.ObtenerImagen(imagenId),
                 BannerImagen = manejadorMongo.ObtenerImagen(bannerId),
             };

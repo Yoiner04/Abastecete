@@ -122,6 +122,7 @@ namespace BusinessLogic
         {
             string fotosId = GetString(row, "FOTOS_LOCAL");
             string bannerId = GetString(row, "BANNER_LOCAL");
+            string cloudinaryPublicIdLogotipo = GetString(row, "CLOUDINARY_PUBLIC_ID_LOGOTIPO");
 
             return new Negocio
             {
@@ -131,6 +132,7 @@ namespace BusinessLogic
                 Direccion = GetString(row, "DIRECCION_LOCAL"),
                 Telefono = GetLong(row, "TELEFONO_LOCAL"),
                 LogotipoId = fotosId,
+                CloudinaryPublicIdLogotipo = cloudinaryPublicIdLogotipo,
                 Descripcion = GetString(row, "DESCRIPCION_LOCAL"),
                 imagen = _manejadorMongo.ObtenerImagen(fotosId),
                 BannerId = bannerId,
@@ -259,6 +261,7 @@ namespace BusinessLogic
                 new Parametro("p_localizacion_local", !string.IsNullOrEmpty(negocio.Localizacion) ? negocio.Localizacion : actual.Localizacion),
                 new Parametro("p_telefono_local", negocio.Telefono != 0 ? negocio.Telefono : actual.Telefono),
                 new Parametro("p_fotos_local", !string.IsNullOrEmpty(negocio.LogotipoId) ? negocio.LogotipoId : actual.LogotipoId),
+                new Parametro("p_cloudinary_public_id_logotipo", !string.IsNullOrEmpty(negocio.CloudinaryPublicIdLogotipo) ? negocio.CloudinaryPublicIdLogotipo : actual.CloudinaryPublicIdLogotipo),
                 new Parametro("p_descripcion_local", !string.IsNullOrEmpty(negocio.Descripcion) ? negocio.Descripcion : actual.Descripcion),
                 new Parametro("p_banner_local", !string.IsNullOrEmpty(negocio.BannerId) ? negocio.BannerId : actual.BannerId),
 

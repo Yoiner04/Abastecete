@@ -1,9 +1,115 @@
 @model BusinessLogic.Models.DashboardAnaliticas
 @{
+    ViewData["Title"] = "Analíticas del Local";
+    ViewData["Description"] = "Visualiza las estadísticas de tu negocio: visitas al perfil, clics en WhatsApp, vistas de productos y apariciones en búsquedas.";
     var local = ViewBag.Local as BusinessLogic.Models.Negocio;
     var periodoSeleccionado = ViewBag.PeriodoSeleccionado as string ?? "7d";
 }
 
+<!-- Skeleton de carga -->
+<div id="skeleton-analiticas" class="animate-pulse">
+    <!-- Header skeleton -->
+    <div class="bg-white border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-6 h-6 bg-gray-200 rounded"></div>
+                    <div>
+                        <div class="h-6 w-32 bg-gray-200 rounded mb-2"></div>
+                        <div class="h-4 w-48 bg-gray-200 rounded"></div>
+                    </div>
+                </div>
+                <div class="h-10 w-40 bg-gray-200 rounded-lg"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <!-- Stats cards skeleton -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div class="bg-white rounded-xl shadow-sm p-5 border border-gray-100">
+                <div class="flex items-center justify-between">
+                    <div class="flex-1">
+                        <div class="h-4 w-24 bg-gray-200 rounded mb-2"></div>
+                        <div class="h-8 w-16 bg-gray-200 rounded"></div>
+                    </div>
+                    <div class="w-12 h-12 rounded-full bg-gray-200"></div>
+                </div>
+                <div class="mt-3 h-4 w-32 bg-gray-200 rounded"></div>
+            </div>
+            <div class="bg-white rounded-xl shadow-sm p-5 border border-gray-100">
+                <div class="flex items-center justify-between">
+                    <div class="flex-1">
+                        <div class="h-4 w-24 bg-gray-200 rounded mb-2"></div>
+                        <div class="h-8 w-16 bg-gray-200 rounded"></div>
+                    </div>
+                    <div class="w-12 h-12 rounded-full bg-gray-200"></div>
+                </div>
+                <div class="mt-3 h-4 w-32 bg-gray-200 rounded"></div>
+            </div>
+            <div class="bg-white rounded-xl shadow-sm p-5 border border-gray-100">
+                <div class="flex items-center justify-between">
+                    <div class="flex-1">
+                        <div class="h-4 w-24 bg-gray-200 rounded mb-2"></div>
+                        <div class="h-8 w-16 bg-gray-200 rounded"></div>
+                    </div>
+                    <div class="w-12 h-12 rounded-full bg-gray-200"></div>
+                </div>
+                <div class="mt-3 h-4 w-32 bg-gray-200 rounded"></div>
+            </div>
+            <div class="bg-white rounded-xl shadow-sm p-5 border border-gray-100">
+                <div class="flex items-center justify-between">
+                    <div class="flex-1">
+                        <div class="h-4 w-24 bg-gray-200 rounded mb-2"></div>
+                        <div class="h-8 w-16 bg-gray-200 rounded"></div>
+                    </div>
+                    <div class="w-12 h-12 rounded-full bg-gray-200"></div>
+                </div>
+                <div class="mt-3 h-4 w-32 bg-gray-200 rounded"></div>
+            </div>
+        </div>
+
+        <!-- Chart and products skeleton -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-2 bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                <div class="h-6 w-40 bg-gray-200 rounded mb-4"></div>
+                <div class="h-72 bg-gray-200 rounded"></div>
+            </div>
+            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                <div class="h-6 w-40 bg-gray-200 rounded mb-4"></div>
+                <div class="space-y-3">
+                    <div class="flex items-center gap-3 p-2">
+                        <div class="w-10 h-10 rounded-lg bg-gray-200"></div>
+                        <div class="flex-1">
+                            <div class="h-4 w-32 bg-gray-200 rounded mb-1"></div>
+                            <div class="h-3 w-20 bg-gray-200 rounded"></div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3 p-2">
+                        <div class="w-10 h-10 rounded-lg bg-gray-200"></div>
+                        <div class="flex-1">
+                            <div class="h-4 w-32 bg-gray-200 rounded mb-1"></div>
+                            <div class="h-3 w-20 bg-gray-200 rounded"></div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3 p-2">
+                        <div class="w-10 h-10 rounded-lg bg-gray-200"></div>
+                        <div class="flex-1">
+                            <div class="h-4 w-32 bg-gray-200 rounded mb-1"></div>
+                            <div class="h-3 w-20 bg-gray-200 rounded"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tips skeleton -->
+        <div class="mt-6 bg-gray-200 rounded-xl p-6 h-48"></div>
+    </div>
+</div>
+
+<!-- Contenido real (oculto inicialmente) -->
+<div id="content-analiticas" class="hidden">
 <!-- Header con barra blanca -->
 <div class="bg-white border-b border-gray-200">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
@@ -200,9 +306,21 @@
         </div>
     </div>
 </div>
+</div>
 
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Mostrar contenido después de cargar el DOM
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(function() {
+                document.getElementById('skeleton-analiticas').style.display = 'none';
+                document.getElementById('content-analiticas').classList.remove('hidden');
+                document.getElementById('content-analiticas').style.transition = 'opacity 300ms';
+                document.getElementById('content-analiticas').style.opacity = '1';
+            }, 100);
+        });
+    </script>
     <script>
         // Datos iniciales del gráfico
         const datosGrafico = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.DatosGrafico.Select(d => new {

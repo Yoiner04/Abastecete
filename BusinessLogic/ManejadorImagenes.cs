@@ -103,8 +103,10 @@ namespace BusinessLogic
         }
 
         /// <summary>
-        /// Actualiza una imagen existente: sube la nueva y retorna su URL
+        /// OBSOLETO: Este método NO elimina la imagen anterior de Cloudinary.
+        /// Use SubirImagenCompleto() + EliminarImagenCloudinary() en su lugar.
         /// </summary>
+        [Obsolete("Use SubirImagenCompleto() + EliminarImagenCloudinary() para eliminar correctamente la imagen anterior de Cloudinary")]
         public string updateImage(IFormFile archivo, string oldImageId)
         {
             if (archivo == null || archivo.Length == 0)

@@ -1,6 +1,8 @@
 @model List<BusinessLogic.Models.Membresia>
 @{
     Layout = null;
+    ViewData["Title"] = "Planes de Membresía - Abastecete";
+    ViewData["Description"] = "Elige el plan ideal para tu negocio. Compara características y beneficios de cada membresía.";
 }
 
 <!DOCTYPE html>
@@ -8,7 +10,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Seleccionar Membresia - Abastecete</title>
+    <title>@ViewData["Title"]</title>
+    <meta name="description" content="@ViewData["Description"]">
+    <meta name="keywords" content="planes de membresía, membresías para negocios, proveedor, cultivador, empresa, abastecete">
+    <meta name="author" content="Abastecete">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="@ViewData["Title"]">
+    <meta property="og:description" content="@ViewData["Description"]">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="@ViewData["Title"]">
+    <meta name="twitter:description" content="@ViewData["Description"]">
+
     <link rel="icon" type="image/x-icon" href="~/css/Images/Logo A naranja.png" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <script src="https://cdn.tailwindcss.com"></script>
@@ -66,6 +82,101 @@
 </head>
 
 <body class="bg-gray-100 min-h-screen">
+    <!-- Skeleton Loader -->
+    <div id="skeleton-tipos" class="animate-pulse">
+        <!-- Header Skeleton -->
+        <div class="bg-gradient-to-r from-[#23916A] to-emerald-600 shadow-lg">
+            <div class="max-w-6xl mx-auto px-4 py-5">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-xl bg-white/30"></div>
+                        <div>
+                            <div class="h-8 w-64 bg-white/30 rounded mb-2"></div>
+                            <div class="h-4 w-48 bg-white/20 rounded"></div>
+                        </div>
+                    </div>
+                    <div class="hidden sm:block w-20 h-10 bg-white/30 rounded-xl"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stepper Skeleton -->
+        <div class="bg-white shadow-sm border-b">
+            <div class="max-w-6xl mx-auto px-4 py-5">
+                <div class="flex items-center justify-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-gray-200"></div>
+                    <div class="h-1 w-20 bg-gray-200"></div>
+                    <div class="w-10 h-10 rounded-full bg-gray-200"></div>
+                    <div class="h-1 w-20 bg-gray-200"></div>
+                    <div class="w-10 h-10 rounded-full bg-gray-200"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content Skeleton -->
+        <main class="max-w-6xl mx-auto px-4 py-8">
+            <!-- Info Badge Skeleton -->
+            <div class="text-center mb-8">
+                <div class="inline-flex h-10 w-80 bg-gray-200 rounded-full"></div>
+            </div>
+
+            <!-- Cards Grid Skeleton -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Card Skeleton 1 -->
+                <div class="bg-white rounded-2xl border-2 border-gray-200 overflow-hidden">
+                    <div class="h-48 bg-gray-200"></div>
+                    <div class="p-6">
+                        <div class="h-6 bg-gray-200 rounded w-3/4 mx-auto mb-2"></div>
+                        <div class="h-4 bg-gray-200 rounded w-full mb-6"></div>
+                        <div class="space-y-2 mb-6">
+                            <div class="h-4 bg-gray-200 rounded"></div>
+                            <div class="h-4 bg-gray-200 rounded"></div>
+                            <div class="h-4 bg-gray-200 rounded"></div>
+                        </div>
+                        <div class="h-12 bg-gray-200 rounded-xl"></div>
+                    </div>
+                </div>
+
+                <!-- Card Skeleton 2 -->
+                <div class="bg-white rounded-2xl border-2 border-gray-200 overflow-hidden">
+                    <div class="h-48 bg-gray-200"></div>
+                    <div class="p-6">
+                        <div class="h-6 bg-gray-200 rounded w-3/4 mx-auto mb-2"></div>
+                        <div class="h-4 bg-gray-200 rounded w-full mb-6"></div>
+                        <div class="space-y-2 mb-6">
+                            <div class="h-4 bg-gray-200 rounded"></div>
+                            <div class="h-4 bg-gray-200 rounded"></div>
+                            <div class="h-4 bg-gray-200 rounded"></div>
+                        </div>
+                        <div class="h-12 bg-gray-200 rounded-xl"></div>
+                    </div>
+                </div>
+
+                <!-- Card Skeleton 3 -->
+                <div class="bg-white rounded-2xl border-2 border-gray-200 overflow-hidden">
+                    <div class="h-48 bg-gray-200"></div>
+                    <div class="p-6">
+                        <div class="h-6 bg-gray-200 rounded w-3/4 mx-auto mb-2"></div>
+                        <div class="h-4 bg-gray-200 rounded w-full mb-6"></div>
+                        <div class="space-y-2 mb-6">
+                            <div class="h-4 bg-gray-200 rounded"></div>
+                            <div class="h-4 bg-gray-200 rounded"></div>
+                            <div class="h-4 bg-gray-200 rounded"></div>
+                        </div>
+                        <div class="h-12 bg-gray-200 rounded-xl"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Back Button Skeleton -->
+            <div class="mt-8 text-center">
+                <div class="h-6 w-48 bg-gray-200 rounded mx-auto"></div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Contenido Real -->
+    <div id="content-tipos" class="hidden">
     <!-- Header Principal -->
     <header class="bg-gradient-to-r from-[#23916A] to-emerald-600 shadow-lg">
         <div class="max-w-6xl mx-auto px-4 py-5">
@@ -193,5 +304,16 @@
             </a>
         </div>
     </main>
+    </div>
+
+    <!-- Script para mostrar contenido -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(function() {
+                document.getElementById('skeleton-tipos').classList.add('hidden');
+                document.getElementById('content-tipos').classList.remove('hidden');
+            }, 300);
+        });
+    </script>
 </body>
 </html>

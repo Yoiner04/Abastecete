@@ -3,6 +3,9 @@
     var negocio = ViewBag.negocio as BusinessLogic.Models.Negocio;
     var productCount = Model?.Count ?? 0;
     var categoryCount = ViewBag.categorias?.Count ?? 0;
+
+    ViewData["Title"] = $"{negocio?.Nombre} - Productos en Abastécete";
+    ViewData["Description"] = $"Descubre {productCount} productos de {negocio?.Nombre}. {negocio?.Descripcion ?? "Tu proveedor de confianza en Abastécete"}";
 }
 @Html.Partial("_ContactModal")
 <!DOCTYPE html>
@@ -11,7 +14,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@negocio?.Nombre - Abastécete</title>
+    <title>@ViewData["Title"]</title>
+    <meta name="description" content="@ViewData["Description"]">
+    <meta name="keywords" content="@negocio?.Nombre, productos, @(categoryCount) categorías, proveedor, Abastécete">
+    <meta property="og:title" content="@ViewData["Title"]">
+    <meta property="og:description" content="@ViewData["Description"]">
+    <meta property="og:type" content="website">
+    @if (!string.IsNullOrWhiteSpace(negocio?.imagen?.Base64))
+    {
+        <meta property="og:image" content="@negocio.imagen.Base64">
+    }
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="@ViewData["Title"]">
+    <meta name="twitter:description" content="@ViewData["Description"]">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <style>
@@ -35,6 +50,16 @@
         @@keyframes shimmer {
             0% { background-position: -200% 0; }
             100% { background-position: 200% 0; }
+        }
+
+        /* Skeleton loader animation */
+        @@keyframes skeleton-pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .animate-pulse {
+            animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
         }
 
         .animate-fadeInUp {
@@ -263,8 +288,120 @@
 </head>
 
 <body class="bg-gradient-to-br from-gray-50 via-white to-gray-100 min-h-screen">
-    <!-- HEADER HERO MODERNIZADO -->
-    <header class="relative w-full overflow-hidden">
+    <!-- SKELETON LOADER -->
+    <div id="skeleton-productos" class="animate-pulse">
+        <!-- Header Skeleton -->
+        <div class="relative w-full overflow-hidden">
+            <!-- Banner skeleton -->
+            <div class="relative h-64 sm:h-80 lg:h-96 w-full bg-gray-200"></div>
+
+            <!-- Info card skeleton -->
+            <div class="relative z-20 -mt-16 container mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="bg-white rounded-2xl shadow-xl p-6 sm:p-8 border border-gray-100">
+                    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+                        <div class="flex flex-col sm:flex-row items-center sm:items-start gap-6 flex-1">
+                            <!-- Logo skeleton -->
+                            <div class="size-32 sm:size-40 lg:size-48 rounded-2xl bg-gray-200"></div>
+
+                            <!-- Text skeleton -->
+                            <div class="flex-1 space-y-3 text-center sm:text-left">
+                                <div class="h-8 bg-gray-200 rounded w-64 mx-auto sm:mx-0"></div>
+                                <div class="h-4 bg-gray-200 rounded w-96 mx-auto sm:mx-0"></div>
+                                <div class="flex gap-4 justify-center sm:justify-start mt-4">
+                                    <div class="h-4 bg-gray-200 rounded w-24"></div>
+                                    <div class="h-4 bg-gray-200 rounded w-24"></div>
+                                    <div class="h-4 bg-gray-200 rounded w-24"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Buttons skeleton -->
+                        <div class="flex gap-3">
+                            <div class="h-12 w-36 bg-gray-200 rounded-xl"></div>
+                            <div class="h-12 w-40 bg-gray-200 rounded-xl"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main content skeleton -->
+        <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <!-- Search bar skeleton -->
+            <div class="mb-8">
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6">
+                    <div class="flex flex-col sm:flex-row gap-4">
+                        <div class="flex-1 h-12 bg-gray-200 rounded-xl"></div>
+                        <div class="flex gap-3">
+                            <div class="h-12 w-40 bg-gray-200 rounded-xl"></div>
+                            <div class="h-12 w-24 bg-gray-200 rounded-xl"></div>
+                        </div>
+                    </div>
+                    <!-- Quick filters skeleton -->
+                    <div class="flex flex-wrap gap-2 mt-4">
+                        <div class="h-9 w-20 bg-gray-200 rounded-full"></div>
+                        <div class="h-9 w-24 bg-gray-200 rounded-full"></div>
+                        <div class="h-9 w-28 bg-gray-200 rounded-full"></div>
+                        <div class="h-9 w-20 bg-gray-200 rounded-full"></div>
+                        <div class="h-9 w-24 bg-gray-200 rounded-full"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex flex-col lg:flex-row gap-8">
+                <!-- Sidebar skeleton -->
+                <aside class="w-full lg:w-72 xl:w-80 flex-shrink-0">
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 space-y-6">
+                        <div class="flex items-center justify-between">
+                            <div class="h-6 bg-gray-200 rounded w-24"></div>
+                            <div class="h-4 bg-gray-200 rounded w-16"></div>
+                        </div>
+                        <div class="space-y-3">
+                            <div class="h-4 bg-gray-200 rounded w-20"></div>
+                            <div class="h-12 bg-gray-200 rounded-xl"></div>
+                        </div>
+                        <div class="space-y-3">
+                            <div class="h-4 bg-gray-200 rounded w-24"></div>
+                            <div class="h-12 bg-gray-200 rounded-xl"></div>
+                        </div>
+                        <div class="space-y-3">
+                            <div class="h-4 bg-gray-200 rounded w-28"></div>
+                            <div class="h-2 bg-gray-200 rounded-full"></div>
+                            <div class="flex justify-between">
+                                <div class="h-12 w-20 bg-gray-200 rounded-lg"></div>
+                                <div class="h-12 w-20 bg-gray-200 rounded-lg"></div>
+                            </div>
+                        </div>
+                    </div>
+                </aside>
+
+                <!-- Products grid skeleton -->
+                <section class="flex-1">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+                        @for (int i = 0; i < 6; i++)
+                        {
+                            <div class="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100">
+                                <div class="aspect-square bg-gray-200"></div>
+                                <div class="p-5 space-y-3">
+                                    <div class="h-6 bg-gray-200 rounded w-3/4"></div>
+                                    <div class="h-4 bg-gray-200 rounded w-1/2"></div>
+                                    <div class="flex items-center justify-between mt-4">
+                                        <div class="h-8 bg-gray-200 rounded w-24"></div>
+                                        <div class="h-10 bg-gray-200 rounded-xl w-24"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- ACTUAL CONTENT -->
+    <div id="content-productos" class="hidden">
+        <!-- HEADER HERO MODERNIZADO -->
+        <header class="relative w-full overflow-hidden">
         <!-- Banner con overlay gradiente -->
         <div class="relative h-64 sm:h-80 lg:h-96 w-full">
             @if (!string.IsNullOrWhiteSpace(negocio?.BannerImagen?.Base64))
@@ -1186,6 +1323,18 @@
     {
         <script src="https://maps.googleapis.com/maps/api/js?key=@ViewBag.GoogleMapsApiKey&libraries=places"></script>
     }
+    </div>
+    <!-- End of content-productos wrapper -->
+
+    <script>
+        // Skeleton loader transition
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(function() {
+                document.getElementById('skeleton-productos').classList.add('hidden');
+                document.getElementById('content-productos').classList.remove('hidden');
+            }, 300);
+        });
+    </script>
 </body>
 
 </html>

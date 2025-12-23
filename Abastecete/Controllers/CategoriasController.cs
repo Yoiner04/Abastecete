@@ -37,15 +37,41 @@ namespace Abastecete.Controllers
         [Auditar(ModulosAuditoria.CATEGORIAS, TiposAccionAuditoria.CREATE, ParametroDescripcion = "Nombre")]
         public IActionResult Crear(IFormFile Imagen, string Nombre, int Estado, IFormFile Banner)
         {
-            var imagenUrl = manejadorImagenes.SubirImagen(Imagen);
-            var bannerUrl = manejadorImagenes.SubirImagen(Banner);
+            string imagenUrl = "";
+            string cloudinaryPublicIdImagen = "";
+            string bannerUrl = "";
+            string cloudinaryPublicIdBanner = "";
+
+            // Subir imagen
+            if (Imagen != null && Imagen.Length > 0)
+            {
+                var resultado = manejadorImagenes.SubirImagenCompleto(Imagen, "categorias");
+                if (resultado.Success)
+                {
+                    imagenUrl = resultado.SecureUrl;
+                    cloudinaryPublicIdImagen = resultado.PublicId;
+                }
+            }
+
+            // Subir banner
+            if (Banner != null && Banner.Length > 0)
+            {
+                var resultado = manejadorImagenes.SubirImagenCompleto(Banner, "categorias/banners");
+                if (resultado.Success)
+                {
+                    bannerUrl = resultado.SecureUrl;
+                    cloudinaryPublicIdBanner = resultado.PublicId;
+                }
+            }
 
             var categoria = new Categoria
             {
                 Nombre = Nombre,
                 Estado = Estado,
-                ImagenId = imagenUrl ?? "",
-                BannerId = bannerUrl ?? ""
+                ImagenId = imagenUrl,
+                CloudinaryPublicIdImagen = cloudinaryPublicIdImagen,
+                BannerId = bannerUrl,
+                CloudinaryPublicIdBanner = cloudinaryPublicIdBanner
             };
             string mensaje = manejadorCategorias.CrearCategoria(categoria);
             return Json(new { mensaje });
@@ -59,17 +85,45 @@ namespace Abastecete.Controllers
         {
             Categoria categoriaActual = manejadorCategorias.ObtenerCategoria(Id);
 
-            string imagenId = categoriaActual.ImagenId;
-            string bannerId = categoriaActual.BannerId;
+            string imagenUrl = categoriaActual.ImagenId;
+            string cloudinaryPublicIdImagen = categoriaActual.CloudinaryPublicIdImagen;
+            string bannerUrl = categoriaActual.BannerId;
+            string cloudinaryPublicIdBanner = categoriaActual.CloudinaryPublicIdBanner;
 
+            // Si hay nueva imagen, eliminar la anterior de Cloudinary y subir la nueva
             if (Imagen != null && Imagen.Length > 0)
             {
-                imagenId = manejadorImagenes.updateImage(Imagen, imagenId);
+                // Eliminar imagen anterior de Cloudinary
+                if (!string.IsNullOrEmpty(categoriaActual.CloudinaryPublicIdImagen))
+                {
+                    manejadorImagenes.EliminarImagenCloudinary(categoriaActual.CloudinaryPublicIdImagen);
+                }
+
+                // Subir nueva imagen
+                var resultado = manejadorImagenes.SubirImagenCompleto(Imagen, "categorias");
+                if (resultado.Success)
+                {
+                    imagenUrl = resultado.SecureUrl;
+                    cloudinaryPublicIdImagen = resultado.PublicId;
+                }
             }
 
+            // Si hay nuevo banner, eliminar el anterior de Cloudinary y subir el nuevo
             if (Banner != null && Banner.Length > 0)
             {
-                bannerId = manejadorImagenes.updateImage(Banner, bannerId);
+                // Eliminar banner anterior de Cloudinary
+                if (!string.IsNullOrEmpty(categoriaActual.CloudinaryPublicIdBanner))
+                {
+                    manejadorImagenes.EliminarImagenCloudinary(categoriaActual.CloudinaryPublicIdBanner);
+                }
+
+                // Subir nuevo banner
+                var resultado = manejadorImagenes.SubirImagenCompleto(Banner, "categorias/banners");
+                if (resultado.Success)
+                {
+                    bannerUrl = resultado.SecureUrl;
+                    cloudinaryPublicIdBanner = resultado.PublicId;
+                }
             }
 
             var categoria = new Categoria
@@ -77,8 +131,10 @@ namespace Abastecete.Controllers
                 Id = Id,
                 Nombre = Nombre,
                 Estado = Estado,
-                ImagenId = imagenId,
-                BannerId = bannerId
+                ImagenId = imagenUrl,
+                CloudinaryPublicIdImagen = cloudinaryPublicIdImagen,
+                BannerId = bannerUrl,
+                CloudinaryPublicIdBanner = cloudinaryPublicIdBanner
             };
 
             string mensaje = manejadorCategorias.EditarCategoria(categoria);

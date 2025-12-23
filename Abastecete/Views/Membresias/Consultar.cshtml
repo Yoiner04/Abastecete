@@ -3,9 +3,94 @@
 
 @{
     ViewData["Title"] = "Gestión de Membresías";
+    ViewData["Description"] = "Administra los planes y precios de membresías del sistema";
     var tienePermiso = RolPermisos.TienePermiso("Administrar Membresias", Context.Session.GetString("permisos"));
 }
 
+<!-- Skeleton de carga -->
+<div id="loading-skeleton" class="animate-pulse">
+    <!-- Header Skeleton -->
+    <div class="bg-white border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 bg-gray-200 rounded-lg"></div>
+                    <div>
+                        <div class="h-8 w-64 bg-gray-200 rounded"></div>
+                        <div class="h-4 w-48 bg-gray-200 rounded mt-2"></div>
+                    </div>
+                </div>
+                <div class="h-10 w-32 bg-gray-200 rounded-lg"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Content Skeleton -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <!-- Stats Cards Skeleton -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div class="bg-white rounded-xl border border-gray-200 p-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-gray-200 rounded-lg"></div>
+                    <div class="flex-1">
+                        <div class="h-8 w-16 bg-gray-200 rounded mb-1"></div>
+                        <div class="h-3 w-24 bg-gray-200 rounded"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-xl border border-gray-200 p-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-gray-200 rounded-lg"></div>
+                    <div class="flex-1">
+                        <div class="h-8 w-16 bg-gray-200 rounded mb-1"></div>
+                        <div class="h-3 w-24 bg-gray-200 rounded"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-xl border border-gray-200 p-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-gray-200 rounded-lg"></div>
+                    <div class="flex-1">
+                        <div class="h-8 w-16 bg-gray-200 rounded mb-1"></div>
+                        <div class="h-3 w-24 bg-gray-200 rounded"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-xl border border-gray-200 p-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-gray-200 rounded-lg"></div>
+                    <div class="flex-1">
+                        <div class="h-8 w-16 bg-gray-200 rounded mb-1"></div>
+                        <div class="h-3 w-24 bg-gray-200 rounded"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filtros Skeleton -->
+        <div class="bg-white rounded-xl border border-gray-200 p-4 mb-6">
+            <div class="flex gap-4">
+                <div class="flex-1 h-10 bg-gray-200 rounded-lg"></div>
+                <div class="w-48 h-10 bg-gray-200 rounded-lg"></div>
+                <div class="w-32 h-10 bg-gray-200 rounded-lg"></div>
+            </div>
+        </div>
+
+        <!-- Tabla Skeleton -->
+        <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+            <div class="p-4 space-y-3">
+                <div class="h-12 bg-gray-200 rounded"></div>
+                <div class="h-12 bg-gray-200 rounded"></div>
+                <div class="h-12 bg-gray-200 rounded"></div>
+                <div class="h-12 bg-gray-200 rounded"></div>
+                <div class="h-12 bg-gray-200 rounded"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Contenido real -->
+<div id="main-content" class="hidden">
 <!-- Header a ancho completo -->
 <div class="bg-white border-b border-gray-200">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
@@ -333,6 +418,7 @@
 
 <!-- Toast de notificación -->
 </div> <!-- Cierre del contenedor principal -->
+</div> <!-- Cierre del contenido real -->
 
 <div id="toast" class="hidden fixed bottom-4 right-4 z-50">
     <div class="flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg" id="toastContent">
@@ -343,6 +429,14 @@
 
 @section Scripts {
 <script>
+    // Mostrar contenido después de cargar
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(function() {
+            document.getElementById('loading-skeleton').style.display = 'none';
+            document.getElementById('main-content').classList.remove('hidden');
+        }, 300);
+    });
+
     // Variables de paginación
     let currentPage = 1;
     let itemsPerPage = 25;

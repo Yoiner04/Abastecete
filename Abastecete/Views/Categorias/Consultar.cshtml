@@ -2,9 +2,168 @@
 @using BusinessLogic.Utilidades
 
 @{
-    ViewData["Title"] = "Gestión de Categorías";
+    ViewData["Title"] = "Gestión de Categorías - Abastecete";
+    ViewData["Description"] = "Administra las categorías y subcategorías de productos en Abastecete. Crea, edita y organiza categorías para una mejor gestión del inventario.";
     var tienePermiso = RolPermisos.TienePermiso("Administrar Categorias", Context.Session.GetString("permisos"));
 }
+
+<!-- Skeleton Loader -->
+<div id="skeleton-categorias" class="animate-pulse">
+    <!-- Header Skeleton -->
+    <div class="bg-white border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-lg bg-gray-200"></div>
+                    <div>
+                        <div class="h-8 bg-gray-200 rounded w-64 mb-2"></div>
+                        <div class="h-4 bg-gray-200 rounded w-80"></div>
+                    </div>
+                </div>
+                <div class="h-10 bg-gray-200 rounded w-40"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contenido con contenedor -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <!-- Stats Cards Skeleton -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div class="bg-white rounded-xl border border-gray-200 p-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-lg bg-gray-200"></div>
+                    <div class="flex-1">
+                        <div class="h-8 bg-gray-200 rounded w-16 mb-2"></div>
+                        <div class="h-3 bg-gray-200 rounded w-24"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-xl border border-gray-200 p-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-lg bg-gray-200"></div>
+                    <div class="flex-1">
+                        <div class="h-8 bg-gray-200 rounded w-16 mb-2"></div>
+                        <div class="h-3 bg-gray-200 rounded w-24"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-xl border border-gray-200 p-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-lg bg-gray-200"></div>
+                    <div class="flex-1">
+                        <div class="h-8 bg-gray-200 rounded w-16 mb-2"></div>
+                        <div class="h-3 bg-gray-200 rounded w-24"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-xl border border-gray-200 p-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-lg bg-gray-200"></div>
+                    <div class="flex-1">
+                        <div class="h-8 bg-gray-200 rounded w-16 mb-2"></div>
+                        <div class="h-3 bg-gray-200 rounded w-24"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filtros Skeleton -->
+        <div class="bg-white rounded-xl border border-gray-200 p-4 mb-6">
+            <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+                <div class="flex flex-col sm:flex-row gap-3 flex-1">
+                    <div class="h-10 bg-gray-200 rounded-lg w-full max-w-md"></div>
+                    <div class="h-10 bg-gray-200 rounded-lg w-40"></div>
+                </div>
+                <div class="h-10 bg-gray-200 rounded-lg w-24"></div>
+            </div>
+        </div>
+
+        <!-- Tabla Skeleton -->
+        <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead>
+                        <tr class="bg-gray-50 border-b border-gray-200">
+                            <th class="px-4 py-3"><div class="h-4 bg-gray-200 rounded w-24"></div></th>
+                            <th class="px-4 py-3"><div class="h-4 bg-gray-200 rounded w-20 mx-auto"></div></th>
+                            <th class="px-4 py-3"><div class="h-4 bg-gray-200 rounded w-20 mx-auto"></div></th>
+                            <th class="px-4 py-3"><div class="h-4 bg-gray-200 rounded w-20 mx-auto"></div></th>
+                            <th class="px-4 py-3"><div class="h-4 bg-gray-200 rounded w-24 mx-auto"></div></th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-4 py-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-lg bg-gray-200"></div>
+                                    <div class="h-5 bg-gray-200 rounded w-32"></div>
+                                </div>
+                            </td>
+                            <td class="px-4 py-4"><div class="w-14 h-14 rounded-lg bg-gray-200 mx-auto"></div></td>
+                            <td class="px-4 py-4"><div class="w-24 h-12 rounded-lg bg-gray-200 mx-auto"></div></td>
+                            <td class="px-4 py-4"><div class="h-6 bg-gray-200 rounded-full w-16 mx-auto"></div></td>
+                            <td class="px-4 py-4">
+                                <div class="flex items-center justify-center gap-2">
+                                    <div class="h-8 bg-gray-200 rounded-lg w-20"></div>
+                                    <div class="h-8 bg-gray-200 rounded-lg w-28"></div>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-4 py-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-lg bg-gray-200"></div>
+                                    <div class="h-5 bg-gray-200 rounded w-32"></div>
+                                </div>
+                            </td>
+                            <td class="px-4 py-4"><div class="w-14 h-14 rounded-lg bg-gray-200 mx-auto"></div></td>
+                            <td class="px-4 py-4"><div class="w-24 h-12 rounded-lg bg-gray-200 mx-auto"></div></td>
+                            <td class="px-4 py-4"><div class="h-6 bg-gray-200 rounded-full w-16 mx-auto"></div></td>
+                            <td class="px-4 py-4">
+                                <div class="flex items-center justify-center gap-2">
+                                    <div class="h-8 bg-gray-200 rounded-lg w-20"></div>
+                                    <div class="h-8 bg-gray-200 rounded-lg w-28"></div>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-4 py-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-lg bg-gray-200"></div>
+                                    <div class="h-5 bg-gray-200 rounded w-32"></div>
+                                </div>
+                            </td>
+                            <td class="px-4 py-4"><div class="w-14 h-14 rounded-lg bg-gray-200 mx-auto"></div></td>
+                            <td class="px-4 py-4"><div class="w-24 h-12 rounded-lg bg-gray-200 mx-auto"></div></td>
+                            <td class="px-4 py-4"><div class="h-6 bg-gray-200 rounded-full w-16 mx-auto"></div></td>
+                            <td class="px-4 py-4">
+                                <div class="flex items-center justify-center gap-2">
+                                    <div class="h-8 bg-gray-200 rounded-lg w-20"></div>
+                                    <div class="h-8 bg-gray-200 rounded-lg w-28"></div>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Paginación Skeleton -->
+            <div class="px-4 py-3 border-t border-gray-200 bg-gray-50">
+                <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div class="h-4 bg-gray-200 rounded w-48"></div>
+                    <div class="flex items-center gap-2">
+                        <div class="h-9 bg-gray-200 rounded-lg w-24"></div>
+                        <div class="h-9 bg-gray-200 rounded-lg w-32"></div>
+                        <div class="h-9 bg-gray-200 rounded-lg w-24"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Contenido Real -->
+<div id="content-categorias" class="hidden">
 
 <!-- Header a ancho completo -->
 <div class="bg-white border-b border-gray-200">
@@ -359,6 +518,8 @@
 <!-- Toast -->
 </div> <!-- Cierre del contenedor principal -->
 
+</div> <!-- Cierre de content-categorias -->
+
 <div id="toast" class="hidden fixed bottom-4 right-4 z-50">
     <div class="flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg" id="toastContent">
         <i id="toastIcon" class="fas"></i>
@@ -375,6 +536,12 @@
     let allRows = [];
 
     document.addEventListener('DOMContentLoaded', function() {
+        // Mostrar contenido y ocultar skeleton
+        setTimeout(function() {
+            document.getElementById('skeleton-categorias').classList.add('hidden');
+            document.getElementById('content-categorias').classList.remove('hidden');
+        }, 300);
+
         allRows = Array.from(document.querySelectorAll('.data-row'));
         filteredRows = [...allRows];
 

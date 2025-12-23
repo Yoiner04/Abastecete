@@ -1,5 +1,10 @@
 ﻿@model List<BusinessLogic.Models.Categoria>
 
+@{
+    ViewData["Title"] = "Descuentos Imperdibles - Abastecete";
+    ViewData["Description"] = "Descubre los mejores descuentos y promociones en Abastecete. Encuentra ofertas imperdibles en todas las categorías de productos.";
+}
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,34 +18,84 @@
 </head>
 
 <body>
-    <!-- DESCUENTOS -->
-    <section id="discounts-section" class="discounts-section p-6 lg:p-10">
+    <!-- Skeleton Loader -->
+    <div id="skeleton-promociones" class="animate-pulse p-6 lg:p-10">
         <div class="mb-6 flex flex-wrap gap-2 lg:gap-4">
-            <h2 class="text-3xl lg:text-5xl font-bold text-[#F66623]">DESCUENTOS</h2>
-            <h2 class="text-3xl lg:text-5xl font-bold text-[#23916A]">IMPERDIBLES</h2>
+            <div class="bg-gray-200 rounded h-12 w-64"></div>
+            <div class="bg-gray-200 rounded h-12 w-72"></div>
         </div>
 
-        <!-- Contenedor de Categorías -->
-        <div id="categories-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            @foreach (var categoria in Model.Where(c => c.Estado == 1))
-            {
-                var rutaBase = $"/images/{categoria.Nombre.Replace(" ", "_")}/";
-                var imagenPorDefecto = "/images/default.webp";
-
-                <div class="rounded-xl p-6 shadow-md transition-transform transform hover:scale-105 @(categoria.Id % 2 == 0 ? "bg-white" : "bg-green-100")">
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-lg font-bold text-gray-800">@categoria.Nombre</h3>
-                    </div>
-
-                    <!-- Imágenes representativas -->
-                    <div class="grid grid-cols-2 gap-2">
-                        <img src="@($"{rutaBase}banner3.webp")" onerror="this.src='@imagenPorDefecto'" class="h-32 w-full object-cover rounded-lg">
-                        <img src="@($"{rutaBase}banner4.webp")" onerror="this.src='@imagenPorDefecto'" class="h-32 w-full object-cover rounded-lg">
-                        <img src="@($"{rutaBase}banner5.webp")" onerror="this.src='@imagenPorDefecto'" class="h-32 w-full object-cover rounded-lg">
-                        <img src="@($"{rutaBase}banner6.webp")" onerror="this.src='@imagenPorDefecto'" class="h-32 w-full object-cover rounded-lg">
-                    </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div class="rounded-xl p-6 shadow-md bg-white">
+                <div class="bg-gray-200 rounded h-6 w-32 mb-4"></div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div class="bg-gray-200 rounded-lg h-32 w-full"></div>
+                    <div class="bg-gray-200 rounded-lg h-32 w-full"></div>
+                    <div class="bg-gray-200 rounded-lg h-32 w-full"></div>
+                    <div class="bg-gray-200 rounded-lg h-32 w-full"></div>
                 </div>
-            }
+            </div>
+            <div class="rounded-xl p-6 shadow-md bg-green-100">
+                <div class="bg-gray-200 rounded h-6 w-32 mb-4"></div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div class="bg-gray-200 rounded-lg h-32 w-full"></div>
+                    <div class="bg-gray-200 rounded-lg h-32 w-full"></div>
+                    <div class="bg-gray-200 rounded-lg h-32 w-full"></div>
+                    <div class="bg-gray-200 rounded-lg h-32 w-full"></div>
+                </div>
+            </div>
+            <div class="rounded-xl p-6 shadow-md bg-white">
+                <div class="bg-gray-200 rounded h-6 w-32 mb-4"></div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div class="bg-gray-200 rounded-lg h-32 w-full"></div>
+                    <div class="bg-gray-200 rounded-lg h-32 w-full"></div>
+                    <div class="bg-gray-200 rounded-lg h-32 w-full"></div>
+                    <div class="bg-gray-200 rounded-lg h-32 w-full"></div>
+                </div>
+            </div>
         </div>
-    </section>
+    </div>
+
+    <!-- Contenido Real -->
+    <div id="content-promociones" class="hidden">
+        <!-- DESCUENTOS -->
+        <section id="discounts-section" class="discounts-section p-6 lg:p-10">
+            <div class="mb-6 flex flex-wrap gap-2 lg:gap-4">
+                <h2 class="text-3xl lg:text-5xl font-bold text-[#F66623]">DESCUENTOS</h2>
+                <h2 class="text-3xl lg:text-5xl font-bold text-[#23916A]">IMPERDIBLES</h2>
+            </div>
+
+            <!-- Contenedor de Categorías -->
+            <div id="categories-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                @foreach (var categoria in Model.Where(c => c.Estado == 1))
+                {
+                    var rutaBase = $"/images/{categoria.Nombre.Replace(" ", "_")}/";
+                    var imagenPorDefecto = "/images/default.webp";
+
+                    <div class="rounded-xl p-6 shadow-md transition-transform transform hover:scale-105 @(categoria.Id % 2 == 0 ? "bg-white" : "bg-green-100")">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-bold text-gray-800">@categoria.Nombre</h3>
+                        </div>
+
+                        <!-- Imágenes representativas -->
+                        <div class="grid grid-cols-2 gap-2">
+                            <img src="@($"{rutaBase}banner3.webp")" onerror="this.src='@imagenPorDefecto'" class="h-32 w-full object-cover rounded-lg">
+                            <img src="@($"{rutaBase}banner4.webp")" onerror="this.src='@imagenPorDefecto'" class="h-32 w-full object-cover rounded-lg">
+                            <img src="@($"{rutaBase}banner5.webp")" onerror="this.src='@imagenPorDefecto'" class="h-32 w-full object-cover rounded-lg">
+                            <img src="@($"{rutaBase}banner6.webp")" onerror="this.src='@imagenPorDefecto'" class="h-32 w-full object-cover rounded-lg">
+                        </div>
+                    </div>
+                }
+            </div>
+        </section>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(function() {
+                document.getElementById('skeleton-promociones').classList.add('hidden');
+                document.getElementById('content-promociones').classList.remove('hidden');
+            }, 300);
+        });
+    </script>
 </body>

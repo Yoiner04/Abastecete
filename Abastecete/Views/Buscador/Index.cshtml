@@ -1,6 +1,7 @@
 @{
     Layout = "_Layout";
-    ViewData["Title"] = "Resultados de búsqueda";
+    ViewData["Title"] = "Buscar Productos - Abastecete";
+    ViewData["Description"] = "Busca productos de proveedores locales. Filtra por categoría, precio y más.";
 
     var query = ViewBag.Query as string ?? "";
     var ofertas = ViewBag.Ofertas as List<BusinessLogic.Models.OfertaFlash> ?? new List<BusinessLogic.Models.OfertaFlash>();
@@ -51,9 +52,181 @@
     .countdown-timer {
         font-variant-numeric: tabular-nums;
     }
+
+    /* Skeleton animations */
+    @@keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+    }
+    .animate-pulse {
+        animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
 </style>
 
-<div class="min-h-screen bg-gray-50">
+<!-- Skeleton Loader -->
+<div id="skeleton-buscador" class="animate-pulse min-h-screen bg-gray-50">
+    <!-- Header skeleton -->
+    <div class="bg-gradient-to-r from-[#23916A] to-emerald-500 shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <!-- Barra de búsqueda skeleton -->
+            <div class="max-w-2xl mx-auto">
+                <div class="h-14 bg-white/30 rounded-2xl"></div>
+            </div>
+            <!-- Info skeleton -->
+            <div class="text-center mt-4">
+                <div class="h-6 bg-white/20 rounded w-64 mx-auto"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabs skeleton -->
+    <div class="bg-white border-b shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex gap-2 py-2">
+                <div class="h-10 bg-gray-200 rounded-xl w-24"></div>
+                <div class="h-10 bg-gray-200 rounded-xl w-28"></div>
+                <div class="h-10 bg-gray-200 rounded-xl w-32"></div>
+                <div class="h-10 bg-gray-200 rounded-xl w-24"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Content skeleton -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <!-- Sección ofertas skeleton -->
+        <div class="mb-8">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-10 h-10 bg-gray-200 rounded-xl"></div>
+                <div>
+                    <div class="h-6 bg-gray-200 rounded w-32 mb-2"></div>
+                    <div class="h-4 bg-gray-200 rounded w-24"></div>
+                </div>
+            </div>
+            <!-- Grid de ofertas skeleton -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div class="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100">
+                    <div class="h-40 bg-gray-200"></div>
+                    <div class="p-4 space-y-2">
+                        <div class="h-5 bg-gray-200 rounded w-3/4"></div>
+                        <div class="h-4 bg-gray-200 rounded w-1/2"></div>
+                        <div class="h-3 bg-gray-200 rounded w-2/3"></div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100">
+                    <div class="h-40 bg-gray-200"></div>
+                    <div class="p-4 space-y-2">
+                        <div class="h-5 bg-gray-200 rounded w-3/4"></div>
+                        <div class="h-4 bg-gray-200 rounded w-1/2"></div>
+                        <div class="h-3 bg-gray-200 rounded w-2/3"></div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100">
+                    <div class="h-40 bg-gray-200"></div>
+                    <div class="p-4 space-y-2">
+                        <div class="h-5 bg-gray-200 rounded w-3/4"></div>
+                        <div class="h-4 bg-gray-200 rounded w-1/2"></div>
+                        <div class="h-3 bg-gray-200 rounded w-2/3"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sección productos skeleton -->
+        <div class="mb-8">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-10 h-10 bg-gray-200 rounded-xl"></div>
+                <div>
+                    <div class="h-6 bg-gray-200 rounded w-28 mb-2"></div>
+                    <div class="h-4 bg-gray-200 rounded w-36"></div>
+                </div>
+            </div>
+            <!-- Grid de productos skeleton -->
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                <div class="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100">
+                    <div class="aspect-square bg-gray-200"></div>
+                    <div class="p-2.5 space-y-2">
+                        <div class="h-3 bg-gray-200 rounded"></div>
+                        <div class="h-3 bg-gray-200 rounded w-2/3"></div>
+                        <div class="h-4 bg-gray-200 rounded w-1/2"></div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100">
+                    <div class="aspect-square bg-gray-200"></div>
+                    <div class="p-2.5 space-y-2">
+                        <div class="h-3 bg-gray-200 rounded"></div>
+                        <div class="h-3 bg-gray-200 rounded w-2/3"></div>
+                        <div class="h-4 bg-gray-200 rounded w-1/2"></div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100">
+                    <div class="aspect-square bg-gray-200"></div>
+                    <div class="p-2.5 space-y-2">
+                        <div class="h-3 bg-gray-200 rounded"></div>
+                        <div class="h-3 bg-gray-200 rounded w-2/3"></div>
+                        <div class="h-4 bg-gray-200 rounded w-1/2"></div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100">
+                    <div class="aspect-square bg-gray-200"></div>
+                    <div class="p-2.5 space-y-2">
+                        <div class="h-3 bg-gray-200 rounded"></div>
+                        <div class="h-3 bg-gray-200 rounded w-2/3"></div>
+                        <div class="h-4 bg-gray-200 rounded w-1/2"></div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100">
+                    <div class="aspect-square bg-gray-200"></div>
+                    <div class="p-2.5 space-y-2">
+                        <div class="h-3 bg-gray-200 rounded"></div>
+                        <div class="h-3 bg-gray-200 rounded w-2/3"></div>
+                        <div class="h-4 bg-gray-200 rounded w-1/2"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sección locales skeleton -->
+        <div class="mb-8">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-10 h-10 bg-gray-200 rounded-xl"></div>
+                <div>
+                    <div class="h-6 bg-gray-200 rounded w-24 mb-2"></div>
+                    <div class="h-4 bg-gray-200 rounded w-32"></div>
+                </div>
+            </div>
+            <!-- Grid de locales skeleton -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex items-center gap-4">
+                    <div class="w-16 h-16 bg-gray-200 rounded-xl"></div>
+                    <div class="flex-1 space-y-2">
+                        <div class="h-5 bg-gray-200 rounded w-3/4"></div>
+                        <div class="h-4 bg-gray-200 rounded w-1/2"></div>
+                        <div class="h-3 bg-gray-200 rounded w-2/3"></div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex items-center gap-4">
+                    <div class="w-16 h-16 bg-gray-200 rounded-xl"></div>
+                    <div class="flex-1 space-y-2">
+                        <div class="h-5 bg-gray-200 rounded w-3/4"></div>
+                        <div class="h-4 bg-gray-200 rounded w-1/2"></div>
+                        <div class="h-3 bg-gray-200 rounded w-2/3"></div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex items-center gap-4">
+                    <div class="w-16 h-16 bg-gray-200 rounded-xl"></div>
+                    <div class="flex-1 space-y-2">
+                        <div class="h-5 bg-gray-200 rounded w-3/4"></div>
+                        <div class="h-4 bg-gray-200 rounded w-1/2"></div>
+                        <div class="h-3 bg-gray-200 rounded w-2/3"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Real Content -->
+<div id="content-buscador" class="hidden min-h-screen bg-gray-50">
     <!-- Header de búsqueda -->
     <div class="bg-gradient-to-r from-[#23916A] to-emerald-500 shadow-lg">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -343,8 +516,17 @@
         </div>
     }
 </div>
+</div>
 
 <script>
+    // Skeleton loader toggle
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(function() {
+            document.getElementById('skeleton-buscador').classList.add('hidden');
+            document.getElementById('content-buscador').classList.remove('hidden');
+        }, 300);
+    });
+
     // Tabs functionality
     function showTab(tab) {
         // Actualizar botones

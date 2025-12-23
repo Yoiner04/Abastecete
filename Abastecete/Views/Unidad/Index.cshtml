@@ -1,7 +1,8 @@
 @model List<BusinessLogic.Models.Unidad>
 @using BusinessLogic.Models
 @{
-    ViewData["Title"] = "Gestión de Unidades";
+    ViewData["Title"] = "Gestión de Unidades - Abastecete";
+    ViewData["Description"] = "Administra las unidades de medida y tipos de unidad para los productos en Abastecete. Gestiona kg, litros, unidades y más categorías de medición.";
     var tiposUnidad = ViewBag.TiposUnidad as List<TipoUnidad> ?? new List<TipoUnidad>();
 }
 
@@ -30,8 +31,87 @@
 </head>
 
 <body class="bg-gray-50 min-h-screen">
-    <!-- Header -->
-    <header class="bg-white shadow-sm border-b border-gray-200">
+    <!-- Skeleton Loader -->
+    <div id="skeleton-unidad" class="animate-pulse">
+        <!-- Header Skeleton -->
+        <header class="bg-white shadow-sm border-b border-gray-200">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-4">
+                        <div class="h-6 w-24 bg-gray-200 rounded"></div>
+                        <div class="h-6 w-px bg-gray-200"></div>
+                        <div class="h-8 w-64 bg-gray-200 rounded"></div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <!-- Tabs Skeleton -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 mb-6">
+                <div class="border-b border-gray-200">
+                    <nav class="flex -mb-px">
+                        <div class="px-6 py-4 w-32 h-12 bg-gray-200 rounded-t"></div>
+                        <div class="px-6 py-4 w-40 h-12 bg-gray-100 rounded-t ml-2"></div>
+                    </nav>
+                </div>
+
+                <!-- Content Skeleton -->
+                <div class="p-6">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+                        <div class="flex-1">
+                            <div class="h-6 w-48 bg-gray-200 rounded mb-2"></div>
+                            <div class="h-4 w-64 bg-gray-200 rounded"></div>
+                        </div>
+                        <div class="h-10 w-40 bg-gray-200 rounded-lg"></div>
+                    </div>
+
+                    <!-- Table Skeleton -->
+                    <div class="overflow-x-auto rounded-lg border border-gray-200">
+                        <div class="min-w-full divide-y divide-gray-200">
+                            <!-- Header -->
+                            <div class="bg-gray-50 px-6 py-3 flex gap-4">
+                                <div class="h-4 w-12 bg-gray-200 rounded"></div>
+                                <div class="h-4 w-32 bg-gray-200 rounded"></div>
+                                <div class="h-4 w-24 bg-gray-200 rounded"></div>
+                                <div class="h-4 w-24 bg-gray-200 rounded"></div>
+                                <div class="h-4 w-24 bg-gray-200 rounded ml-auto"></div>
+                            </div>
+                            <!-- Rows -->
+                            <div class="bg-white divide-y divide-gray-200">
+                                <div class="px-6 py-4 flex gap-4 items-center">
+                                    <div class="h-4 w-12 bg-gray-200 rounded"></div>
+                                    <div class="h-4 w-32 bg-gray-200 rounded"></div>
+                                    <div class="h-6 w-24 bg-gray-200 rounded-full"></div>
+                                    <div class="h-6 w-20 bg-gray-200 rounded-full"></div>
+                                    <div class="h-4 w-20 bg-gray-200 rounded ml-auto"></div>
+                                </div>
+                                <div class="px-6 py-4 flex gap-4 items-center">
+                                    <div class="h-4 w-12 bg-gray-200 rounded"></div>
+                                    <div class="h-4 w-32 bg-gray-200 rounded"></div>
+                                    <div class="h-6 w-24 bg-gray-200 rounded-full"></div>
+                                    <div class="h-6 w-20 bg-gray-200 rounded-full"></div>
+                                    <div class="h-4 w-20 bg-gray-200 rounded ml-auto"></div>
+                                </div>
+                                <div class="px-6 py-4 flex gap-4 items-center">
+                                    <div class="h-4 w-12 bg-gray-200 rounded"></div>
+                                    <div class="h-4 w-32 bg-gray-200 rounded"></div>
+                                    <div class="h-6 w-24 bg-gray-200 rounded-full"></div>
+                                    <div class="h-6 w-20 bg-gray-200 rounded-full"></div>
+                                    <div class="h-4 w-20 bg-gray-200 rounded ml-auto"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Contenido Real -->
+    <div id="content-unidad" class="hidden">
+        <!-- Header -->
+        <header class="bg-white shadow-sm border-b border-gray-200">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-4">
@@ -505,6 +585,15 @@
         function cerrarModalConfirm() {
             document.getElementById('modalConfirm').classList.add('hidden');
         }
+
+        // Skeleton Loader
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(function() {
+                document.getElementById('skeleton-unidad').classList.add('hidden');
+                document.getElementById('content-unidad').classList.remove('hidden');
+            }, 300);
+        });
     </script>
+    </div>
 </body>
 </html>

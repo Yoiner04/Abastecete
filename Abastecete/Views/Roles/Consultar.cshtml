@@ -2,6 +2,7 @@
 @using BusinessLogic.Utilidades
 @{
     ViewData["Title"] = "Gestión de Roles y Permisos";
+    ViewData["Description"] = "Administra roles, permisos y asignaciones de usuarios del sistema";
     var permisos = Context.Session.GetString("permisos");
     var puedeAdministrar = RolPermisos.TienePermiso("Administrar Roles", permisos);
 
@@ -12,6 +13,85 @@
     var rolSeleccionado = roles.FirstOrDefault(r => r.Id == idRolSeleccionado);
 }
 
+<!-- Skeleton de carga -->
+<div id="loading-skeleton" class="animate-pulse">
+    <!-- Header Skeleton -->
+    <div class="bg-white border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="flex items-center gap-4">
+                <div class="w-10 h-10 bg-gray-200 rounded-lg"></div>
+                <div>
+                    <div class="h-8 w-72 bg-gray-200 rounded"></div>
+                    <div class="h-4 w-56 bg-gray-200 rounded mt-2"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Content Skeleton -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <!-- Stats Cards Skeleton -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div class="bg-white rounded-xl border border-gray-200 p-4">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 bg-gray-200 rounded-lg"></div>
+                    <div class="flex-1">
+                        <div class="h-8 w-12 bg-gray-200 rounded mb-1"></div>
+                        <div class="h-4 w-20 bg-gray-200 rounded"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-xl border border-gray-200 p-4">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 bg-gray-200 rounded-lg"></div>
+                    <div class="flex-1">
+                        <div class="h-8 w-12 bg-gray-200 rounded mb-1"></div>
+                        <div class="h-4 w-28 bg-gray-200 rounded"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-xl border border-gray-200 p-4">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 bg-gray-200 rounded-lg"></div>
+                    <div class="flex-1">
+                        <div class="h-8 w-12 bg-gray-200 rounded mb-1"></div>
+                        <div class="h-4 w-16 bg-gray-200 rounded"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Grid Skeleton -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Roles Panel Skeleton -->
+            <div class="lg:col-span-1 bg-white rounded-xl border border-gray-200 p-4">
+                <div class="h-6 w-32 bg-gray-200 rounded mb-4"></div>
+                <div class="space-y-2">
+                    <div class="h-14 bg-gray-200 rounded-lg"></div>
+                    <div class="h-14 bg-gray-200 rounded-lg"></div>
+                    <div class="h-14 bg-gray-200 rounded-lg"></div>
+                    <div class="h-14 bg-gray-200 rounded-lg"></div>
+                </div>
+            </div>
+
+            <!-- Permisos Panel Skeleton -->
+            <div class="lg:col-span-2 bg-white rounded-xl border border-gray-200 p-4">
+                <div class="h-6 w-40 bg-gray-200 rounded mb-4"></div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div class="h-16 bg-gray-200 rounded-xl"></div>
+                    <div class="h-16 bg-gray-200 rounded-xl"></div>
+                    <div class="h-16 bg-gray-200 rounded-xl"></div>
+                    <div class="h-16 bg-gray-200 rounded-xl"></div>
+                    <div class="h-16 bg-gray-200 rounded-xl"></div>
+                    <div class="h-16 bg-gray-200 rounded-xl"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Contenido real -->
+<div id="main-content" class="hidden">
 <!-- Header a ancho completo -->
 <div class="bg-white border-b border-gray-200">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
@@ -257,9 +337,18 @@
 </div>
 
 </div> <!-- Cierre del contenedor principal -->
+</div> <!-- Cierre del contenido real -->
 
 @section Scripts {
 <script>
+    // Mostrar contenido después de cargar
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(function() {
+            document.getElementById('loading-skeleton').style.display = 'none';
+            document.getElementById('main-content').classList.remove('hidden');
+        }, 300);
+    });
+
     function togglePermiso(idRol, idPermiso) {
         // Redirect to toggle permission
         window.location.href = '@Url.Action("AsignarPermisoRol", "Roles")' + '?idRol=' + idRol + '&idPermiso=' + idPermiso;

@@ -19,6 +19,7 @@ namespace BusinessLogic.Models
         public long Telefono { get; set; }
         public float Puntuacion { get; set; } = 5;
         public string? LogotipoId { get; set; }
+        public string? CloudinaryPublicIdLogotipo { get; set; }
         public IFormFile? logotipoArchivo { get; set; }
         public ImagenModel imagen { get; set; }
         public string BannerId { get; set; }

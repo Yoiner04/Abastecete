@@ -5,12 +5,11 @@ namespace DataAccess
 {
     public class Connection
     {
-        // Connection string optimizada con pooling y timeouts
         private static readonly string _connectionString =
             "server=167.71.91.199; " +
             "database=abastecete; " +
-            "user=bd_abastecete; " +
-            "password=root_abastecete; " +
+            "user=root; " +
+            "password=Websen2025.; " +
             "port=3306; " +
             "Pooling=true; " +                    // Habilitar connection pooling
             "Min Pool Size=5; " +                 // Mantener 5 conexiones listas
