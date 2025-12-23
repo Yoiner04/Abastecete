@@ -264,6 +264,56 @@
         </div>
     </div>
 
+    @{
+        var bannersBuscador = ViewBag.BannersBuscador as List<BusinessLogic.Models.Banner> ?? new List<BusinessLogic.Models.Banner>();
+    }
+    @if (bannersBuscador.Any())
+    {
+        <!-- Banner del Buscador -->
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="relative overflow-hidden rounded-2xl shadow-lg">
+                @if (bannersBuscador.Count == 1)
+                {
+                    <img src="@bannersBuscador[0].CloudinaryUrl"
+                         alt="Banner promocional"
+                         class="w-full h-auto object-cover max-h-48 md:max-h-64" />
+                }
+                else
+                {
+                    <!-- Carousel de banners -->
+                    <div id="banner-carousel-buscador" class="relative">
+                        @for (int i = 0; i < bannersBuscador.Count; i++)
+                        {
+                            <div class="banner-slide-buscador @(i == 0 ? "" : "hidden") transition-opacity duration-500">
+                                <img src="@bannersBuscador[i].CloudinaryUrl"
+                                     alt="Banner promocional @(i + 1)"
+                                     class="w-full h-auto object-cover max-h-48 md:max-h-64" />
+                            </div>
+                        }
+                        <!-- Indicadores -->
+                        <div class="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2">
+                            @for (int i = 0; i < bannersBuscador.Count; i++)
+                            {
+                                <button onclick="goToBannerSlide(@i)"
+                                        class="banner-indicator w-2 h-2 rounded-full @(i == 0 ? "bg-white" : "bg-white/50") transition-all hover:bg-white"></button>
+                            }
+                        </div>
+                        <!-- Controles -->
+                        @if (bannersBuscador.Count > 1)
+                        {
+                            <button onclick="prevBannerSlide()" class="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/30 text-white flex items-center justify-center hover:bg-black/50 transition-colors">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <button onclick="nextBannerSlide()" class="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/30 text-white flex items-center justify-center hover:bg-black/50 transition-colors">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    }
+
     @if (!string.IsNullOrEmpty(query) && totalResultados > 0)
     {
         <!-- Tabs de filtro -->
@@ -572,4 +622,40 @@
 
     setInterval(actualizarContadores, 1000);
     actualizarContadores();
+
+    // Banner Carousel
+    let currentBannerSlide = 0;
+    const bannerSlides = document.querySelectorAll('.banner-slide-buscador');
+    const bannerIndicators = document.querySelectorAll('.banner-indicator');
+
+    function goToBannerSlide(index) {
+        if (bannerSlides.length === 0) return;
+
+        // Ocultar slide actual
+        bannerSlides[currentBannerSlide].classList.add('hidden');
+        bannerIndicators[currentBannerSlide]?.classList.remove('bg-white');
+        bannerIndicators[currentBannerSlide]?.classList.add('bg-white/50');
+
+        // Mostrar nuevo slide
+        currentBannerSlide = index;
+        if (currentBannerSlide >= bannerSlides.length) currentBannerSlide = 0;
+        if (currentBannerSlide < 0) currentBannerSlide = bannerSlides.length - 1;
+
+        bannerSlides[currentBannerSlide].classList.remove('hidden');
+        bannerIndicators[currentBannerSlide]?.classList.add('bg-white');
+        bannerIndicators[currentBannerSlide]?.classList.remove('bg-white/50');
+    }
+
+    function nextBannerSlide() {
+        goToBannerSlide(currentBannerSlide + 1);
+    }
+
+    function prevBannerSlide() {
+        goToBannerSlide(currentBannerSlide - 1);
+    }
+
+    // Auto-rotate banners cada 5 segundos
+    if (bannerSlides.length > 1) {
+        setInterval(nextBannerSlide, 5000);
+    }
 </script>

@@ -495,6 +495,7 @@
                         }
                         <a href="@waUrl"
                            target="_blank" rel="noopener"
+                           onclick="if(window.AbasteceteTracking) AbasteceteTracking.registrarClicWhatsapp(@negocio.Id);"
                            class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 text-white font-semibold shadow-lg shadow-green-500/30 hover:shadow-xl hover:shadow-green-500/40 hover:-translate-y-0.5 transition-all duration-300">
                             <i class="fab fa-whatsapp text-xl"></i>
                             <span>WhatsApp</span>
@@ -540,6 +541,18 @@
                                     <a href="@negocio.SitioWeb" target="_blank" class="flex items-center gap-2 text-gray-600 hover:text-blue-600">
                                         <i class="fas fa-globe w-4"></i> Sitio web
                                     </a>
+                                }
+                                @if (negocio?.FechaRegistro.HasValue == true)
+                                {
+                                    var diasAntiguedad = (int)(DateTime.Now - negocio.FechaRegistro.Value).TotalDays;
+                                    var textoAntiguedad = diasAntiguedad < 30 ? $"{diasAntiguedad} días"
+                                        : diasAntiguedad < 365 ? $"{diasAntiguedad / 30} meses"
+                                        : diasAntiguedad >= 365 && diasAntiguedad < 730 ? "1 año"
+                                        : $"{diasAntiguedad / 365} años";
+                                    <div class="flex items-center gap-2 text-gray-600 mt-2 pt-2 border-t border-gray-100">
+                                        <i class="fas fa-calendar-check w-4 text-emerald-500"></i>
+                                        <span>En Abastecete hace <strong class="text-emerald-600">@textoAntiguedad</strong></span>
+                                    </div>
                                 }
                             </div>
                         </div>
@@ -960,6 +973,7 @@
         <!-- Botón -->
         <a href="@waUrlFloat"
            target="_blank"
+           onclick="if(window.AbasteceteTracking) AbasteceteTracking.registrarClicWhatsapp(@negocio.Id);"
            class="flex items-center justify-center w-16 h-16 rounded-full bg-[#25D366] text-white shadow-lg shadow-green-500/30 hover:shadow-xl hover:shadow-green-500/50 hover:scale-110 transition-all duration-300 relative">
             <!-- Ping animation -->
             <span class="absolute inset-0 rounded-full bg-[#25D366] animate-ping opacity-30"></span>
@@ -1333,6 +1347,17 @@
                 document.getElementById('skeleton-productos').classList.add('hidden');
                 document.getElementById('content-productos').classList.remove('hidden');
             }, 300);
+        });
+    </script>
+
+    <!-- Tracking de Analíticas -->
+    <script src="~/js/tracking.js"></script>
+    <script>
+        // Registrar visita al local al cargar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.AbasteceteTracking) {
+                AbasteceteTracking.registrarVisitaLocal(@negocio.Id);
+            }
         });
     </script>
 </body>

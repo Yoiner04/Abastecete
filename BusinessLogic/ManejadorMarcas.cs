@@ -79,16 +79,22 @@ namespace BusinessLogic
                 new Parametro("p_nombre", nombre),
                 new Parametro("p_descripcion", descripcion ?? ""),
                 new Parametro("p_logo_url", logoUrl ?? ""),
-                new Parametro("p_cloudinary_public_id", cloudinaryPublicId ?? ""),
-                new Parametro("mensaje", null),
-                new Parametro("resultado", null)
+                new Parametro("p_cloudinary_public_id", cloudinaryPublicId ?? "")
             };
 
+            // El SP retorna SELECT resultado, mensaje
             var datos = conexion.EjecutarConsulta("crear_marca", parametros);
 
-            // El resultado viene en los parámetros de salida
-            // Por ahora retornamos éxito si no hubo excepción
-            return (1, "Marca creada exitosamente");
+            if (datos != null && datos.Rows.Count > 0)
+            {
+                var row = datos.Rows[0];
+                int resultado = Convert.ToInt32(row["resultado"]);
+                string mensaje = row["mensaje"]?.ToString() ?? "";
+
+                return (resultado, mensaje);
+            }
+
+            return (0, "Error al crear marca");
         }
 
         /// <summary>

@@ -235,6 +235,37 @@
                 </button>
             </div>
         </div>
+
+        <!-- Banner del Buscador -->
+        <div class="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow">
+            <div class="h-40 bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center relative overflow-hidden">
+                <div class="text-center text-white">
+                    <i class="fas fa-search text-5xl mb-2"></i>
+                </div>
+                <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+                <div class="absolute bottom-3 left-4 right-4">
+                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-white/20 text-white backdrop-blur-sm">
+                        <i class="fas fa-search mr-1"></i> Página de Búsqueda
+                    </span>
+                </div>
+            </div>
+            <div class="p-5">
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="w-10 h-10 rounded-lg bg-teal-100 flex items-center justify-center">
+                        <i class="fas fa-search text-teal-600"></i>
+                    </div>
+                    <h3 class="font-semibold text-gray-900">Banner del Buscador</h3>
+                </div>
+                <p class="text-sm text-gray-600 mb-4">
+                    Imagen promocional que aparece debajo del buscador de productos.
+                </p>
+                <button onclick="abrirBannerBuscadorModal()"
+                        class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors font-medium">
+                    <i class="fas fa-edit"></i>
+                    Editar Banner
+                </button>
+            </div>
+        </div>
     </div>
 }
 else
@@ -256,3 +287,4 @@ else
 @Html.Partial("BannerProveedoresModal")
 @Html.Partial("BannerOfertasModal")
 @Html.Partial("BannerSesionModal")
+@Html.Partial("BannerBuscadorModal")

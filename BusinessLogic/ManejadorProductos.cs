@@ -289,5 +289,58 @@ namespace BusinessLogic
 
             return producto;
         }
+
+        /// <summary>
+        /// Obtiene las marcas disponibles de un producto (nivel global)
+        /// </summary>
+        public List<Marca> ObtenerMarcasDisponiblesProducto(int idProducto)
+        {
+            var parametros = new List<Parametro>
+            {
+                new Parametro("p_id_producto", idProducto)
+            };
+
+            DataTable datos = conexion.EjecutarConsulta("sp_listar_marcas_disponibles_producto", parametros);
+            var marcas = new List<Marca>();
+
+            foreach (DataRow row in datos.Rows)
+            {
+                marcas.Add(new Marca
+                {
+                    Id = Convert.ToInt32(row["Id"]),
+                    Nombre = row["Nombre"]?.ToString() ?? "",
+                    LogoUrl = row["LogoUrl"]?.ToString() ?? ""
+                });
+            }
+
+            return marcas;
+        }
+
+        /// <summary>
+        /// Guarda las marcas disponibles de un producto (nivel global)
+        /// </summary>
+        public bool GuardarMarcasDisponiblesProducto(int idProducto, List<int> marcasIds)
+        {
+            var marcasString = marcasIds != null && marcasIds.Count > 0
+                ? string.Join(",", marcasIds)
+                : "";
+
+            var parametros = new List<Parametro>
+            {
+                new Parametro("p_id_producto", idProducto),
+                new Parametro("p_marcas_ids", marcasString)
+            };
+
+            try
+            {
+                conexion.EjecutarConsulta("sp_guardar_marcas_disponibles_producto", parametros);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error al guardar marcas disponibles: {ex.Message}");
+                return false;
+            }
+        }
     }
 }

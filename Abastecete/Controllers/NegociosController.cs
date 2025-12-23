@@ -311,7 +311,7 @@ namespace Abastecete.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> CompletarRegistro(int tipoMembresiaId)
+        public IActionResult CompletarRegistro(int tipoMembresiaId)
         {
             var negocioJson = HttpContext.Session.GetString("NegocioTemporal");
             if (string.IsNullOrEmpty(negocioJson))
@@ -331,16 +331,29 @@ namespace Abastecete.Controllers
             {
                 Console.WriteLine("Negocio registrado con éxito!");
 
+                // Asignar rol de proveedor (2)
                 ManejadorRoles manejadorRoles = new ManejadorRoles();
                 bool rolAsignado = manejadorRoles.AsignarRol(2, usuarioId.Value);
 
-                await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-                HttpContext.Session.Clear();
-                Response.Cookies.Delete(".AspNetCore.Session");
-                Response.Cookies.Delete(".AspNetCore.Cookies");
+                // Actualizar datos de sesión sin cerrarla
+                // Obtener el local recién creado para tener el ID
+                var personaId = HttpContext.Session.GetInt32("PersonaId");
+                if (personaId.HasValue)
+                {
+                    var negocioCreado = _manejadorNegocios.ConsultarNegocio(personaId.Value);
+                    if (negocioCreado != null)
+                    {
+                        HttpContext.Session.SetInt32("LocalId", negocioCreado.Id);
+                        HttpContext.Session.SetString("TieneMembresiaActiva", "true");
+                        HttpContext.Session.SetString("NombreLocal", negocioCreado.Nombre ?? "");
+                    }
+                }
 
-                return RedirectToAction("Login", "Login", new { negocioId = negocio.Id });
+                // Actualizar rol en sesión
+                HttpContext.Session.SetInt32("Rol", 2); // 2 = Proveedor
 
+                // Redirigir al dashboard del local (sin cerrar sesión)
+                return RedirectToAction("Index", "Home");
             }
             else
             {

@@ -123,8 +123,13 @@
                     <p class="text-gray-500 text-sm">Estadísticas de @local?.Nombre</p>
                 </div>
             </div>
-            <!-- Selector de período -->
-            <div class="flex items-center gap-2">
+            <!-- Selector de período y botón de descarga -->
+            <div class="flex items-center gap-3">
+                <button onclick="descargarEstadisticas()"
+                        class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#23916A] text-white text-sm font-medium hover:bg-[#1c7355] transition-colors shadow-sm">
+                    <i class="fas fa-download"></i>
+                    <span class="hidden sm:inline">Descargar</span>
+                </button>
                 <select id="selectPeriodo" class="px-4 py-2 rounded-lg border border-gray-300 text-sm focus:border-[#23916A] focus:ring-2 focus:ring-[#23916A]/20 outline-none">
                     @if (periodoSeleccionado == "today") { <option value="today" selected>Hoy</option> } else { <option value="today">Hoy</option> }
                     @if (periodoSeleccionado == "7d") { <option value="7d" selected>Últimos 7 días</option> } else { <option value="7d">Últimos 7 días</option> }
@@ -422,5 +427,114 @@
         document.getElementById('selectPeriodo').addEventListener('change', function() {
             window.location.href = '@Url.Action("Index", "Analiticas")?periodo=' + this.value;
         });
+
+        // Función para descargar estadísticas como imagen
+        function descargarEstadisticas() {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+
+            // Configurar dimensiones
+            canvas.width = 800;
+            canvas.height = 500;
+
+            // Fondo con gradiente
+            const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+            gradient.addColorStop(0, '#23916A');
+            gradient.addColorStop(1, '#1c7355');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Tarjeta blanca central
+            ctx.fillStyle = '#ffffff';
+            roundRect(ctx, 40, 40, canvas.width - 80, canvas.height - 80, 20);
+            ctx.fill();
+
+            // Header con logo y nombre
+            ctx.fillStyle = '#1f2937';
+            ctx.font = 'bold 28px Arial, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('@(local?.Nombre?.Replace("'", "\\'") ?? "Mi Local")', canvas.width / 2, 100);
+
+            ctx.fillStyle = '#6b7280';
+            ctx.font = '16px Arial, sans-serif';
+            ctx.fillText('Estadísticas del @periodoSeleccionado', canvas.width / 2, 130);
+
+            // Línea separadora
+            ctx.strokeStyle = '#e5e7eb';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(80, 160);
+            ctx.lineTo(canvas.width - 80, 160);
+            ctx.stroke();
+
+            // Stats en grid 2x2
+            const stats = [
+                { label: 'Visitas al perfil', value: '@Model.Estadisticas.TotalVisitas.ToString("N0")', icon: 'eye', color: '#3b82f6' },
+                { label: 'Clics en WhatsApp', value: '@Model.Estadisticas.TotalClicsWhatsapp.ToString("N0")', icon: 'whatsapp', color: '#25D366' },
+                { label: 'Vistas de productos', value: '@Model.Estadisticas.TotalVisitasProductos.ToString("N0")', icon: 'box', color: '#8b5cf6' },
+                { label: 'Apariciones en búsqueda', value: '@Model.Estadisticas.TotalAparicionesBusqueda.ToString("N0")', icon: 'search', color: '#f59e0b' }
+            ];
+
+            const startY = 200;
+            const boxWidth = 310;
+            const boxHeight = 100;
+            const gap = 20;
+
+            stats.forEach((stat, index) => {
+                const col = index % 2;
+                const row = Math.floor(index / 2);
+                const x = 80 + col * (boxWidth + gap);
+                const y = startY + row * (boxHeight + gap);
+
+                // Fondo de la tarjeta
+                ctx.fillStyle = '#f9fafb';
+                roundRect(ctx, x, y, boxWidth, boxHeight, 12);
+                ctx.fill();
+
+                // Borde con color
+                ctx.strokeStyle = stat.color;
+                ctx.lineWidth = 2;
+                roundRect(ctx, x, y, boxWidth, boxHeight, 12);
+                ctx.stroke();
+
+                // Valor
+                ctx.fillStyle = '#1f2937';
+                ctx.font = 'bold 32px Arial, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(stat.value, x + boxWidth/2, y + 45);
+
+                // Etiqueta
+                ctx.fillStyle = '#6b7280';
+                ctx.font = '14px Arial, sans-serif';
+                ctx.fillText(stat.label, x + boxWidth/2, y + 75);
+            });
+
+            // Footer con branding
+            ctx.fillStyle = '#9ca3af';
+            ctx.font = '12px Arial, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('Generado con Abastecete - ' + new Date().toLocaleDateString('es-CO'), canvas.width / 2, canvas.height - 60);
+
+            // Descargar imagen
+            const link = document.createElement('a');
+            link.download = 'estadisticas-@(local?.Nombre?.Replace(" ", "-").Replace("'", "") ?? "local")-' + new Date().toISOString().split('T')[0] + '.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+
+        // Función auxiliar para rectángulos redondeados
+        function roundRect(ctx, x, y, width, height, radius) {
+            ctx.beginPath();
+            ctx.moveTo(x + radius, y);
+            ctx.lineTo(x + width - radius, y);
+            ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+            ctx.lineTo(x + width, y + height - radius);
+            ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+            ctx.lineTo(x + radius, y + height);
+            ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+            ctx.lineTo(x, y + radius);
+            ctx.quadraticCurveTo(x, y, x + radius, y);
+            ctx.closePath();
+        }
     </script>
 }

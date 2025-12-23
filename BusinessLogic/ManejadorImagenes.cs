@@ -288,5 +288,42 @@ namespace BusinessLogic
             var (success, _) = _banners.ActualizarBanner(bannerId, result.SecureUrl, result.PublicId);
             return success;
         }
+
+        /*Buscador*/
+        public List<Banner> ListarBannersBuscador()
+        {
+            return _banners.ListarBannersPorTipo("buscador");
+        }
+
+        public int AgregarBannerBuscador(IFormFile archivo)
+        {
+            var result = SubirImagenCompleto(archivo, "banners/buscador");
+            if (!result.Success) return 0;
+
+            var (id, _) = _banners.CrearBanner(result.SecureUrl, result.PublicId, null, "buscador", "16:9");
+            return id;
+        }
+
+        public bool ReemplazarBannerBuscador(int bannerId, IFormFile archivo)
+        {
+            var bannerActual = _banners.ObtenerBanner(bannerId);
+            if (bannerActual == null) return false;
+
+            if (!string.IsNullOrEmpty(bannerActual.CloudinaryPublicId))
+                _cloudinary.EliminarImagen(bannerActual.CloudinaryPublicId);
+
+            var result = SubirImagenCompleto(archivo, "banners/buscador");
+            if (!result.Success) return false;
+
+            var (success, _) = _banners.ActualizarBanner(bannerId, result.SecureUrl, result.PublicId);
+            return success;
+        }
+
+        public void EliminarBannerBuscador(int bannerId)
+        {
+            var (_, _, publicId) = _banners.EliminarBanner(bannerId);
+            if (!string.IsNullOrEmpty(publicId))
+                _cloudinary.EliminarImagen(publicId);
+        }
     }
 }

@@ -1,0 +1,158 @@
+<div id="bannerBuscadorModal" class="bg-opacity-50 fixed inset-0 z-50 hidden bg-black">
+    <div class="flex min-h-screen items-center justify-center">
+        <div id="bannerBuscadorModalContent" class="max-h-[90vh] w-full max-w-5xl overflow-y-auto rounded-2xl border border-gray-200 bg-white p-6 shadow-2xl">
+
+            <h2 class="mb-6 text-center text-2xl font-bold text-gray-800">Gestionar Banners del Buscador</h2>
+
+            <!-- Galería de banners actuales -->
+            <div id="galeriaBuscador" class="mb-8 grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
+                <!-- Aquí se renderizan los banners dinámicamente -->
+            </div>
+
+            <!-- Subir nuevo banner -->
+            <form id="formNuevoBannerBuscador" class="flex flex-col items-center gap-4 border-t pt-6">
+                <label class="text-lg font-semibold text-gray-700">Agregar Nuevo Banner</label>
+                <p class="text-sm text-gray-500 mb-2">Se recomienda una imagen con proporción 16:9 para mejor visualización.</p>
+                <input type="file" id="nuevoBannerBuscador" accept="image/*"
+                       class="block w-full text-sm text-gray-700 file:mr-4 file:rounded-lg file:border-0 file:bg-teal-50 file:px-4 file:py-2 file:text-teal-700 hover:file:bg-teal-100" />
+            </form>
+
+            <!-- Botones de acción -->
+            <div class="mt-8 flex flex-col justify-center gap-4 border-t pt-6 sm:flex-row">
+                <button type="submit" form="formNuevoBannerBuscador"
+                        class="w-full rounded-lg bg-teal-600 px-6 py-3 font-semibold text-white shadow transition hover:bg-teal-700 sm:w-auto">
+                    Subir Imagen
+                </button>
+
+                <button type="button" onclick="cerrarBannerBuscadorModal()"
+                        class="w-full rounded-lg bg-gray-500 px-6 py-3 font-semibold text-white shadow transition hover:bg-gray-600 sm:w-auto">
+                    Cerrar
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Scripts -->
+<script>
+    function abrirBannerBuscadorModal() {
+        document.getElementById("bannerBuscadorModal").classList.remove("hidden");
+        document.body.classList.add("overflow-hidden");
+        cargarBannersBuscador();
+    }
+
+    function cerrarBannerBuscadorModal() {
+        document.getElementById("bannerBuscadorModal").classList.add("hidden");
+        document.body.classList.remove("overflow-hidden");
+    }
+
+    document.getElementById("bannerBuscadorModal").addEventListener("click", function (event) {
+        if (!document.getElementById("bannerBuscadorModalContent").contains(event.target)) {
+            cerrarBannerBuscadorModal();
+        }
+    });
+
+    // Evento para subir nuevo banner
+    document.getElementById("formNuevoBannerBuscador").addEventListener("submit", function (event) {
+        event.preventDefault();
+
+        const input = document.getElementById("nuevoBannerBuscador");
+        const file = input.files[0];
+
+        if (!file) {
+            alert("Selecciona una imagen para subir.");
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append("imagen", file);
+
+        fetch("/Banners/AgregarBannerBuscador", {
+            method: "POST",
+            body: formData
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.mensaje) alert(data.mensaje);
+            input.value = ""; // Limpiar input
+            cargarBannersBuscador();
+        })
+        .catch(() => alert("Error al subir la imagen."));
+    });
+
+    // Función para cargar banners existentes
+    function cargarBannersBuscador() {
+        fetch("/Banners/ListarBannersBuscador")
+            .then(response => response.json())
+            .then(banners => {
+                const galeria = document.getElementById("galeriaBuscador");
+                galeria.innerHTML = "";
+
+                if (banners.length === 0) {
+                    galeria.innerHTML = `
+                        <div class="col-span-full text-center py-8">
+                            <i class="fas fa-image text-4xl text-gray-300 mb-2"></i>
+                            <p class="text-gray-500">No hay banners configurados</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                banners.forEach(banner => {
+                    galeria.innerHTML += `
+                        <div class="flex flex-col items-center gap-2 rounded-lg border p-4 shadow">
+                            <img src="${banner.base64}" alt="${banner.nombre}" class="h-32 w-full rounded-md bg-gray-100 object-contain">
+                            <div class="mt-2 flex gap-2">
+                                <button onclick="reemplazarBannerBuscador('${banner.id}')" class="rounded bg-blue-500 px-3 py-1 text-sm text-white hover:bg-blue-600">Reemplazar</button>
+                                <button onclick="eliminarBannerBuscador('${banner.id}')" class="rounded bg-red-500 px-3 py-1 text-sm text-white hover:bg-red-600">Eliminar</button>
+                            </div>
+                        </div>
+                    `;
+                });
+            })
+            .catch(error => console.error("Error cargando banners:", error));
+    }
+
+    // Función para reemplazar un banner existente
+    function reemplazarBannerBuscador(id) {
+        let input = document.createElement("input");
+        input.type = "file";
+        input.accept = "image/*";
+        input.onchange = () => {
+            let file = input.files[0];
+            if (file) {
+                let formData = new FormData();
+                formData.append("id", id);
+                formData.append("imagen", file);
+
+                fetch("/Banners/ReemplazarBannerBuscador", {
+                    method: "POST",
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.mensaje);
+                    cargarBannersBuscador();
+                })
+                .catch(error => console.error("Error al reemplazar:", error));
+            }
+        };
+        input.click();
+    }
+
+    // Función para eliminar un banner
+    function eliminarBannerBuscador(id) {
+        if (!confirm("¿Estás seguro de que deseas eliminar este banner?")) return;
+
+        fetch(`/Banners/EliminarBannerBuscador?id=${id}`, {
+            method: "DELETE"
+        })
+        .then(response => response.json())
+        .then(data => {
+            alert(data.mensaje);
+            cargarBannersBuscador();
+        })
+        .catch(error => console.error("Error al eliminar:", error));
+    }
+</script>

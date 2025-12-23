@@ -445,18 +445,34 @@
                             </div>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1.5">Marca</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1.5">Marcas Disponibles</label>
                             <div class="relative">
-                                <select id="producto-marca" class="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#23916A]/20 focus:border-[#23916A] transition-all bg-gray-50 focus:bg-white appearance-none">
-                                    <option value="1">Sin Marca</option>
-                                    @foreach (var marca in marcas.Where(m => m.Activo))
-                                    {
-                                        <option value="@marca.Id">@marca.Nombre</option>
-                                    }
-                                </select>
-                                <i class="fas fa-trademark absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                                <i class="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+                                <!-- Selector de marcas con chips -->
+                                <div id="marcas-selector" class="w-full min-h-[48px] p-2 border border-gray-200 rounded-xl bg-gray-50 focus-within:ring-2 focus-within:ring-[#23916A]/20 focus-within:border-[#23916A] transition-all">
+                                    <div id="marcas-chips" class="flex flex-wrap gap-2 mb-2"></div>
+                                    <div class="relative">
+                                        <button type="button" id="btn-agregar-marca" class="text-sm text-[#23916A] hover:text-[#1a6b4f] font-medium flex items-center gap-1">
+                                            <i class="fas fa-plus text-xs"></i> Agregar marca
+                                        </button>
+                                    </div>
+                                </div>
+                                <!-- Dropdown de marcas -->
+                                <div id="marcas-dropdown" class="hidden absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-48 overflow-y-auto">
+                                    <div class="p-2">
+                                        @foreach (var marca in marcas.Where(m => m.Activo))
+                                        {
+                                            <label class="flex items-center gap-2 p-2 hover:bg-gray-50 rounded-lg cursor-pointer marca-option" data-marca-id="@marca.Id" data-marca-nombre="@marca.Nombre">
+                                                <input type="checkbox" class="marca-checkbox rounded border-gray-300 text-[#23916A] focus:ring-[#23916A]" value="@marca.Id">
+                                                <span class="text-sm text-gray-700">@marca.Nombre</span>
+                                            </label>
+                                        }
+                                    </div>
+                                </div>
+                                <!-- Campo oculto para compatibilidad -->
+                                <input type="hidden" id="producto-marca" value="1">
+                                <input type="hidden" id="producto-marcas-ids" value="">
                             </div>
+                            <p class="text-xs text-gray-500 mt-1">Selecciona las marcas disponibles para este producto</p>
                         </div>
                     </div>
                 </div>
@@ -730,12 +746,20 @@
         document.getElementById('producto-subcategoria').innerHTML = '<option value="">Seleccione categoria</option>';
         document.getElementById('producto-subcategoria').disabled = true;
         document.getElementById('producto-marca').value = '1';
+        document.getElementById('producto-marcas-ids').value = '';
         document.getElementById('producto-tipounidad').value = '';
         document.getElementById('producto-imagen').value = '';
         document.getElementById('imagen-preview').src = '';
         document.getElementById('imagen-preview').classList.add('hidden');
         document.getElementById('imagen-placeholder').classList.remove('hidden');
         document.getElementById('error-mensaje').classList.add('hidden');
+        // Limpiar marcas seleccionadas
+        if (typeof limpiarMarcasSeleccionadas === 'function') {
+            limpiarMarcasSeleccionadas();
+        } else {
+            document.getElementById('marcas-chips').innerHTML = '';
+            document.querySelectorAll('.marca-checkbox').forEach(cb => cb.checked = false);
+        }
     }
 
     // Preview de imagen
@@ -754,6 +778,103 @@
         }
     });
 
+    // =============== SELECTOR DE MARCAS MULTIPLES ===============
+    const marcasSeleccionadas = new Set();
+
+    document.getElementById('btn-agregar-marca').addEventListener('click', function(e) {
+        e.stopPropagation();
+        const dropdown = document.getElementById('marcas-dropdown');
+        dropdown.classList.toggle('hidden');
+    });
+
+    // Cerrar dropdown al hacer clic fuera
+    document.addEventListener('click', function(e) {
+        const dropdown = document.getElementById('marcas-dropdown');
+        const selector = document.getElementById('marcas-selector');
+        if (!selector.contains(e.target) && !dropdown.contains(e.target)) {
+            dropdown.classList.add('hidden');
+        }
+    });
+
+    // Manejar seleccion de marcas
+    document.querySelectorAll('.marca-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const marcaId = parseInt(this.value);
+            const marcaOption = this.closest('.marca-option');
+            const marcaNombre = marcaOption.dataset.marcaNombre;
+
+            if (this.checked) {
+                marcasSeleccionadas.add(marcaId);
+                agregarChipMarca(marcaId, marcaNombre);
+            } else {
+                marcasSeleccionadas.delete(marcaId);
+                eliminarChipMarca(marcaId);
+            }
+            actualizarCampoMarcas();
+        });
+    });
+
+    function agregarChipMarca(id, nombre) {
+        const chipsContainer = document.getElementById('marcas-chips');
+        const chip = document.createElement('span');
+        chip.id = `chip-marca-${id}`;
+        chip.className = 'inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-[#23916A]/10 text-[#23916A] text-sm';
+        chip.innerHTML = `
+            ${nombre}
+            <button type="button" onclick="quitarMarca(${id})" class="hover:text-red-500 ml-1">
+                <i class="fas fa-times text-xs"></i>
+            </button>
+        `;
+        chipsContainer.appendChild(chip);
+    }
+
+    function eliminarChipMarca(id) {
+        const chip = document.getElementById(`chip-marca-${id}`);
+        if (chip) chip.remove();
+    }
+
+    function quitarMarca(id) {
+        marcasSeleccionadas.delete(id);
+        eliminarChipMarca(id);
+        // Desmarcar checkbox
+        const checkbox = document.querySelector(`.marca-checkbox[value="${id}"]`);
+        if (checkbox) checkbox.checked = false;
+        actualizarCampoMarcas();
+    }
+
+    function actualizarCampoMarcas() {
+        const marcasArray = Array.from(marcasSeleccionadas);
+        document.getElementById('producto-marcas-ids').value = marcasArray.join(',');
+        // Mantener compatibilidad con idMarca (primera marca o 1)
+        document.getElementById('producto-marca').value = marcasArray.length > 0 ? marcasArray[0] : 1;
+    }
+
+    function limpiarMarcasSeleccionadas() {
+        marcasSeleccionadas.clear();
+        document.getElementById('marcas-chips').innerHTML = '';
+        document.querySelectorAll('.marca-checkbox').forEach(cb => cb.checked = false);
+        document.getElementById('producto-marcas-ids').value = '';
+        document.getElementById('producto-marca').value = '1';
+    }
+
+    function cargarMarcasProducto(idProducto) {
+        fetch(`/Productos/ObtenerMarcasDisponiblesProducto?id=${idProducto}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.marcas) {
+                    limpiarMarcasSeleccionadas();
+                    data.marcas.forEach(marca => {
+                        marcasSeleccionadas.add(marca.id);
+                        agregarChipMarca(marca.id, marca.nombre);
+                        const checkbox = document.querySelector(`.marca-checkbox[value="${marca.id}"]`);
+                        if (checkbox) checkbox.checked = true;
+                    });
+                    actualizarCampoMarcas();
+                }
+            })
+            .catch(err => console.log('Error cargando marcas:', err));
+    }
+
     // Editar producto
     function editarProducto(id) {
         fetch(`/Productos/ObtenerProducto?id=${id}`)
@@ -769,6 +890,9 @@
                 document.getElementById('producto-tipounidad').value = data.idTipoUnidad || '';
 
                 cargarSubcategoriasYSeleccionar(data.categoria, data.idSubCategoria);
+
+                // Cargar marcas disponibles del producto
+                cargarMarcasProducto(data.id);
 
                 const preview = document.getElementById('imagen-preview');
                 const placeholder = document.getElementById('imagen-placeholder');
@@ -818,6 +942,7 @@
         const descripcion = document.getElementById('producto-descripcion').value.trim();
         const idSubCategoria = document.getElementById('producto-subcategoria').value;
         const idMarca = document.getElementById('producto-marca').value;
+        const marcasIds = document.getElementById('producto-marcas-ids').value;
         const idTipoUnidad = document.getElementById('producto-tipounidad').value;
         const imagenInput = document.getElementById('producto-imagen').files[0];
         const cloudinaryId = document.getElementById('producto-cloudinary-id').value;
@@ -838,6 +963,7 @@
         formData.append('descripcion', descripcion);
         formData.append('idSubCategoria', idSubCategoria);
         formData.append('idMarca', idMarca);
+        formData.append('marcasIds', marcasIds);
         formData.append('idTipoUnidad', idTipoUnidad || '');
         if (imagenInput) formData.append('imagen', imagenInput);
         if (cloudinaryId) formData.append('cloudinaryPublicId', cloudinaryId);

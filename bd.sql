@@ -1,7 +1,7 @@
 -- --------------------------------------------------------
--- Host:                         127.0.0.1
--- Versión del servidor:         8.0.39 - MySQL Community Server - GPL
--- SO del servidor:              Win64
+-- Host:                         167.71.91.199
+-- Versión del servidor:         8.0.44-0ubuntu0.24.04.2 - (Ubuntu)
+-- SO del servidor:              Linux
 -- HeidiSQL Versión:             12.10.0.7000
 -- --------------------------------------------------------
 
@@ -582,24 +582,26 @@ CREATE TABLE IF NOT EXISTS `categoria` (
   `ESTADO_CATEGORIA` tinyint NOT NULL DEFAULT '1',
   `IMAGEN_CATEGORIA` varchar(255) DEFAULT NULL,
   `BANNER_CATEGORIA` varchar(50) DEFAULT NULL,
+  `CLOUDINARY_PUBLIC_ID_IMAGEN` varchar(255) DEFAULT NULL,
+  `CLOUDINARY_PUBLIC_ID_BANNER` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`PK_ID_CATEGORIA`)
 ) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Volcando datos para la tabla abastecete.categoria: ~13 rows (aproximadamente)
-INSERT INTO `categoria` (`PK_ID_CATEGORIA`, `NOMBRE_CATEGORIA`, `ESTADO_CATEGORIA`, `IMAGEN_CATEGORIA`, `BANNER_CATEGORIA`) VALUES
-	(4, 'Frutas y Verduras', 1, '68309cb78e2dc61914d38cb4', '68309cb88e2dc61914d38cb6'),
-	(5, 'Proteínas', 1, '68309e8e8e2dc61914d38cbc', '68309e8f8e2dc61914d38cbe'),
-	(6, 'Lácteos y Huevos', 1, '68309ea48e2dc61914d38cc0', '68309ea48e2dc61914d38cc2'),
-	(7, 'Panadería y Repostería', 1, '68309ebd8e2dc61914d38cc4', '68309ebe8e2dc61914d38cc6'),
-	(8, 'Despensa', 1, '68309edc8e2dc61914d38ccc', '68309edc8e2dc61914d38cce'),
-	(9, 'Congelados', 1, '68309f158e2dc61914d38cd0', '68309f168e2dc61914d38cd2'),
-	(10, 'Bebidas', 1, '6830a1d08e2dc61914d38cf4', '6830a1d08e2dc61914d38cf6'),
-	(11, 'Snacks y Aperitivos', 1, '6830a1a58e2dc61914d38cf0', '6830a1a58e2dc61914d38cf2'),
-	(12, 'Dulces y Chocolatería', 1, '6830a17b8e2dc61914d38ce9', '6830a17c8e2dc61914d38cee'),
-	(13, 'Charcutería y Especialidades', 1, '68309fbe8e2dc61914d38ce0', '68309fbf8e2dc61914d38ce2'),
-	(14, 'Aseo del Hogar', 1, '68309f978e2dc61914d38cdc', '68309f988e2dc61914d38cde'),
-	(15, 'Cuidado Personal', 1, '68309f798e2dc61914d38cd8', '68309f7a8e2dc61914d38cda'),
-	(16, 'Licores y Tabaco', 1, '68309f2f8e2dc61914d38cd4', '68309f2f8e2dc61914d38cd6');
+INSERT INTO `categoria` (`PK_ID_CATEGORIA`, `NOMBRE_CATEGORIA`, `ESTADO_CATEGORIA`, `IMAGEN_CATEGORIA`, `BANNER_CATEGORIA`, `CLOUDINARY_PUBLIC_ID_IMAGEN`, `CLOUDINARY_PUBLIC_ID_BANNER`) VALUES
+	(4, 'Frutas y Verduras', 1, '68309cb78e2dc61914d38cb4', '68309cb88e2dc61914d38cb6', NULL, NULL),
+	(5, 'Proteínas', 1, '68309e8e8e2dc61914d38cbc', '68309e8f8e2dc61914d38cbe', NULL, NULL),
+	(6, 'Lácteos y Huevos', 1, '68309ea48e2dc61914d38cc0', '68309ea48e2dc61914d38cc2', NULL, NULL),
+	(7, 'Panadería y Repostería', 1, '68309ebd8e2dc61914d38cc4', '68309ebe8e2dc61914d38cc6', NULL, NULL),
+	(8, 'Despensa', 1, '68309edc8e2dc61914d38ccc', '68309edc8e2dc61914d38cce', NULL, NULL),
+	(9, 'Congelados', 1, '68309f158e2dc61914d38cd0', '68309f168e2dc61914d38cd2', NULL, NULL),
+	(10, 'Bebidas', 1, '6830a1d08e2dc61914d38cf4', '6830a1d08e2dc61914d38cf6', NULL, NULL),
+	(11, 'Snacks y Aperitivos', 1, '6830a1a58e2dc61914d38cf0', '6830a1a58e2dc61914d38cf2', NULL, NULL),
+	(12, 'Dulces y Chocolatería', 1, '6830a17b8e2dc61914d38ce9', '6830a17c8e2dc61914d38cee', NULL, NULL),
+	(13, 'Charcutería y Especialidades', 1, '68309fbe8e2dc61914d38ce0', '68309fbf8e2dc61914d38ce2', NULL, NULL),
+	(14, 'Aseo del Hogar', 1, '68309f978e2dc61914d38cdc', '68309f988e2dc61914d38cde', NULL, NULL),
+	(15, 'Cuidado Personal', 1, '68309f798e2dc61914d38cd8', '68309f7a8e2dc61914d38cda', NULL, NULL),
+	(16, 'Licores y Tabaco', 1, '68309f2f8e2dc61914d38cd4', '68309f2f8e2dc61914d38cd6', NULL, NULL);
 
 -- Volcando estructura para procedimiento abastecete.confirmar_pago
 DELIMITER //
@@ -1651,11 +1653,13 @@ DELIMITER ;
 -- Volcando estructura para procedimiento abastecete.crear_categoria
 DELIMITER //
 CREATE PROCEDURE `crear_categoria`(
-	IN `p_nombre_categoria` VARCHAR(100),
-	IN `p_estado_categoria` TINYINT,
-	IN `p_imagen_categoria` VARCHAR(255),
-	OUT `mensaje` VARCHAR(500),
-	IN `p_banner_categoria` INT
+    IN `p_nombre_categoria` VARCHAR(100),
+    IN `p_estado_categoria` TINYINT,
+    IN `p_imagen_categoria` VARCHAR(255),
+    IN `p_cloudinary_public_id_imagen` VARCHAR(255),
+    IN `p_banner_categoria` VARCHAR(255),
+    IN `p_cloudinary_public_id_banner` VARCHAR(255),
+    OUT `mensaje` VARCHAR(500)
 )
 BEGIN
     DECLARE categoria_existe INT;
@@ -1665,8 +1669,22 @@ BEGIN
 
     IF categoria_existe = 0 THEN
         -- Insertar la nueva categoría
-        INSERT INTO categoria (NOMBRE_CATEGORIA, ESTADO_CATEGORIA, IMAGEN_CATEGORIA,BANNER_CATEGORIA)
-        VALUES (p_nombre_categoria, p_estado_categoria, p_imagen_categoria,p_banner_categoria);
+        INSERT INTO categoria (
+            NOMBRE_CATEGORIA,
+            ESTADO_CATEGORIA,
+            IMAGEN_CATEGORIA,
+            CLOUDINARY_PUBLIC_ID_IMAGEN,
+            BANNER_CATEGORIA,
+            CLOUDINARY_PUBLIC_ID_BANNER
+        )
+        VALUES (
+            p_nombre_categoria,
+            p_estado_categoria,
+            p_imagen_categoria,
+            p_cloudinary_public_id_imagen,
+            p_banner_categoria,
+            p_cloudinary_public_id_banner
+        );
         SET mensaje = 'Categoría creada con éxito.';
     ELSE
         SET mensaje = 'La categoría con el nombre especificado ya existe.';
@@ -1763,6 +1781,7 @@ BEGIN
     SET v_id_local = LAST_INSERT_ID();
 
     -- Crear suscripción inicial (si se pasa tipo membresía)
+    -- CORREGIDO: ESTADO debe ser 1 (numérico), no 'Activa' (texto)
     IF p_fk_id_tipomembresia IS NOT NULL AND p_fk_id_tipomembresia > 0 THEN
         INSERT INTO suscripcion (
             FK_ID_LOCAL,
@@ -1775,7 +1794,7 @@ BEGIN
             p_fk_id_tipomembresia,
             NOW(),
             DATE_ADD(NOW(), INTERVAL 30 DAY),
-            'Activa'
+            1  -- 1 = Activa (era 'Activa' texto, causaba error)
         );
     END IF;
 
@@ -1789,19 +1808,19 @@ CREATE PROCEDURE `crear_marca`(
     IN `p_nombre` VARCHAR(100),
     IN `p_descripcion` VARCHAR(255),
     IN `p_logo_url` VARCHAR(500),
-    IN `p_cloudinary_public_id` VARCHAR(255),
-    OUT `mensaje` VARCHAR(255),
-    OUT `resultado` INT
+    IN `p_cloudinary_public_id` VARCHAR(255)
 )
 BEGIN
-    DECLARE existe INT DEFAULT 0;
+    DECLARE v_existe INT DEFAULT 0;
+    DECLARE v_resultado INT DEFAULT 0;
+    DECLARE v_mensaje VARCHAR(255) DEFAULT '';
 
     -- Verificar si ya existe una marca con ese nombre
-    SELECT COUNT(*) INTO existe FROM marca WHERE NOMBRE = p_nombre;
+    SELECT COUNT(*) INTO v_existe FROM marca WHERE NOMBRE = p_nombre;
 
-    IF existe > 0 THEN
-        SET mensaje = 'Ya existe una marca con ese nombre';
-        SET resultado = 0;
+    IF v_existe > 0 THEN
+        SET v_mensaje = 'Ya existe una marca con ese nombre';
+        SET v_resultado = 0;
     ELSE
         INSERT INTO marca (
             NOMBRE,
@@ -1819,9 +1838,12 @@ BEGIN
             NOW()
         );
 
-        SET resultado = LAST_INSERT_ID();
-        SET mensaje = 'Marca creada exitosamente';
+        SET v_resultado = LAST_INSERT_ID();
+        SET v_mensaje = 'Marca creada exitosamente';
     END IF;
+
+    -- Retornar resultado como SELECT (compatible con EjecutarTransaccion)
+    SELECT v_resultado AS resultado, v_mensaje AS mensaje;
 END//
 DELIMITER ;
 
@@ -2546,28 +2568,32 @@ DELIMITER ;
 -- Volcando estructura para procedimiento abastecete.editar_categoria
 DELIMITER //
 CREATE PROCEDURE `editar_categoria`(
-	IN `p_id_categoria` INT,
-	IN `p_nombre_categoria` VARCHAR(100),
-	IN `p_estado_categoria` TINYINT,
-	OUT `mensaje` VARCHAR(500),
-	IN `p_imagen_categoria` VARCHAR(255),
-	IN `p_banner_categoria` VARCHAR(50)
+    IN `p_id_categoria` INT,
+    IN `p_nombre_categoria` VARCHAR(100),
+    IN `p_estado_categoria` TINYINT,
+    IN `p_imagen_categoria` VARCHAR(255),
+    IN `p_cloudinary_public_id_imagen` VARCHAR(255),
+    IN `p_banner_categoria` VARCHAR(255),
+    IN `p_cloudinary_public_id_banner` VARCHAR(255),
+    OUT `mensaje` VARCHAR(500)
 )
-BEGIN   
-	IF EXISTS (SELECT 1 FROM categoria WHERE PK_ID_CATEGORIA = p_id_categoria) THEN
-	  -- Actualizar la categoría
-		UPDATE categoria
-		SET 
-		   NOMBRE_CATEGORIA = p_nombre_categoria,
-		   ESTADO_CATEGORIA = p_estado_categoria,
-		   IMAGEN_CATEGORIA = p_imagen_categoria,
-		   BANNER_CATEGORIA = p_banner_categoria
-		WHERE PK_ID_CATEGORIA = p_id_categoria;
-		
-		SET mensaje = 'Categoría actualizada con éxito.';
-	ELSE
-	  	SET mensaje = 'La categoría especificada no existe.';
-	END IF;
+BEGIN
+    IF EXISTS (SELECT 1 FROM categoria WHERE PK_ID_CATEGORIA = p_id_categoria) THEN
+        -- Actualizar la categoría
+        UPDATE categoria
+        SET
+           NOMBRE_CATEGORIA = p_nombre_categoria,
+           ESTADO_CATEGORIA = p_estado_categoria,
+           IMAGEN_CATEGORIA = p_imagen_categoria,
+           CLOUDINARY_PUBLIC_ID_IMAGEN = p_cloudinary_public_id_imagen,
+           BANNER_CATEGORIA = p_banner_categoria,
+           CLOUDINARY_PUBLIC_ID_BANNER = p_cloudinary_public_id_banner
+        WHERE PK_ID_CATEGORIA = p_id_categoria;
+
+        SET mensaje = 'Categoría actualizada con éxito.';
+    ELSE
+        SET mensaje = 'La categoría especificada no existe.';
+    END IF;
 END//
 DELIMITER ;
 
@@ -2610,6 +2636,7 @@ CREATE PROCEDURE `editar_local`(
     IN p_localizacion_local VARCHAR(100),
     IN p_telefono_local VARCHAR(20),
     IN p_fotos_local LONGTEXT,
+    IN p_cloudinary_public_id_logotipo VARCHAR(255),
     IN p_descripcion_local VARCHAR(1000),
     IN p_banner_local VARCHAR(50),
     IN p_email_contacto VARCHAR(100),
@@ -2638,6 +2665,7 @@ BEGIN
         LOCALIZACION = p_localizacion_local,
         TELEFONO_LOCAL = p_telefono_local,
         FOTOS_LOCAL = p_fotos_local,
+        CLOUDINARY_PUBLIC_ID_LOGOTIPO = p_cloudinary_public_id_logotipo,
         DESCRIPCION_LOCAL = p_descripcion_local,
         BANNER_LOCAL = p_banner_local,
         EMAIL_CONTACTO = p_email_contacto,
@@ -3621,9 +3649,18 @@ CREATE TABLE IF NOT EXISTS `evento_analitica` (
   KEY `fk_evento_producto` (`FK_ID_PRODUCTO`),
   CONSTRAINT `fk_evento_local` FOREIGN KEY (`FK_ID_LOCAL`) REFERENCES `local` (`PK_ID_LOCAL`) ON DELETE CASCADE,
   CONSTRAINT `fk_evento_producto` FOREIGN KEY (`FK_ID_PRODUCTO`) REFERENCES `producto` (`PK_ID_PRODUCTO`) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Volcando datos para la tabla abastecete.evento_analitica: ~0 rows (aproximadamente)
+INSERT INTO `evento_analitica` (`PK_ID_EVENTO`, `FK_ID_LOCAL`, `FK_ID_PRODUCTO`, `TIPO_EVENTO`, `IP_VISITANTE`, `USER_AGENT`, `REFERRER`, `FECHA_EVENTO`) VALUES
+	(1, 28, NULL, 'BUSQUEDA_APARICION', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'https://localhost:7076/Home/Principal', '2025-12-23 05:19:49'),
+	(2, 35, NULL, 'BUSQUEDA_APARICION', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'https://localhost:7076/Home/Principal', '2025-12-23 05:19:50'),
+	(3, 36, NULL, 'BUSQUEDA_APARICION', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'https://localhost:7076/Home/Principal', '2025-12-23 05:19:50'),
+	(4, 27, NULL, 'BUSQUEDA_APARICION', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'https://localhost:7076/Home/Principal', '2025-12-23 05:19:50'),
+	(5, 28, NULL, 'VISITA_LOCAL', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'https://localhost:7076/Negocios/ConsultarProductos?idLocal=28', '2025-12-23 05:19:59'),
+	(8, 28, NULL, 'VISITA_LOCAL', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'https://localhost:7076/Negocios/ConsultarProductos?idLocal=28', '2025-12-23 05:20:20'),
+	(9, 28, NULL, 'BUSQUEDA_APARICION', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'https://localhost:7076/Home/Principal', '2025-12-23 05:24:17'),
+	(10, 28, NULL, 'VISITA_LOCAL', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'https://localhost:7076/Negocios/ConsultarProductos?idLocal=28', '2025-12-23 05:24:23');
 
 -- Volcando estructura para evento abastecete.expirar_ofertas_flash
 DELIMITER //
@@ -3898,6 +3935,7 @@ CREATE TABLE IF NOT EXISTS `local` (
   `DIRECCION_LOCAL` varchar(200) NOT NULL,
   `TELEFONO_LOCAL` varchar(20) DEFAULT NULL,
   `FOTOS_LOCAL` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci,
+  `CLOUDINARY_PUBLIC_ID_LOGOTIPO` varchar(255) DEFAULT NULL,
   `BANNER_LOCAL` varchar(50) DEFAULT NULL,
   `IMAGENES_LOCAL` varchar(150) DEFAULT NULL,
   `DESCRIPCION_LOCAL` varchar(1000) DEFAULT NULL,
@@ -3933,22 +3971,22 @@ CREATE TABLE IF NOT EXISTS `local` (
 ) ENGINE=InnoDB AUTO_INCREMENT=39 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Volcando datos para la tabla abastecete.local: ~15 rows (aproximadamente)
-INSERT INTO `local` (`PK_ID_LOCAL`, `FK_ID_PERSONA`, `FK_ID_ESTADO_LOCAL`, `NOMBRE_LOCAL`, `LOCALIZACION`, `DIRECCION_LOCAL`, `TELEFONO_LOCAL`, `FOTOS_LOCAL`, `BANNER_LOCAL`, `IMAGENES_LOCAL`, `DESCRIPCION_LOCAL`, `EMAIL_CONTACTO`, `WHATSAPP`, `SITIO_WEB`, `NIT`, `INSTAGRAM`, `FACEBOOK`, `TIKTOK`, `YOUTUBE`, `TWITTER`, `HORARIO_LUNES`, `HORARIO_MARTES`, `HORARIO_MIERCOLES`, `HORARIO_JUEVES`, `HORARIO_VIERNES`, `HORARIO_SABADO`, `HORARIO_DOMINGO`, `LATITUD`, `LONGITUD`, `FECHA_REGISTRO`, `FECHA_ACTUALIZACION`, `FK_ID_SUSCRIPCION_ACTIVA`) VALUES
-	(1, 6, 1, 'Verduras don pepe', 'Pablo VI', 'Calle 12', '3123687285', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-12-20 20:19:09', NULL, 1),
-	(3, 6, 1, 'pepito', 'abbas', 'calle 24', '21414', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-12-20 20:19:09', NULL, 2),
-	(21, 12, 1, 'Donas Micha', '1.6153858,-75.60423639999999', 'Florencia, Caquetá, Colombia', '78456', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-12-20 20:19:09', NULL, 3),
-	(22, 24, 1, 'Horizons', '1.6234506622739668,-75.60409692513122', 'Florencia, Caquetá, Colombia', '3204440787', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-12-20 20:19:09', NULL, NULL),
-	(23, 25, 1, 'Horizons', '1.6234506622739668,-75.60409692513122', 'Florencia, Caquetá, Colombia', '3204440787', '683e1755f65d6c711a287e84', '683436604765d87a461b341a', NULL, 'Negocio realizado para la comunidad', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-12-20 20:19:09', '2025-12-21 21:21:37', 23),
-	(24, 30, 1, 'blablabla blebleble', '1.6222087305724857, -75.61084289841457', 'Florencia caqueta', '3204440787', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-12-20 20:19:09', NULL, 5),
-	(26, 34, 1, 'Coratiendas', '1.6123400192086215,-75.60642508255614', 'Florencia, Caquetá, Colombia', '3652547', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-12-20 20:19:09', NULL, 6),
-	(27, 36, 1, 'EdifiK', '4.3356027,-74.3683957', 'Carrera 13 # 18-26, Fusagasugá, Cundinamarca, Colombia', '3103348519', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-12-20 20:19:09', NULL, 7),
-	(28, 37, 1, 'K-OS', '1.6234506622739668,-75.60409692513122', 'Florencia, Caquetá, Colombia', '3204440787', 'https://res.cloudinary.com/dwl5ggfhd/image/upload/v1766456390/abastecete/yo5y7twlhmw5g9aqcbnc.png', '6834362b4765d87a461b3408', NULL, 'Pq si', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', NULL, NULL, '2025-12-20 20:19:09', '2025-12-22 21:19:53', 28),
-	(29, 38, 1, 'Prome', '1.6234506622739668,-75.60409692513122', 'Florencia, Caquetá, Colombia', '3204440787', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-12-20 20:19:09', NULL, 9),
-	(34, 40, 1, 'Pan pa\' ya', '1.6046943720574707,-75.60290677490232', 'Cra. 15a #2d-115, Florencia, Caquetá', '3204440787', '6850ac1dac6622168168c557', '683436264765d87a461b3405', NULL, 'panaderia de pan', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-12-20 20:19:09', NULL, 10),
-	(35, 50, 1, 'Abastecible', '2.9339860379526495,-75.27426106872556', 'Los pinos', '3112929178', '687ee8f4ac6622168168c559', '683436264765d87a461b3405', NULL, 'Pinos', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-12-20 20:19:09', NULL, 11),
-	(36, 51, 1, 'Websen', NULL, 'Fusagasugá', '3103348519', '68a648005c46ee78254291cf', '683436264765d87a461b3405', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-12-20 20:19:09', NULL, 16),
-	(37, 36, 1, 'Edifik', NULL, 'villa counrty', '3103348519', '68a674485c46ee78254291d1', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-12-20 20:19:09', NULL, 13),
-	(38, 57, 1, 'Habitta ', '4.344581584102627,-74.36225406825542', 'Centro Comercial Plaza Santa Cruz, Calle 7 #5-32, Sabaneta, Fusagasugá, Cundinamarca, Colombia', '0', 'https://res.cloudinary.com/dwl5ggfhd/image/upload/v1766457801/abastecete/knelxikcruwszxbpn7oq.png', '', NULL, 'Empresa inmobiliaria ', '', '+57 310 3348519', '', '', '@habitta.col', 'https://web.facebook.com/people/Habitta-Col/61582169653971/', '@habittacol', 'https://www.youtube.com/@habitta_inmobiliaria', '', '', '', '', '', '', '', '', NULL, NULL, '2025-12-22 21:43:48', '2025-12-22 21:47:33', 30);
+INSERT INTO `local` (`PK_ID_LOCAL`, `FK_ID_PERSONA`, `FK_ID_ESTADO_LOCAL`, `NOMBRE_LOCAL`, `LOCALIZACION`, `DIRECCION_LOCAL`, `TELEFONO_LOCAL`, `FOTOS_LOCAL`, `CLOUDINARY_PUBLIC_ID_LOGOTIPO`, `BANNER_LOCAL`, `IMAGENES_LOCAL`, `DESCRIPCION_LOCAL`, `EMAIL_CONTACTO`, `WHATSAPP`, `SITIO_WEB`, `NIT`, `INSTAGRAM`, `FACEBOOK`, `TIKTOK`, `YOUTUBE`, `TWITTER`, `HORARIO_LUNES`, `HORARIO_MARTES`, `HORARIO_MIERCOLES`, `HORARIO_JUEVES`, `HORARIO_VIERNES`, `HORARIO_SABADO`, `HORARIO_DOMINGO`, `LATITUD`, `LONGITUD`, `FECHA_REGISTRO`, `FECHA_ACTUALIZACION`, `FK_ID_SUSCRIPCION_ACTIVA`) VALUES
+	(1, 6, 1, 'Verduras don pepe', 'Pablo VI', 'Calle 12', '3123687285', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-12-20 20:19:09', NULL, 1),
+	(3, 6, 1, 'pepito', 'abbas', 'calle 24', '21414', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-12-20 20:19:09', NULL, 2),
+	(21, 12, 1, 'Donas Micha', '1.6153858,-75.60423639999999', 'Florencia, Caquetá, Colombia', '78456', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-12-20 20:19:09', NULL, 3),
+	(22, 24, 1, 'Horizons', '1.6234506622739668,-75.60409692513122', 'Florencia, Caquetá, Colombia', '3204440787', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-12-20 20:19:09', NULL, NULL),
+	(23, 25, 1, 'Horizons', '1.6234506622739668,-75.60409692513122', 'Florencia, Caquetá, Colombia', '3204440787', '683e1755f65d6c711a287e84', NULL, '683436604765d87a461b341a', NULL, 'Negocio realizado para la comunidad', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-12-20 20:19:09', '2025-12-21 21:21:37', 23),
+	(24, 30, 1, 'blablabla blebleble', '1.6222087305724857, -75.61084289841457', 'Florencia caqueta', '3204440787', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-12-20 20:19:09', NULL, 5),
+	(26, 34, 1, 'Coratiendas', '1.6123400192086215,-75.60642508255614', 'Florencia, Caquetá, Colombia', '3652547', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-12-20 20:19:09', NULL, 6),
+	(27, 36, 1, 'EdifiK', '4.3356027,-74.3683957', 'Carrera 13 # 18-26, Fusagasugá, Cundinamarca, Colombia', '3103348519', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-12-20 20:19:09', NULL, 7),
+	(28, 37, 1, 'K-OS', '1.6234506622739668,-75.60409692513122', 'Florencia, Caquetá, Colombia', '3204440787', 'https://res.cloudinary.com/dwl5ggfhd/image/upload/v1766456390/abastecete/yo5y7twlhmw5g9aqcbnc.png', NULL, '6834362b4765d87a461b3408', NULL, 'Pq si', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', NULL, NULL, '2025-12-20 20:19:09', '2025-12-22 21:19:53', 28),
+	(29, 38, 1, 'Prome', '1.6234506622739668,-75.60409692513122', 'Florencia, Caquetá, Colombia', '3204440787', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-12-20 20:19:09', NULL, 9),
+	(34, 40, 1, 'Pan pa\' ya', '1.6046943720574707,-75.60290677490232', 'Cra. 15a #2d-115, Florencia, Caquetá', '3204440787', '6850ac1dac6622168168c557', NULL, '683436264765d87a461b3405', NULL, 'panaderia de pan', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-12-20 20:19:09', NULL, 10),
+	(35, 50, 1, 'Abastecible', '2.9339860379526495,-75.27426106872556', 'Los pinos', '3112929178', '687ee8f4ac6622168168c559', NULL, '683436264765d87a461b3405', NULL, 'Pinos', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-12-20 20:19:09', NULL, 11),
+	(36, 51, 1, 'Websen', NULL, 'Fusagasugá', '3103348519', '68a648005c46ee78254291cf', NULL, '683436264765d87a461b3405', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-12-20 20:19:09', NULL, 16),
+	(37, 36, 1, 'Edifik', NULL, 'villa counrty', '3103348519', '68a674485c46ee78254291d1', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-12-20 20:19:09', NULL, 13),
+	(38, 57, 1, 'Habitta ', '4.344581584102627,-74.36225406825542', 'Centro Comercial Plaza Santa Cruz, Calle 7 #5-32, Sabaneta, Fusagasugá, Cundinamarca, Colombia', '0', 'https://res.cloudinary.com/dwl5ggfhd/image/upload/v1766457801/abastecete/knelxikcruwszxbpn7oq.png', NULL, '', NULL, 'Empresa inmobiliaria ', '', '+57 310 3348519', '', '', '@habitta.col', 'https://web.facebook.com/people/Habitta-Col/61582169653971/', '@habittacol', 'https://www.youtube.com/@habitta_inmobiliaria', '', '', '', '', '', '', '', '', NULL, NULL, '2025-12-22 21:43:48', '2025-12-22 21:47:33', 30);
 
 -- Volcando estructura para tabla abastecete.localcategoria
 CREATE TABLE IF NOT EXISTS `localcategoria` (
@@ -3962,7 +4000,7 @@ CREATE TABLE IF NOT EXISTS `localcategoria` (
   KEY `idx_localcategoria_categoria` (`FK_ID_CATEGORIA`),
   CONSTRAINT `FK1` FOREIGN KEY (`FK_ID_LOCAL`) REFERENCES `local` (`PK_ID_LOCAL`),
   CONSTRAINT `FK2` FOREIGN KEY (`FK_ID_CATEGORIA`) REFERENCES `categoria` (`PK_ID_CATEGORIA`)
-) ENGINE=InnoDB AUTO_INCREMENT=39 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=40 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Volcando datos para la tabla abastecete.localcategoria: ~17 rows (aproximadamente)
 INSERT INTO `localcategoria` (`PK_ID_LOCALCATEGORIA`, `FK_ID_LOCAL`, `FK_ID_CATEGORIA`) VALUES
@@ -3982,7 +4020,8 @@ INSERT INTO `localcategoria` (`PK_ID_LOCALCATEGORIA`, `FK_ID_LOCAL`, `FK_ID_CATE
 	(35, 27, 10),
 	(36, 27, 12),
 	(37, 27, 16),
-	(38, 28, 6);
+	(38, 28, 6),
+	(39, 28, 10);
 
 -- Volcando estructura para procedimiento abastecete.login_google
 DELIMITER //
@@ -4277,9 +4316,9 @@ CREATE TABLE IF NOT EXISTS `logs_sistema` (
   KEY `IDX_logs_tipo_accion` (`TIPO_ACCION`),
   KEY `IDX_logs_entidad` (`MODULO`,`ENTIDAD_ID`),
   CONSTRAINT `FK_logs_usuario` FOREIGN KEY (`FK_ID_USUARIO`) REFERENCES `usuario` (`PK_ID_USUARIO`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=41 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=55 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla abastecete.logs_sistema: ~40 rows (aproximadamente)
+-- Volcando datos para la tabla abastecete.logs_sistema: ~45 rows (aproximadamente)
 INSERT INTO `logs_sistema` (`PK_ID_LOG`, `FK_ID_USUARIO`, `NOMBRE_USUARIO`, `MODULO`, `TIPO_ACCION`, `ENTIDAD_ID`, `ENTIDAD_DESCRIPCION`, `DATOS_ANTERIORES`, `DATOS_NUEVOS`, `IP_CLIENTE`, `USER_AGENT`, `FECHA_REGISTRO`, `RESULTADO`, `MENSAJE_ERROR`, `CONTROLLER`, `ACTION`) VALUES
 	(1, 54, 'prueba123@gmail.com', 'AUTENTICACION', 'LOGIN', 54, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-22 05:25:06', 'EXITO', '', 'Login', 'Login'),
 	(2, 54, 'Usuario', 'AUTENTICACION', 'LOGOUT', 54, 'Cierre de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-22 05:27:25', 'EXITO', '', 'Login', 'Logout'),
@@ -4320,7 +4359,21 @@ INSERT INTO `logs_sistema` (`PK_ID_LOG`, `FK_ID_USUARIO`, `NOMBRE_USUARIO`, `MOD
 	(37, 55, 'Usuario', 'AUTENTICACION', 'LOGOUT', 55, 'Cierre de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-22 21:48:18', 'EXITO', '', 'Login', 'Logout'),
 	(38, 37, 'hola@gmail.com', 'AUTENTICACION', 'LOGIN', 37, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-22 21:54:08', 'EXITO', '', 'Login', 'Login'),
 	(39, 37, 'Usuario', 'AUTENTICACION', 'LOGOUT', 37, 'Cierre de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-22 22:03:45', 'EXITO', '', 'Login', 'Logout'),
-	(40, 2, 'kevin12@gmail.com', 'AUTENTICACION', 'LOGIN', 2, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-22 22:03:49', 'EXITO', '', 'Login', 'Login');
+	(40, 2, 'kevin12@gmail.com', 'AUTENTICACION', 'LOGIN', 2, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-22 22:03:49', 'EXITO', '', 'Login', 'Login'),
+	(41, 2, 'kevin12@gmail.com', 'AUTENTICACION', 'LOGIN', 2, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-23 03:56:14', 'EXITO', '', 'Login', 'Login'),
+	(42, 37, 'hola@gmail.com', 'AUTENTICACION', 'LOGIN', 37, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-23 05:04:08', 'EXITO', '', 'Login', 'Login'),
+	(43, 37, 'Usuario', 'AUTENTICACION', 'LOGOUT', 37, 'Cierre de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-23 05:06:30', 'EXITO', '', 'Login', 'Logout'),
+	(44, 2, 'kevin12@gmail.com', 'AUTENTICACION', 'LOGIN', 2, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-23 05:06:45', 'EXITO', '', 'Login', 'Login'),
+	(45, 2, 'Usuario ID: 2', 'MARCAS', 'CREATE', 1, 'Postobon', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-23 05:07:33', 'EXITO', '', 'Marcas', 'Crear'),
+	(46, 2, 'kevin12@gmail.com', 'AUTENTICACION', 'LOGIN', 2, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-23 05:13:14', 'EXITO', '', 'Login', 'Login'),
+	(47, 2, 'Usuario ID: 2', 'MARCAS', 'CREATE', 2, 'Postobon', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-23 05:13:26', 'EXITO', '', 'Marcas', 'Crear'),
+	(48, 2, 'Usuario ID: 2', 'PRODUCTOS', 'CREATE', 1, 'Prueba', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-23 05:15:55', 'EXITO', '', 'Productos', 'CrearProductoAdmin'),
+	(49, 2, 'Usuario', 'AUTENTICACION', 'LOGOUT', 2, 'Cierre de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-23 05:16:22', 'EXITO', '', 'Login', 'Logout'),
+	(50, 37, 'hola@gmail.com', 'AUTENTICACION', 'LOGIN', 37, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-23 05:16:26', 'EXITO', '', 'Login', 'Login'),
+	(51, 37, 'Usuario', 'AUTENTICACION', 'LOGOUT', 37, 'Cierre de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-23 05:19:33', 'EXITO', '', 'Login', 'Logout'),
+	(52, 37, 'hola@gmail.com', 'AUTENTICACION', 'LOGIN', 37, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-23 05:19:42', 'EXITO', '', 'Login', 'Login'),
+	(53, 37, 'Usuario', 'AUTENTICACION', 'LOGOUT', 37, 'Cierre de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-23 05:24:03', 'EXITO', '', 'Login', 'Logout'),
+	(54, 55, 'prueba1234@gmail.com', 'AUTENTICACION', 'LOGIN', 55, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-23 05:24:07', 'EXITO', '', 'Login', 'Login');
 
 -- Volcando estructura para tabla abastecete.marca
 CREATE TABLE IF NOT EXISTS `marca` (
@@ -4333,11 +4386,12 @@ CREATE TABLE IF NOT EXISTS `marca` (
   `FECHA_REGISTRO` datetime DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`PK_ID_MARCA`),
   UNIQUE KEY `uk_marca_nombre` (`NOMBRE`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla abastecete.marca: ~0 rows (aproximadamente)
+-- Volcando datos para la tabla abastecete.marca: ~1 rows (aproximadamente)
 INSERT INTO `marca` (`PK_ID_MARCA`, `NOMBRE`, `DESCRIPCION`, `LOGO_URL`, `CLOUDINARY_PUBLIC_ID`, `ACTIVO`, `FECHA_REGISTRO`) VALUES
-	(1, 'Sin Marca', 'Productos sin marca específica', NULL, NULL, 1, '2025-12-19 03:16:12');
+	(1, 'Sin Marca', 'Productos sin marca específica', NULL, NULL, 1, '2025-12-19 03:16:12'),
+	(2, 'Postobon', 'a', '', '', 1, '2025-12-23 05:13:26');
 
 -- Volcando estructura para tabla abastecete.metodo_autenticacion
 CREATE TABLE IF NOT EXISTS `metodo_autenticacion` (
@@ -4929,7 +4983,7 @@ CREATE TABLE IF NOT EXISTS `producto` (
   CONSTRAINT `fk_producto_marca` FOREIGN KEY (`FK_ID_MARCA`) REFERENCES `marca` (`PK_ID_MARCA`),
   CONSTRAINT `FK_producto_sub_categoria` FOREIGN KEY (`FK_ID_SUB_CATEGORIA`) REFERENCES `sub_categoria` (`PK_ID_SUB_CATEGORIA`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `fk_tipounidad` FOREIGN KEY (`FK_ID_TIPOUNIDAD`) REFERENCES `tipo_unidad` (`ID_TIPOUNIDAD`)
-) ENGINE=InnoDB AUTO_INCREMENT=584 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=585 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Volcando datos para la tabla abastecete.producto: ~573 rows (aproximadamente)
 INSERT INTO `producto` (`PK_ID_PRODUCTO`, `FK_ID_SUB_CATEGORIA`, `NOMBRE_PRODUCTO`, `IMAGEN_URL`, `FK_ID_TIPOUNIDAD`, `FK_ID_MARCA`, `DESCRIPCION`, `SKU`, `CLOUDINARY_PUBLIC_ID`) VALUES
@@ -5505,7 +5559,8 @@ INSERT INTO `producto` (`PK_ID_PRODUCTO`, `FK_ID_SUB_CATEGORIA`, `NOMBRE_PRODUCT
 	(579, 62, 'Líquidos para vapeadores', '/images/PRODUCTOS ABASTECETE/Licores y Tabaco/Cigarrillos y vapeadores/Líquidos para vapeadores.webp', 3, 1, NULL, NULL, NULL),
 	(580, 62, 'Cigarrillos electrónicos', '/images/PRODUCTOS ABASTECETE/Licores y Tabaco/Cigarrillos y vapeadores/Cigarrillos electrónicos.webp', 3, 1, NULL, NULL, NULL),
 	(581, 38, 'Chocolatería fina', '/images/PRODUCTOS ABASTECETE/Dulces y Chocolatería/Chocolatería fina/Chocolatería fina.webp', 3, 1, NULL, NULL, NULL),
-	(583, 51, 'Prueba', 'https://res.cloudinary.com/dwl5ggfhd/image/upload/v1766234586/productos/ffjleq3lqniflonmphg0.png', 3, 1, 'aaaaaaaaaaaaaaaa', 'prueba-000', 'productos/ffjleq3lqniflonmphg0');
+	(583, 51, 'Prueba', 'https://res.cloudinary.com/dwl5ggfhd/image/upload/v1766234586/productos/ffjleq3lqniflonmphg0.png', 3, 1, 'aaaaaaaaaaaaaaaa', 'prueba-000', 'productos/ffjleq3lqniflonmphg0'),
+	(584, 31, 'Prueba', 'https://res.cloudinary.com/dwl5ggfhd/image/upload/v1766466953/productos/fz4q2ofmamjmnlaapacg.png', 3, 2, 'aaaa', 'prueba-111', 'productos/fz4q2ofmamjmnlaapacg');
 
 -- Volcando estructura para tabla abastecete.productoslocal
 CREATE TABLE IF NOT EXISTS `productoslocal` (
@@ -5526,7 +5581,7 @@ CREATE TABLE IF NOT EXISTS `productoslocal` (
   CONSTRAINT `fk4` FOREIGN KEY (`FK_ID_UNIDAD`) REFERENCES `unidad` (`ID_UNIDAD`),
   CONSTRAINT `fk_estado` FOREIGN KEY (`FK_ESTADO`) REFERENCES `estado` (`PK_ID_ESTADO`),
   CONSTRAINT `fk_local` FOREIGN KEY (`FK_ID_LOCAL`) REFERENCES `local` (`PK_ID_LOCAL`)
-) ENGINE=InnoDB AUTO_INCREMENT=131 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=132 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Volcando datos para la tabla abastecete.productoslocal: ~27 rows (aproximadamente)
 INSERT INTO `productoslocal` (`PK_ID_PRODUCTS_LOCAL`, `FK_ID_PRODUCTO`, `FK_ID_UNIDAD`, `VALOR_PRODUCTS_LOCAL`, `FK_ID_LOCAL`, `FK_ESTADO`) VALUES
@@ -5556,7 +5611,8 @@ INSERT INTO `productoslocal` (`PK_ID_PRODUCTS_LOCAL`, `FK_ID_PRODUCTO`, `FK_ID_U
 	(127, 410, 10, 2000, 27, 1),
 	(128, 535, 5, 8000, 27, 1),
 	(129, 143, 1, 6000, 27, 1),
-	(130, 205, 1, 5000, 28, 1);
+	(130, 205, 1, 5000, 28, 1),
+	(131, 584, 10, 1, 28, 1);
 
 -- Volcando estructura para procedimiento abastecete.productos_local
 DELIMITER //
@@ -5605,7 +5661,7 @@ CREATE TABLE IF NOT EXISTS `producto_marca` (
   CONSTRAINT `fk_pm_local` FOREIGN KEY (`FK_ID_LOCAL`) REFERENCES `local` (`PK_ID_LOCAL`) ON DELETE CASCADE,
   CONSTRAINT `fk_pm_marca` FOREIGN KEY (`FK_ID_MARCA`) REFERENCES `marca` (`PK_ID_MARCA`) ON DELETE CASCADE,
   CONSTRAINT `fk_pm_producto` FOREIGN KEY (`FK_ID_PRODUCTO`) REFERENCES `producto` (`PK_ID_PRODUCTO`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=32 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=33 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Volcando datos para la tabla abastecete.producto_marca: ~25 rows (aproximadamente)
 INSERT INTO `producto_marca` (`PK_ID`, `FK_ID_PRODUCTO`, `FK_ID_MARCA`, `FK_ID_LOCAL`, `PRECIO`, `STOCK`, `DISPONIBLE`, `FECHA_REGISTRO`, `FECHA_ACTUALIZACION`) VALUES
@@ -5634,6 +5690,597 @@ INSERT INTO `producto_marca` (`PK_ID`, `FK_ID_PRODUCTO`, `FK_ID_MARCA`, `FK_ID_L
 	(23, 535, 1, 27, 8000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
 	(24, 143, 1, 27, 6000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
 	(25, 205, 1, 28, 5000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04');
+
+-- Volcando estructura para tabla abastecete.producto_marcas_disponibles
+CREATE TABLE IF NOT EXISTS `producto_marcas_disponibles` (
+  `PK_ID` int NOT NULL AUTO_INCREMENT,
+  `FK_ID_PRODUCTO` int NOT NULL,
+  `FK_ID_MARCA` int NOT NULL,
+  `FECHA_REGISTRO` datetime DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`PK_ID`),
+  UNIQUE KEY `uk_producto_marca_disponible` (`FK_ID_PRODUCTO`,`FK_ID_MARCA`),
+  KEY `idx_pmd_producto` (`FK_ID_PRODUCTO`),
+  KEY `idx_pmd_marca` (`FK_ID_MARCA`),
+  CONSTRAINT `fk_pmd_marca` FOREIGN KEY (`FK_ID_MARCA`) REFERENCES `marca` (`PK_ID_MARCA`) ON DELETE CASCADE,
+  CONSTRAINT `fk_pmd_producto` FOREIGN KEY (`FK_ID_PRODUCTO`) REFERENCES `producto` (`PK_ID_PRODUCTO`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=1027 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- Volcando datos para la tabla abastecete.producto_marcas_disponibles: ~573 rows (aproximadamente)
+INSERT INTO `producto_marcas_disponibles` (`PK_ID`, `FK_ID_PRODUCTO`, `FK_ID_MARCA`, `FECHA_REGISTRO`) VALUES
+	(2, 2, 1, '2025-12-23 05:03:43'),
+	(3, 3, 1, '2025-12-23 05:03:43'),
+	(4, 4, 1, '2025-12-23 05:03:43'),
+	(5, 5, 1, '2025-12-23 05:03:43'),
+	(6, 6, 1, '2025-12-23 05:03:43'),
+	(7, 7, 1, '2025-12-23 05:03:43'),
+	(8, 8, 1, '2025-12-23 05:03:43'),
+	(9, 9, 1, '2025-12-23 05:03:43'),
+	(10, 10, 1, '2025-12-23 05:03:43'),
+	(11, 11, 1, '2025-12-23 05:03:43'),
+	(12, 12, 1, '2025-12-23 05:03:43'),
+	(13, 13, 1, '2025-12-23 05:03:43'),
+	(14, 14, 1, '2025-12-23 05:03:43'),
+	(15, 15, 1, '2025-12-23 05:03:43'),
+	(16, 16, 1, '2025-12-23 05:03:43'),
+	(17, 17, 1, '2025-12-23 05:03:43'),
+	(18, 18, 1, '2025-12-23 05:03:43'),
+	(19, 19, 1, '2025-12-23 05:03:43'),
+	(20, 21, 1, '2025-12-23 05:03:43'),
+	(21, 22, 1, '2025-12-23 05:03:43'),
+	(22, 23, 1, '2025-12-23 05:03:43'),
+	(23, 24, 1, '2025-12-23 05:03:43'),
+	(24, 25, 1, '2025-12-23 05:03:43'),
+	(25, 26, 1, '2025-12-23 05:03:43'),
+	(26, 27, 1, '2025-12-23 05:03:43'),
+	(27, 29, 1, '2025-12-23 05:03:43'),
+	(28, 30, 1, '2025-12-23 05:03:43'),
+	(29, 31, 1, '2025-12-23 05:03:43'),
+	(30, 32, 1, '2025-12-23 05:03:43'),
+	(31, 33, 1, '2025-12-23 05:03:43'),
+	(32, 34, 1, '2025-12-23 05:03:43'),
+	(33, 35, 1, '2025-12-23 05:03:43'),
+	(34, 36, 1, '2025-12-23 05:03:43'),
+	(35, 37, 1, '2025-12-23 05:03:43'),
+	(36, 38, 1, '2025-12-23 05:03:43'),
+	(37, 39, 1, '2025-12-23 05:03:43'),
+	(38, 40, 1, '2025-12-23 05:03:43'),
+	(39, 41, 1, '2025-12-23 05:03:43'),
+	(40, 42, 1, '2025-12-23 05:03:43'),
+	(41, 43, 1, '2025-12-23 05:03:43'),
+	(42, 44, 1, '2025-12-23 05:03:43'),
+	(43, 45, 1, '2025-12-23 05:03:43'),
+	(44, 46, 1, '2025-12-23 05:03:43'),
+	(45, 47, 1, '2025-12-23 05:03:43'),
+	(46, 48, 1, '2025-12-23 05:03:43'),
+	(47, 49, 1, '2025-12-23 05:03:43'),
+	(48, 50, 1, '2025-12-23 05:03:43'),
+	(49, 51, 1, '2025-12-23 05:03:43'),
+	(50, 53, 1, '2025-12-23 05:03:43'),
+	(51, 54, 1, '2025-12-23 05:03:43'),
+	(52, 55, 1, '2025-12-23 05:03:43'),
+	(53, 56, 1, '2025-12-23 05:03:43'),
+	(54, 57, 1, '2025-12-23 05:03:43'),
+	(55, 58, 1, '2025-12-23 05:03:43'),
+	(56, 59, 1, '2025-12-23 05:03:43'),
+	(57, 62, 1, '2025-12-23 05:03:43'),
+	(58, 65, 1, '2025-12-23 05:03:43'),
+	(59, 66, 1, '2025-12-23 05:03:43'),
+	(60, 67, 1, '2025-12-23 05:03:43'),
+	(61, 68, 1, '2025-12-23 05:03:43'),
+	(62, 69, 1, '2025-12-23 05:03:43'),
+	(63, 70, 1, '2025-12-23 05:03:43'),
+	(64, 71, 1, '2025-12-23 05:03:43'),
+	(65, 72, 1, '2025-12-23 05:03:43'),
+	(66, 73, 1, '2025-12-23 05:03:43'),
+	(67, 74, 1, '2025-12-23 05:03:43'),
+	(68, 75, 1, '2025-12-23 05:03:43'),
+	(69, 76, 1, '2025-12-23 05:03:43'),
+	(70, 77, 1, '2025-12-23 05:03:43'),
+	(71, 78, 1, '2025-12-23 05:03:43'),
+	(72, 79, 1, '2025-12-23 05:03:43'),
+	(73, 80, 1, '2025-12-23 05:03:43'),
+	(74, 81, 1, '2025-12-23 05:03:43'),
+	(75, 82, 1, '2025-12-23 05:03:43'),
+	(76, 83, 1, '2025-12-23 05:03:43'),
+	(77, 84, 1, '2025-12-23 05:03:43'),
+	(78, 85, 1, '2025-12-23 05:03:43'),
+	(79, 86, 1, '2025-12-23 05:03:43'),
+	(80, 87, 1, '2025-12-23 05:03:43'),
+	(81, 88, 1, '2025-12-23 05:03:43'),
+	(82, 89, 1, '2025-12-23 05:03:43'),
+	(83, 90, 1, '2025-12-23 05:03:43'),
+	(84, 91, 1, '2025-12-23 05:03:43'),
+	(85, 92, 1, '2025-12-23 05:03:43'),
+	(86, 93, 1, '2025-12-23 05:03:43'),
+	(87, 94, 1, '2025-12-23 05:03:43'),
+	(88, 95, 1, '2025-12-23 05:03:43'),
+	(89, 96, 1, '2025-12-23 05:03:43'),
+	(90, 97, 1, '2025-12-23 05:03:43'),
+	(91, 98, 1, '2025-12-23 05:03:43'),
+	(92, 99, 1, '2025-12-23 05:03:43'),
+	(93, 100, 1, '2025-12-23 05:03:43'),
+	(94, 101, 1, '2025-12-23 05:03:43'),
+	(95, 102, 1, '2025-12-23 05:03:43'),
+	(96, 103, 1, '2025-12-23 05:03:43'),
+	(97, 104, 1, '2025-12-23 05:03:43'),
+	(98, 105, 1, '2025-12-23 05:03:43'),
+	(99, 106, 1, '2025-12-23 05:03:43'),
+	(100, 107, 1, '2025-12-23 05:03:43'),
+	(101, 108, 1, '2025-12-23 05:03:43'),
+	(102, 109, 1, '2025-12-23 05:03:43'),
+	(103, 110, 1, '2025-12-23 05:03:43'),
+	(104, 111, 1, '2025-12-23 05:03:43'),
+	(105, 112, 1, '2025-12-23 05:03:43'),
+	(106, 113, 1, '2025-12-23 05:03:43'),
+	(107, 114, 1, '2025-12-23 05:03:43'),
+	(108, 115, 1, '2025-12-23 05:03:43'),
+	(109, 116, 1, '2025-12-23 05:03:43'),
+	(110, 117, 1, '2025-12-23 05:03:43'),
+	(111, 118, 1, '2025-12-23 05:03:43'),
+	(112, 119, 1, '2025-12-23 05:03:43'),
+	(113, 120, 1, '2025-12-23 05:03:43'),
+	(114, 121, 1, '2025-12-23 05:03:43'),
+	(115, 122, 1, '2025-12-23 05:03:43'),
+	(116, 123, 1, '2025-12-23 05:03:43'),
+	(117, 124, 1, '2025-12-23 05:03:43'),
+	(118, 125, 1, '2025-12-23 05:03:43'),
+	(119, 126, 1, '2025-12-23 05:03:43'),
+	(120, 127, 1, '2025-12-23 05:03:43'),
+	(121, 128, 1, '2025-12-23 05:03:43'),
+	(122, 129, 1, '2025-12-23 05:03:43'),
+	(123, 130, 1, '2025-12-23 05:03:43'),
+	(124, 131, 1, '2025-12-23 05:03:43'),
+	(125, 132, 1, '2025-12-23 05:03:43'),
+	(126, 133, 1, '2025-12-23 05:03:43'),
+	(127, 134, 1, '2025-12-23 05:03:43'),
+	(128, 135, 1, '2025-12-23 05:03:43'),
+	(129, 136, 1, '2025-12-23 05:03:43'),
+	(130, 137, 1, '2025-12-23 05:03:43'),
+	(131, 138, 1, '2025-12-23 05:03:43'),
+	(132, 139, 1, '2025-12-23 05:03:43'),
+	(133, 140, 1, '2025-12-23 05:03:43'),
+	(134, 141, 1, '2025-12-23 05:03:43'),
+	(135, 142, 1, '2025-12-23 05:03:43'),
+	(136, 143, 1, '2025-12-23 05:03:43'),
+	(137, 144, 1, '2025-12-23 05:03:43'),
+	(138, 145, 1, '2025-12-23 05:03:43'),
+	(139, 146, 1, '2025-12-23 05:03:43'),
+	(140, 147, 1, '2025-12-23 05:03:43'),
+	(141, 149, 1, '2025-12-23 05:03:43'),
+	(142, 150, 1, '2025-12-23 05:03:43'),
+	(143, 151, 1, '2025-12-23 05:03:43'),
+	(144, 152, 1, '2025-12-23 05:03:43'),
+	(145, 153, 1, '2025-12-23 05:03:43'),
+	(146, 154, 1, '2025-12-23 05:03:43'),
+	(147, 155, 1, '2025-12-23 05:03:43'),
+	(148, 156, 1, '2025-12-23 05:03:43'),
+	(149, 157, 1, '2025-12-23 05:03:43'),
+	(150, 158, 1, '2025-12-23 05:03:43'),
+	(151, 159, 1, '2025-12-23 05:03:43'),
+	(152, 160, 1, '2025-12-23 05:03:43'),
+	(153, 161, 1, '2025-12-23 05:03:43'),
+	(154, 162, 1, '2025-12-23 05:03:43'),
+	(155, 163, 1, '2025-12-23 05:03:43'),
+	(156, 164, 1, '2025-12-23 05:03:43'),
+	(157, 165, 1, '2025-12-23 05:03:43'),
+	(158, 166, 1, '2025-12-23 05:03:43'),
+	(159, 167, 1, '2025-12-23 05:03:43'),
+	(160, 168, 1, '2025-12-23 05:03:43'),
+	(161, 169, 1, '2025-12-23 05:03:43'),
+	(162, 170, 1, '2025-12-23 05:03:43'),
+	(163, 171, 1, '2025-12-23 05:03:43'),
+	(164, 172, 1, '2025-12-23 05:03:43'),
+	(165, 173, 1, '2025-12-23 05:03:43'),
+	(166, 174, 1, '2025-12-23 05:03:43'),
+	(167, 175, 1, '2025-12-23 05:03:43'),
+	(168, 176, 1, '2025-12-23 05:03:43'),
+	(169, 177, 1, '2025-12-23 05:03:43'),
+	(170, 179, 1, '2025-12-23 05:03:43'),
+	(171, 180, 1, '2025-12-23 05:03:43'),
+	(172, 181, 1, '2025-12-23 05:03:43'),
+	(173, 182, 1, '2025-12-23 05:03:43'),
+	(174, 183, 1, '2025-12-23 05:03:43'),
+	(175, 184, 1, '2025-12-23 05:03:43'),
+	(176, 185, 1, '2025-12-23 05:03:43'),
+	(177, 186, 1, '2025-12-23 05:03:43'),
+	(178, 187, 1, '2025-12-23 05:03:43'),
+	(179, 188, 1, '2025-12-23 05:03:43'),
+	(180, 189, 1, '2025-12-23 05:03:43'),
+	(181, 190, 1, '2025-12-23 05:03:43'),
+	(182, 191, 1, '2025-12-23 05:03:43'),
+	(183, 192, 1, '2025-12-23 05:03:43'),
+	(184, 193, 1, '2025-12-23 05:03:43'),
+	(185, 194, 1, '2025-12-23 05:03:43'),
+	(186, 195, 1, '2025-12-23 05:03:43'),
+	(187, 196, 1, '2025-12-23 05:03:43'),
+	(188, 197, 1, '2025-12-23 05:03:43'),
+	(189, 198, 1, '2025-12-23 05:03:43'),
+	(190, 199, 1, '2025-12-23 05:03:43'),
+	(191, 200, 1, '2025-12-23 05:03:43'),
+	(192, 201, 1, '2025-12-23 05:03:43'),
+	(193, 202, 1, '2025-12-23 05:03:43'),
+	(194, 203, 1, '2025-12-23 05:03:43'),
+	(195, 204, 1, '2025-12-23 05:03:43'),
+	(196, 205, 1, '2025-12-23 05:03:43'),
+	(197, 206, 1, '2025-12-23 05:03:43'),
+	(198, 207, 1, '2025-12-23 05:03:43'),
+	(199, 208, 1, '2025-12-23 05:03:43'),
+	(200, 209, 1, '2025-12-23 05:03:43'),
+	(201, 210, 1, '2025-12-23 05:03:43'),
+	(202, 211, 1, '2025-12-23 05:03:43'),
+	(203, 212, 1, '2025-12-23 05:03:43'),
+	(204, 213, 1, '2025-12-23 05:03:43'),
+	(205, 214, 1, '2025-12-23 05:03:43'),
+	(206, 215, 1, '2025-12-23 05:03:43'),
+	(207, 216, 1, '2025-12-23 05:03:43'),
+	(208, 217, 1, '2025-12-23 05:03:43'),
+	(209, 218, 1, '2025-12-23 05:03:43'),
+	(210, 219, 1, '2025-12-23 05:03:43'),
+	(211, 220, 1, '2025-12-23 05:03:43'),
+	(212, 221, 1, '2025-12-23 05:03:43'),
+	(213, 222, 1, '2025-12-23 05:03:43'),
+	(214, 223, 1, '2025-12-23 05:03:43'),
+	(215, 224, 1, '2025-12-23 05:03:43'),
+	(216, 225, 1, '2025-12-23 05:03:43'),
+	(217, 226, 1, '2025-12-23 05:03:43'),
+	(218, 227, 1, '2025-12-23 05:03:43'),
+	(219, 228, 1, '2025-12-23 05:03:43'),
+	(220, 229, 1, '2025-12-23 05:03:43'),
+	(221, 230, 1, '2025-12-23 05:03:43'),
+	(222, 231, 1, '2025-12-23 05:03:43'),
+	(223, 232, 1, '2025-12-23 05:03:43'),
+	(224, 233, 1, '2025-12-23 05:03:43'),
+	(225, 234, 1, '2025-12-23 05:03:43'),
+	(226, 235, 1, '2025-12-23 05:03:43'),
+	(227, 236, 1, '2025-12-23 05:03:43'),
+	(228, 237, 1, '2025-12-23 05:03:43'),
+	(229, 238, 1, '2025-12-23 05:03:43'),
+	(230, 239, 1, '2025-12-23 05:03:43'),
+	(231, 240, 1, '2025-12-23 05:03:43'),
+	(232, 241, 1, '2025-12-23 05:03:43'),
+	(233, 242, 1, '2025-12-23 05:03:43'),
+	(234, 243, 1, '2025-12-23 05:03:43'),
+	(235, 244, 1, '2025-12-23 05:03:43'),
+	(236, 245, 1, '2025-12-23 05:03:43'),
+	(237, 246, 1, '2025-12-23 05:03:43'),
+	(238, 247, 1, '2025-12-23 05:03:43'),
+	(239, 248, 1, '2025-12-23 05:03:43'),
+	(240, 249, 1, '2025-12-23 05:03:43'),
+	(241, 250, 1, '2025-12-23 05:03:43'),
+	(242, 251, 1, '2025-12-23 05:03:43'),
+	(243, 252, 1, '2025-12-23 05:03:43'),
+	(244, 253, 1, '2025-12-23 05:03:43'),
+	(245, 254, 1, '2025-12-23 05:03:43'),
+	(246, 255, 1, '2025-12-23 05:03:43'),
+	(247, 256, 1, '2025-12-23 05:03:43'),
+	(248, 257, 1, '2025-12-23 05:03:43'),
+	(249, 258, 1, '2025-12-23 05:03:43'),
+	(250, 259, 1, '2025-12-23 05:03:43'),
+	(251, 260, 1, '2025-12-23 05:03:43'),
+	(252, 261, 1, '2025-12-23 05:03:43'),
+	(253, 262, 1, '2025-12-23 05:03:43'),
+	(254, 263, 1, '2025-12-23 05:03:43'),
+	(255, 264, 1, '2025-12-23 05:03:43'),
+	(256, 265, 1, '2025-12-23 05:03:43'),
+	(257, 266, 1, '2025-12-23 05:03:43'),
+	(258, 267, 1, '2025-12-23 05:03:43'),
+	(259, 268, 1, '2025-12-23 05:03:43'),
+	(260, 269, 1, '2025-12-23 05:03:43'),
+	(261, 270, 1, '2025-12-23 05:03:43'),
+	(262, 271, 1, '2025-12-23 05:03:43'),
+	(263, 272, 1, '2025-12-23 05:03:43'),
+	(264, 273, 1, '2025-12-23 05:03:43'),
+	(265, 274, 1, '2025-12-23 05:03:43'),
+	(266, 275, 1, '2025-12-23 05:03:43'),
+	(267, 276, 1, '2025-12-23 05:03:43'),
+	(268, 277, 1, '2025-12-23 05:03:43'),
+	(269, 278, 1, '2025-12-23 05:03:43'),
+	(270, 279, 1, '2025-12-23 05:03:43'),
+	(271, 280, 1, '2025-12-23 05:03:43'),
+	(272, 281, 1, '2025-12-23 05:03:43'),
+	(273, 282, 1, '2025-12-23 05:03:43'),
+	(274, 283, 1, '2025-12-23 05:03:43'),
+	(275, 284, 1, '2025-12-23 05:03:43'),
+	(276, 285, 1, '2025-12-23 05:03:43'),
+	(277, 286, 1, '2025-12-23 05:03:43'),
+	(278, 287, 1, '2025-12-23 05:03:43'),
+	(279, 288, 1, '2025-12-23 05:03:43'),
+	(280, 289, 1, '2025-12-23 05:03:43'),
+	(281, 290, 1, '2025-12-23 05:03:43'),
+	(282, 291, 1, '2025-12-23 05:03:43'),
+	(283, 292, 1, '2025-12-23 05:03:43'),
+	(284, 293, 1, '2025-12-23 05:03:43'),
+	(285, 294, 1, '2025-12-23 05:03:43'),
+	(286, 295, 1, '2025-12-23 05:03:43'),
+	(287, 296, 1, '2025-12-23 05:03:43'),
+	(288, 297, 1, '2025-12-23 05:03:43'),
+	(289, 298, 1, '2025-12-23 05:03:43'),
+	(290, 299, 1, '2025-12-23 05:03:43'),
+	(291, 300, 1, '2025-12-23 05:03:43'),
+	(292, 301, 1, '2025-12-23 05:03:43'),
+	(293, 302, 1, '2025-12-23 05:03:43'),
+	(294, 303, 1, '2025-12-23 05:03:43'),
+	(295, 304, 1, '2025-12-23 05:03:43'),
+	(296, 305, 1, '2025-12-23 05:03:43'),
+	(297, 306, 1, '2025-12-23 05:03:43'),
+	(298, 307, 1, '2025-12-23 05:03:43'),
+	(299, 308, 1, '2025-12-23 05:03:43'),
+	(300, 309, 1, '2025-12-23 05:03:43'),
+	(301, 310, 1, '2025-12-23 05:03:43'),
+	(302, 311, 1, '2025-12-23 05:03:43'),
+	(303, 312, 1, '2025-12-23 05:03:43'),
+	(304, 313, 1, '2025-12-23 05:03:43'),
+	(305, 314, 1, '2025-12-23 05:03:43'),
+	(306, 315, 1, '2025-12-23 05:03:43'),
+	(307, 316, 1, '2025-12-23 05:03:43'),
+	(308, 317, 1, '2025-12-23 05:03:43'),
+	(309, 318, 1, '2025-12-23 05:03:43'),
+	(310, 319, 1, '2025-12-23 05:03:43'),
+	(311, 320, 1, '2025-12-23 05:03:43'),
+	(312, 321, 1, '2025-12-23 05:03:43'),
+	(313, 322, 1, '2025-12-23 05:03:43'),
+	(314, 323, 1, '2025-12-23 05:03:43'),
+	(315, 324, 1, '2025-12-23 05:03:43'),
+	(316, 325, 1, '2025-12-23 05:03:43'),
+	(317, 326, 1, '2025-12-23 05:03:43'),
+	(318, 327, 1, '2025-12-23 05:03:43'),
+	(319, 328, 1, '2025-12-23 05:03:43'),
+	(320, 329, 1, '2025-12-23 05:03:43'),
+	(321, 330, 1, '2025-12-23 05:03:43'),
+	(322, 331, 1, '2025-12-23 05:03:43'),
+	(323, 332, 1, '2025-12-23 05:03:43'),
+	(324, 333, 1, '2025-12-23 05:03:43'),
+	(325, 334, 1, '2025-12-23 05:03:43'),
+	(326, 335, 1, '2025-12-23 05:03:43'),
+	(327, 336, 1, '2025-12-23 05:03:43'),
+	(328, 337, 1, '2025-12-23 05:03:43'),
+	(329, 338, 1, '2025-12-23 05:03:43'),
+	(330, 339, 1, '2025-12-23 05:03:43'),
+	(331, 340, 1, '2025-12-23 05:03:43'),
+	(332, 341, 1, '2025-12-23 05:03:43'),
+	(333, 342, 1, '2025-12-23 05:03:43'),
+	(334, 343, 1, '2025-12-23 05:03:43'),
+	(335, 344, 1, '2025-12-23 05:03:43'),
+	(336, 345, 1, '2025-12-23 05:03:43'),
+	(337, 346, 1, '2025-12-23 05:03:43'),
+	(338, 347, 1, '2025-12-23 05:03:43'),
+	(339, 348, 1, '2025-12-23 05:03:43'),
+	(340, 349, 1, '2025-12-23 05:03:43'),
+	(341, 350, 1, '2025-12-23 05:03:43'),
+	(342, 351, 1, '2025-12-23 05:03:43'),
+	(343, 352, 1, '2025-12-23 05:03:43'),
+	(344, 353, 1, '2025-12-23 05:03:43'),
+	(345, 354, 1, '2025-12-23 05:03:43'),
+	(346, 355, 1, '2025-12-23 05:03:43'),
+	(347, 356, 1, '2025-12-23 05:03:43'),
+	(348, 357, 1, '2025-12-23 05:03:43'),
+	(349, 358, 1, '2025-12-23 05:03:43'),
+	(350, 359, 1, '2025-12-23 05:03:43'),
+	(351, 360, 1, '2025-12-23 05:03:43'),
+	(352, 361, 1, '2025-12-23 05:03:43'),
+	(353, 362, 1, '2025-12-23 05:03:43'),
+	(354, 363, 1, '2025-12-23 05:03:43'),
+	(355, 364, 1, '2025-12-23 05:03:43'),
+	(356, 365, 1, '2025-12-23 05:03:43'),
+	(357, 366, 1, '2025-12-23 05:03:43'),
+	(358, 367, 1, '2025-12-23 05:03:43'),
+	(359, 368, 1, '2025-12-23 05:03:43'),
+	(360, 369, 1, '2025-12-23 05:03:43'),
+	(361, 370, 1, '2025-12-23 05:03:43'),
+	(362, 371, 1, '2025-12-23 05:03:43'),
+	(363, 372, 1, '2025-12-23 05:03:43'),
+	(364, 373, 1, '2025-12-23 05:03:43'),
+	(365, 374, 1, '2025-12-23 05:03:43'),
+	(366, 375, 1, '2025-12-23 05:03:43'),
+	(367, 376, 1, '2025-12-23 05:03:43'),
+	(368, 377, 1, '2025-12-23 05:03:43'),
+	(369, 378, 1, '2025-12-23 05:03:43'),
+	(370, 379, 1, '2025-12-23 05:03:43'),
+	(371, 380, 1, '2025-12-23 05:03:43'),
+	(372, 381, 1, '2025-12-23 05:03:43'),
+	(373, 382, 1, '2025-12-23 05:03:43'),
+	(374, 383, 1, '2025-12-23 05:03:43'),
+	(375, 384, 1, '2025-12-23 05:03:43'),
+	(376, 385, 1, '2025-12-23 05:03:43'),
+	(377, 386, 1, '2025-12-23 05:03:43'),
+	(378, 387, 1, '2025-12-23 05:03:43'),
+	(379, 388, 1, '2025-12-23 05:03:43'),
+	(380, 389, 1, '2025-12-23 05:03:43'),
+	(381, 390, 1, '2025-12-23 05:03:43'),
+	(382, 391, 1, '2025-12-23 05:03:43'),
+	(383, 392, 1, '2025-12-23 05:03:43'),
+	(384, 393, 1, '2025-12-23 05:03:43'),
+	(385, 394, 1, '2025-12-23 05:03:43'),
+	(386, 395, 1, '2025-12-23 05:03:43'),
+	(387, 396, 1, '2025-12-23 05:03:43'),
+	(388, 397, 1, '2025-12-23 05:03:43'),
+	(389, 398, 1, '2025-12-23 05:03:43'),
+	(390, 399, 1, '2025-12-23 05:03:43'),
+	(391, 400, 1, '2025-12-23 05:03:43'),
+	(392, 401, 1, '2025-12-23 05:03:43'),
+	(393, 402, 1, '2025-12-23 05:03:43'),
+	(394, 403, 1, '2025-12-23 05:03:43'),
+	(395, 404, 1, '2025-12-23 05:03:43'),
+	(396, 405, 1, '2025-12-23 05:03:43'),
+	(397, 406, 1, '2025-12-23 05:03:43'),
+	(398, 407, 1, '2025-12-23 05:03:43'),
+	(399, 408, 1, '2025-12-23 05:03:43'),
+	(400, 409, 1, '2025-12-23 05:03:43'),
+	(401, 410, 1, '2025-12-23 05:03:43'),
+	(402, 411, 1, '2025-12-23 05:03:43'),
+	(403, 412, 1, '2025-12-23 05:03:43'),
+	(404, 413, 1, '2025-12-23 05:03:43'),
+	(405, 414, 1, '2025-12-23 05:03:43'),
+	(406, 415, 1, '2025-12-23 05:03:43'),
+	(407, 416, 1, '2025-12-23 05:03:43'),
+	(408, 417, 1, '2025-12-23 05:03:43'),
+	(409, 418, 1, '2025-12-23 05:03:43'),
+	(410, 419, 1, '2025-12-23 05:03:43'),
+	(411, 420, 1, '2025-12-23 05:03:43'),
+	(412, 421, 1, '2025-12-23 05:03:43'),
+	(413, 422, 1, '2025-12-23 05:03:43'),
+	(414, 423, 1, '2025-12-23 05:03:43'),
+	(415, 424, 1, '2025-12-23 05:03:43'),
+	(416, 425, 1, '2025-12-23 05:03:43'),
+	(417, 426, 1, '2025-12-23 05:03:43'),
+	(418, 427, 1, '2025-12-23 05:03:43'),
+	(419, 428, 1, '2025-12-23 05:03:43'),
+	(420, 429, 1, '2025-12-23 05:03:43'),
+	(421, 430, 1, '2025-12-23 05:03:43'),
+	(422, 431, 1, '2025-12-23 05:03:43'),
+	(423, 432, 1, '2025-12-23 05:03:43'),
+	(424, 433, 1, '2025-12-23 05:03:43'),
+	(425, 434, 1, '2025-12-23 05:03:43'),
+	(426, 435, 1, '2025-12-23 05:03:43'),
+	(427, 436, 1, '2025-12-23 05:03:43'),
+	(428, 437, 1, '2025-12-23 05:03:43'),
+	(429, 438, 1, '2025-12-23 05:03:43'),
+	(430, 439, 1, '2025-12-23 05:03:43'),
+	(431, 440, 1, '2025-12-23 05:03:43'),
+	(432, 441, 1, '2025-12-23 05:03:43'),
+	(433, 442, 1, '2025-12-23 05:03:43'),
+	(434, 443, 1, '2025-12-23 05:03:43'),
+	(435, 444, 1, '2025-12-23 05:03:43'),
+	(436, 445, 1, '2025-12-23 05:03:43'),
+	(437, 446, 1, '2025-12-23 05:03:43'),
+	(438, 447, 1, '2025-12-23 05:03:43'),
+	(439, 448, 1, '2025-12-23 05:03:43'),
+	(440, 449, 1, '2025-12-23 05:03:43'),
+	(441, 450, 1, '2025-12-23 05:03:43'),
+	(442, 451, 1, '2025-12-23 05:03:43'),
+	(443, 452, 1, '2025-12-23 05:03:43'),
+	(444, 453, 1, '2025-12-23 05:03:43'),
+	(445, 454, 1, '2025-12-23 05:03:43'),
+	(446, 455, 1, '2025-12-23 05:03:43'),
+	(447, 456, 1, '2025-12-23 05:03:43'),
+	(448, 457, 1, '2025-12-23 05:03:43'),
+	(449, 458, 1, '2025-12-23 05:03:43'),
+	(450, 459, 1, '2025-12-23 05:03:43'),
+	(451, 460, 1, '2025-12-23 05:03:43'),
+	(452, 461, 1, '2025-12-23 05:03:43'),
+	(453, 462, 1, '2025-12-23 05:03:43'),
+	(454, 463, 1, '2025-12-23 05:03:43'),
+	(455, 464, 1, '2025-12-23 05:03:43'),
+	(456, 465, 1, '2025-12-23 05:03:43'),
+	(457, 466, 1, '2025-12-23 05:03:43'),
+	(458, 467, 1, '2025-12-23 05:03:43'),
+	(459, 468, 1, '2025-12-23 05:03:43'),
+	(460, 469, 1, '2025-12-23 05:03:43'),
+	(461, 470, 1, '2025-12-23 05:03:43'),
+	(462, 471, 1, '2025-12-23 05:03:43'),
+	(463, 472, 1, '2025-12-23 05:03:43'),
+	(464, 473, 1, '2025-12-23 05:03:43'),
+	(465, 474, 1, '2025-12-23 05:03:43'),
+	(466, 475, 1, '2025-12-23 05:03:43'),
+	(467, 476, 1, '2025-12-23 05:03:43'),
+	(468, 477, 1, '2025-12-23 05:03:43'),
+	(469, 478, 1, '2025-12-23 05:03:43'),
+	(470, 479, 1, '2025-12-23 05:03:43'),
+	(471, 480, 1, '2025-12-23 05:03:43'),
+	(472, 481, 1, '2025-12-23 05:03:43'),
+	(473, 482, 1, '2025-12-23 05:03:43'),
+	(474, 483, 1, '2025-12-23 05:03:43'),
+	(475, 484, 1, '2025-12-23 05:03:43'),
+	(476, 485, 1, '2025-12-23 05:03:43'),
+	(477, 486, 1, '2025-12-23 05:03:43'),
+	(478, 487, 1, '2025-12-23 05:03:43'),
+	(479, 488, 1, '2025-12-23 05:03:43'),
+	(480, 489, 1, '2025-12-23 05:03:43'),
+	(481, 490, 1, '2025-12-23 05:03:43'),
+	(482, 491, 1, '2025-12-23 05:03:43'),
+	(483, 492, 1, '2025-12-23 05:03:43'),
+	(484, 493, 1, '2025-12-23 05:03:43'),
+	(485, 494, 1, '2025-12-23 05:03:43'),
+	(486, 495, 1, '2025-12-23 05:03:43'),
+	(487, 496, 1, '2025-12-23 05:03:43'),
+	(488, 497, 1, '2025-12-23 05:03:43'),
+	(489, 498, 1, '2025-12-23 05:03:43'),
+	(490, 499, 1, '2025-12-23 05:03:43'),
+	(491, 500, 1, '2025-12-23 05:03:43'),
+	(492, 501, 1, '2025-12-23 05:03:43'),
+	(493, 502, 1, '2025-12-23 05:03:43'),
+	(494, 503, 1, '2025-12-23 05:03:43'),
+	(495, 504, 1, '2025-12-23 05:03:43'),
+	(496, 505, 1, '2025-12-23 05:03:43'),
+	(497, 506, 1, '2025-12-23 05:03:43'),
+	(498, 507, 1, '2025-12-23 05:03:43'),
+	(499, 508, 1, '2025-12-23 05:03:43'),
+	(500, 509, 1, '2025-12-23 05:03:43'),
+	(501, 510, 1, '2025-12-23 05:03:43'),
+	(502, 511, 1, '2025-12-23 05:03:43'),
+	(503, 512, 1, '2025-12-23 05:03:43'),
+	(504, 513, 1, '2025-12-23 05:03:43'),
+	(505, 514, 1, '2025-12-23 05:03:43'),
+	(506, 515, 1, '2025-12-23 05:03:43'),
+	(507, 516, 1, '2025-12-23 05:03:43'),
+	(508, 517, 1, '2025-12-23 05:03:43'),
+	(509, 518, 1, '2025-12-23 05:03:43'),
+	(510, 519, 1, '2025-12-23 05:03:43'),
+	(511, 520, 1, '2025-12-23 05:03:43'),
+	(512, 521, 1, '2025-12-23 05:03:43'),
+	(513, 522, 1, '2025-12-23 05:03:43'),
+	(514, 523, 1, '2025-12-23 05:03:43'),
+	(515, 524, 1, '2025-12-23 05:03:43'),
+	(516, 525, 1, '2025-12-23 05:03:43'),
+	(517, 526, 1, '2025-12-23 05:03:43'),
+	(518, 527, 1, '2025-12-23 05:03:43'),
+	(519, 528, 1, '2025-12-23 05:03:43'),
+	(520, 529, 1, '2025-12-23 05:03:43'),
+	(521, 530, 1, '2025-12-23 05:03:43'),
+	(522, 531, 1, '2025-12-23 05:03:43'),
+	(523, 532, 1, '2025-12-23 05:03:43'),
+	(524, 533, 1, '2025-12-23 05:03:43'),
+	(525, 534, 1, '2025-12-23 05:03:43'),
+	(526, 535, 1, '2025-12-23 05:03:43'),
+	(527, 536, 1, '2025-12-23 05:03:43'),
+	(528, 537, 1, '2025-12-23 05:03:43'),
+	(529, 538, 1, '2025-12-23 05:03:43'),
+	(530, 539, 1, '2025-12-23 05:03:43'),
+	(531, 540, 1, '2025-12-23 05:03:43'),
+	(532, 541, 1, '2025-12-23 05:03:43'),
+	(533, 542, 1, '2025-12-23 05:03:43'),
+	(534, 543, 1, '2025-12-23 05:03:43'),
+	(535, 544, 1, '2025-12-23 05:03:43'),
+	(536, 545, 1, '2025-12-23 05:03:43'),
+	(537, 546, 1, '2025-12-23 05:03:43'),
+	(538, 547, 1, '2025-12-23 05:03:43'),
+	(539, 548, 1, '2025-12-23 05:03:43'),
+	(540, 549, 1, '2025-12-23 05:03:43'),
+	(541, 550, 1, '2025-12-23 05:03:43'),
+	(542, 551, 1, '2025-12-23 05:03:43'),
+	(543, 552, 1, '2025-12-23 05:03:43'),
+	(544, 553, 1, '2025-12-23 05:03:43'),
+	(545, 554, 1, '2025-12-23 05:03:43'),
+	(546, 555, 1, '2025-12-23 05:03:43'),
+	(547, 556, 1, '2025-12-23 05:03:43'),
+	(548, 557, 1, '2025-12-23 05:03:43'),
+	(549, 558, 1, '2025-12-23 05:03:43'),
+	(550, 559, 1, '2025-12-23 05:03:43'),
+	(551, 560, 1, '2025-12-23 05:03:43'),
+	(552, 561, 1, '2025-12-23 05:03:43'),
+	(553, 562, 1, '2025-12-23 05:03:43'),
+	(554, 563, 1, '2025-12-23 05:03:43'),
+	(555, 564, 1, '2025-12-23 05:03:43'),
+	(556, 565, 1, '2025-12-23 05:03:43'),
+	(557, 566, 1, '2025-12-23 05:03:43'),
+	(558, 567, 1, '2025-12-23 05:03:43'),
+	(559, 568, 1, '2025-12-23 05:03:43'),
+	(560, 569, 1, '2025-12-23 05:03:43'),
+	(561, 570, 1, '2025-12-23 05:03:43'),
+	(562, 571, 1, '2025-12-23 05:03:43'),
+	(563, 572, 1, '2025-12-23 05:03:43'),
+	(564, 573, 1, '2025-12-23 05:03:43'),
+	(565, 574, 1, '2025-12-23 05:03:43'),
+	(566, 575, 1, '2025-12-23 05:03:43'),
+	(567, 576, 1, '2025-12-23 05:03:43'),
+	(568, 577, 1, '2025-12-23 05:03:43'),
+	(569, 578, 1, '2025-12-23 05:03:43'),
+	(570, 579, 1, '2025-12-23 05:03:43'),
+	(571, 580, 1, '2025-12-23 05:03:43'),
+	(572, 581, 1, '2025-12-23 05:03:43'),
+	(573, 583, 1, '2025-12-23 05:03:43'),
+	(1024, 1, 1, '2025-12-23 05:15:54'),
+	(1025, 1, 2, '2025-12-23 05:15:54');
 
 -- Volcando estructura para procedimiento abastecete.realizar_pago_membresia
 DELIMITER //
@@ -5814,9 +6461,19 @@ CREATE PROCEDURE `registrar_evento_analitica`(
     IN p_referrer VARCHAR(500)
 )
 BEGIN
-    -- Insertar evento individual
+    DECLARE v_id_producto_validado INT DEFAULT NULL;
+
+    -- Validar que el producto existe si se proporciona un ID
+    IF p_id_producto IS NOT NULL THEN
+        SELECT PK_ID_PRODUCTO INTO v_id_producto_validado
+        FROM producto
+        WHERE PK_ID_PRODUCTO = p_id_producto
+        LIMIT 1;
+    END IF;
+
+    -- Insertar evento individual (con producto validado o NULL)
     INSERT INTO evento_analitica (FK_ID_LOCAL, FK_ID_PRODUCTO, TIPO_EVENTO, IP_VISITANTE, USER_AGENT, REFERRER)
-    VALUES (p_id_local, p_id_producto, p_tipo_evento, p_ip_visitante, p_user_agent, p_referrer);
+    VALUES (p_id_local, v_id_producto_validado, p_tipo_evento, p_ip_visitante, p_user_agent, p_referrer);
 
     -- Actualizar resumen diario
     INSERT INTO resumen_analitica_diario (FK_ID_LOCAL, FECHA, VISITAS_LOCAL, VISITAS_PRODUCTOS, CLICS_WHATSAPP, CLICS_TELEFONO, APARICIONES_BUSQUEDA, COMPARTIDOS)
@@ -5838,10 +6495,10 @@ BEGIN
         APARICIONES_BUSQUEDA = APARICIONES_BUSQUEDA + IF(p_tipo_evento = 'BUSQUEDA_APARICION', 1, 0),
         COMPARTIDOS = COMPARTIDOS + IF(p_tipo_evento = 'COMPARTIR', 1, 0);
 
-    -- Si es vista de producto, actualizar resumen de producto
-    IF p_tipo_evento = 'VISITA_PRODUCTO' AND p_id_producto IS NOT NULL THEN
+    -- Si es vista de producto y el producto existe, actualizar resumen de producto
+    IF p_tipo_evento = 'VISITA_PRODUCTO' AND v_id_producto_validado IS NOT NULL THEN
         INSERT INTO resumen_producto_vistas (FK_ID_PRODUCTO, FK_ID_LOCAL, FECHA, VISTAS)
-        VALUES (p_id_producto, p_id_local, CURDATE(), 1)
+        VALUES (v_id_producto_validado, p_id_local, CURDATE(), 1)
         ON DUPLICATE KEY UPDATE VISTAS = VISTAS + 1;
     END IF;
 
@@ -6057,9 +6714,14 @@ CREATE TABLE IF NOT EXISTS `resumen_analitica_diario` (
   UNIQUE KEY `uk_local_fecha` (`FK_ID_LOCAL`,`FECHA`),
   KEY `idx_resumen_fecha` (`FECHA`),
   CONSTRAINT `fk_resumen_local` FOREIGN KEY (`FK_ID_LOCAL`) REFERENCES `local` (`PK_ID_LOCAL`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Volcando datos para la tabla abastecete.resumen_analitica_diario: ~0 rows (aproximadamente)
+INSERT INTO `resumen_analitica_diario` (`PK_ID_RESUMEN`, `FK_ID_LOCAL`, `FECHA`, `VISITAS_LOCAL`, `VISITAS_PRODUCTOS`, `CLICS_WHATSAPP`, `CLICS_TELEFONO`, `APARICIONES_BUSQUEDA`, `COMPARTIDOS`) VALUES
+	(1, 28, '2025-12-23', 3, 0, 0, 0, 2, 0),
+	(2, 35, '2025-12-23', 0, 0, 0, 0, 1, 0),
+	(3, 36, '2025-12-23', 0, 0, 0, 0, 1, 0),
+	(4, 27, '2025-12-23', 0, 0, 0, 0, 1, 0);
 
 -- Volcando estructura para tabla abastecete.resumen_producto_vistas
 CREATE TABLE IF NOT EXISTS `resumen_producto_vistas` (
@@ -6258,6 +6920,49 @@ BEGIN
 END//
 DELIMITER ;
 
+-- Volcando estructura para procedimiento abastecete.sp_guardar_marcas_disponibles_producto
+DELIMITER //
+CREATE PROCEDURE `sp_guardar_marcas_disponibles_producto`(
+    IN p_id_producto INT,
+    IN p_marcas_ids VARCHAR(500) -- Lista separada por comas: "1,2,3,5"
+)
+BEGIN
+    -- Eliminar marcas anteriores
+    DELETE FROM producto_marcas_disponibles WHERE FK_ID_PRODUCTO = p_id_producto;
+
+    -- Insertar nuevas marcas
+    IF p_marcas_ids IS NOT NULL AND p_marcas_ids != '' THEN
+        SET @sql = CONCAT(
+            'INSERT INTO producto_marcas_disponibles (FK_ID_PRODUCTO, FK_ID_MARCA) ',
+            'SELECT ', p_id_producto, ', PK_ID_MARCA FROM marca WHERE PK_ID_MARCA IN (', p_marcas_ids, ') AND ACTIVO = 1'
+        );
+        PREPARE stmt FROM @sql;
+        EXECUTE stmt;
+        DEALLOCATE PREPARE stmt;
+    END IF;
+
+    SELECT ROW_COUNT() as cantidad;
+END//
+DELIMITER ;
+
+-- Volcando estructura para procedimiento abastecete.sp_listar_marcas_disponibles_producto
+DELIMITER //
+CREATE PROCEDURE `sp_listar_marcas_disponibles_producto`(
+    IN p_id_producto INT
+)
+BEGIN
+    SELECT
+        m.PK_ID_MARCA as Id,
+        m.NOMBRE as Nombre,
+        m.LOGO_URL as LogoUrl
+    FROM producto_marcas_disponibles pmd
+    INNER JOIN marca m ON pmd.FK_ID_MARCA = m.PK_ID_MARCA
+    WHERE pmd.FK_ID_PRODUCTO = p_id_producto
+    AND m.ACTIVO = 1
+    ORDER BY m.NOMBRE;
+END//
+DELIMITER ;
+
 -- Volcando estructura para procedimiento abastecete.sp_listar_marcas_producto
 DELIMITER //
 CREATE PROCEDURE `sp_listar_marcas_producto`(
@@ -6295,9 +7000,9 @@ BEGIN
         DESCRIPCION as Descripcion,
         LOGO_URL as LogoUrl,
         CLOUDINARY_PUBLIC_ID as CloudinaryPublicId,
-        ACTIVA as Activa
+        ACTIVO as Activo
     FROM marca
-    WHERE ACTIVA = 1
+    WHERE ACTIVO = 1
     ORDER BY NOMBRE;
 END//
 DELIMITER ;

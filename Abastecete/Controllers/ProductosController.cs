@@ -365,10 +365,10 @@ namespace Abastecete.Controllers
         [HttpPost]
         [RequierePermiso("Administrar Productos")]
         [Auditar(ModulosAuditoria.PRODUCTOS, TiposAccionAuditoria.CREATE, ParametroDescripcion = "nombre")]
-        public IActionResult CrearProductoAdmin(string nombre, string descripcion, string sku, int idSubCategoria, int idMarca, int? idTipoUnidad, IFormFile imagen)
+        public IActionResult CrearProductoAdmin(string nombre, string descripcion, string sku, int idSubCategoria, int idMarca, int? idTipoUnidad, IFormFile imagen, string marcasIds = null)
         {
             Console.WriteLine($"=== CrearProductoAdmin ===");
-            Console.WriteLine($"Nombre: {nombre}, SubCat: {idSubCategoria}, Marca: {idMarca}, TipoUnidad: {idTipoUnidad}");
+            Console.WriteLine($"Nombre: {nombre}, SubCat: {idSubCategoria}, Marca: {idMarca}, MarcasIds: {marcasIds}, TipoUnidad: {idTipoUnidad}");
             Console.WriteLine($"Imagen: {imagen?.FileName}, Size: {imagen?.Length}");
 
             if (string.IsNullOrWhiteSpace(nombre))
@@ -417,7 +417,28 @@ namespace Abastecete.Controllers
                 var (id, mensaje) = manejadorProductos.CrearProducto(producto);
 
                 if (id > 0)
+                {
+                    // Guardar marcas disponibles si se proporcionaron
+                    if (!string.IsNullOrEmpty(marcasIds))
+                    {
+                        var marcasList = marcasIds.Split(',')
+                            .Select(m => int.TryParse(m.Trim(), out int mid) ? mid : 0)
+                            .Where(m => m > 0)
+                            .ToList();
+
+                        if (marcasList.Count > 0)
+                        {
+                            manejadorProductos.GuardarMarcasDisponiblesProducto(id, marcasList);
+                        }
+                    }
+                    else if (idMarca > 0)
+                    {
+                        // Si solo se selecciono una marca (compatibilidad)
+                        manejadorProductos.GuardarMarcasDisponiblesProducto(id, new List<int> { idMarca });
+                    }
+
                     return Json(new { success = true, mensaje, id });
+                }
 
                 return BadRequest(new { success = false, mensaje });
             }
@@ -434,7 +455,7 @@ namespace Abastecete.Controllers
         [HttpPost]
         [RequierePermiso("Administrar Productos")]
         [Auditar(ModulosAuditoria.PRODUCTOS, TiposAccionAuditoria.UPDATE, ParametroId = "id", ParametroDescripcion = "nombre")]
-        public IActionResult EditarProductoAdmin(int id, string nombre, string descripcion, string sku, int idSubCategoria, int idMarca, int? idTipoUnidad, IFormFile imagen, string cloudinaryPublicId)
+        public IActionResult EditarProductoAdmin(int id, string nombre, string descripcion, string sku, int idSubCategoria, int idMarca, int? idTipoUnidad, IFormFile imagen, string cloudinaryPublicId, string marcasIds = null)
         {
             if (id <= 0)
                 return BadRequest(new { success = false, mensaje = "ID invalido" });
@@ -484,7 +505,25 @@ namespace Abastecete.Controllers
                 var (success, mensaje) = manejadorProductos.EditarProducto(producto);
 
                 if (success)
+                {
+                    // Guardar marcas disponibles si se proporcionaron
+                    if (!string.IsNullOrEmpty(marcasIds))
+                    {
+                        var marcasList = marcasIds.Split(',')
+                            .Select(m => int.TryParse(m.Trim(), out int mid) ? mid : 0)
+                            .Where(m => m > 0)
+                            .ToList();
+
+                        manejadorProductos.GuardarMarcasDisponiblesProducto(id, marcasList);
+                    }
+                    else if (idMarca > 0)
+                    {
+                        // Si solo se selecciono una marca (compatibilidad)
+                        manejadorProductos.GuardarMarcasDisponiblesProducto(id, new List<int> { idMarca });
+                    }
+
                     return Json(new { success = true, mensaje });
+                }
 
                 return BadRequest(new { success = false, mensaje });
             }
@@ -492,6 +531,24 @@ namespace Abastecete.Controllers
             {
                 Console.WriteLine($"Error al editar producto: {ex.Message}");
                 return BadRequest(new { success = false, mensaje = "Error al editar producto" });
+            }
+        }
+
+        /// <summary>
+        /// Obtiene las marcas disponibles de un producto
+        /// </summary>
+        [HttpGet]
+        public IActionResult ObtenerMarcasDisponiblesProducto(int id)
+        {
+            try
+            {
+                var marcas = manejadorProductos.ObtenerMarcasDisponiblesProducto(id);
+                return Json(new { success = true, marcas });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error al obtener marcas del producto: {ex.Message}");
+                return BadRequest(new { success = false, mensaje = "Error al obtener marcas" });
             }
         }
 
