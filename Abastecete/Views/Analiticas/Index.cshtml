@@ -123,12 +123,21 @@
                     <p class="text-gray-500 text-sm">Estadísticas de @local?.Nombre</p>
                 </div>
             </div>
-            <!-- Selector de período y botón de descarga -->
-            <div class="flex items-center gap-3">
+            <!-- Selector de período y botones de descarga -->
+            <div class="flex items-center gap-2">
+                <!-- Botón descargar imagen -->
                 <button onclick="descargarEstadisticas()"
-                        class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#23916A] text-white text-sm font-medium hover:bg-[#1c7355] transition-colors shadow-sm">
-                    <i class="fas fa-download"></i>
-                    <span class="hidden sm:inline">Descargar</span>
+                        class="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-[#23916A] text-white text-sm font-medium hover:bg-[#1c7355] transition-colors shadow-sm"
+                        title="Descargar imagen PNG">
+                    <i class="fas fa-image"></i>
+                    <span class="hidden sm:inline">Imagen</span>
+                </button>
+                <!-- Botón exportar Excel -->
+                <button onclick="exportarExcel()"
+                        class="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 transition-colors shadow-sm"
+                        title="Exportar a Excel/CSV">
+                    <i class="fas fa-file-excel"></i>
+                    <span class="hidden sm:inline">Excel</span>
                 </button>
                 <select id="selectPeriodo" class="px-4 py-2 rounded-lg border border-gray-300 text-sm focus:border-[#23916A] focus:ring-2 focus:ring-[#23916A]/20 outline-none">
                     @if (periodoSeleccionado == "today") { <option value="today" selected>Hoy</option> } else { <option value="today">Hoy</option> }
@@ -428,98 +437,248 @@
             window.location.href = '@Url.Action("Index", "Analiticas")?periodo=' + this.value;
         });
 
-        // Función para descargar estadísticas como imagen
+        // Función para descargar estadísticas como card compacta estilo GitHub Stats
         function descargarEstadisticas() {
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
 
-            // Configurar dimensiones
-            canvas.width = 800;
-            canvas.height = 500;
+            // Dimensiones compactas tipo card (495x195 como GitHub stats)
+            canvas.width = 500;
+            canvas.height = 220;
 
-            // Fondo con gradiente
-            const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-            gradient.addColorStop(0, '#23916A');
-            gradient.addColorStop(1, '#1c7355');
-            ctx.fillStyle = gradient;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            // Tarjeta blanca central
-            ctx.fillStyle = '#ffffff';
-            roundRect(ctx, 40, 40, canvas.width - 80, canvas.height - 80, 20);
+            // Fondo oscuro con gradiente sutil
+            const bgGrad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+            bgGrad.addColorStop(0, '#0d1117');
+            bgGrad.addColorStop(1, '#161b22');
+            ctx.fillStyle = bgGrad;
+            roundRect(ctx, 0, 0, canvas.width, canvas.height, 10);
             ctx.fill();
 
-            // Header con logo y nombre
-            ctx.fillStyle = '#1f2937';
-            ctx.font = 'bold 28px Arial, sans-serif';
-            ctx.textAlign = 'center';
-            ctx.fillText('@(local?.Nombre?.Replace("'", "\\'") ?? "Mi Local")', canvas.width / 2, 100);
-
-            ctx.fillStyle = '#6b7280';
-            ctx.font = '16px Arial, sans-serif';
-            ctx.fillText('Estadísticas del @periodoSeleccionado', canvas.width / 2, 130);
-
-            // Línea separadora
-            ctx.strokeStyle = '#e5e7eb';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.moveTo(80, 160);
-            ctx.lineTo(canvas.width - 80, 160);
+            // Borde sutil
+            ctx.strokeStyle = '#30363d';
+            ctx.lineWidth = 1;
+            roundRect(ctx, 0.5, 0.5, canvas.width - 1, canvas.height - 1, 10);
             ctx.stroke();
 
-            // Stats en grid 2x2
+            // Cargar logo
+            const logo = new Image();
+            logo.crossOrigin = 'anonymous';
+            logo.onload = function() {
+                generarCardCompacta(ctx, canvas, logo);
+            };
+            logo.onerror = function() {
+                generarCardCompacta(ctx, canvas, null);
+            };
+            logo.src = '/images/LOGO%20FINAL.png';
+        }
+
+        function generarCardCompacta(ctx, canvas, logo) {
+            // ========== HEADER ==========
+            let startX = 25;
+            let currentY = 25;
+
+            // Logo pequeño
+            if (logo) {
+                const logoSize = 22;
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(startX + logoSize/2, currentY + logoSize/2 - 3, logoSize/2, 0, Math.PI * 2);
+                ctx.fillStyle = '#ffffff';
+                ctx.fill();
+                ctx.clip();
+                const scale = Math.min(logoSize / logo.width, logoSize / logo.height);
+                const w = logo.width * scale;
+                const h = logo.height * scale;
+                ctx.drawImage(logo, startX + logoSize/2 - w/2, currentY + logoSize/2 - 3 - h/2, w, h);
+                ctx.restore();
+                startX += logoSize + 10;
+            }
+
+            // Título: Nombre del local + Stats
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 16px "Segoe UI", system-ui, sans-serif';
+            ctx.textAlign = 'left';
+            ctx.fillText('@(local?.Nombre?.Replace("'", "\\'") ?? "Mi Local")\'s Stats', startX, currentY + 12);
+
+            // Badge período (derecha)
+            const periodo = '@periodoSeleccionado';
+            ctx.font = '11px "Segoe UI", system-ui, sans-serif';
+            ctx.fillStyle = '#8b949e';
+            ctx.textAlign = 'right';
+            ctx.fillText(periodo, canvas.width - 25, currentY + 12);
+
+            currentY += 35;
+
+            // ========== MÉTRICAS EN LISTA ==========
             const stats = [
-                { label: 'Visitas al perfil', value: '@Model.Estadisticas.TotalVisitas.ToString("N0")', icon: 'eye', color: '#3b82f6' },
-                { label: 'Clics en WhatsApp', value: '@Model.Estadisticas.TotalClicsWhatsapp.ToString("N0")', icon: 'whatsapp', color: '#25D366' },
-                { label: 'Vistas de productos', value: '@Model.Estadisticas.TotalVisitasProductos.ToString("N0")', icon: 'box', color: '#8b5cf6' },
-                { label: 'Apariciones en búsqueda', value: '@Model.Estadisticas.TotalAparicionesBusqueda.ToString("N0")', icon: 'search', color: '#f59e0b' }
+                { icon: '👁️', label: 'Visitas al perfil:', value: '@Model.Estadisticas.TotalVisitas.ToString("N0")', color: '#3b82f6' },
+                { icon: '💬', label: 'Clics en WhatsApp:', value: '@Model.Estadisticas.TotalClicsWhatsapp.ToString("N0")', color: '#22c55e' },
+                { icon: '📦', label: 'Vistas de productos:', value: '@Model.Estadisticas.TotalVisitasProductos.ToString("N0")', color: '#a855f7' },
+                { icon: '🔍', label: 'Apariciones en búsqueda:', value: '@Model.Estadisticas.TotalAparicionesBusqueda.ToString("N0")', color: '#f59e0b' }
             ];
 
-            const startY = 200;
-            const boxWidth = 310;
-            const boxHeight = 100;
-            const gap = 20;
+            const lineHeight = 28;
+            stats.forEach((stat, i) => {
+                const y = currentY + i * lineHeight;
 
-            stats.forEach((stat, index) => {
-                const col = index % 2;
-                const row = Math.floor(index / 2);
-                const x = 80 + col * (boxWidth + gap);
-                const y = startY + row * (boxHeight + gap);
+                // Icono
+                ctx.font = '14px Arial';
+                ctx.textAlign = 'left';
+                ctx.fillText(stat.icon, 25, y + 5);
 
-                // Fondo de la tarjeta
-                ctx.fillStyle = '#f9fafb';
-                roundRect(ctx, x, y, boxWidth, boxHeight, 12);
-                ctx.fill();
+                // Label
+                ctx.fillStyle = '#8b949e';
+                ctx.font = '13px "Segoe UI", system-ui, sans-serif';
+                ctx.fillText(stat.label, 50, y + 4);
 
-                // Borde con color
-                ctx.strokeStyle = stat.color;
-                ctx.lineWidth = 2;
-                roundRect(ctx, x, y, boxWidth, boxHeight, 12);
-                ctx.stroke();
-
-                // Valor
-                ctx.fillStyle = '#1f2937';
-                ctx.font = 'bold 32px Arial, sans-serif';
-                ctx.textAlign = 'center';
-                ctx.fillText(stat.value, x + boxWidth/2, y + 45);
-
-                // Etiqueta
-                ctx.fillStyle = '#6b7280';
-                ctx.font = '14px Arial, sans-serif';
-                ctx.fillText(stat.label, x + boxWidth/2, y + 75);
+                // Valor (derecha)
+                ctx.fillStyle = stat.color;
+                ctx.font = 'bold 14px "Segoe UI", system-ui, sans-serif';
+                ctx.textAlign = 'right';
+                ctx.fillText(stat.value, canvas.width - 25, y + 4);
             });
 
-            // Footer con branding
-            ctx.fillStyle = '#9ca3af';
-            ctx.font = '12px Arial, sans-serif';
-            ctx.textAlign = 'center';
-            ctx.fillText('Generado con Abastecete - ' + new Date().toLocaleDateString('es-CO'), canvas.width / 2, canvas.height - 60);
+            currentY += stats.length * lineHeight + 10;
 
-            // Descargar imagen
+            // ========== MINI GRÁFICO CIRCULAR (estilo ring) ==========
+            // Ring de progreso en la esquina derecha
+            const ringX = canvas.width - 70;
+            const ringY = 110;
+            const ringRadius = 35;
+            const ringWidth = 6;
+
+            // Calcular total para el ring
+            const total = @Model.Estadisticas.TotalVisitas + @Model.Estadisticas.TotalClicsWhatsapp + @Model.Estadisticas.TotalVisitasProductos + @Model.Estadisticas.TotalAparicionesBusqueda;
+            const maxRing = Math.max(total, 100);
+
+            // Fondo del ring
+            ctx.beginPath();
+            ctx.arc(ringX, ringY, ringRadius, 0, Math.PI * 2);
+            ctx.strokeStyle = '#21262d';
+            ctx.lineWidth = ringWidth;
+            ctx.stroke();
+
+            // Ring de progreso con gradiente
+            const progress = Math.min(total / maxRing, 1);
+            const startAngle = -Math.PI / 2;
+            const endAngle = startAngle + (progress * Math.PI * 2);
+
+            ctx.beginPath();
+            ctx.arc(ringX, ringY, ringRadius, startAngle, endAngle);
+            const ringGrad = ctx.createLinearGradient(ringX - ringRadius, ringY, ringX + ringRadius, ringY);
+            ringGrad.addColorStop(0, '#23916A');
+            ringGrad.addColorStop(1, '#10b981');
+            ctx.strokeStyle = ringGrad;
+            ctx.lineWidth = ringWidth;
+            ctx.lineCap = 'round';
+            ctx.stroke();
+
+            // Texto central del ring
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 16px "Segoe UI", system-ui, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(total.toLocaleString('es-CO'), ringX, ringY + 5);
+
+            ctx.fillStyle = '#8b949e';
+            ctx.font = '9px "Segoe UI", system-ui, sans-serif';
+            ctx.fillText('Total', ringX, ringY + 18);
+
+            // ========== FOOTER ==========
+            ctx.fillStyle = '#30363d';
+            ctx.fillRect(0, canvas.height - 30, canvas.width, 1);
+
+            ctx.fillStyle = '#8b949e';
+            ctx.font = '11px "Segoe UI", system-ui, sans-serif';
+            ctx.textAlign = 'left';
+            ctx.fillText('Generado con Abastecete', 25, canvas.height - 10);
+
+            ctx.textAlign = 'right';
+            ctx.fillText(new Date().toLocaleDateString('es-CO'), canvas.width - 25, canvas.height - 10);
+
+            // Descargar
             const link = document.createElement('a');
-            link.download = 'estadisticas-@(local?.Nombre?.Replace(" ", "-").Replace("'", "") ?? "local")-' + new Date().toISOString().split('T')[0] + '.png';
-            link.href = canvas.toDataURL('image/png');
+            link.download = 'stats-@(local?.Nombre?.Replace(" ", "-").Replace("'", "") ?? "local")-' + new Date().toISOString().split('T')[0] + '.png';
+            link.href = canvas.toDataURL('image/png', 1.0);
             link.click();
+        }
+
+        // Función para exportar a Excel
+        function exportarExcel() {
+            // Datos de estadísticas
+            const nombreLocal = '@(local?.Nombre?.Replace("'", "\\'") ?? "Mi Local")';
+            const periodo = '@periodoSeleccionado';
+            const fechaGeneracion = new Date().toLocaleDateString('es-CO');
+
+            // Estadísticas totales
+            const estadisticas = [
+                ['Métrica', 'Valor'],
+                ['Visitas al perfil', '@Model.Estadisticas.TotalVisitas'],
+                ['Clics en WhatsApp', '@Model.Estadisticas.TotalClicsWhatsapp'],
+                ['Vistas de productos', '@Model.Estadisticas.TotalVisitasProductos'],
+                ['Apariciones en búsqueda', '@Model.Estadisticas.TotalAparicionesBusqueda']
+            ];
+
+            // Datos diarios del gráfico
+            const datosDiarios = [
+                ['Fecha', 'Visitas', 'WhatsApp']
+            ];
+
+            @if (Model.DatosGrafico != null)
+            {
+                @foreach (var dia in Model.DatosGrafico)
+                {
+                    @:datosDiarios.push(['@dia.Fecha.ToString("dd/MM/yyyy")', '@dia.Visitas', '@dia.ClicsWhatsapp']);
+                }
+            }
+
+            // Productos más vistos
+            const productosMasVistos = [
+                ['Producto', 'Vistas']
+            ];
+
+            @if (Model.ProductosMasVistos != null)
+            {
+                @foreach (var producto in Model.ProductosMasVistos)
+                {
+                    @:productosMasVistos.push(['@producto.NombreProducto?.Replace("'", "\\'")', '@producto.TotalVistas']);
+                }
+            }
+
+            // Crear contenido CSV con múltiples secciones
+            let csvContent = '\uFEFF'; // BOM para UTF-8
+
+            // Encabezado
+            csvContent += 'REPORTE DE ESTADÍSTICAS - ' + nombreLocal + '\n';
+            csvContent += 'Período: ' + periodo + '\n';
+            csvContent += 'Fecha de generación: ' + fechaGeneracion + '\n\n';
+
+            // Sección: Resumen de estadísticas
+            csvContent += '=== RESUMEN DE ESTADÍSTICAS ===\n';
+            estadisticas.forEach(row => {
+                csvContent += row.join(',') + '\n';
+            });
+            csvContent += '\n';
+
+            // Sección: Datos diarios
+            csvContent += '=== DATOS DIARIOS ===\n';
+            datosDiarios.forEach(row => {
+                csvContent += row.join(',') + '\n';
+            });
+            csvContent += '\n';
+
+            // Sección: Productos más vistos
+            csvContent += '=== PRODUCTOS MÁS VISTOS ===\n';
+            productosMasVistos.forEach(row => {
+                csvContent += row.join(',') + '\n';
+            });
+
+            // Crear y descargar archivo
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'estadisticas-' + nombreLocal.replace(/\s+/g, '-').toLowerCase() + '-' + new Date().toISOString().split('T')[0] + '.csv';
+            link.click();
+            URL.revokeObjectURL(link.href);
         }
 
         // Función auxiliar para rectángulos redondeados
