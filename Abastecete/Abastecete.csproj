@@ -33,7 +33,7 @@
 	</ItemGroup>
 
 	<Target Name="Tailwind" BeforeTargets="Build">
-		<Exec Command="npm run css:build" WorkingDirectory="$(SolutionDir)" />
+		<Exec Command="npm run css:build" WorkingDirectory="$(MSBuildProjectDirectory)" />
 	</Target>
 
 </Project>
