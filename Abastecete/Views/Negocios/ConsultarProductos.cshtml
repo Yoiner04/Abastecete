@@ -1357,6 +1357,16 @@
         document.addEventListener('DOMContentLoaded', function() {
             if (window.AbasteceteTracking) {
                 AbasteceteTracking.registrarVisitaLocal(@negocio.Id);
+
+                // Registrar vista de producto cuando hacen clic en "Ver más" o en el ojo
+                document.querySelectorAll('.producto-card').forEach(function(card) {
+                    var productoId = card.id.replace('producto-', '');
+                    card.querySelectorAll('a[href*="ProductDetailLocal"]').forEach(function(link) {
+                        link.addEventListener('click', function() {
+                            AbasteceteTracking.registrarVisitaProducto(@negocio.Id, parseInt(productoId));
+                        });
+                    });
+                });
             }
         });
     </script>

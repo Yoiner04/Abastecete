@@ -3649,9 +3649,9 @@ CREATE TABLE IF NOT EXISTS `evento_analitica` (
   KEY `fk_evento_producto` (`FK_ID_PRODUCTO`),
   CONSTRAINT `fk_evento_local` FOREIGN KEY (`FK_ID_LOCAL`) REFERENCES `local` (`PK_ID_LOCAL`) ON DELETE CASCADE,
   CONSTRAINT `fk_evento_producto` FOREIGN KEY (`FK_ID_PRODUCTO`) REFERENCES `producto` (`PK_ID_PRODUCTO`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=26 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla abastecete.evento_analitica: ~0 rows (aproximadamente)
+-- Volcando datos para la tabla abastecete.evento_analitica: ~22 rows (aproximadamente)
 INSERT INTO `evento_analitica` (`PK_ID_EVENTO`, `FK_ID_LOCAL`, `FK_ID_PRODUCTO`, `TIPO_EVENTO`, `IP_VISITANTE`, `USER_AGENT`, `REFERRER`, `FECHA_EVENTO`) VALUES
 	(1, 28, NULL, 'BUSQUEDA_APARICION', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'https://localhost:7076/Home/Principal', '2025-12-23 05:19:49'),
 	(2, 35, NULL, 'BUSQUEDA_APARICION', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'https://localhost:7076/Home/Principal', '2025-12-23 05:19:50'),
@@ -3660,7 +3660,25 @@ INSERT INTO `evento_analitica` (`PK_ID_EVENTO`, `FK_ID_LOCAL`, `FK_ID_PRODUCTO`,
 	(5, 28, NULL, 'VISITA_LOCAL', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'https://localhost:7076/Negocios/ConsultarProductos?idLocal=28', '2025-12-23 05:19:59'),
 	(8, 28, NULL, 'VISITA_LOCAL', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'https://localhost:7076/Negocios/ConsultarProductos?idLocal=28', '2025-12-23 05:20:20'),
 	(9, 28, NULL, 'BUSQUEDA_APARICION', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'https://localhost:7076/Home/Principal', '2025-12-23 05:24:17'),
-	(10, 28, NULL, 'VISITA_LOCAL', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'https://localhost:7076/Negocios/ConsultarProductos?idLocal=28', '2025-12-23 05:24:23');
+	(10, 28, NULL, 'VISITA_LOCAL', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'https://localhost:7076/Negocios/ConsultarProductos?idLocal=28', '2025-12-23 05:24:23'),
+	(12, 28, NULL, 'BUSQUEDA_APARICION', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'https://localhost:7076/Productos/ProductosNegocio', '2025-12-23 12:49:27'),
+	(13, 35, NULL, 'BUSQUEDA_APARICION', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'https://localhost:7076/Productos/ProductosNegocio', '2025-12-23 12:49:27'),
+	(14, 36, NULL, 'BUSQUEDA_APARICION', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'https://localhost:7076/Productos/ProductosNegocio', '2025-12-23 12:49:28'),
+	(15, 27, NULL, 'BUSQUEDA_APARICION', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'https://localhost:7076/Productos/ProductosNegocio', '2025-12-23 12:49:28'),
+	(16, 28, NULL, 'VISITA_LOCAL', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'https://localhost:7076/Negocios/ConsultarProductos?idLocal=28', '2025-12-23 12:49:37'),
+	(17, 28, NULL, 'VISITA_PRODUCTO', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'https://localhost:7076/Productos/ProductDetailLocal?idlocal=28&idProducto=1', '2025-12-23 12:49:50'),
+	(18, 28, NULL, 'VISITA_LOCAL', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'https://localhost:7076/Negocios/ConsultarProductos?idLocal=28', '2025-12-23 12:50:05'),
+	(19, 28, NULL, 'CLIC_WHATSAPP', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'https://localhost:7076/Negocios/ConsultarProductos?idLocal=28', '2025-12-23 12:50:22'),
+	(20, 28, NULL, 'BUSQUEDA_APARICION', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'https://localhost:7076/Analiticas/Index', '2025-12-23 13:09:31'),
+	(21, 35, NULL, 'BUSQUEDA_APARICION', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'https://localhost:7076/Analiticas/Index', '2025-12-23 13:09:31'),
+	(22, 36, NULL, 'BUSQUEDA_APARICION', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'https://localhost:7076/Analiticas/Index', '2025-12-23 13:09:32'),
+	(23, 27, NULL, 'BUSQUEDA_APARICION', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'https://localhost:7076/Analiticas/Index', '2025-12-23 13:09:32'),
+	(24, 28, NULL, 'VISITA_LOCAL', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'https://localhost:7076/Negocios/ConsultarProductos?idLocal=28', '2025-12-23 13:09:40'),
+	(25, 28, NULL, 'VISITA_PRODUCTO', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'https://localhost:7076/Productos/ProductDetailLocal?idlocal=28&idProducto=1', '2025-12-23 13:09:43'),
+	(26, 28, NULL, 'BUSQUEDA_APARICION', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'https://localhost:7076/', '2025-12-27 21:29:34'),
+	(27, 35, NULL, 'BUSQUEDA_APARICION', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'https://localhost:7076/', '2025-12-27 21:29:34'),
+	(28, 36, NULL, 'BUSQUEDA_APARICION', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'https://localhost:7076/', '2025-12-27 21:29:34'),
+	(29, 27, NULL, 'BUSQUEDA_APARICION', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'https://localhost:7076/', '2025-12-27 21:29:34');
 
 -- Volcando estructura para evento abastecete.expirar_ofertas_flash
 DELIMITER //
@@ -3689,7 +3707,7 @@ CREATE TABLE IF NOT EXISTS `galeria_local` (
   CONSTRAINT `FK_galeria_revisor` FOREIGN KEY (`FK_ID_USUARIO_REVISOR`) REFERENCES `usuario` (`PK_ID_USUARIO`) ON DELETE SET NULL
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Volcando datos para la tabla abastecete.galeria_local: ~0 rows (aproximadamente)
+-- Volcando datos para la tabla abastecete.galeria_local: ~1 rows (aproximadamente)
 INSERT INTO `galeria_local` (`PK_ID_GALERIA`, `FK_ID_LOCAL`, `CLOUDINARY_URL`, `CLOUDINARY_PUBLIC_ID`, `ESTADO`, `FECHA_SUBIDA`, `FECHA_REVISION`, `FK_ID_USUARIO_REVISOR`, `MOTIVO_RECHAZO`) VALUES
 	(1, 28, 'https://res.cloudinary.com/dwl5ggfhd/image/upload/v1766353804/galeria/locales/xtx4pvn7tyockpdhge4x.jpg', 'galeria/locales/xtx4pvn7tyockpdhge4x', 1, '2025-12-21 21:50:05', '2025-12-21 22:31:12', 2, NULL);
 
@@ -4002,7 +4020,7 @@ CREATE TABLE IF NOT EXISTS `localcategoria` (
   CONSTRAINT `FK2` FOREIGN KEY (`FK_ID_CATEGORIA`) REFERENCES `categoria` (`PK_ID_CATEGORIA`)
 ) ENGINE=InnoDB AUTO_INCREMENT=40 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla abastecete.localcategoria: ~17 rows (aproximadamente)
+-- Volcando datos para la tabla abastecete.localcategoria: ~18 rows (aproximadamente)
 INSERT INTO `localcategoria` (`PK_ID_LOCALCATEGORIA`, `FK_ID_LOCAL`, `FK_ID_CATEGORIA`) VALUES
 	(22, 28, 4),
 	(23, 34, 7),
@@ -4316,9 +4334,9 @@ CREATE TABLE IF NOT EXISTS `logs_sistema` (
   KEY `IDX_logs_tipo_accion` (`TIPO_ACCION`),
   KEY `IDX_logs_entidad` (`MODULO`,`ENTIDAD_ID`),
   CONSTRAINT `FK_logs_usuario` FOREIGN KEY (`FK_ID_USUARIO`) REFERENCES `usuario` (`PK_ID_USUARIO`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=55 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=56 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla abastecete.logs_sistema: ~45 rows (aproximadamente)
+-- Volcando datos para la tabla abastecete.logs_sistema: ~55 rows (aproximadamente)
 INSERT INTO `logs_sistema` (`PK_ID_LOG`, `FK_ID_USUARIO`, `NOMBRE_USUARIO`, `MODULO`, `TIPO_ACCION`, `ENTIDAD_ID`, `ENTIDAD_DESCRIPCION`, `DATOS_ANTERIORES`, `DATOS_NUEVOS`, `IP_CLIENTE`, `USER_AGENT`, `FECHA_REGISTRO`, `RESULTADO`, `MENSAJE_ERROR`, `CONTROLLER`, `ACTION`) VALUES
 	(1, 54, 'prueba123@gmail.com', 'AUTENTICACION', 'LOGIN', 54, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-22 05:25:06', 'EXITO', '', 'Login', 'Login'),
 	(2, 54, 'Usuario', 'AUTENTICACION', 'LOGOUT', 54, 'Cierre de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-22 05:27:25', 'EXITO', '', 'Login', 'Logout'),
@@ -4373,7 +4391,11 @@ INSERT INTO `logs_sistema` (`PK_ID_LOG`, `FK_ID_USUARIO`, `NOMBRE_USUARIO`, `MOD
 	(51, 37, 'Usuario', 'AUTENTICACION', 'LOGOUT', 37, 'Cierre de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-23 05:19:33', 'EXITO', '', 'Login', 'Logout'),
 	(52, 37, 'hola@gmail.com', 'AUTENTICACION', 'LOGIN', 37, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-23 05:19:42', 'EXITO', '', 'Login', 'Login'),
 	(53, 37, 'Usuario', 'AUTENTICACION', 'LOGOUT', 37, 'Cierre de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-23 05:24:03', 'EXITO', '', 'Login', 'Logout'),
-	(54, 55, 'prueba1234@gmail.com', 'AUTENTICACION', 'LOGIN', 55, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-23 05:24:07', 'EXITO', '', 'Login', 'Login');
+	(54, 55, 'prueba1234@gmail.com', 'AUTENTICACION', 'LOGIN', 55, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-23 05:24:07', 'EXITO', '', 'Login', 'Login'),
+	(55, 37, 'hola@gmail.com', 'AUTENTICACION', 'LOGIN', 37, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-23 12:48:16', 'EXITO', '', 'Login', 'Login'),
+	(56, 37, 'hola@gmail.com', 'AUTENTICACION', 'LOGIN', 37, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-27 21:25:03', 'EXITO', '', 'Login', 'Login'),
+	(57, 37, 'Usuario', 'AUTENTICACION', 'LOGOUT', 37, 'Cierre de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-27 21:31:46', 'EXITO', '', 'Login', 'Logout'),
+	(58, 2, 'kevin12@gmail.com', 'AUTENTICACION', 'LOGIN', 2, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-27 21:31:50', 'EXITO', '', 'Login', 'Login');
 
 -- Volcando estructura para tabla abastecete.marca
 CREATE TABLE IF NOT EXISTS `marca` (
@@ -4388,7 +4410,7 @@ CREATE TABLE IF NOT EXISTS `marca` (
   UNIQUE KEY `uk_marca_nombre` (`NOMBRE`)
 ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla abastecete.marca: ~1 rows (aproximadamente)
+-- Volcando datos para la tabla abastecete.marca: ~2 rows (aproximadamente)
 INSERT INTO `marca` (`PK_ID_MARCA`, `NOMBRE`, `DESCRIPCION`, `LOGO_URL`, `CLOUDINARY_PUBLIC_ID`, `ACTIVO`, `FECHA_REGISTRO`) VALUES
 	(1, 'Sin Marca', 'Productos sin marca específica', NULL, NULL, 1, '2025-12-19 03:16:12'),
 	(2, 'Postobon', 'a', '', '', 1, '2025-12-23 05:13:26');
@@ -4620,10 +4642,11 @@ BEGIN
         p.IMAGEN_URL as imagen_url,
         COALESCE(SUM(rpv.VISTAS), 0) as total_vistas
     FROM producto p
-    LEFT JOIN resumen_producto_vistas rpv ON p.PK_ID_PRODUCTO = rpv.FK_ID_PRODUCTO
+    INNER JOIN resumen_producto_vistas rpv ON p.PK_ID_PRODUCTO = rpv.FK_ID_PRODUCTO
         AND rpv.FECHA BETWEEN p_fecha_inicio AND p_fecha_fin
     WHERE p.FK_ID_LOCAL = p_id_local
     GROUP BY p.PK_ID_PRODUCTO, p.NOMBRE, p.IMAGEN_URL
+    HAVING total_vistas > 0
     ORDER BY total_vistas DESC
     LIMIT p_limite;
 END//
@@ -4985,7 +5008,7 @@ CREATE TABLE IF NOT EXISTS `producto` (
   CONSTRAINT `fk_tipounidad` FOREIGN KEY (`FK_ID_TIPOUNIDAD`) REFERENCES `tipo_unidad` (`ID_TIPOUNIDAD`)
 ) ENGINE=InnoDB AUTO_INCREMENT=585 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla abastecete.producto: ~573 rows (aproximadamente)
+-- Volcando datos para la tabla abastecete.producto: ~574 rows (aproximadamente)
 INSERT INTO `producto` (`PK_ID_PRODUCTO`, `FK_ID_SUB_CATEGORIA`, `NOMBRE_PRODUCTO`, `IMAGEN_URL`, `FK_ID_TIPOUNIDAD`, `FK_ID_MARCA`, `DESCRIPCION`, `SKU`, `CLOUDINARY_PUBLIC_ID`) VALUES
 	(1, 1, 'Manzanas', '/images/PRODUCTOS ABASTECETE/Frutas y Verduras/Frutas frescas/Manzanas.webp', 1, 1, NULL, NULL, NULL),
 	(2, 1, 'Bananas', '/images/PRODUCTOS ABASTECETE/Frutas y Verduras/Frutas frescas/Bananas.webp', 1, 1, NULL, NULL, NULL),
@@ -5583,7 +5606,7 @@ CREATE TABLE IF NOT EXISTS `productoslocal` (
   CONSTRAINT `fk_local` FOREIGN KEY (`FK_ID_LOCAL`) REFERENCES `local` (`PK_ID_LOCAL`)
 ) ENGINE=InnoDB AUTO_INCREMENT=132 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla abastecete.productoslocal: ~27 rows (aproximadamente)
+-- Volcando datos para la tabla abastecete.productoslocal: ~28 rows (aproximadamente)
 INSERT INTO `productoslocal` (`PK_ID_PRODUCTS_LOCAL`, `FK_ID_PRODUCTO`, `FK_ID_UNIDAD`, `VALOR_PRODUCTS_LOCAL`, `FK_ID_LOCAL`, `FK_ESTADO`) VALUES
 	(104, 1, 6, 5000, 28, 1),
 	(105, 5, 6, 7000, 28, 1),
@@ -5705,7 +5728,7 @@ CREATE TABLE IF NOT EXISTS `producto_marcas_disponibles` (
   CONSTRAINT `fk_pmd_producto` FOREIGN KEY (`FK_ID_PRODUCTO`) REFERENCES `producto` (`PK_ID_PRODUCTO`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=1027 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla abastecete.producto_marcas_disponibles: ~573 rows (aproximadamente)
+-- Volcando datos para la tabla abastecete.producto_marcas_disponibles: ~574 rows (aproximadamente)
 INSERT INTO `producto_marcas_disponibles` (`PK_ID`, `FK_ID_PRODUCTO`, `FK_ID_MARCA`, `FECHA_REGISTRO`) VALUES
 	(2, 2, 1, '2025-12-23 05:03:43'),
 	(3, 3, 1, '2025-12-23 05:03:43'),
@@ -6714,14 +6737,18 @@ CREATE TABLE IF NOT EXISTS `resumen_analitica_diario` (
   UNIQUE KEY `uk_local_fecha` (`FK_ID_LOCAL`,`FECHA`),
   KEY `idx_resumen_fecha` (`FECHA`),
   CONSTRAINT `fk_resumen_local` FOREIGN KEY (`FK_ID_LOCAL`) REFERENCES `local` (`PK_ID_LOCAL`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=23 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla abastecete.resumen_analitica_diario: ~0 rows (aproximadamente)
+-- Volcando datos para la tabla abastecete.resumen_analitica_diario: ~4 rows (aproximadamente)
 INSERT INTO `resumen_analitica_diario` (`PK_ID_RESUMEN`, `FK_ID_LOCAL`, `FECHA`, `VISITAS_LOCAL`, `VISITAS_PRODUCTOS`, `CLICS_WHATSAPP`, `CLICS_TELEFONO`, `APARICIONES_BUSQUEDA`, `COMPARTIDOS`) VALUES
-	(1, 28, '2025-12-23', 3, 0, 0, 0, 2, 0),
-	(2, 35, '2025-12-23', 0, 0, 0, 0, 1, 0),
-	(3, 36, '2025-12-23', 0, 0, 0, 0, 1, 0),
-	(4, 27, '2025-12-23', 0, 0, 0, 0, 1, 0);
+	(1, 28, '2025-12-23', 6, 2, 1, 0, 4, 0),
+	(2, 35, '2025-12-23', 0, 0, 0, 0, 3, 0),
+	(3, 36, '2025-12-23', 0, 0, 0, 0, 3, 0),
+	(4, 27, '2025-12-23', 0, 0, 0, 0, 3, 0),
+	(23, 28, '2025-12-27', 0, 0, 0, 0, 1, 0),
+	(24, 35, '2025-12-27', 0, 0, 0, 0, 1, 0),
+	(25, 36, '2025-12-27', 0, 0, 0, 0, 1, 0),
+	(26, 27, '2025-12-27', 0, 0, 0, 0, 1, 0);
 
 -- Volcando estructura para tabla abastecete.resumen_producto_vistas
 CREATE TABLE IF NOT EXISTS `resumen_producto_vistas` (

@@ -1,23 +1,23 @@
-﻿using MySql.Data.MySqlClient;
+﻿using Microsoft.Extensions.Configuration;
+using MySql.Data.MySqlClient;
 using System.Data;
 
 namespace DataAccess
 {
     public class Connection
     {
-        private static readonly string _connectionString =
-            "server=167.71.91.199; " +
-            "database=abastecete; " +
-            "user=root; " +
-            "password=Websen2025.; " +
-            "port=3306; " +
-            "Pooling=true; " +                    // Habilitar connection pooling
-            "Min Pool Size=5; " +                 // Mantener 5 conexiones listas
-            "Max Pool Size=100; " +               // Máximo 100 conexiones simultáneas
-            "Connection Timeout=10; " +           // Timeout de conexión 10 segundos
-            "Command Timeout=30; " +              // Timeout de comandos 30 segundos
-            "Connection Lifetime=300; " +         // Reciclar conexiones cada 5 minutos
-            "Connection Reset=false";             // No resetear conexión al devolverla al pool
+        private static string _connectionString;
+
+        static Connection()
+        {
+            // Cargar configuración desde appsettings.json
+            var configuration = new ConfigurationBuilder()
+                .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
+                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                .Build();
+
+            _connectionString = configuration.GetConnectionString("MySql");
+        }
 
         private MySqlConnection CrearConexion()
         {

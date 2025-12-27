@@ -21,14 +21,20 @@ namespace BusinessLogic.Utilidades
 
         public EmailService()
         {
-            // Configuración por defecto (idealmente mover a appsettings.json)
-            _smtpHost = "smtp.gmail.com";
-            _smtpPort = 587;
-            _smtpUser = "abastecetecol@gmail.com";
-            _smtpPass = "mvijnlfiegwohmsm";
-            _emailFrom = "abastecetecol@gmail.com";
-            _emailFromName = "Abastecete";
-            _emailAdmin = "abastecetecol@gmail.com";
+            // Cargar configuración desde appsettings.json
+            var configuration = new ConfigurationBuilder()
+                .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
+                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                .Build();
+
+            var emailConfig = configuration.GetSection("EmailSettings");
+            _smtpHost = emailConfig["SmtpHost"] ?? "smtp.gmail.com";
+            _smtpPort = int.Parse(emailConfig["SmtpPort"] ?? "587");
+            _smtpUser = emailConfig["SmtpUser"];
+            _smtpPass = emailConfig["SmtpPass"];
+            _emailFrom = emailConfig["EmailFrom"];
+            _emailFromName = emailConfig["EmailFromName"] ?? "Abastecete";
+            _emailAdmin = emailConfig["EmailAdmin"];
         }
 
         public EmailService(IConfiguration configuration)
