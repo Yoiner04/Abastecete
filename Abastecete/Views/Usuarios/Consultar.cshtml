@@ -177,7 +177,7 @@
             <i class="fas fa-user-check text-green-600 text-xl"></i>
         </div>
         <div>
-            <p class="text-2xl font-bold text-gray-900">@Model.Items.Count(u => u.Usuario.Persona?.Estado == "Activo")</p>
+            <p class="text-2xl font-bold text-gray-900">@Model.Items.Count(u => u.Usuario.Estado == 1)</p>
             <p class="text-sm text-gray-500">Activos (página)</p>
         </div>
     </div>
@@ -284,15 +284,15 @@
                 @foreach (var item in Model.Items)
                 {
                     var usuario = item.Usuario;
-                    var nombreCompleto = $"{usuario.Persona?.Nombre} {usuario.Persona?.Apellido}";
-                    var estado = usuario.Persona?.Estado ?? "Inactivo";
-                    var esActivo = estado == "Activo";
+                    var nombreCompleto = $"{usuario.Nombres} {usuario.Apellidos}";
+                    var estado = usuario.Estado == 1 ? "Activo" : "Inactivo";
+                    var esActivo = usuario.Estado == 1;
 
                     <tr class="usuario-row hover:bg-gray-50 transition-colors">
                         <td class="px-4 py-4">
                             <div class="flex items-center gap-3">
                                 <div class="w-10 h-10 rounded-full bg-gradient-to-br from-[#23916A] to-[#1a6b4f] flex items-center justify-center text-white font-semibold text-sm">
-                                    @(usuario.Persona?.Nombre?.Length > 0 ? usuario.Persona.Nombre.Substring(0, 1).ToUpper() : "?")@(usuario.Persona?.Apellido?.Length > 0 ? usuario.Persona.Apellido.Substring(0, 1).ToUpper() : "")
+                                    @(usuario.Nombres?.Length > 0 ? usuario.Nombres.Substring(0, 1).ToUpper() : "?")@(usuario.Apellidos?.Length > 0 ? usuario.Apellidos.Substring(0, 1).ToUpper() : "")
                                 </div>
                                 <div>
                                     <p class="font-medium text-gray-900">@nombreCompleto</p>

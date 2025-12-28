@@ -10,7 +10,8 @@ namespace BusinessLogic.Models
     public class Negocio
     {
         public int Id { get; set; }
-        public Persona Persona { get; set; }
+        public int UsuarioId { get; set; }
+        public Usuario Usuario { get; set; }
         public int Estado { get; set; }
         public Suscripcion SuscripcionActiva { get; set; }
         public string Nombre { get; set; }

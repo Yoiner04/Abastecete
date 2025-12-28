@@ -151,7 +151,6 @@ namespace ConnectionProject.Controllers
                 }
 
                 // Solo si el login fue exitoso, obtener los demás datos
-                int idPersona = Convert.ToInt32(data.Rows[0]["FK_ID_PERSONA"]);
                 int idUsuario = Convert.ToInt32(data.Rows[0]["PK_ID_USUARIO"]);
 
                 // Obtener tipo de membresía de forma segura
@@ -162,7 +161,6 @@ namespace ConnectionProject.Controllers
                     idTipoMembresia = Convert.ToInt32(membresiaValue);
                 }
 
-                HttpContext.Session.SetInt32("PersonaId", idPersona);
                 HttpContext.Session.SetInt32("idUsuario", idUsuario);
                 HttpContext.Session.SetString("membresia", idTipoMembresia > 0 ? idTipoMembresia.ToString() : "sin membresia");
 
@@ -177,7 +175,9 @@ namespace ConnectionProject.Controllers
 
                 // Login exitoso
                 HttpContext.Session.Remove("LastLoginError");
-                GuardarPermisosRol(idRol);
+
+                // Cargar permisos (unificado - evita llamadas duplicadas a DB)
+                GuardarTodosLosPermisos(idUsuario, idRol);
 
                 // Registrar login exitoso
                 RegistrarLogAutenticacion(idUsuario, usuario.Correo, TiposAccionAuditoria.LOGIN, "EXITO");
@@ -217,15 +217,32 @@ namespace ConnectionProject.Controllers
             return RedirectToAction("Login");
         }
 
-        private void GuardarPermisosRol(int idRol)
+        /// <summary>
+        /// Carga todos los permisos (nuevo sistema + legacy) en una sola operación
+        /// </summary>
+        private void GuardarTodosLosPermisos(int idUsuario, int idRol)
         {
+            var sw = System.Diagnostics.Stopwatch.StartNew();
             ManejadorPermisos manejadorP = new ManejadorPermisos();
+
             HttpContext.Session.SetString("idRol", idRol.ToString());
 
-            Dictionary<string, bool> permisos = manejadorP.ObtenerPermisos(idRol)
-                .ToDictionary(c => c.Nombre, c => c.Estado);
+            // Cargar permisos del nuevo sistema (UNA sola llamada a DB)
+            var permisosNuevo = manejadorP.ObtenerDiccionarioPermisos(idUsuario);
+            HttpContext.Session.SetString("permisosSistema", JsonConvert.SerializeObject(permisosNuevo));
 
-            HttpContext.Session.SetString("permisos", JsonConvert.SerializeObject(permisos));
+            Console.WriteLine($"[PERMISOS TIMING] Nuevo sistema: {sw.ElapsedMilliseconds}ms ({permisosNuevo.Count} permisos)");
+            sw.Restart();
+
+            // Sistema legacy - solo si es necesario para compatibilidad
+            #pragma warning disable CS0618
+            Dictionary<string, bool> permisosLegacy = manejadorP.ObtenerPermisos(idRol)
+                .ToDictionary(c => c.Nombre, c => c.Estado);
+            #pragma warning restore CS0618
+
+            HttpContext.Session.SetString("permisos", JsonConvert.SerializeObject(permisosLegacy));
+
+            Console.WriteLine($"[PERMISOS TIMING] Sistema legacy: {sw.ElapsedMilliseconds}ms ({permisosLegacy.Count} permisos)");
         }
 
         public IActionResult LoginWithGoogle()
@@ -307,7 +324,6 @@ namespace ConnectionProject.Controllers
                 if (data.Rows.Count > 0)
                 {
                     int idUsuario = Convert.ToInt32(data.Rows[0]["PK_ID_USUARIO"]);
-                    int idPersona = Convert.ToInt32(data.Rows[0]["FK_ID_PERSONA"]);
 
                     // Manejo seguro de FK_ID_TIPOMEMBRESIA
                     string membresia = "sin membresia";
@@ -322,7 +338,6 @@ namespace ConnectionProject.Controllers
                     }
 
                     HttpContext.Session.SetInt32("idUsuario", idUsuario);
-                    HttpContext.Session.SetInt32("PersonaId", idPersona);
                     HttpContext.Session.SetString("membresia", membresia);
                 }
 
@@ -330,7 +345,12 @@ namespace ConnectionProject.Controllers
                 HttpContext.Session.SetString("userName", name);
                 HttpContext.Session.SetInt32("userRol", rol);
 
-                GuardarPermisosRol(rol);
+                // Cargar permisos (unificado)
+                var idUsuarioGoogle = HttpContext.Session.GetInt32("idUsuario");
+                if (idUsuarioGoogle.HasValue)
+                {
+                    GuardarTodosLosPermisos(idUsuarioGoogle.Value, rol);
+                }
 
                 await HttpContext.SignInAsync(
                     CookieAuthenticationDefaults.AuthenticationScheme,

@@ -18,7 +18,7 @@ namespace Abastecete.Controllers
 
         }
 
-        [RequierePermiso("Administrar Usuarios")]
+        [RequierePermiso("Administrar Usuarios,ADMIN_USUARIOS")]
         public IActionResult Consultar(int pagina = 1, int registrosPorPagina = 10, string busqueda = null)
         {
             ViewBag.rol = LoginController.rol;
@@ -54,7 +54,7 @@ namespace Abastecete.Controllers
         }
 
         [HttpPost]
-        [RequierePermiso("Administrar Usuarios")]
+        [RequierePermiso("Administrar Usuarios,ADMIN_USUARIOS")]
         [Auditar(ModulosAuditoria.USUARIOS, TiposAccionAuditoria.UPDATE)]
         public IActionResult EditarEstado([FromBody] EditarEstadoRequest data)
         {
@@ -79,7 +79,7 @@ namespace Abastecete.Controllers
         }
 
         [HttpPost]
-        [RequierePermiso("Administrar Usuarios")]
+        [RequierePermiso("Administrar Usuarios,ADMIN_USUARIOS")]
         [Auditar(ModulosAuditoria.MEMBRESIAS, TiposAccionAuditoria.UPDATE)]
         public IActionResult ExtenderMembresia([FromBody] ExtenderMembresiaRequest data)
         {
@@ -116,7 +116,7 @@ namespace Abastecete.Controllers
         }
 
         [HttpGet]
-        [RequierePermiso("Administrar Usuarios")]
+        [RequierePermiso("Administrar Usuarios,ADMIN_USUARIOS")]
         public IActionResult ObtenerInfoSuscripcion(int idLocal)
         {
             try
@@ -152,7 +152,7 @@ namespace Abastecete.Controllers
         }
 
         [HttpPost]
-        [RequierePermiso("Administrar Usuarios")]
+        [RequierePermiso("Administrar Usuarios,ADMIN_USUARIOS")]
         [Auditar(ModulosAuditoria.MEMBRESIAS, TiposAccionAuditoria.UPDATE)]
         public IActionResult CambiarMembresia([FromBody] CambiarMembresiaRequest data)
         {
@@ -190,7 +190,7 @@ namespace Abastecete.Controllers
         }
 
         [HttpGet]
-        [RequierePermiso("Administrar Usuarios")]
+        [RequierePermiso("Administrar Usuarios,ADMIN_USUARIOS")]
         public IActionResult ObtenerTiposMembresia()
         {
             try
@@ -247,9 +247,7 @@ namespace Abastecete.Controllers
         [HttpPost]
         public IActionResult EditarUsuario(Usuario usuario)
         {
-            Persona persona = usuario.Persona;
-            persona.Correo = usuario.Correo;
-            bool resultado = manejadorU.EditarUsuario(persona);
+            bool resultado = manejadorU.EditarUsuario(usuario);
 
             if (resultado)
             {
@@ -316,13 +314,11 @@ namespace Abastecete.Controllers
         public IActionResult Registrar(Usuario usuario)
         {
             Console.WriteLine("=== DEBUG REGISTRO ===");
-            Console.WriteLine($"Persona null: {usuario?.Persona == null}");
-            Console.WriteLine($"Nombre: {usuario?.Persona?.Nombre}");
-            Console.WriteLine($"Apellido: {usuario?.Persona?.Apellido}");
-            Console.WriteLine($"Documento: {usuario?.Persona?.Documento}");
-            Console.WriteLine($"TipoDoc null: {usuario?.Persona?.TipoDeDocumento == null}");
-            Console.WriteLine($"TipoDoc.Id: {usuario?.Persona?.TipoDeDocumento?.Id}");
-            Console.WriteLine($"Telefono: {usuario?.Persona?.Telefono}");
+            Console.WriteLine($"Nombres: {usuario?.Nombres}");
+            Console.WriteLine($"Apellidos: {usuario?.Apellidos}");
+            Console.WriteLine($"Documento: {usuario?.DocumentoIdentidad}");
+            Console.WriteLine($"TipoDocumentoId: {usuario?.TipoDocumentoId}");
+            Console.WriteLine($"Telefono: {usuario?.Telefono}");
             Console.WriteLine($"Correo: {usuario?.Correo}");
             Console.WriteLine($"Contrasenia: {usuario?.Contrasenia?.Length} chars");
             Console.WriteLine($"CodigoReferido: {usuario?.CodigoReferido}");

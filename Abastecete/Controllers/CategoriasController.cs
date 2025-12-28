@@ -18,7 +18,7 @@ namespace Abastecete.Controllers
             manejadorCategorias = new ManejadorCategorias();
         }
 
-        [RequierePermiso("Administrar Categorias")]
+        [RequierePermiso("Administrar Categorias,ADMIN_CATEGORIAS")]
         public IActionResult Consultar()
         {
             List<Categoria> categorias = manejadorCategorias.ConsultarCategorias();
@@ -33,7 +33,7 @@ namespace Abastecete.Controllers
         }
 
         [HttpPost]
-        [RequierePermiso("Administrar Categorias")]
+        [RequierePermiso("Administrar Categorias,ADMIN_CATEGORIAS")]
         [Auditar(ModulosAuditoria.CATEGORIAS, TiposAccionAuditoria.CREATE, ParametroDescripcion = "Nombre")]
         public IActionResult Crear(IFormFile Imagen, string Nombre, int Estado, IFormFile Banner)
         {
@@ -79,7 +79,7 @@ namespace Abastecete.Controllers
 
 
         [HttpPost]
-        [RequierePermiso("Administrar Categorias")]
+        [RequierePermiso("Administrar Categorias,ADMIN_CATEGORIAS")]
         [Auditar(ModulosAuditoria.CATEGORIAS, TiposAccionAuditoria.UPDATE, ParametroId = "Id", ParametroDescripcion = "Nombre")]
         public IActionResult EditarCategoria(int Id, IFormFile Imagen, string Nombre, int Estado, IFormFile Banner)
         {

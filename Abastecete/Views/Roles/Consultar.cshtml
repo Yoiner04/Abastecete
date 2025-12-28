@@ -300,7 +300,7 @@
                                     <option value="">Seleccionar usuario...</option>
                                     @foreach (var usuario in usuarios)
                                     {
-                                        <option value="@usuario.Id">@usuario.Persona?.Nombre @usuario.Persona?.Apellido</option>
+                                        <option value="@usuario.Id">@usuario.Nombres @usuario.Apellidos</option>
                                     }
                                 </select>
                                 <i class="fas fa-user absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>

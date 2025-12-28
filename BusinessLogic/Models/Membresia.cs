@@ -1,9 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace BusinessLogic.Models
 {
@@ -11,6 +8,7 @@ namespace BusinessLogic.Models
     {
         public int Id { get; set; }
         public string Nombre { get; set; }
+        public string DescripcionCorta { get; set; }
         public float Costo { get; set; }
         public int Estado { get; set; }
 
@@ -24,6 +22,12 @@ namespace BusinessLogic.Models
         public float Costo_trimestral { get; set; }
         public float Costo_semestral { get; set; }
         public float Costo_anual { get; set; }
+
+        // Permisos asociados a esta membresía
+        public List<PermisoSistema> Permisos { get; set; } = new List<PermisoSistema>();
+
+        // Conteo de permisos (para listados)
+        public int TotalPermisos { get; set; }
 
         // Descripción generada automáticamente
         public string Descripcion => GenerarDescripcion();
@@ -42,6 +46,23 @@ namespace BusinessLogic.Models
                 partes.Add("Ofertas ilimitadas");
 
             return string.Join(" • ", partes);
+        }
+
+        /// <summary>
+        /// Verifica si la membresía tiene un permiso específico
+        /// </summary>
+        public bool TienePermiso(string codigoPermiso)
+        {
+            return Permisos.Any(p => p.Codigo == codigoPermiso && p.Estado);
+        }
+
+        /// <summary>
+        /// Obtiene los permisos agrupados por categoría
+        /// </summary>
+        public Dictionary<string, List<PermisoSistema>> ObtenerPermisosAgrupados()
+        {
+            return Permisos.GroupBy(p => p.Categoria)
+                          .ToDictionary(g => g.Key, g => g.ToList());
         }
     }
 }

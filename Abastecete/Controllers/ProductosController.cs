@@ -12,7 +12,7 @@ namespace Abastecete.Controllers
         private readonly ManejadorNegocios manejadorNegocios;
         private readonly ManejadorProductos manejadorProductos;
         private readonly ManejadorCategorias manejadorCategorias;
-        private readonly ManejadorPersonas manejadorPersonas;
+        private readonly ManejadorUsuario manejadorUsuario;
         private readonly ManejadorMarcas manejadorMarcas;
         private readonly ManejadorImagenes manejadorImagenes;
         private readonly ManejadorTipoUnidad manejadorTipoUnidad;
@@ -25,7 +25,7 @@ namespace Abastecete.Controllers
             manejadorNegocios = new ManejadorNegocios();
             manejadorProductos = new ManejadorProductos();
             manejadorCategorias = new ManejadorCategorias();
-            manejadorPersonas = new ManejadorPersonas();
+            manejadorUsuario = new ManejadorUsuario();
             manejadorMarcas = new ManejadorMarcas();
             manejadorImagenes = new ManejadorImagenes();
             manejadorTipoUnidad = new ManejadorTipoUnidad();
@@ -63,20 +63,19 @@ namespace Abastecete.Controllers
 
         public IActionResult ProductosNegocio()
         {
-            var personaIdNullable = HttpContext.Session.GetInt32("PersonaId");
-            if (personaIdNullable == null)
+            var usuarioId = HttpContext.Session.GetInt32("idUsuario");
+            if (usuarioId == null)
             {
                 return RedirectToAction("Login", "Login");
             }
-            var personaId = personaIdNullable.Value;
 
-            Negocio negocio = manejadorNegocios.ConsultarNegocio(personaId);
+            Negocio negocio = manejadorNegocios.ConsultarNegocioPorUsuario(usuarioId.Value);
             if (negocio == null)
             {
                 return View("ErrorNegocioNoEncontrado");
             }
 
-            List<Persona> persona = manejadorPersonas.ObtenerPersonas(personaId);
+            var usuarios = manejadorUsuario.ConsultarUsuarios(usuarioId.Value);
             List<Producto> productos = manejadorProductos.ConsultarProductosLocal(negocio.Id);
 
             // Cargar galería aprobada del local
@@ -91,7 +90,7 @@ namespace Abastecete.Controllers
             var negocioPersona = new NegocioPersona
             {
                 Negocio = negocio,
-                Persona = persona.First()
+                Persona = usuarios.FirstOrDefault()
             };
 
             return View(negocioPersona);
@@ -130,13 +129,13 @@ namespace Abastecete.Controllers
         [HttpGet]
         public IActionResult AgregarProductNegocio()
         {
-            var personaIdNullable = HttpContext.Session.GetInt32("PersonaId");
-            if (personaIdNullable == null)
+            var usuarioId = HttpContext.Session.GetInt32("idUsuario");
+            if (usuarioId == null)
             {
                 return RedirectToAction("Login", "Login");
             }
 
-            Negocio negocio = manejadorNegocios.ConsultarNegocio(personaIdNullable.Value);
+            Negocio negocio = manejadorNegocios.ConsultarNegocioPorUsuario(usuarioId.Value);
             if (negocio == null)
             {
                 return RedirectToAction("Crear", "Negocios");
@@ -184,13 +183,13 @@ namespace Abastecete.Controllers
         {
             try
             {
-                var personaIdNullable = HttpContext.Session.GetInt32("PersonaId");
-                if (personaIdNullable == null)
+                var usuarioId = HttpContext.Session.GetInt32("idUsuario");
+                if (usuarioId == null)
                 {
                     return Json(new { success = false, mensaje = "Sesión expirada. Por favor inicia sesión nuevamente." });
                 }
 
-                var negocio = manejadorNegocios.ConsultarNegocio(personaIdNullable.Value);
+                var negocio = manejadorNegocios.ConsultarNegocioPorUsuario(usuarioId.Value);
                 if (negocio == null)
                 {
                     return Json(new { success = false, mensaje = "No se encontró tu negocio." });
@@ -303,7 +302,7 @@ namespace Abastecete.Controllers
         /// <summary>
         /// Vista de administracion de productos (solo SuperAdmin)
         /// </summary>
-        [RequierePermiso("Administrar Productos")]
+        [RequierePermiso("Administrar Productos,ADMIN_PRODUCTOS")]
         public IActionResult AdminProductos(string termino, int? idCategoria, int? idSubCategoria, int? idMarca)
         {
             List<Producto> productos;
@@ -329,7 +328,7 @@ namespace Abastecete.Controllers
         /// Obtiene un producto por ID (para edicion)
         /// </summary>
         [HttpGet]
-        [RequierePermiso("Administrar Productos")]
+        [RequierePermiso("Administrar Productos,ADMIN_PRODUCTOS")]
         public IActionResult ObtenerProducto(int id)
         {
             try
@@ -363,7 +362,7 @@ namespace Abastecete.Controllers
         /// Crea un nuevo producto (admin)
         /// </summary>
         [HttpPost]
-        [RequierePermiso("Administrar Productos")]
+        [RequierePermiso("Administrar Productos,ADMIN_PRODUCTOS")]
         [Auditar(ModulosAuditoria.PRODUCTOS, TiposAccionAuditoria.CREATE, ParametroDescripcion = "nombre")]
         public IActionResult CrearProductoAdmin(string nombre, string descripcion, string sku, int idSubCategoria, int idMarca, int? idTipoUnidad, IFormFile imagen, string marcasIds = null)
         {
@@ -453,7 +452,7 @@ namespace Abastecete.Controllers
         /// Edita un producto existente (admin)
         /// </summary>
         [HttpPost]
-        [RequierePermiso("Administrar Productos")]
+        [RequierePermiso("Administrar Productos,ADMIN_PRODUCTOS")]
         [Auditar(ModulosAuditoria.PRODUCTOS, TiposAccionAuditoria.UPDATE, ParametroId = "id", ParametroDescripcion = "nombre")]
         public IActionResult EditarProductoAdmin(int id, string nombre, string descripcion, string sku, int idSubCategoria, int idMarca, int? idTipoUnidad, IFormFile imagen, string cloudinaryPublicId, string marcasIds = null)
         {
@@ -556,7 +555,7 @@ namespace Abastecete.Controllers
         /// Elimina un producto (admin)
         /// </summary>
         [HttpDelete]
-        [RequierePermiso("Administrar Productos")]
+        [RequierePermiso("Administrar Productos,ADMIN_PRODUCTOS")]
         [Auditar(ModulosAuditoria.PRODUCTOS, TiposAccionAuditoria.DELETE, ParametroId = "id")]
         public IActionResult EliminarProductoAdmin(int id)
         {

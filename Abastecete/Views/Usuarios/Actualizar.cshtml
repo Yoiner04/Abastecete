@@ -65,7 +65,7 @@
                         <!-- Avatar placeholder -->
                         <div class="md:col-span-2 flex justify-center mb-4">
                             <div class="w-24 h-24 rounded-full bg-gradient-to-br from-[#23916A] to-[#1a6b4f] flex items-center justify-center text-white text-3xl font-bold shadow-lg">
-                                @(Model?.Persona?.Nombre?.Substring(0, 1).ToUpper())@(Model?.Persona?.Apellido?.Substring(0, 1).ToUpper())
+                                @(Model?.Nombres?.Substring(0, 1).ToUpper())@(Model?.Apellidos?.Substring(0, 1).ToUpper())
                             </div>
                         </div>
 
@@ -73,7 +73,7 @@
                             <label class="block text-sm font-medium text-gray-700 mb-1">
                                 Nombre <span class="text-red-500">*</span>
                             </label>
-                            @Html.TextBoxFor(m => m.Persona.Nombre, new {
+                            @Html.TextBoxFor(m => m.Nombres, new {
                                 @class = "w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-[#23916A] focus:ring-2 focus:ring-[#23916A]/20 outline-none transition-all",
                                 placeholder = "Tu nombre"
                             })
@@ -83,7 +83,7 @@
                             <label class="block text-sm font-medium text-gray-700 mb-1">
                                 Apellido <span class="text-red-500">*</span>
                             </label>
-                            @Html.TextBoxFor(m => m.Persona.Apellido, new {
+                            @Html.TextBoxFor(m => m.Apellidos, new {
                                 @class = "w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-[#23916A] focus:ring-2 focus:ring-[#23916A]/20 outline-none transition-all",
                                 placeholder = "Tu apellido"
                             })
@@ -93,9 +93,9 @@
                             <label class="block text-sm font-medium text-gray-700 mb-1">
                                 Tipo de Documento <span class="text-red-500">*</span>
                             </label>
-                            <select name="Persona.TipoDeDocumento.Id" required
+                            <select name="TipoDocumentoId" required
                                     class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-[#23916A] focus:ring-2 focus:ring-[#23916A]/20 outline-none transition-all">
-                                @if (Model.Persona.TipoDeDocumento == null)
+                                @if (Model.TipoDocumentoId == 0)
                                 {
                                     <option value="" selected disabled>Seleccione</option>
                                 }
@@ -105,7 +105,7 @@
                                 }
                                 @foreach (TipoDocumento td in ViewBag.TiposDocumento)
                                 {
-                                    if (Model.Persona.TipoDeDocumento != null && Model.Persona.TipoDeDocumento.Id == td.Id)
+                                    if (Model.TipoDocumentoId == td.Id)
                                     {
                                         <option value="@td.Id" selected>@td.Nombre</option>
                                     }
@@ -121,7 +121,7 @@
                             <label class="block text-sm font-medium text-gray-700 mb-1">
                                 Documento <span class="text-red-500">*</span>
                             </label>
-                            @Html.TextBoxFor(m => m.Persona.Documento, new {
+                            @Html.TextBoxFor(m => m.DocumentoIdentidad, new {
                                 @class = "w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-[#23916A] focus:ring-2 focus:ring-[#23916A]/20 outline-none transition-all",
                                 oninput = "this.value=this.value.replace(/[^0-9]/g,'');",
                                 placeholder = "Número de documento"
@@ -132,7 +132,7 @@
                             <label class="block text-sm font-medium text-gray-700 mb-1">
                                 Teléfono <span class="text-red-500">*</span>
                             </label>
-                            @Html.TextBoxFor(m => m.Persona.Telefono, new {
+                            @Html.TextBoxFor(m => m.Telefono, new {
                                 @class = "w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-[#23916A] focus:ring-2 focus:ring-[#23916A]/20 outline-none transition-all",
                                 oninput = "this.value=this.value.replace(/[^0-9]/g,'');",
                                 placeholder = "Tu teléfono"

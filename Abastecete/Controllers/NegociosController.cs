@@ -18,6 +18,8 @@ namespace Abastecete.Controllers
         private readonly ManejadorImagenes _manejadorImagenes;
         private readonly ManejadorGaleriaLocal _manejadorGaleria;
         private readonly ManejadorSuscripciones _manejadorSuscripciones;
+        private readonly ManejadorPermisos _manejadorPermisos;
+        private readonly ManejadorAddons _manejadorAddons;
         private readonly IConfiguration _configuration;
 
 
@@ -30,6 +32,8 @@ namespace Abastecete.Controllers
             _manejadorImagenes = new ManejadorImagenes();
             _manejadorGaleria = new ManejadorGaleriaLocal();
             _manejadorSuscripciones = new ManejadorSuscripciones();
+            _manejadorPermisos = new ManejadorPermisos();
+            _manejadorAddons = new ManejadorAddons();
             _configuration = configuration;
         }
 
@@ -123,13 +127,13 @@ namespace Abastecete.Controllers
         [HttpGet]
         public IActionResult EditarNegocio()
         {
-            var personaId = HttpContext.Session.GetInt32("PersonaId");
-            if (!personaId.HasValue)
+            var usuarioId = HttpContext.Session.GetInt32("idUsuario");
+            if (!usuarioId.HasValue)
             {
                 return RedirectToAction("Login", "Login");
             }
 
-            Negocio ne = _manejadorNegocios.ConsultarNegocio(personaId.Value);
+            Negocio ne = _manejadorNegocios.ConsultarNegocioPorUsuario(usuarioId.Value);
             if (ne == null)
             {
                 return RedirectToAction("Crear");
@@ -153,13 +157,13 @@ namespace Abastecete.Controllers
         [Auditar(ModulosAuditoria.NEGOCIOS, TiposAccionAuditoria.UPDATE, ParametroDescripcion = "Nombre")]
         public IActionResult EditarNegocio(Negocio a, List<IFormFile>? imagenesGaleria)
         {
-            var personaId = HttpContext.Session.GetInt32("PersonaId");
-            if (!personaId.HasValue)
+            var usuarioId = HttpContext.Session.GetInt32("idUsuario");
+            if (!usuarioId.HasValue)
             {
                 return RedirectToAction("Login", "Login");
             }
 
-            Negocio actual = _manejadorNegocios.ConsultarNegocio(personaId.Value);
+            Negocio actual = _manejadorNegocios.ConsultarNegocioPorUsuario(usuarioId.Value);
             if (actual == null)
             {
                 return RedirectToAction("Crear");
@@ -212,13 +216,13 @@ namespace Abastecete.Controllers
         [HttpPost]
         public IActionResult SubirImagenGaleria(IFormFile imagen)
         {
-            var personaId = HttpContext.Session.GetInt32("PersonaId");
-            if (!personaId.HasValue)
+            var usuarioId = HttpContext.Session.GetInt32("idUsuario");
+            if (!usuarioId.HasValue)
             {
                 return Json(new { success = false, message = "Sesión expirada" });
             }
 
-            var negocio = _manejadorNegocios.ConsultarNegocio(personaId.Value);
+            var negocio = _manejadorNegocios.ConsultarNegocioPorUsuario(usuarioId.Value);
             if (negocio == null)
             {
                 return Json(new { success = false, message = "Negocio no encontrado" });
@@ -258,8 +262,8 @@ namespace Abastecete.Controllers
         [Auditar(ModulosAuditoria.GALERIA, TiposAccionAuditoria.DELETE, ParametroId = "id")]
         public IActionResult EliminarImagenGaleria(int id)
         {
-            var personaId = HttpContext.Session.GetInt32("PersonaId");
-            if (!personaId.HasValue)
+            var usuarioId = HttpContext.Session.GetInt32("idUsuario");
+            if (!usuarioId.HasValue)
             {
                 return Json(new { success = false, message = "Sesión expirada" });
             }
@@ -285,20 +289,15 @@ namespace Abastecete.Controllers
         [Auditar(ModulosAuditoria.NEGOCIOS, TiposAccionAuditoria.CREATE, ParametroDescripcion = "Nombre")]
         public IActionResult GuardarDatosNegocio(Negocio negocio, IFormFile logo_archivo)
         {
-            var personaId = HttpContext.Session.GetInt32("PersonaId");
+            var usuarioId = HttpContext.Session.GetInt32("idUsuario");
 
-            if (!personaId.HasValue)
+            if (!usuarioId.HasValue)
             {
-                Console.WriteLine("No se encontró PersonaId en la sesión.");
+                Console.WriteLine("No se encontró idUsuario en la sesión.");
                 return RedirectToAction("Login", "Login");
             }
 
-            if (negocio.Persona == null)
-            {
-                negocio.Persona = new Persona();
-            }
-
-            negocio.Persona.Id = personaId.Value;
+            negocio.UsuarioId = usuarioId.Value;
 
             if (logo_archivo != null && logo_archivo.Length > 0)
             {
@@ -307,7 +306,8 @@ namespace Abastecete.Controllers
 
             HttpContext.Session.SetString("NegocioTemporal", JsonConvert.SerializeObject(negocio));
 
-            return RedirectToAction("Tipos", "Membresias");
+            // Redirigir directamente a selección de plan (ya no hay selección de tipo/categoría)
+            return RedirectToAction("Publicar", "Membresias");
         }
 
         [HttpGet]
@@ -331,23 +331,27 @@ namespace Abastecete.Controllers
             {
                 Console.WriteLine("Negocio registrado con éxito!");
 
-                // Asignar rol de proveedor (2)
+                // Asignar rol de proveedor (2) - mantener para compatibilidad
                 ManejadorRoles manejadorRoles = new ManejadorRoles();
                 bool rolAsignado = manejadorRoles.AsignarRol(2, usuarioId.Value);
 
                 // Actualizar datos de sesión sin cerrarla
                 // Obtener el local recién creado para tener el ID
-                var personaId = HttpContext.Session.GetInt32("PersonaId");
-                if (personaId.HasValue)
+                var negocioCreado = _manejadorNegocios.ConsultarNegocioPorUsuario(usuarioId.Value);
+                if (negocioCreado != null)
                 {
-                    var negocioCreado = _manejadorNegocios.ConsultarNegocio(personaId.Value);
-                    if (negocioCreado != null)
-                    {
-                        HttpContext.Session.SetInt32("LocalId", negocioCreado.Id);
-                        HttpContext.Session.SetString("TieneMembresiaActiva", "true");
-                        HttpContext.Session.SetString("NombreLocal", negocioCreado.Nombre ?? "");
-                    }
+                    HttpContext.Session.SetInt32("LocalId", negocioCreado.Id);
+                    HttpContext.Session.SetString("TieneMembresiaActiva", "true");
+                    HttpContext.Session.SetString("NombreLocal", negocioCreado.Nombre ?? "");
                 }
+
+                // Asignar permisos de la membresía al usuario (nuevo sistema)
+                int permisosAsignados = _manejadorPermisos.AsignarPermisosDeMembresia(usuarioId.Value, tipoMembresiaId);
+                Console.WriteLine($"[PERMISOS] Asignados {permisosAsignados} permisos de membresía {tipoMembresiaId} al usuario {usuarioId.Value}");
+
+                // Actualizar permisos en sesión
+                var permisosSistema = _manejadorPermisos.ObtenerDiccionarioPermisos(usuarioId.Value);
+                HttpContext.Session.SetString("permisosSistema", JsonConvert.SerializeObject(permisosSistema));
 
                 // Actualizar rol en sesión
                 HttpContext.Session.SetInt32("Rol", 2); // 2 = Proveedor
@@ -391,13 +395,13 @@ namespace Abastecete.Controllers
         [HttpGet]
         public IActionResult MiMembresia()
         {
-            var personaId = HttpContext.Session.GetInt32("PersonaId");
-            if (!personaId.HasValue)
+            var usuarioId = HttpContext.Session.GetInt32("idUsuario");
+            if (!usuarioId.HasValue)
             {
                 return RedirectToAction("Login", "Login");
             }
 
-            Negocio negocio = _manejadorNegocios.ConsultarNegocio(personaId.Value);
+            Negocio negocio = _manejadorNegocios.ConsultarNegocioPorUsuario(usuarioId.Value);
             if (negocio == null)
             {
                 return RedirectToAction("Crear");
@@ -427,13 +431,13 @@ namespace Abastecete.Controllers
         [HttpGet]
         public IActionResult CompletarRenovacion(string periodo, decimal monto, string ref_payco)
         {
-            var personaId = HttpContext.Session.GetInt32("PersonaId");
-            if (!personaId.HasValue)
+            var usuarioId = HttpContext.Session.GetInt32("idUsuario");
+            if (!usuarioId.HasValue)
             {
                 return RedirectToAction("Login", "Login");
             }
 
-            Negocio negocio = _manejadorNegocios.ConsultarNegocio(personaId.Value);
+            Negocio negocio = _manejadorNegocios.ConsultarNegocioPorUsuario(usuarioId.Value);
             if (negocio == null)
             {
                 return RedirectToAction("Crear");
@@ -479,13 +483,13 @@ namespace Abastecete.Controllers
         [HttpGet]
         public IActionResult CompletarCambioPlan(int tipoMembresiaId, string periodo, decimal monto, string ref_payco)
         {
-            var personaId = HttpContext.Session.GetInt32("PersonaId");
-            if (!personaId.HasValue)
+            var usuarioId = HttpContext.Session.GetInt32("idUsuario");
+            if (!usuarioId.HasValue)
             {
                 return RedirectToAction("Login", "Login");
             }
 
-            Negocio negocio = _manejadorNegocios.ConsultarNegocio(personaId.Value);
+            Negocio negocio = _manejadorNegocios.ConsultarNegocioPorUsuario(usuarioId.Value);
             if (negocio == null)
             {
                 return RedirectToAction("Crear");
@@ -504,6 +508,17 @@ namespace Abastecete.Controllers
 
                 if (resultado.IdSuscripcion > 0)
                 {
+                    // Actualizar permisos del usuario según la nueva membresía
+                    if (usuarioId.HasValue)
+                    {
+                        int permisosAsignados = _manejadorPermisos.AsignarPermisosDeMembresia(usuarioId.Value, tipoMembresiaId);
+                        Console.WriteLine($"[PERMISOS] Reasignados {permisosAsignados} permisos al cambiar a membresía {tipoMembresiaId}");
+
+                        // Actualizar permisos en sesión
+                        var permisosSistema = _manejadorPermisos.ObtenerDiccionarioPermisos(usuarioId.Value);
+                        HttpContext.Session.SetString("permisosSistema", JsonConvert.SerializeObject(permisosSistema));
+                    }
+
                     string mensaje = resultado.TipoCambio switch
                     {
                         "UPGRADE" => "¡Plan mejorado exitosamente!",

@@ -23,8 +23,14 @@
 <body class="bg-gray-100" style="color: black;">
 
     @{
-        string permisos = HttpContextAccessor.HttpContext.Session.GetString("permisos");
+        // Nuevo sistema de permisos (códigos como ADMIN_USUARIOS)
+        string permisosSistema = HttpContextAccessor.HttpContext.Session.GetString("permisosSistema");
+        // Sistema antiguo de permisos (nombres como "Administrar Usuarios") - fallback
+        string permisosLegacy = HttpContextAccessor.HttpContext.Session.GetString("permisos");
+        // Usar nuevo sistema si existe, sino fallback al antiguo
+        string permisos = !string.IsNullOrEmpty(permisosSistema) ? permisosSistema : permisosLegacy;
         string membresia = HttpContextAccessor.HttpContext.Session.GetString("membresia") ?? "0";
+        bool estaLogueado = permisos != null || permisosSistema != null;
     }
     <!-- Header Principal Modernizado -->
     <header id="header" class="fixed top-0 left-0 w-full z-40 shadow-lg transition-shadow duration-300" style="background-color: #F4F1E9;">
@@ -86,7 +92,7 @@
 
                 <!-- Área de usuario -->
                 <div class="flex items-center gap-3 order-3 w-full lg:w-auto justify-center lg:justify-end mt-2 lg:mt-0">
-                    @if (permisos != null)
+                    @if (estaLogueado)
                     {
                         <div class="relative">
                             <button id="user-btn" title="Ver opciones de usuario"
@@ -104,7 +110,7 @@
                                         <span class="font-medium">Editar perfil</span>
                                     </a>
                                 </li>
-                                @if (!RolPermisos.TienePermiso("Ver Dashboard Admin", permisos))
+                                @if (!RolPermisos.TienePermiso("Ver Dashboard Admin,ADMIN_DASHBOARD", permisos))
                                 {
                                     <li class="border-b border-gray-100">
                                         <a href="@Url.Action("Index", "Analiticas")"
@@ -146,8 +152,9 @@
         <!-- Menú de administración -->
         <div id="admin-menu" class="hidden justify-center py-2.5 md:flex border-t border-[#d9d5cc]" style="background-color: #ebe7de;">
             <ul class="flex flex-col text-center text-sm md:flex-row md:gap-1 lg:gap-2 md:text-left px-4 flex-wrap justify-center">
-                @if (permisos != null)
+                @if (estaLogueado)
                 {
+                    @* Opciones para usuarios sin negocio (pueden publicar) *@
                     @if (RolPermisos.TienePermiso("Publica tu negocio", permisos))
                     {
                         <li>
@@ -157,7 +164,8 @@
                             </a>
                         </li>
                     }
-                    @if (RolPermisos.TienePermiso("Mi negocio", permisos))
+                    @* Opciones para usuarios con negocio (permisos de negocio) *@
+                    @if (RolPermisos.TienePermiso("Mi negocio,PRODUCTOS_BASICO,PRODUCTOS_ILIMITADOS", permisos))
                     {
                         <li>
                             <a href="@Url.Action("ProductosNegocio", "Productos")" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium hover:bg-[#23916A]/10 hover:text-[#23916A] transition-all duration-200" style="color: #374151;">
@@ -166,7 +174,7 @@
                             </a>
                         </li>
                     }
-                    @if (RolPermisos.TienePermiso("Mi negocio", permisos))
+                    @if (RolPermisos.TienePermiso("Mi negocio,OFERTAS_FLASH", permisos))
                     {
                         <li>
                             <a href="@Url.Action("Crear", "OfertasFlash")" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium hover:bg-[#F66623]/10 hover:text-[#F66623] transition-all duration-200" style="color: #374151;">
@@ -184,7 +192,8 @@
                             </a>
                         </li>
                     }
-                    @if (RolPermisos.TienePermiso("Administrar Categorias", permisos))
+                    @* Opciones de administración *@
+                    @if (RolPermisos.TienePermiso("Administrar Categorias,ADMIN_CATEGORIAS", permisos))
                     {
                         <li>
                             <a href="@Url.Action("Consultar", "Categorias")" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium hover:bg-[#23916A]/10 hover:text-[#23916A] transition-all duration-200" style="color: #374151;">
@@ -199,7 +208,7 @@
                             </a>
                         </li>
                     }
-                    @if (RolPermisos.TienePermiso("Administrar Usuarios", permisos))
+                    @if (RolPermisos.TienePermiso("Administrar Usuarios,ADMIN_USUARIOS", permisos))
                     {
                         <li>
                             <a href="@Url.Action("Consultar", "Usuarios")" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium hover:bg-[#23916A]/10 hover:text-[#23916A] transition-all duration-200" style="color: #374151;">
@@ -208,7 +217,7 @@
                             </a>
                         </li>
                     }
-                    @if (RolPermisos.TienePermiso("Administrar Membresias", permisos))
+                    @if (RolPermisos.TienePermiso("Administrar Membresias,ADMIN_MEMBRESIAS", permisos))
                     {
                         <li>
                             <a href="@Url.Action("Consultar", "Membresias")" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium hover:bg-[#23916A]/10 hover:text-[#23916A] transition-all duration-200" style="color: #374151;">
@@ -217,16 +226,16 @@
                             </a>
                         </li>
                     }
-                    @if (RolPermisos.TienePermiso("Administrar Roles", permisos))
+                    @if (RolPermisos.TienePermiso("Administrar Roles,ADMIN_PERMISOS", permisos))
                     {
                         <li>
                             <a href="@Url.Action("Consultar", "Roles")" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium hover:bg-[#23916A]/10 hover:text-[#23916A] transition-all duration-200" style="color: #374151;">
                                 <i class="fas fa-user-shield text-xs" style="color: #23916A;"></i>
-                                Roles
+                                Permisos
                             </a>
                         </li>
                     }
-                    @if (RolPermisos.TienePermiso("Administrar Banners", permisos))
+                    @if (RolPermisos.TienePermiso("Administrar Banners,ADMIN_BANNERS", permisos))
                     {
                         <li>
                             <a href="@Url.Action("Editar", "Banners")" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium hover:bg-[#23916A]/10 hover:text-[#23916A] transition-all duration-200" style="color: #374151;">
@@ -235,7 +244,7 @@
                             </a>
                         </li>
                     }
-                    @if (RolPermisos.TienePermiso("Administrar Banners", permisos))
+                    @if (RolPermisos.TienePermiso("Administrar Banners,ADMIN_OFERTAS", permisos))
                     {
                         <li>
                             <a href="@Url.Action("Gestionar", "OfertasFlash")" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium hover:bg-[#F66623]/10 hover:text-[#F66623] transition-all duration-200" style="color: #374151;">
@@ -244,7 +253,7 @@
                             </a>
                         </li>
                     }
-                    @if (RolPermisos.TienePermiso("Administrar Productos", permisos))
+                    @if (RolPermisos.TienePermiso("Administrar Productos,ADMIN_PRODUCTOS", permisos))
                     {
                         <li>
                             <a href="@Url.Action("AdminProductos", "Productos")" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium hover:bg-[#23916A]/10 hover:text-[#23916A] transition-all duration-200" style="color: #374151;">
@@ -252,6 +261,9 @@
                                 Productos
                             </a>
                         </li>
+                    }
+                    @if (RolPermisos.TienePermiso("Administrar Productos,ADMIN_MARCAS", permisos))
+                    {
                         <li>
                             <a href="@Url.Action("Index", "Marcas")" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium hover:bg-[#23916A]/10 hover:text-[#23916A] transition-all duration-200" style="color: #374151;">
                                 <i class="fas fa-trademark text-xs" style="color: #23916A;"></i>
@@ -259,7 +271,7 @@
                             </a>
                         </li>
                     }
-                    @if (RolPermisos.TienePermiso("Administrar Galeria", permisos))
+                    @if (RolPermisos.TienePermiso("Administrar Galeria,ADMIN_GALERIA", permisos))
                     {
                         <li>
                             <a href="@Url.Action("Index", "GaleriaAdmin")" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium hover:bg-[#23916A]/10 hover:text-[#23916A] transition-all duration-200" style="color: #374151;">
@@ -268,7 +280,7 @@
                             </a>
                         </li>
                     }
-                    @if (RolPermisos.TienePermiso("Ver Logs Sistema", permisos))
+                    @if (RolPermisos.TienePermiso("Ver Logs Sistema,ADMIN_LOGS", permisos))
                     {
                         <li>
                             <a href="@Url.Action("Index", "Logs")" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium hover:bg-[#23916A]/10 hover:text-[#23916A] transition-all duration-200" style="color: #374151;">
@@ -277,7 +289,7 @@
                             </a>
                         </li>
                     }
-                    @if (RolPermisos.TienePermiso("Ver Dashboard Admin", permisos))
+                    @if (RolPermisos.TienePermiso("Ver Dashboard Admin,ADMIN_DASHBOARD", permisos))
                     {
                         <li>
                             <a href="@Url.Action("DashboardAdmin", "Analiticas")" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium hover:bg-[#23916A]/10 hover:text-[#23916A] transition-all duration-200" style="color: #374151;">

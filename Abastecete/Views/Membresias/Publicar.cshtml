@@ -2,7 +2,9 @@
 @inject IHttpContextAccessor HttpContextAccessor
 @{
     Layout = null;
-    var tipoMembresia = Model.FirstOrDefault()?.Nombre?.Split(' ').FirstOrDefault() ?? "Membresia";
+    // Detectar si estamos en flujo nuevo (sin tipo) o antiguo
+    var esFlujNuevo = ViewBag.nombre == null;
+    var tipoMembresia = esFlujNuevo ? "Membresía" : (Model.FirstOrDefault()?.Nombre?.Split(' ').FirstOrDefault() ?? "Membresía");
 }
 
 <!DOCTYPE html>
@@ -104,13 +106,23 @@
         <div class="max-w-6xl mx-auto px-4 py-5">
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-4">
-                    <a href="@Url.Action("Tipos", "Membresias")"
-                       class="w-10 h-10 rounded-xl bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors">
-                        <i class="fas fa-arrow-left text-white"></i>
-                    </a>
+                    @if (esFlujNuevo)
+                    {
+                        <a href="@Url.Action("Crear", "Negocios")"
+                           class="w-10 h-10 rounded-xl bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors">
+                            <i class="fas fa-arrow-left text-white"></i>
+                        </a>
+                    }
+                    else
+                    {
+                        <a href="@Url.Action("Tipos", "Membresias")"
+                           class="w-10 h-10 rounded-xl bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors">
+                            <i class="fas fa-arrow-left text-white"></i>
+                        </a>
+                    }
                     <div>
-                        <h1 class="text-2xl font-bold text-white">Planes @tipoMembresia</h1>
-                        <p class="text-white/70 text-sm">Selecciona el plan que mejor se adapte a ti</p>
+                        <h1 class="text-2xl font-bold text-white">Selecciona tu Plan</h1>
+                        <p class="text-white/70 text-sm">Elige el plan que mejor se adapte a tu negocio</p>
                     </div>
                 </div>
                 <a href="@Url.Action("Principal", "Home")" class="hidden sm:block bg-white rounded-xl px-3 py-2">
@@ -123,26 +135,47 @@
     <!-- Stepper -->
     <div class="bg-white shadow-sm border-b">
         <div class="max-w-6xl mx-auto px-4 py-5">
-            <div class="flex items-center justify-center gap-3">
-                <div class="flex items-center gap-2">
-                    <div class="step-circle completed">
-                        <i class="fas fa-check text-sm"></i>
+            @if (esFlujNuevo)
+            {
+                <!-- Nuevo flujo: 2 pasos -->
+                <div class="flex items-center justify-center gap-3">
+                    <div class="flex items-center gap-2">
+                        <div class="step-circle completed">
+                            <i class="fas fa-check text-sm"></i>
+                        </div>
+                        <span class="text-sm font-medium text-gray-800 hidden sm:inline">Información</span>
                     </div>
-                    <span class="text-sm font-medium text-gray-800 hidden sm:inline">Informacion</span>
-                </div>
-                <div class="step-line bg-[#23916A]"></div>
-                <div class="flex items-center gap-2">
-                    <div class="step-circle completed">
-                        <i class="fas fa-check text-sm"></i>
+                    <div class="step-line bg-[#23916A]"></div>
+                    <div class="flex items-center gap-2">
+                        <div class="step-circle active">2</div>
+                        <span class="text-sm font-medium text-gray-800 hidden sm:inline">Membresía</span>
                     </div>
-                    <span class="text-sm font-medium text-gray-800 hidden sm:inline">Tipo</span>
                 </div>
-                <div class="step-line bg-[#23916A]"></div>
-                <div class="flex items-center gap-2">
-                    <div class="step-circle active">3</div>
-                    <span class="text-sm font-medium text-gray-800 hidden sm:inline">Plan</span>
+            }
+            else
+            {
+                <!-- Flujo antiguo: 3 pasos -->
+                <div class="flex items-center justify-center gap-3">
+                    <div class="flex items-center gap-2">
+                        <div class="step-circle completed">
+                            <i class="fas fa-check text-sm"></i>
+                        </div>
+                        <span class="text-sm font-medium text-gray-800 hidden sm:inline">Información</span>
+                    </div>
+                    <div class="step-line bg-[#23916A]"></div>
+                    <div class="flex items-center gap-2">
+                        <div class="step-circle completed">
+                            <i class="fas fa-check text-sm"></i>
+                        </div>
+                        <span class="text-sm font-medium text-gray-800 hidden sm:inline">Tipo</span>
+                    </div>
+                    <div class="step-line bg-[#23916A]"></div>
+                    <div class="flex items-center gap-2">
+                        <div class="step-circle active">3</div>
+                        <span class="text-sm font-medium text-gray-800 hidden sm:inline">Plan</span>
+                    </div>
                 </div>
-            </div>
+            }
         </div>
     </div>
 
@@ -318,19 +351,39 @@
             <div class="text-center py-12">
                 <i class="fas fa-exclamation-circle text-4xl text-gray-400 mb-4"></i>
                 <p class="text-gray-600">No se encontraron planes disponibles</p>
-                <a href="@Url.Action("Tipos", "Membresias")" class="inline-block mt-4 text-[#23916A] hover:underline">
-                    Volver a tipos de membresia
-                </a>
+                @if (esFlujNuevo)
+                {
+                    <a href="@Url.Action("Crear", "Negocios")" class="inline-block mt-4 text-[#23916A] hover:underline">
+                        Volver al paso anterior
+                    </a>
+                }
+                else
+                {
+                    <a href="@Url.Action("Tipos", "Membresias")" class="inline-block mt-4 text-[#23916A] hover:underline">
+                        Volver a tipos de membresía
+                    </a>
+                }
             </div>
         }
 
         <!-- Boton Volver -->
         <div class="mt-8 text-center">
-            <a href="@Url.Action("Tipos", "Membresias")"
-               class="inline-flex items-center gap-2 text-gray-600 hover:text-[#23916A] transition-colors">
-                <i class="fas fa-arrow-left"></i>
-                <span>Cambiar tipo de membresia</span>
-            </a>
+            @if (esFlujNuevo)
+            {
+                <a href="@Url.Action("Crear", "Negocios")"
+                   class="inline-flex items-center gap-2 text-gray-600 hover:text-[#23916A] transition-colors">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>Volver al paso anterior</span>
+                </a>
+            }
+            else
+            {
+                <a href="@Url.Action("Tipos", "Membresias")"
+                   class="inline-flex items-center gap-2 text-gray-600 hover:text-[#23916A] transition-colors">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>Cambiar tipo de membresía</span>
+                </a>
+            }
         </div>
     </main>
 

@@ -5,8 +5,8 @@ using Microsoft.AspNetCore.Mvc.Filters;
 namespace BusinessLogic.Utilidades
 {
     /// <summary>
-    /// Filtro de autorización basado en permisos
-    /// Uso: [RequierePermiso("Administrar Productos")]
+    /// Filtro de autorización basado en permisos del nuevo sistema unificado
+    /// Uso: [RequierePermiso("ADMIN_USUARIOS")] o [RequierePermiso("ADMIN_USUARIOS,ADMIN_PERMISOS")]
     /// </summary>
     public class RequierePermisoAttribute : ActionFilterAttribute
     {
@@ -19,12 +19,25 @@ namespace BusinessLogic.Utilidades
 
         public override void OnActionExecuting(ActionExecutingContext context)
         {
-            var permisos = context.HttpContext.Session.GetString("permisos");
+            // Primero intentar con el nuevo sistema de permisos
+            var permisosSistema = context.HttpContext.Session.GetString("permisosSistema");
 
-            if (string.IsNullOrEmpty(permisos) || !RolPermisos.TienePermiso(_permiso, permisos))
+            // Si existe en el nuevo sistema, verificar ahí
+            if (!string.IsNullOrEmpty(permisosSistema))
             {
-                // Redirigir a página principal si no tiene permiso
-                context.Result = new RedirectToActionResult("Principal", "Home", null);
+                if (!RolPermisos.TienePermiso(_permiso, permisosSistema))
+                {
+                    context.Result = new RedirectToActionResult("Principal", "Home", null);
+                }
+            }
+            else
+            {
+                // Fallback al sistema antiguo para compatibilidad
+                var permisos = context.HttpContext.Session.GetString("permisos");
+                if (string.IsNullOrEmpty(permisos) || !RolPermisos.TienePermiso(_permiso, permisos))
+                {
+                    context.Result = new RedirectToActionResult("Principal", "Home", null);
+                }
             }
 
             base.OnActionExecuting(context);
@@ -65,27 +78,51 @@ namespace BusinessLogic.Utilidades
             return session.GetInt32("idUsuario");
         }
 
-        public static int? ObtenerPersonaId(ISession session)
-        {
-            return session.GetInt32("PersonaId");
-        }
-
-        public static int? ObtenerRolId(ISession session)
-        {
-            var rolStr = session.GetString("idRol");
-            return int.TryParse(rolStr, out int rol) ? rol : null;
-        }
-
+        /// <summary>
+        /// Verifica si el usuario tiene un permiso específico
+        /// Usa el nuevo sistema de permisos con fallback al antiguo
+        /// </summary>
         public static bool TienePermiso(ISession session, string permiso)
         {
+            // Primero intentar con nuevo sistema
+            var permisosSistema = session.GetString("permisosSistema");
+            if (!string.IsNullOrEmpty(permisosSistema))
+            {
+                return RolPermisos.TienePermiso(permiso, permisosSistema);
+            }
+
+            // Fallback al sistema antiguo
             var permisos = session.GetString("permisos");
             return RolPermisos.TienePermiso(permiso, permisos);
         }
 
+        /// <summary>
+        /// Verifica si el usuario es administrador (tiene algún permiso ADMIN_*)
+        /// </summary>
         public static bool EsAdministrador(ISession session)
         {
-            var rolId = ObtenerRolId(session);
-            return rolId == 1 || rolId == 8; // Admin o Director
+            var permisosSistema = session.GetString("permisosSistema");
+            if (!string.IsNullOrEmpty(permisosSistema))
+            {
+                return RolPermisos.EsAdministrador(permisosSistema);
+            }
+
+            // Fallback al sistema antiguo por rol
+            var rolStr = session.GetString("idRol");
+            if (int.TryParse(rolStr, out int rol))
+            {
+                return rol == 1 || rol == 8; // Admin o Director
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Obtiene todos los permisos del usuario como lista
+        /// </summary>
+        public static List<string> ObtenerPermisos(ISession session)
+        {
+            var permisosSistema = session.GetString("permisosSistema");
+            return RolPermisos.ObtenerListaPermisos(permisosSistema);
         }
     }
 }

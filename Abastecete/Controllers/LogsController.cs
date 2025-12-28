@@ -19,7 +19,7 @@ namespace Abastecete.Controllers
         /// <summary>
         /// Vista principal del panel de logs
         /// </summary>
-        [RequierePermiso("Ver Logs Sistema")]
+        [RequierePermiso("Ver Logs Sistema,ADMIN_LOGS")]
         public IActionResult Index(
             DateTime? fechaDesde,
             DateTime? fechaHasta,
@@ -63,7 +63,7 @@ namespace Abastecete.Controllers
         /// Exporta logs a CSV
         /// </summary>
         [HttpGet]
-        [RequierePermiso("Ver Logs Sistema")]
+        [RequierePermiso("Ver Logs Sistema,ADMIN_LOGS")]
         public IActionResult Exportar(
             DateTime? fechaDesde,
             DateTime? fechaHasta,

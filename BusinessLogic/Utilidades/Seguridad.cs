@@ -12,7 +12,37 @@ namespace BusinessLogic.Utilidades
         private static readonly byte[] Key = Encoding.ASCII.GetBytes("StEryDroPlAtrIsT");
         private static readonly byte[] IV = Encoding.ASCII.GetBytes("nchSiTIsTABLEITY");
 
+        /// <summary>
+        /// Encripta una contraseña usando BCrypt (recomendado para contraseñas)
+        /// </summary>
         public static string Encriptar(string Text)
+        {
+            if (string.IsNullOrEmpty(Text)) throw new ArgumentNullException("Text null");
+            return BCrypt.Net.BCrypt.HashPassword(Text);
+        }
+
+        /// <summary>
+        /// Verifica si una contraseña coincide con un hash BCrypt
+        /// </summary>
+        public static bool VerificarContrasenia(string contrasenia, string hashAlmacenado)
+        {
+            if (string.IsNullOrEmpty(contrasenia) || string.IsNullOrEmpty(hashAlmacenado))
+                return false;
+
+            try
+            {
+                return BCrypt.Net.BCrypt.Verify(contrasenia, hashAlmacenado);
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Encripta texto usando AES (para datos que no son contraseñas)
+        /// </summary>
+        public static string EncriptarAES(string Text)
         {
             if (Text == null || Text.Length <= 0) throw new ArgumentNullException("Text null");
             if (Key == null || Key.Length <= 0) throw new ArgumentNullException("Key null");
@@ -35,6 +65,9 @@ namespace BusinessLogic.Utilidades
             return edta;
         }
 
+        /// <summary>
+        /// Desencripta texto usando AES
+        /// </summary>
         public static string Desencriptar(string Text)
         {
             byte[] cText = Convert.FromBase64String(Text);

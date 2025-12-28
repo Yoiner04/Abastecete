@@ -1,4 +1,4 @@
-﻿using BusinessLogic.Models;
+using BusinessLogic.Models;
 using BusinessLogic.Utilidades;
 using DataAccess;
 using MySql.Data.MySqlClient;
@@ -25,27 +25,119 @@ namespace BusinessLogic
         {
             List<Parametro> parametros = new List<Parametro>()
             {
-                new Parametro("p_nombre", usuario.Persona.Nombre),
-                new Parametro("p_apellido", usuario.Persona.Apellido),
-                new Parametro("p_documento", usuario.Persona.Documento),
-                new Parametro("p_fk_tipo_documento", usuario.Persona.TipoDeDocumento.Id),
-                new Parametro("p_telefono", usuario.Persona.Telefono),
+                new Parametro("p_nombres", usuario.Nombres),
+                new Parametro("p_apellidos", usuario.Apellidos),
+                new Parametro("p_telefono", usuario.Telefono),
                 new Parametro("p_correo", usuario.Correo),
                 new Parametro("p_contrasenia", Seguridad.Encriptar(usuario.Contrasenia)),
-                new Parametro("p_codigo_referido_usuario", usuario.CodigoReferido),
-                new Parametro("p_fk_id_metodo_autenticacion", 1)
+                new Parametro("p_documento", usuario.DocumentoIdentidad),
+                new Parametro("p_fk_tipo_documento", usuario.TipoDocumentoId > 0 ? usuario.TipoDocumentoId : 1),
+                new Parametro("p_fk_rol", usuario.RolId > 0 ? usuario.RolId : 3),
             };
-            return conexion.EjecutarTransaccionConMensaje("crear_usuario_persona", parametros);
+            return conexion.EjecutarTransaccionConMensaje("crear_usuario", parametros);
         }
 
         public DataTable Login(string nombreUsuario, string contrasenia)
         {
+            Console.WriteLine($"[LOGIN DEBUG] ========================================");
+            Console.WriteLine($"[LOGIN DEBUG] Intentando login para: '{nombreUsuario}'");
+
             List<Parametro> parametros = new List<Parametro>()
             {
                 new Parametro("p_nombre_usuario", nombreUsuario),
-                new Parametro("p_contrasenia", Seguridad.Encriptar(contrasenia))
+                new Parametro("p_contrasenia", "") // No se usa, pero el SP lo requiere
             };
-            return conexion.EjecutarConsulta("login_usuario", parametros);
+
+            try
+            {
+                var result = conexion.EjecutarConsulta("login_usuario", parametros);
+                Console.WriteLine($"[LOGIN DEBUG] Resultado SP: {result.Rows.Count} filas");
+
+                if (result.Rows.Count > 0)
+                {
+                    int rolId = Convert.ToInt32(result.Rows[0]["FK_ID_ROL"]);
+                    Console.WriteLine($"[LOGIN DEBUG] FK_ID_ROL: {rolId}");
+
+                    // Si es código de error (97, 98, 0), retornar directamente
+                    if (rolId == 97 || rolId == 98 || rolId == 0)
+                    {
+                        Console.WriteLine($"[LOGIN DEBUG] Código de error: {rolId}");
+                        return result;
+                    }
+
+                    // Verificar contraseña con BCrypt
+                    if (result.Columns.Contains("CONTRASENIA_HASH") && result.Rows[0]["CONTRASENIA_HASH"] != DBNull.Value)
+                    {
+                        string hashAlmacenado = result.Rows[0]["CONTRASENIA_HASH"].ToString();
+                        Console.WriteLine($"[LOGIN DEBUG] Verificando BCrypt...");
+
+                        bool contraseniaValida = Seguridad.VerificarContrasenia(contrasenia, hashAlmacenado);
+                        Console.WriteLine($"[LOGIN DEBUG] Contraseña válida: {contraseniaValida}");
+
+                        if (contraseniaValida)
+                        {
+                            // Limpiar intentos fallidos
+                            int idUsuario = Convert.ToInt32(result.Rows[0]["PK_ID_USUARIO"]);
+                            LimpiarIntentosFallidos(idUsuario);
+                            Console.WriteLine($"[LOGIN DEBUG] Login exitoso para usuario {idUsuario}");
+                            return result;
+                        }
+                        else
+                        {
+                            // Contraseña incorrecta - registrar intento fallido
+                            int idUsuario = Convert.ToInt32(result.Rows[0]["PK_ID_USUARIO"]);
+                            RegistrarIntentoFallido(idUsuario);
+
+                            // Retornar código 99 (contraseña incorrecta)
+                            DataTable errorResult = new DataTable();
+                            errorResult.Columns.Add("FK_ID_ROL", typeof(int));
+                            errorResult.Rows.Add(99);
+                            Console.WriteLine($"[LOGIN DEBUG] Contraseña incorrecta, retornando 99");
+                            return errorResult;
+                        }
+                    }
+                }
+
+                Console.WriteLine($"[LOGIN DEBUG] ========================================");
+                return result;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[LOGIN DEBUG] ERROR: {ex.Message}");
+                throw;
+            }
+        }
+
+        private void RegistrarIntentoFallido(int idUsuario)
+        {
+            try
+            {
+                var parametros = new List<Parametro>()
+                {
+                    new Parametro("p_id_usuario", idUsuario)
+                };
+                conexion.EjecutarTransaccion("registrar_intento_fallido", parametros);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[LOGIN] Error registrando intento fallido: {ex.Message}");
+            }
+        }
+
+        private void LimpiarIntentosFallidos(int idUsuario)
+        {
+            try
+            {
+                var parametros = new List<Parametro>()
+                {
+                    new Parametro("p_id_usuario", idUsuario)
+                };
+                conexion.EjecutarTransaccion("limpiar_intentos_fallidos", parametros);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[LOGIN] Error limpiando intentos fallidos: {ex.Message}");
+            }
         }
 
 
@@ -61,27 +153,41 @@ namespace BusinessLogic
 
             foreach (DataRow row in datos.Rows)
             {
-                usuarios.Add(new Usuario
-                {
-                    Id = Convert.ToInt32(row["PK_ID_USUARIO"]),
-                    Persona = new Persona
-                    {
-                        Id = row["PK_ID_PERSONA"] != DBNull.Value ? Convert.ToInt32(row["PK_ID_PERSONA"]) : 0,
-                        Nombre = row["NOMBRES"].ToString(),
-                        Apellido = row["APELLIDOS"].ToString(),
-                        Telefono = row["TELEFONO"].ToString(),
-                        Estado = Convert.ToInt32(row["ESTADO"]) == 1 ? "Activo" : "Inactivo",
-                        Correo = row["CORREO"].ToString()
-                    },
-                    Rol = new Rol
-                    {
-                        Nombre = row["NOMBRE_ROL"].ToString()
-                    },
-                    Correo = row["CORREO"].ToString(),
-                    CodigoReferido = null
-                });
+                usuarios.Add(MapearUsuario(row));
             }
             return usuarios;
+        }
+
+        /// <summary>
+        /// Mapea un DataRow a un objeto Usuario
+        /// </summary>
+        private Usuario MapearUsuario(DataRow row)
+        {
+            return new Usuario
+            {
+                Id = Convert.ToInt32(row["PK_ID_USUARIO"]),
+                Nombres = row["NOMBRES"]?.ToString() ?? "",
+                Apellidos = row["APELLIDOS"]?.ToString() ?? "",
+                Telefono = row["TELEFONO"]?.ToString() ?? "",
+                Correo = row["CORREO"]?.ToString() ?? row["NOMBRE_USUARIO"]?.ToString() ?? "",
+                Estado = row["ESTADO"] != DBNull.Value ? Convert.ToInt32(row["ESTADO"]) : 1,
+                DocumentoIdentidad = row.Table.Columns.Contains("DOCUMENTO_IDENTIDAD") && row["DOCUMENTO_IDENTIDAD"] != DBNull.Value
+                    ? Convert.ToInt64(row["DOCUMENTO_IDENTIDAD"])
+                    : null,
+                TipoDocumentoId = row.Table.Columns.Contains("FK_ID_TIPO_DOCUMENTO") && row["FK_ID_TIPO_DOCUMENTO"] != DBNull.Value
+                    ? Convert.ToInt32(row["FK_ID_TIPO_DOCUMENTO"])
+                    : 1,
+                CodigoReferido = row.Table.Columns.Contains("CODIGO_REFERIDO")
+                    ? row["CODIGO_REFERIDO"]?.ToString()
+                    : null,
+                Rol = new Rol
+                {
+                    Nombre = row.Table.Columns.Contains("NOMBRE_ROL") ? row["NOMBRE_ROL"]?.ToString() ?? "" : ""
+                },
+                RolId = row.Table.Columns.Contains("FK_ID_ROL") && row["FK_ID_ROL"] != DBNull.Value
+                    ? Convert.ToInt32(row["FK_ID_ROL"])
+                    : 0
+            };
         }
 
         /// <summary>
@@ -261,24 +367,22 @@ namespace BusinessLogic
             }
         }
 
-        
-        public bool EditarUsuario(Persona usuario)
+
+        public bool EditarUsuario(Usuario usuario)
         {
             List<Parametro> parametros = new List<Parametro>
             {
-                new Parametro("p_nombre", usuario.Nombre),
-                new Parametro("p_apellido", usuario.Apellido),
-                new Parametro("p_documento", usuario.Documento),
-                new Parametro("p_fk_tipo_documento", usuario.TipoDeDocumento.Id),
+                new Parametro("p_id_usuario", usuario.Id),
+                new Parametro("p_nombres", usuario.Nombres),
+                new Parametro("p_apellidos", usuario.Apellidos),
                 new Parametro("p_telefono", usuario.Telefono),
-                new Parametro("p_correo", usuario.Correo),
             };
-            bool act = conexion.EjecutarTransaccion("editar_usuario_persona", parametros);
+            bool act = conexion.EjecutarTransaccion("editar_usuario", parametros);
             return act;
         }
 
         /// <summary>
-        /// Obtiene usuarios con información de su local y suscripción (método legacy - usa N+1 queries)
+        /// Obtiene usuarios con información de su local y suscripción
         /// </summary>
         public List<UsuarioConLocalViewModel> ConsultarUsuariosConLocal(int idUsuario)
         {
@@ -293,10 +397,10 @@ namespace BusinessLogic
                     Usuario = usuario
                 };
 
-                // Intentar obtener el local del usuario (por persona)
-                if (usuario.Persona?.Id > 0)
+                // Intentar obtener el local del usuario
+                if (usuario.Id > 0)
                 {
-                    viewModel.Local = manejadorNegocios.ConsultarNegocioPersonaConSuscripcion(usuario.Persona.Id);
+                    viewModel.Local = manejadorNegocios.ConsultarNegocioUsuarioConSuscripcion(usuario.Id);
                 }
 
                 resultado.Add(viewModel);
@@ -344,20 +448,15 @@ namespace BusinessLogic
                     Usuario = new Usuario
                     {
                         Id = Convert.ToInt32(row["UsuarioId"]),
-                        Persona = new Persona
-                        {
-                            Id = row["PersonaId"] != DBNull.Value ? Convert.ToInt32(row["PersonaId"]) : 0,
-                            Nombre = row["PersonaNombres"].ToString(),
-                            Apellido = row["PersonaApellidos"].ToString(),
-                            Telefono = row["PersonaTelefono"].ToString(),
-                            Correo = row["PersonaCorreo"].ToString(),
-                            Estado = Convert.ToInt32(row["UsuarioEstado"]) == 1 ? "Activo" : "Inactivo"
-                        },
+                        Nombres = row["Nombres"]?.ToString() ?? "",
+                        Apellidos = row["Apellidos"]?.ToString() ?? "",
+                        Telefono = row["Telefono"]?.ToString() ?? "",
+                        Correo = row["Correo"]?.ToString() ?? "",
+                        Estado = Convert.ToInt32(row["UsuarioEstado"]),
                         Rol = new Rol
                         {
-                            Nombre = row["RolNombre"].ToString()
-                        },
-                        Correo = row["PersonaCorreo"].ToString()
+                            Nombre = row["RolNombre"]?.ToString() ?? ""
+                        }
                     }
                 };
 
@@ -367,7 +466,7 @@ namespace BusinessLogic
                     viewModel.Local = new Negocio
                     {
                         Id = Convert.ToInt32(row["LocalId"]),
-                        Nombre = row["LocalNombre"].ToString()
+                        Nombre = row["LocalNombre"]?.ToString() ?? ""
                     };
 
                     // Suscripción activa (si existe)
@@ -390,7 +489,7 @@ namespace BusinessLogic
                                 Id = row["TipoMembresiaId"] != DBNull.Value
                                     ? Convert.ToInt32(row["TipoMembresiaId"])
                                     : 0,
-                                Nombre = row["TipoMembresiaNombre"].ToString()
+                                Nombre = row["TipoMembresiaNombre"]?.ToString() ?? ""
                             }
                         };
                     }

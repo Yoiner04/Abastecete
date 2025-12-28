@@ -114,14 +114,14 @@ namespace Abastecete.Controllers
         [Auditar(ModulosAuditoria.OFERTAS_FLASH, TiposAccionAuditoria.CREATE, ParametroDescripcion = "Titulo")]
         public async Task<IActionResult> Crear(OfertaFlash oferta, int productoSeleccionado)
         {
-            var personaId = HttpContext.Session.GetInt32("PersonaId");
-            if (personaId == null)
+            var usuarioId = HttpContext.Session.GetInt32("idUsuario");
+            if (usuarioId == null)
             {
                 TempData["ErrorMessage"] = "No tienes un negocio registrado para publicar ofertas.";
                 return RedirectToAction("Crear");
             }
 
-            Negocio negocio = _manejadorNegocios.ConsultarNegocio(personaId.Value);
+            Negocio negocio = _manejadorNegocios.ConsultarNegocioPorUsuario(usuarioId.Value);
             if (negocio == null)
             {
                 TempData["ErrorMessage"] = "No se encontró un negocio asociado a tu cuenta.";
@@ -183,10 +183,10 @@ namespace Abastecete.Controllers
         // Obtener el ID del local del usuario autenticado
         private int? ObtenerIdLocalUsuario()
         {
-            var personaId = HttpContext.Session.GetInt32("PersonaId");
-            if (personaId == null) return null;
+            var usuarioId = HttpContext.Session.GetInt32("idUsuario");
+            if (usuarioId == null) return null;
 
-            Negocio negocio = _manejadorNegocios.ConsultarNegocio(personaId.Value);
+            Negocio negocio = _manejadorNegocios.ConsultarNegocioPorUsuario(usuarioId.Value);
             return negocio?.Id;
         }
 

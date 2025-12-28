@@ -17,11 +17,10 @@ namespace Abastecete.Controllers
         /// </summary>
         public IActionResult DashboardAdmin(string periodo = "7d")
         {
-            // Verificar sesión (LoginController usa "PersonaId")
-            var idPersona = HttpContext.Session.GetInt32("PersonaId");
+            var idUsuario = HttpContext.Session.GetInt32("idUsuario");
             var permisos = HttpContext.Session.GetString("permisos");
 
-            if (idPersona == null)
+            if (idUsuario == null)
             {
                 return RedirectToAction("Login", "Login");
             }
@@ -50,8 +49,8 @@ namespace Abastecete.Controllers
         [HttpGet]
         public IActionResult ObtenerDatosAdmin(string periodo = "7d")
         {
-            var idPersona = HttpContext.Session.GetInt32("PersonaId");
-            if (idPersona == null)
+            var idUsuario = HttpContext.Session.GetInt32("idUsuario");
+            if (idUsuario == null)
             {
                 return Json(new { success = false, mensaje = "Sesión expirada" });
             }
@@ -113,14 +112,14 @@ namespace Abastecete.Controllers
         /// </summary>
         public IActionResult Index(string periodo = "7d")
         {
-            var idPersona = HttpContext.Session.GetInt32("PersonaId");
-            if (idPersona == null)
+            var idUsuario = HttpContext.Session.GetInt32("idUsuario");
+            if (idUsuario == null)
             {
                 return RedirectToAction("Login", "Login");
             }
 
             // Obtener el local del usuario
-            var local = manejadorNegocios.ConsultarNegocio(idPersona.Value);
+            var local = manejadorNegocios.ConsultarNegocioPorUsuario(idUsuario.Value);
             if (local == null)
             {
                 TempData["mensaje"] = "No tienes un local registrado.";
@@ -145,13 +144,13 @@ namespace Abastecete.Controllers
         [HttpGet]
         public IActionResult ObtenerDatos(string periodo = "7d")
         {
-            var idPersona = HttpContext.Session.GetInt32("PersonaId");
-            if (idPersona == null)
+            var idUsuario = HttpContext.Session.GetInt32("idUsuario");
+            if (idUsuario == null)
             {
                 return Json(new { success = false, mensaje = "Sesión expirada" });
             }
 
-            var local = manejadorNegocios.ConsultarNegocio(idPersona.Value);
+            var local = manejadorNegocios.ConsultarNegocioPorUsuario(idUsuario.Value);
             if (local == null)
             {
                 return Json(new { success = false, mensaje = "No tienes un local registrado" });

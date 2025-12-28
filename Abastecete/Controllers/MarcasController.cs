@@ -19,7 +19,7 @@ namespace Abastecete.Controllers
         /// <summary>
         /// Vista principal CRUD de marcas
         /// </summary>
-        [RequierePermiso("Administrar Marcas")]
+        [RequierePermiso("Administrar Marcas,ADMIN_MARCAS")]
         public IActionResult Index()
         {
             var marcas = _manejadorMarcas.ConsultarMarcasTodas();
@@ -84,7 +84,7 @@ namespace Abastecete.Controllers
         /// Crea una nueva marca
         /// </summary>
         [HttpPost]
-        [RequierePermiso("Administrar Marcas")]
+        [RequierePermiso("Administrar Marcas,ADMIN_MARCAS")]
         [Auditar(ModulosAuditoria.MARCAS, TiposAccionAuditoria.CREATE, ParametroDescripcion = "nombre")]
         public IActionResult Crear(string nombre, string descripcion, IFormFile logo)
         {
@@ -125,7 +125,7 @@ namespace Abastecete.Controllers
         /// Edita una marca existente
         /// </summary>
         [HttpPost]
-        [RequierePermiso("Administrar Marcas")]
+        [RequierePermiso("Administrar Marcas,ADMIN_MARCAS")]
         [Auditar(ModulosAuditoria.MARCAS, TiposAccionAuditoria.UPDATE, ParametroId = "id", ParametroDescripcion = "nombre")]
         public IActionResult Editar(int id, string nombre, string descripcion, IFormFile logo)
         {
@@ -179,7 +179,7 @@ namespace Abastecete.Controllers
         /// Elimina o desactiva una marca
         /// </summary>
         [HttpDelete]
-        [RequierePermiso("Administrar Marcas")]
+        [RequierePermiso("Administrar Marcas,ADMIN_MARCAS")]
         [Auditar(ModulosAuditoria.MARCAS, TiposAccionAuditoria.DELETE, ParametroId = "id")]
         public IActionResult Eliminar(int id)
         {
@@ -216,7 +216,7 @@ namespace Abastecete.Controllers
         /// Activa una marca desactivada
         /// </summary>
         [HttpPost]
-        [RequierePermiso("Administrar Marcas")]
+        [RequierePermiso("Administrar Marcas,ADMIN_MARCAS")]
         public IActionResult Activar(int id)
         {
             if (id <= 0)

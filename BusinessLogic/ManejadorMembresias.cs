@@ -1,19 +1,22 @@
-﻿using BusinessLogic.Models;
+using BusinessLogic.Models;
 using DataAccess;
 using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 
 namespace BusinessLogic
 {
     public class ManejadorMembresias
     {
         private Connection conexion;
+        private ManejadorPermisos manejadorPermisos;
 
         public ManejadorMembresias()
         {
             conexion = new Connection();
+            manejadorPermisos = new ManejadorPermisos();
         }
 
         public List<Membresia> consultarTiposMembresia()
@@ -160,6 +163,68 @@ namespace BusinessLogic
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// Obtiene una membresía con sus permisos cargados
+        /// </summary>
+        public Membresia ObtenerMembresiaConPermisos(int id)
+        {
+            var membresia = ObtenerMembresia(id);
+            if (membresia != null)
+            {
+                membresia.Permisos = manejadorPermisos.ObtenerPermisosMembresia(id);
+                membresia.TotalPermisos = membresia.Permisos.Count;
+            }
+            return membresia;
+        }
+
+        /// <summary>
+        /// Obtiene todas las membresías con conteo de permisos
+        /// </summary>
+        public List<Membresia> ObtenerMembresiasConConteoPermisos()
+        {
+            DataTable datos = conexion.EjecutarConsulta("obtener_membresias_con_permisos");
+            List<Membresia> membresias = new List<Membresia>();
+
+            foreach (DataRow row in datos.Rows)
+            {
+                membresias.Add(new Membresia
+                {
+                    Id = Convert.ToInt32(row["PK_ID_TIPO_MEMBRESIA"]),
+                    Nombre = row["NOMBRE"].ToString(),
+                    Costo = row["COSTO"] != DBNull.Value ? float.Parse(row["COSTO"].ToString()) : 0,
+                    Estado = row["ESTADO"] != DBNull.Value ? Convert.ToInt32(row["ESTADO"]) : 1,
+                    Cantidad = row["CANTIDAD_PRODUCTOS"] != DBNull.Value ? Convert.ToInt32(row["CANTIDAD_PRODUCTOS"]) : 0,
+                    OfertasFlashSimultaneas = row["OFERTAS_FLASH_SIMULTANEAS"] != DBNull.Value ? Convert.ToInt32(row["OFERTAS_FLASH_SIMULTANEAS"]) : 1,
+                    Duracion = row["DURACION_OFERTA"] != DBNull.Value ? Convert.ToInt32(row["DURACION_OFERTA"]) : 6,
+                    TotalPermisos = row["total_permisos"] != DBNull.Value ? Convert.ToInt32(row["total_permisos"]) : 0
+                });
+            }
+
+            return membresias;
+        }
+
+        /// <summary>
+        /// Actualiza los permisos de una membresía
+        /// </summary>
+        public int ActualizarPermisosMembresia(int idTipoMembresia, List<int> idsPermisos)
+        {
+            return manejadorPermisos.ActualizarPermisosMembresia(idTipoMembresia, idsPermisos);
+        }
+
+        /// <summary>
+        /// Obtiene todas las membresías con sus permisos completos
+        /// </summary>
+        public List<Membresia> ObtenerMembresiasConPermisos()
+        {
+            var membresias = ObtenerTodasMembresias();
+            foreach (var membresia in membresias)
+            {
+                membresia.Permisos = manejadorPermisos.ObtenerPermisosMembresia(membresia.Id);
+                membresia.TotalPermisos = membresia.Permisos.Count;
+            }
+            return membresias;
         }
 
     }

@@ -27,7 +27,7 @@ namespace BusinessLogic
         {
             List<Parametro> parametros = new List<Parametro>
             {
-                new Parametro("p_fk_id_persona", negocio.Persona.Id),
+                new Parametro("p_fk_id_usuario", negocio.UsuarioId),
                 new Parametro("p_fk_id_estado_local", 1),
                 new Parametro("p_fk_id_tipomembresia", idTipoMembresia),
                 new Parametro("p_localizacion", negocio.Localizacion),
@@ -190,11 +190,11 @@ namespace BusinessLogic
             return categorias;
         }
 
-        public Negocio ConsultarNegocio(int idPersona)
+        public Negocio ConsultarNegocio(int idUsuario)
         {
             List<Parametro> parametros = new List<Parametro>
             {
-                new Parametro("p_id_persona", idPersona)
+                new Parametro("p_id_usuario", idUsuario)
             };
 
             DataTable datos = conexion.EjecutarConsulta("consultar_negocio", parametros);
@@ -363,7 +363,7 @@ namespace BusinessLogic
             try
             {
                 List<Parametro> p = new List<Parametro> {
-                    new Parametro("p_id_persona", 0)
+                    new Parametro("p_id_usuario", 0)
                 };
 
                 DataTable datos = conexion.EjecutarConsulta("consultar_local", p);
@@ -499,11 +499,39 @@ namespace BusinessLogic
         }
 
         /// <summary>
-        /// Consulta un negocio por persona incluyendo su suscripción activa
+        /// DEPRECATED: Alias para compatibilidad, usar ConsultarNegocioUsuarioConSuscripcion
         /// </summary>
-        public Negocio ConsultarNegocioPersonaConSuscripcion(int idPersona)
+        public Negocio ConsultarNegocioPersonaConSuscripcion(int idUsuario)
         {
-            var negocio = ConsultarNegocio(idPersona);
+            return ConsultarNegocioUsuarioConSuscripcion(idUsuario);
+        }
+
+        /// <summary>
+        /// Consulta un negocio por ID de usuario
+        /// </summary>
+        public Negocio ConsultarNegocioPorUsuario(int idUsuario)
+        {
+            List<Parametro> parametros = new List<Parametro>
+            {
+                new Parametro("p_id_usuario", idUsuario)
+            };
+
+            DataTable datos = conexion.EjecutarConsulta("consultar_negocio_usuario", parametros);
+
+            if (datos == null || datos.Rows.Count == 0)
+            {
+                return null;
+            }
+
+            return MapearNegocioDesdeRow(datos.Rows[0]);
+        }
+
+        /// <summary>
+        /// Consulta un negocio por ID de usuario incluyendo su suscripción activa
+        /// </summary>
+        public Negocio ConsultarNegocioUsuarioConSuscripcion(int idUsuario)
+        {
+            var negocio = ConsultarNegocioPorUsuario(idUsuario);
             if (negocio != null)
             {
                 negocio.SuscripcionActiva = _manejadorSuscripciones.ObtenerSuscripcionActiva(negocio.Id);
