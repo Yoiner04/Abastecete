@@ -31,6 +31,8 @@ namespace BusinessLogic.Models
 
         // Referidos
         public int ClientesReferidosTotal { get; set; }
+        public decimal CreditoReferidos { get; set; }
+        public bool YaUsoDescuentoReferido { get; set; }
 
         // Rol
         public Rol Rol { get; set; }

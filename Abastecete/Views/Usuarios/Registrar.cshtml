@@ -246,15 +246,38 @@
 
                     <!-- Código Referido (Opcional) -->
                     <div class="space-y-1.5">
-                        <label class="text-sm font-medium text-gray-700">Código de referido <span class="font-normal text-gray-400">(opcional)</span></label>
+                        <label class="text-sm font-medium text-gray-700">Codigo de referido <span class="font-normal text-gray-400">(opcional)</span></label>
                         <div class="relative">
                             <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                                 <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/>
                                 </svg>
                             </div>
-                            @Html.TextBoxFor(m => m.CodigoReferido, new { @class = "w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all outline-none", @placeholder = "COD1234567", @id = "codigoReferido", data_val = "false" })
+                            @Html.TextBoxFor(m => m.CodigoReferidoUsado, new { @class = "w-full pl-10 pr-12 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all outline-none", @placeholder = "COD123456", @id = "codigoReferidoUsado", data_val = "false", @maxlength = "20" })
+                            <div id="codigoValidando" class="hidden absolute inset-y-0 right-0 flex items-center pr-3">
+                                <svg class="animate-spin h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                                </svg>
+                            </div>
+                            <div id="codigoValido" class="hidden absolute inset-y-0 right-0 flex items-center pr-3">
+                                <svg class="h-5 w-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                </svg>
+                            </div>
+                            <div id="codigoInvalido" class="hidden absolute inset-y-0 right-0 flex items-center pr-3">
+                                <svg class="h-5 w-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                </svg>
+                            </div>
                         </div>
+                        <div id="referidoPor" class="hidden text-xs text-emerald-600 flex items-center gap-1">
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                            </svg>
+                            <span>Referido por: <strong id="nombreReferidor"></strong></span>
+                        </div>
+                        <span id="codigoReferidoError" class="hidden text-xs text-red-500"></span>
                     </div>
 
                     <!-- Botón Submit -->
@@ -292,6 +315,71 @@
 
         document.addEventListener("DOMContentLoaded", function () {
             const form = document.getElementById("registroForm");
+            const codigoInput = document.getElementById("codigoReferidoUsado");
+            let timeoutId = null;
+            let codigoValido = true; // true por defecto porque es opcional
+
+            // Cargar codigo de referido desde URL si existe
+            const urlParams = new URLSearchParams(window.location.search);
+            const refCode = urlParams.get('ref');
+            if (refCode && codigoInput) {
+                codigoInput.value = refCode;
+                validarCodigoReferido(refCode);
+            }
+
+            // Validar codigo al escribir (con debounce)
+            if (codigoInput) {
+                codigoInput.addEventListener('input', function() {
+                    clearTimeout(timeoutId);
+                    const codigo = this.value.trim();
+
+                    // Ocultar todos los indicadores
+                    document.getElementById('codigoValidando').classList.add('hidden');
+                    document.getElementById('codigoValido').classList.add('hidden');
+                    document.getElementById('codigoInvalido').classList.add('hidden');
+                    document.getElementById('referidoPor').classList.add('hidden');
+                    document.getElementById('codigoReferidoError').classList.add('hidden');
+
+                    if (codigo.length === 0) {
+                        codigoValido = true; // Es opcional
+                        return;
+                    }
+
+                    if (codigo.length >= 5) {
+                        document.getElementById('codigoValidando').classList.remove('hidden');
+                        timeoutId = setTimeout(() => validarCodigoReferido(codigo), 500);
+                    }
+                });
+            }
+
+            async function validarCodigoReferido(codigo) {
+                try {
+                    const response = await fetch(`/Referidos/ValidarCodigo?codigo=${encodeURIComponent(codigo)}`);
+                    const result = await response.json();
+
+                    document.getElementById('codigoValidando').classList.add('hidden');
+
+                    if (result.valido) {
+                        codigoValido = true;
+                        document.getElementById('codigoValido').classList.remove('hidden');
+                        document.getElementById('referidoPor').classList.remove('hidden');
+                        document.getElementById('nombreReferidor').textContent = result.nombreDueno;
+                        codigoInput.classList.remove('border-red-500');
+                        codigoInput.classList.add('border-emerald-500');
+                    } else {
+                        codigoValido = false;
+                        document.getElementById('codigoInvalido').classList.remove('hidden');
+                        document.getElementById('codigoReferidoError').textContent = result.mensaje;
+                        document.getElementById('codigoReferidoError').classList.remove('hidden');
+                        codigoInput.classList.add('border-red-500');
+                        codigoInput.classList.remove('border-emerald-500');
+                    }
+                } catch (error) {
+                    console.error('Error validando codigo:', error);
+                    document.getElementById('codigoValidando').classList.add('hidden');
+                    codigoValido = true; // En caso de error, permitir continuar
+                }
+            }
 
             form.addEventListener("submit", function (event) {
                 let valid = true;
@@ -326,6 +414,13 @@
                 if (!fields.correo.value.trim() || !/^[^\s@@]+@@[^\s@@]+\.[^\s@@]+$/.test(fields.correo.value)) showError(fields.correo, 'correoError');
                 if (fields.contrasenia.value.length < 8) showError(fields.contrasenia, 'contraseniaError');
                 if (fields.contrasenia.value !== fields.confirmPassword.value) showError(fields.confirmPassword, 'errorMessage');
+
+                // Validar codigo de referido si tiene valor
+                const codigoRef = codigoInput ? codigoInput.value.trim() : '';
+                if (codigoRef && !codigoValido) {
+                    codigoInput.classList.add('error-field', 'border-red-500');
+                    valid = false;
+                }
 
                 if (!valid) {
                     event.preventDefault();

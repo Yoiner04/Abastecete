@@ -33,6 +33,7 @@ namespace BusinessLogic
                 new Parametro("p_documento", usuario.DocumentoIdentidad),
                 new Parametro("p_fk_tipo_documento", usuario.TipoDocumentoId > 0 ? usuario.TipoDocumentoId : 1),
                 new Parametro("p_fk_rol", usuario.RolId > 0 ? usuario.RolId : 3),
+                new Parametro("p_codigo_referido_usado", usuario.CodigoReferidoUsado ?? ""),
             };
             return conexion.EjecutarTransaccionConMensaje("crear_usuario", parametros);
         }

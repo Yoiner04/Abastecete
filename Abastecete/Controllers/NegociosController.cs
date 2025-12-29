@@ -20,6 +20,7 @@ namespace Abastecete.Controllers
         private readonly ManejadorSuscripciones _manejadorSuscripciones;
         private readonly ManejadorPermisos _manejadorPermisos;
         private readonly ManejadorAddons _manejadorAddons;
+        private readonly ManejadorReferidos _manejadorReferidos;
         private readonly IConfiguration _configuration;
 
 
@@ -34,6 +35,7 @@ namespace Abastecete.Controllers
             _manejadorSuscripciones = new ManejadorSuscripciones();
             _manejadorPermisos = new ManejadorPermisos();
             _manejadorAddons = new ManejadorAddons();
+            _manejadorReferidos = new ManejadorReferidos();
             _configuration = configuration;
         }
 
@@ -478,10 +480,10 @@ namespace Abastecete.Controllers
         }
 
         /// <summary>
-        /// Procesa el cambio de plan después del pago exitoso con ePayco
+        /// Procesa el cambio de plan despues del pago exitoso con ePayco
         /// </summary>
         [HttpGet]
-        public IActionResult CompletarCambioPlan(int tipoMembresiaId, string periodo, decimal monto, string ref_payco)
+        public IActionResult CompletarCambioPlan(int tipoMembresiaId, string periodo, decimal monto, string ref_payco, decimal descuentoReferido = 0, decimal usarCredito = 0)
         {
             var usuarioId = HttpContext.Session.GetInt32("idUsuario");
             if (!usuarioId.HasValue)
@@ -503,27 +505,47 @@ namespace Abastecete.Controllers
                     periodo.ToUpper(),
                     monto,
                     $"ePayco - Ref: {ref_payco}",
-                    "Cambio de plan desde Mi Membresía"
+                    "Cambio de plan desde Mi Membresia"
                 );
 
                 if (resultado.IdSuscripcion > 0)
                 {
-                    // Actualizar permisos del usuario según la nueva membresía
+                    // Aplicar descuentos de referidos si corresponde
+                    if (descuentoReferido > 0 || usarCredito > 0)
+                    {
+                        try
+                        {
+                            _manejadorReferidos.AplicarDescuento(
+                                usuarioId.Value,
+                                tipoMembresiaId,
+                                monto,
+                                descuentoReferido,
+                                usarCredito
+                            );
+                            Console.WriteLine($"[REFERIDOS] Descuento aplicado: {descuentoReferido}, Credito usado: {usarCredito}");
+                        }
+                        catch (Exception exRef)
+                        {
+                            Console.WriteLine($"[REFERIDOS] Error aplicando descuento: {exRef.Message}");
+                        }
+                    }
+
+                    // Actualizar permisos del usuario segun la nueva membresia
                     if (usuarioId.HasValue)
                     {
                         int permisosAsignados = _manejadorPermisos.AsignarPermisosDeMembresia(usuarioId.Value, tipoMembresiaId);
-                        Console.WriteLine($"[PERMISOS] Reasignados {permisosAsignados} permisos al cambiar a membresía {tipoMembresiaId}");
+                        Console.WriteLine($"[PERMISOS] Reasignados {permisosAsignados} permisos al cambiar a membresia {tipoMembresiaId}");
 
-                        // Actualizar permisos en sesión
+                        // Actualizar permisos en sesion
                         var permisosSistema = _manejadorPermisos.ObtenerDiccionarioPermisos(usuarioId.Value);
                         HttpContext.Session.SetString("permisosSistema", JsonConvert.SerializeObject(permisosSistema));
                     }
 
                     string mensaje = resultado.TipoCambio switch
                     {
-                        "UPGRADE" => "¡Plan mejorado exitosamente!",
+                        "UPGRADE" => "Plan mejorado exitosamente!",
                         "DOWNGRADE" => "Plan cambiado exitosamente.",
-                        _ => "¡Membresía activada exitosamente!"
+                        _ => "Membresia activada exitosamente!"
                     };
                     TempData["Success"] = mensaje;
                 }
