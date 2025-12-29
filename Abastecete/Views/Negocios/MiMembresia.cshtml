@@ -5,10 +5,12 @@
     var historial = ViewBag.Historial as List<BusinessLogic.Models.HistorialMembresia> ?? new List<BusinessLogic.Models.HistorialMembresia>();
     var membresias = ViewBag.MembresiasDisponibles as List<BusinessLogic.Models.Membresia> ?? new List<BusinessLogic.Models.Membresia>();
     var epaycoKey = ViewBag.EpaycoPublicKey as string;
+    var resumenReferidos = ViewBag.ResumenReferidos as BusinessLogic.Models.ResumenReferidos;
 
     var diasRestantes = suscripcion?.DiasRestantes ?? 0;
     var proximoAVencer = suscripcion?.ProximaAVencer ?? false;
     var estaActiva = suscripcion?.EstaActiva ?? false;
+    var creditoDisponible = resumenReferidos?.CreditoDisponible ?? 0;
 }
 
 <!DOCTYPE html>
@@ -123,6 +125,33 @@
                 </button>
             </div>
         }
+
+        <!-- Banner de Referidos -->
+        <div class="mb-6 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-2xl p-4 sm:p-6 text-white animate-fadeIn">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
+                        <i class="fas fa-gift text-2xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-lg">Programa de Referidos</h3>
+                        @if (creditoDisponible > 0)
+                        {
+                            <p class="text-purple-100 text-sm">Tienes <strong class="text-white">$@creditoDisponible.ToString("N0")</strong> de credito disponible</p>
+                        }
+                        else
+                        {
+                            <p class="text-purple-100 text-sm">Comparte tu codigo y gana credito en tus renovaciones</p>
+                        }
+                    </div>
+                </div>
+                <a href="@Url.Action("MisReferidos", "Referidos")"
+                   class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-white text-purple-600 font-semibold hover:bg-purple-50 transition-colors">
+                    <i class="fas fa-users"></i>
+                    <span>Mis Referidos</span>
+                </a>
+            </div>
+        </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <!-- Columna izquierda - Estado actual -->

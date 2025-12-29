@@ -418,11 +418,15 @@ namespace Abastecete.Controllers
             // Obtener todas las membresías disponibles para cambiar plan
             var membresiasDisponibles = _manejadorMembresias.ObtenerTodasMembresias();
 
+            // Obtener resumen de referidos para mostrar crédito disponible
+            var resumenReferidos = _manejadorReferidos.ObtenerResumen(usuarioId.Value);
+
             ViewBag.Negocio = negocio;
             ViewBag.SuscripcionActiva = suscripcionActiva;
             ViewBag.Historial = historial;
             ViewBag.MembresiasDisponibles = membresiasDisponibles;
             ViewBag.EpaycoPublicKey = _configuration["Epayco:PublicKey"];
+            ViewBag.ResumenReferidos = resumenReferidos;
 
             return View();
         }
@@ -431,7 +435,7 @@ namespace Abastecete.Controllers
         /// Procesa la renovación de membresía después del pago exitoso con ePayco
         /// </summary>
         [HttpGet]
-        public IActionResult CompletarRenovacion(string periodo, decimal monto, string ref_payco)
+        public IActionResult CompletarRenovacion(string periodo, decimal monto, string ref_payco, decimal usarCredito = 0)
         {
             var usuarioId = HttpContext.Session.GetInt32("idUsuario");
             if (!usuarioId.HasValue)
@@ -463,6 +467,26 @@ namespace Abastecete.Controllers
 
                 if (resultado.IdSuscripcion > 0)
                 {
+                    // Aplicar uso de credito de referidos si corresponde
+                    if (usarCredito > 0)
+                    {
+                        try
+                        {
+                            _manejadorReferidos.AplicarDescuento(
+                                usuarioId.Value,
+                                suscripcionActiva.TipoMembresiaId,
+                                monto,
+                                0, // No hay descuento de primera compra en renovacion
+                                usarCredito
+                            );
+                            Console.WriteLine($"[REFERIDOS] Credito usado en renovacion: {usarCredito}");
+                        }
+                        catch (Exception exRef)
+                        {
+                            Console.WriteLine($"[REFERIDOS] Error usando credito: {exRef.Message}");
+                        }
+                    }
+
                     TempData["Success"] = $"¡Membresía renovada exitosamente! Nueva fecha de vencimiento: {resultado.NuevaFechaFin:dd/MM/yyyy}";
                 }
                 else
