@@ -192,11 +192,20 @@ namespace BusinessLogic
 
         /// <summary>
         /// Obtiene un diccionario de permisos del usuario para almacenar en sesión
+        /// Incluye permisos básicos por defecto para todos los usuarios logueados
         /// </summary>
         public Dictionary<string, bool> ObtenerDiccionarioPermisos(int idUsuario)
         {
             var permisos = ObtenerPermisosUsuario(idUsuario);
-            return permisos.ToDictionary(p => p.Codigo, p => p.Estado);
+            var diccionario = permisos.ToDictionary(p => p.Codigo, p => p.Estado);
+
+            // Permisos básicos para todos los usuarios logueados (sin importar si tienen negocio)
+            if (!diccionario.ContainsKey("Publica tu negocio"))
+                diccionario["Publica tu negocio"] = true;
+            if (!diccionario.ContainsKey("Dejanos tu reseña"))
+                diccionario["Dejanos tu reseña"] = true;
+
+            return diccionario;
         }
 
         #endregion

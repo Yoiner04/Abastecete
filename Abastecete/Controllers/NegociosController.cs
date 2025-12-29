@@ -474,7 +474,7 @@ namespace Abastecete.Controllers
                         {
                             _manejadorReferidos.AplicarDescuento(
                                 usuarioId.Value,
-                                suscripcionActiva.TipoMembresiaId,
+                                suscripcionActiva.TipoMembresia?.Id ?? 0,
                                 monto,
                                 0, // No hay descuento de primera compra en renovacion
                                 usarCredito

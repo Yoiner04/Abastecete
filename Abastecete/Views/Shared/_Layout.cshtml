@@ -17,7 +17,6 @@
 
 @Html.Partial("_SupportBubble")
 @Html.Partial("_ContactModal")
-@Html.Partial("_AddonBubble")
 
 
 <body class="bg-gray-100" style="color: black;">
@@ -302,11 +301,24 @@
                 else
                 {
                     <li>
-                        <a href="@Url.Action("Login", "Login")" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#23916A]/10 font-semibold no-underline hover:bg-[#23916A] hover:text-white transition-all duration-200" style="color: #23916A;">
-                            <i class="fas fa-rocket text-sm" style="color: inherit;"></i>
+                        <a href="@Url.Action("Login", "Login")" class="btn-publicar inline-flex items-center gap-2 px-4 py-2 rounded-lg font-semibold no-underline transition-all duration-200">
+                            <i class="fas fa-rocket text-sm"></i>
                             ¡Publica tu negocio o déjanos tu reseña!
                         </a>
                     </li>
+                    <style>
+                        .btn-publicar {
+                            background-color: #23916A !important;
+                            color: #ffffff !important;
+                        }
+                        .btn-publicar:hover {
+                            background-color: #1d7a59 !important;
+                            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+                        }
+                        .btn-publicar i {
+                            color: #ffffff !important;
+                        }
+                    </style>
                 }
             </ul>
         </div>
