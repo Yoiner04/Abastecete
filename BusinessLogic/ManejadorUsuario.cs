@@ -55,13 +55,14 @@ namespace BusinessLogic
 
                 if (result.Rows.Count > 0)
                 {
-                    int rolId = Convert.ToInt32(result.Rows[0]["FK_ID_ROL"]);
-                    Console.WriteLine($"[LOGIN DEBUG] FK_ID_ROL: {rolId}");
+                    // CODIGO_ESTADO: 97=inhabilitado, 98=no existe, 0=bloqueado, 1=OK
+                    int codigoEstado = Convert.ToInt32(result.Rows[0]["CODIGO_ESTADO"]);
+                    Console.WriteLine($"[LOGIN DEBUG] CODIGO_ESTADO: {codigoEstado}");
 
                     // Si es código de error (97, 98, 0), retornar directamente
-                    if (rolId == 97 || rolId == 98 || rolId == 0)
+                    if (codigoEstado == 97 || codigoEstado == 98 || codigoEstado == 0)
                     {
-                        Console.WriteLine($"[LOGIN DEBUG] Código de error: {rolId}");
+                        Console.WriteLine($"[LOGIN DEBUG] Código de error: {codigoEstado}");
                         return result;
                     }
 
@@ -90,7 +91,7 @@ namespace BusinessLogic
 
                             // Retornar código 99 (contraseña incorrecta)
                             DataTable errorResult = new DataTable();
-                            errorResult.Columns.Add("FK_ID_ROL", typeof(int));
+                            errorResult.Columns.Add("CODIGO_ESTADO", typeof(int));
                             errorResult.Rows.Add(99);
                             Console.WriteLine($"[LOGIN DEBUG] Contraseña incorrecta, retornando 99");
                             return errorResult;
@@ -182,11 +183,9 @@ namespace BusinessLogic
                     : null,
                 Rol = new Rol
                 {
-                    Nombre = row.Table.Columns.Contains("NOMBRE_ROL") ? row["NOMBRE_ROL"]?.ToString() ?? "" : ""
+                    Nombre = "" // Ya no usamos roles, se usa sistema de permisos por membresía
                 },
-                RolId = row.Table.Columns.Contains("FK_ID_ROL") && row["FK_ID_ROL"] != DBNull.Value
-                    ? Convert.ToInt32(row["FK_ID_ROL"])
-                    : 0
+                RolId = 0 // Obsoleto - se usa sistema de permisos por membresía
             };
         }
 

@@ -129,7 +129,7 @@ BEGIN
     IF p_ids_permisos IS NOT NULL AND p_ids_permisos != '' THEN
         SET @sql = CONCAT(
             'INSERT INTO tipo_membresia_permiso (FK_ID_TIPO_MEMBRESIA, FK_ID_PERMISO) ',
-            'SELECT ', p_id_tipo_membresia, ', PK_ID_PERMISO FROM permiso_sistema ',
+            'SELECT ', p_id_tipo_membresia, ', PK_ID_PERMISO FROM permiso ',
             'WHERE PK_ID_PERMISO IN (', p_ids_permisos, ') AND ESTADO = 1'
         );
         PREPARE stmt FROM @sql;
@@ -301,6 +301,34 @@ BEGIN
 END//
 DELIMITER ;
 
+-- Volcando estructura para procedimiento abastecete.asignar_permisos_membresia
+DELIMITER //
+CREATE PROCEDURE `asignar_permisos_membresia`(
+    IN p_id_tipo_membresia INT,
+    IN p_codigos_permisos TEXT
+)
+BEGIN
+    DECLARE v_sql TEXT;
+
+    -- Eliminar permisos actuales de la membresía
+    DELETE FROM tipo_membresia_permiso WHERE FK_ID_TIPO_MEMBRESIA = p_id_tipo_membresia;
+
+    -- Insertar nuevos permisos
+    IF p_codigos_permisos IS NOT NULL AND p_codigos_permisos != '' THEN
+        SET @sql = CONCAT(
+            'INSERT INTO tipo_membresia_permiso (FK_ID_TIPO_MEMBRESIA, FK_ID_PERMISO) ',
+            'SELECT ', p_id_tipo_membresia, ', PK_ID_PERMISO FROM permiso ',
+            'WHERE FIND_IN_SET(CODIGO, ''', p_codigos_permisos, ''') > 0'
+        );
+        PREPARE stmt FROM @sql;
+        EXECUTE stmt;
+        DEALLOCATE PREPARE stmt;
+    END IF;
+
+    SELECT ROW_COUNT() as permisos_asignados;
+END//
+DELIMITER ;
+
 -- Volcando estructura para procedimiento abastecete.asignar_permisos_membresia_usuario
 DELIMITER //
 CREATE PROCEDURE `asignar_permisos_membresia_usuario`(
@@ -368,41 +396,6 @@ BEGIN
     ON DUPLICATE KEY UPDATE ESTADO = 1, ORIGEN = p_origen;
 
     SELECT ROW_COUNT() as resultado;
-END//
-DELIMITER ;
-
--- Volcando estructura para procedimiento abastecete.asignar_rol
-DELIMITER //
-CREATE PROCEDURE `asignar_rol`(
-	IN `p_id_usuario` INT,
-	IN `p_id_rol` INT
-)
-BEGIN
-    -- Manejo de errores
-    DECLARE EXIT HANDLER FOR SQLEXCEPTION 
-    BEGIN
-        SELECT 'Error en la base de datos.' AS mensaje;
-    END;
-
-    -- Verificar si el usuario existe
-    IF NOT EXISTS (SELECT 1 FROM usuario WHERE PK_ID_USUARIO = p_id_usuario) THEN
-        SELECT 'El usuario especificado no existe.' AS mensaje;
-    -- Verificar si el rol existe
-    ELSEIF NOT EXISTS (SELECT 1 FROM rol WHERE PK_ID_ROL = p_id_rol) THEN
-        SELECT 'El rol especificado no existe.' AS mensaje;
-    ELSE
-        -- Asignar el rol al usuario
-        UPDATE usuario 
-        SET FK_ID_ROL = p_id_rol 
-        WHERE PK_ID_USUARIO = p_id_usuario;
-
-        -- Verificar si se actualizó el registro
-        IF ROW_COUNT() > 0 THEN
-            SELECT 'Rol asignado correctamente al usuario.' AS mensaje;
-        ELSE
-            SELECT 'No se pudo asignar el rol. Verifique los datos.' AS mensaje;
-        END IF;
-    END IF;
 END//
 DELIMITER ;
 
@@ -874,15 +867,13 @@ DELIMITER ;
 -- Volcando estructura para procedimiento abastecete.consultar_local
 DELIMITER //
 CREATE PROCEDURE `consultar_local`(
-	IN `p_id_persona` INT
+    IN p_id_usuario INT
 )
 BEGIN
-    -- Si el ID de la persona es 0, traer todos los locales
-    IF p_id_persona = 0 THEN
+    IF p_id_usuario = 0 THEN
         SELECT * FROM local;
     ELSE
-        -- Si se proporciona un ID válido, filtrar por el ID de la persona
-        SELECT * FROM local WHERE FK_ID_PERSONA = p_id_persona;
+        SELECT * FROM local WHERE FK_ID_USUARIO = p_id_usuario;
     END IF;
 END//
 DELIMITER ;
@@ -983,34 +974,6 @@ BEGIN
 END//
 DELIMITER ;
 
--- Volcando estructura para procedimiento abastecete.consultar_local_por_persona_seguro
-DELIMITER //
-CREATE PROCEDURE `consultar_local_por_persona_seguro`(
-    IN `p_id_persona` INT,
-    OUT `mensaje` VARCHAR(255),
-    OUT `resultado` INT
-)
-BEGIN
-    DECLARE local_existe INT DEFAULT 0;
-
-    -- Verificar si existe un local para esta persona
-    SELECT COUNT(*) INTO local_existe
-    FROM local
-    WHERE FK_ID_PERSONA = p_id_persona;
-
-    IF local_existe > 0 THEN
-        SELECT * FROM local WHERE FK_ID_PERSONA = p_id_persona LIMIT 1;
-        SET mensaje = 'Local encontrado';
-        SET resultado = 1;
-    ELSE
-        SET mensaje = 'No se encontró local para esta persona';
-        SET resultado = 0;
-        -- Retornar conjunto vacío con la estructura correcta
-        SELECT * FROM local WHERE 1 = 0;
-    END IF;
-END//
-DELIMITER ;
-
 -- Volcando estructura para procedimiento abastecete.consultar_local_por_usuario
 DELIMITER //
 CREATE PROCEDURE `consultar_local_por_usuario`(
@@ -1021,6 +984,32 @@ BEGIN
         SELECT * FROM local;
     ELSE
         SELECT * FROM local WHERE FK_ID_USUARIO = p_id_usuario;
+    END IF;
+END//
+DELIMITER ;
+
+-- Volcando estructura para procedimiento abastecete.consultar_local_por_usuario_seguro
+DELIMITER //
+CREATE PROCEDURE `consultar_local_por_usuario_seguro`(
+    IN p_id_usuario INT,
+    OUT mensaje VARCHAR(255),
+    OUT resultado INT
+)
+BEGIN
+    DECLARE local_existe INT DEFAULT 0;
+
+    SELECT COUNT(*) INTO local_existe
+    FROM local
+    WHERE FK_ID_USUARIO = p_id_usuario;
+
+    IF local_existe > 0 THEN
+        SELECT * FROM local WHERE FK_ID_USUARIO = p_id_usuario LIMIT 1;
+        SET mensaje = 'Local encontrado';
+        SET resultado = 1;
+    ELSE
+        SET mensaje = 'No se encontró local para este usuario';
+        SET resultado = 0;
+        SELECT NULL AS PK_ID_LOCAL WHERE 1=0;
     END IF;
 END//
 DELIMITER ;
@@ -1130,7 +1119,7 @@ DELIMITER ;
 -- Volcando estructura para procedimiento abastecete.consultar_negocio
 DELIMITER //
 CREATE PROCEDURE `consultar_negocio`(
-    IN p_id_persona INT
+    IN p_id_usuario INT
 )
 BEGIN
     SELECT
@@ -1161,18 +1150,15 @@ BEGIN
         l.HORARIO_DOMINGO,
         l.LATITUD,
         l.LONGITUD,
-        l.FECHA_REGISTRO,
-        l.FECHA_ACTUALIZACION,
-        s.PK_ID_SUSCRIPCION,
-        s.FK_ID_TIPO_MEMBRESIA,
-        s.FECHA_INICIO AS SUSCRIPCION_FECHA_INICIO,
-        s.FECHA_FIN AS SUSCRIPCION_FECHA_FIN,
-        s.ESTADO AS SUSCRIPCION_ESTADO,
-        tm.NOMBRE AS TIPO_MEMBRESIA_NOMBRE
-    FROM `local` l
-    LEFT JOIN suscripcion s ON s.PK_ID_SUSCRIPCION = l.FK_ID_SUSCRIPCION_ACTIVA
-    LEFT JOIN tipo_membresia tm ON tm.PK_ID_TIPO_MEMBRESIA = s.FK_ID_TIPO_MEMBRESIA
-    WHERE l.FK_ID_PERSONA = p_id_persona
+        l.FK_ID_SUSCRIPCION_ACTIVA,
+        l.CLOUDINARY_PUBLIC_ID_LOGOTIPO,
+        tm.NOMBRE AS TIPO_MEMBRESIA,
+        s.FECHA_FIN AS FECHA_FIN_MEMBRESIA,
+        DATEDIFF(s.FECHA_FIN, NOW()) AS DIAS_RESTANTES
+    FROM local l
+    LEFT JOIN suscripcion s ON l.FK_ID_SUSCRIPCION_ACTIVA = s.PK_ID_SUSCRIPCION
+    LEFT JOIN tipo_membresia tm ON s.FK_ID_TIPO_MEMBRESIA = tm.PK_ID_TIPO_MEMBRESIA
+    WHERE l.FK_ID_USUARIO = p_id_usuario
     LIMIT 1;
 END//
 DELIMITER ;
@@ -1229,6 +1215,69 @@ BEGIN
     FROM permiso p
     LEFT JOIN permiso_de_rol pr ON pr.PFK_ID_ROL = p_id_rol AND p.PK_ID_PERMISO = pr.PFK_ID_PERMISO;
   END IF;
+END//
+DELIMITER ;
+
+-- Volcando estructura para procedimiento abastecete.consultar_permisos_membresia
+DELIMITER //
+CREATE PROCEDURE `consultar_permisos_membresia`(
+    IN p_id_tipo_membresia INT
+)
+BEGIN
+    SELECT
+        ps.PK_ID_PERMISO,
+        ps.CODIGO,
+        ps.NOMBRE,
+        ps.DESCRIPCION,
+        ps.ICONO,
+        ps.CATEGORIA,
+        ps.ORDEN
+    FROM permiso ps
+    INNER JOIN tipo_membresia_permiso tmp ON ps.PK_ID_PERMISO = tmp.FK_ID_PERMISO
+    WHERE tmp.FK_ID_TIPO_MEMBRESIA = p_id_tipo_membresia
+    ORDER BY ps.CATEGORIA, ps.ORDEN;
+END//
+DELIMITER ;
+
+-- Volcando estructura para procedimiento abastecete.consultar_permisos_sistema
+DELIMITER //
+CREATE PROCEDURE `consultar_permisos_sistema`()
+BEGIN
+    SELECT
+        PK_ID_PERMISO,
+        CODIGO,
+        NOMBRE,
+        DESCRIPCION,
+        ICONO,
+        CATEGORIA,
+        ORDEN,
+        ESTADO
+    FROM permiso
+    WHERE ESTADO = 1
+    ORDER BY CATEGORIA, ORDEN;
+END//
+DELIMITER ;
+
+-- Volcando estructura para procedimiento abastecete.consultar_permisos_usuario
+DELIMITER //
+CREATE PROCEDURE `consultar_permisos_usuario`(
+    IN p_id_usuario INT
+)
+BEGIN
+    SELECT
+        ps.PK_ID_PERMISO,
+        ps.CODIGO,
+        ps.NOMBRE,
+        ps.DESCRIPCION,
+        ps.ICONO,
+        ps.CATEGORIA,
+        up.ORIGEN,
+        up.FECHA_ASIGNACION
+    FROM usuario_permiso up
+    INNER JOIN permiso ps ON up.FK_ID_PERMISO = ps.PK_ID_PERMISO
+    WHERE up.FK_ID_USUARIO = p_id_usuario
+      AND up.ESTADO = 1
+    ORDER BY ps.CATEGORIA, ps.ORDEN;
 END//
 DELIMITER ;
 
@@ -1621,73 +1670,6 @@ BEGIN
 END//
 DELIMITER ;
 
--- Volcando estructura para procedimiento abastecete.consultar_usuarios
-DELIMITER //
-CREATE PROCEDURE `consultar_usuarios`(
-    IN `id_usuario` INT
-)
-BEGIN
-    SELECT
-        u.PK_ID_USUARIO,
-        COALESCE(p.PK_ID_PERSONA, 0) AS PK_ID_PERSONA,
-        COALESCE(p.NOMBRES, '') AS NOMBRES,
-        COALESCE(p.APELLIDOS, '') AS APELLIDOS,
-        COALESCE(p.TELEFONO, '') AS TELEFONO,
-        COALESCE(u.ESTADO, 0) AS ESTADO,
-        COALESCE(r.NOMBRE_ROL, 'Sin rol') AS NOMBRE_ROL,
-        COALESCE(p.CORREO, '') AS CORREO
-    FROM usuario u
-    LEFT JOIN persona p ON u.FK_ID_PERSONA = p.PK_ID_PERSONA
-    LEFT JOIN rol r ON u.FK_ID_ROL = r.PK_ID_ROL
-    WHERE (id_usuario = 0 OR u.PK_ID_USUARIO = id_usuario);
-END//
-DELIMITER ;
-
--- Volcando estructura para procedimiento abastecete.consultar_usuarios_paginado
-DELIMITER //
-CREATE PROCEDURE `consultar_usuarios_paginado`(
-    IN `p_pagina` INT,
-    IN `p_registros_por_pagina` INT,
-    IN `p_busqueda` VARCHAR(100)
-)
-BEGIN
-    DECLARE v_offset INT;
-    SET v_offset = (p_pagina - 1) * p_registros_por_pagina;
-
-    -- Consulta principal con paginación
-    SELECT
-        u.PK_ID_USUARIO AS UsuarioId,
-        COALESCE(u.ESTADO, 0) AS UsuarioEstado,
-        COALESCE(p.PK_ID_PERSONA, 0) AS PersonaId,
-        COALESCE(p.NOMBRES, '') AS PersonaNombres,
-        COALESCE(p.APELLIDOS, '') AS PersonaApellidos,
-        COALESCE(p.TELEFONO, '') AS PersonaTelefono,
-        COALESCE(p.CORREO, '') AS PersonaCorreo,
-        COALESCE(r.NOMBRE_ROL, 'Sin rol') AS RolNombre,
-        l.PK_ID_LOCAL AS LocalId,
-        COALESCE(l.NOMBRE_LOCAL, '') AS LocalNombre,
-        s.PK_ID_SUSCRIPCION AS SuscripcionId,
-        s.FECHA_INICIO AS SuscripcionFechaInicio,
-        s.FECHA_FIN AS SuscripcionFechaFin,
-        s.ESTADO AS SuscripcionEstado,
-        tm.PK_ID_TIPO_MEMBRESIA AS TipoMembresiaId,
-        COALESCE(tm.NOMBRE, 'Sin membresía') AS TipoMembresiaNombre
-    FROM usuario u
-    LEFT JOIN persona p ON u.FK_ID_PERSONA = p.PK_ID_PERSONA
-    LEFT JOIN rol r ON u.FK_ID_ROL = r.PK_ID_ROL
-    LEFT JOIN local l ON l.FK_ID_PERSONA = p.PK_ID_PERSONA
-    LEFT JOIN suscripcion s ON l.FK_ID_SUSCRIPCION_ACTIVA = s.PK_ID_SUSCRIPCION
-    LEFT JOIN tipo_membresia tm ON s.FK_ID_TIPO_MEMBRESIA = tm.PK_ID_TIPO_MEMBRESIA
-    WHERE (p_busqueda IS NULL OR p_busqueda = '' OR
-           p.NOMBRES LIKE CONCAT('%', p_busqueda, '%') OR
-           p.APELLIDOS LIKE CONCAT('%', p_busqueda, '%') OR
-           p.CORREO LIKE CONCAT('%', p_busqueda, '%') OR
-           l.NOMBRE_LOCAL LIKE CONCAT('%', p_busqueda, '%'))
-    ORDER BY u.PK_ID_USUARIO DESC
-    LIMIT p_registros_por_pagina OFFSET v_offset;
-END//
-DELIMITER ;
-
 -- Volcando estructura para procedimiento abastecete.contar_galeria_pendientes
 DELIMITER //
 CREATE PROCEDURE `contar_galeria_pendientes`()
@@ -2036,19 +2018,6 @@ BEGIN
 END//
 DELIMITER ;
 
--- Volcando estructura para procedimiento abastecete.crear_permiso
-DELIMITER //
-CREATE PROCEDURE `crear_permiso`(
-  IN `p_nombre_permiso` VARCHAR(100),
-  IN `p_estado_permiso` TINYINT
-)
-BEGIN
-  -- Insertar el nuevo permiso
-  INSERT INTO permiso (NOMBRE_PERMISO, ESTADO_PERMISO)
-  VALUES (p_nombre_permiso, p_estado_permiso);
-END//
-DELIMITER ;
-
 -- Volcando estructura para procedimiento abastecete.crear_producto
 DELIMITER //
 CREATE PROCEDURE `crear_producto`(
@@ -2099,35 +2068,6 @@ BEGIN
         SELECT LAST_INSERT_ID() AS id_producto, 'Producto creado exitosamente' AS mensaje;
     ELSE
         SELECT 0 AS id_producto, 'Subcategoria no encontrada' AS mensaje;
-    END IF;
-END//
-DELIMITER ;
-
--- Volcando estructura para procedimiento abastecete.crear_rol
-DELIMITER //
-CREATE PROCEDURE `crear_rol`(
-	IN `p_nombre` VARCHAR(20)
-)
-BEGIN
-    -- Manejo de errores
-    DECLARE EXIT HANDLER FOR SQLEXCEPTION 
-    BEGIN
-        SELECT 'Error en la base de datos.' AS mensaje;
-    END;
-
-    -- Verificar si el rol ya existe
-    IF EXISTS (SELECT 1 FROM rol WHERE NOMBRE_ROL = p_nombre) THEN
-        SELECT 'El rol ya existe.' AS mensaje;
-    ELSE
-        -- Insertar el nuevo rol
-        INSERT INTO rol (NOMBRE_ROL) VALUES (p_nombre);
-        
-        -- Verificar si la inserción fue exitosa
-        IF ROW_COUNT() > 0 THEN
-            SELECT 'Rol creado exitosamente.' AS mensaje;
-        ELSE
-            SELECT 'Error al crear el rol.' AS mensaje;
-        END IF;
     END IF;
 END//
 DELIMITER ;
@@ -3013,38 +2953,6 @@ BEGIN
 END//
 DELIMITER ;
 
--- Volcando estructura para procedimiento abastecete.editar_permiso
-DELIMITER //
-CREATE PROCEDURE `editar_permiso`(
-  IN `p_id_permiso` INT,
-  IN `p_nombre_permiso` VARCHAR(100),
-  IN `p_estado_permiso` TINYINT,
-  OUT `mensaje` VARCHAR(500),
-  OUT `resultado` INT
-)
-BEGIN
-  SET resultado = 0;
-
-  -- Verificar si el permiso existe
-  IF EXISTS (SELECT 1 FROM permiso WHERE PK_ID_PERMISO = p_id_permiso) THEN
-    -- Verificar si ya existe otro permiso con el mismo nombre
-    IF NOT EXISTS (SELECT 1 FROM permiso WHERE NOMBRE_PERMISO = p_nombre_permiso) THEN
-      -- Actualizar el nombre y estado del permiso
-      UPDATE permiso
-      SET NOMBRE_PERMISO = p_nombre_permiso, ESTADO_PERMISO = p_estado_permiso
-      WHERE PK_ID_PERMISO = p_id_permiso;
-
-      SET resultado = 1;
-      SET mensaje = 'Permiso actualizado exitosamente.';
-    ELSE
-      SET mensaje = 'El nombre del permiso ya está en uso.';
-    END IF;
-  ELSE
-    SET mensaje = 'El permiso no existe en el sistema.';
-  END IF;
-END//
-DELIMITER ;
-
 -- Volcando estructura para procedimiento abastecete.editar_producto
 DELIMITER //
 CREATE PROCEDURE `editar_producto`(
@@ -3092,37 +3000,6 @@ BEGIN
     ELSE
         SELECT 0 AS resultado, 'Producto no encontrado' AS mensaje;
     END IF;
-END//
-DELIMITER ;
-
--- Volcando estructura para procedimiento abastecete.editar_rol
-DELIMITER //
-CREATE PROCEDURE `editar_rol`(
-  IN `p_id_rol` INT,
-  IN `p_nombre` VARCHAR(20),
-  OUT `mensaje` VARCHAR(500),
-  OUT `resultado` INT
-)
-BEGIN
-  SET resultado = 0;
-
-  -- Verificar si el rol existe
-  IF EXISTS (SELECT 1 FROM rol WHERE PK_ID_ROL = p_id_rol) THEN
-    -- Verificar si ya existe otro rol con el mismo nombre
-    IF NOT EXISTS (SELECT 1 FROM rol WHERE NOMBRE_ROL = p_nombre) THEN
-      -- Actualizar el nombre del rol
-      UPDATE rol
-      SET NOMBRE_ROL = p_nombre
-      WHERE PK_ID_ROL = p_id_rol;
-
-      SET resultado = 1;
-      SET mensaje = 'Rol actualizado exitosamente.';
-    ELSE
-      SET mensaje = 'El nombre del rol ya está en uso.';
-    END IF;
-  ELSE
-    SET mensaje = 'El rol no existe en el sistema.';
-  END IF;
 END//
 DELIMITER ;
 
@@ -3558,34 +3435,6 @@ BEGIN
 END//
 DELIMITER ;
 
--- Volcando estructura para procedimiento abastecete.eliminar_permiso
-DELIMITER //
-CREATE PROCEDURE `eliminar_permiso`(
-  IN `p_id_permiso` INT,
-  OUT `mensaje` VARCHAR(500),
-  OUT `resultado` INT
-)
-BEGIN
-  SET resultado = 0;
-
-  -- Verificar si el permiso existe
-  IF EXISTS (SELECT 1 FROM permiso WHERE PK_ID_PERMISO = p_id_permiso) THEN
-    -- Verificar si el permiso está asignado a algún rol
-    IF NOT EXISTS (SELECT 1 FROM permiso_de_rol WHERE PFK_ID_PERMISO = p_id_permiso) THEN
-      -- Eliminar el permiso
-      DELETE FROM permiso WHERE PK_ID_PERMISO = p_id_permiso;
-
-      SET resultado = 1;
-      SET mensaje = 'Permiso eliminado exitosamente.';
-    ELSE
-      SET mensaje = 'El permiso está asignado a un rol y no puede ser eliminado.';
-    END IF;
-  ELSE
-    SET mensaje = 'El permiso no existe en el sistema.';
-  END IF;
-END//
-DELIMITER ;
-
 -- Volcando estructura para procedimiento abastecete.eliminar_producto
 DELIMITER //
 CREATE PROCEDURE `eliminar_producto`(
@@ -3595,29 +3444,6 @@ BEGIN
   IF EXISTS (SELECT 1 FROM producto WHERE PK_ID_PRODUCTO = p_id_producto) THEN
     -- Eliminar el producto
     DELETE FROM producto WHERE PK_ID_PRODUCTO = p_id_producto;
-  END IF;
-END//
-DELIMITER ;
-
--- Volcando estructura para procedimiento abastecete.eliminar_rol
-DELIMITER //
-CREATE PROCEDURE `eliminar_rol`(
-  IN `p_id_rol` INT,
-  OUT `mensaje` VARCHAR(500),
-  OUT `resultado` INT
-)
-BEGIN
-  SET resultado = 0;
-
-  -- Verificar si el rol existe
-  IF EXISTS (SELECT 1 FROM rol WHERE PK_ID_ROL = p_id_rol) THEN
-    -- Eliminar el rol
-    DELETE FROM rol WHERE PK_ID_ROL = p_id_rol;
-
-    SET resultado = 1;
-    SET mensaje = 'Rol eliminado exitosamente.';
-  ELSE
-    SET mensaje = 'El rol no existe en el sistema.';
   END IF;
 END//
 DELIMITER ;
@@ -3862,7 +3688,7 @@ CREATE TABLE IF NOT EXISTS `evento_analitica` (
   CONSTRAINT `fk_evento_producto` FOREIGN KEY (`FK_ID_PRODUCTO`) REFERENCES `producto` (`PK_ID_PRODUCTO`) ON DELETE SET NULL
 ) ENGINE=InnoDB AUTO_INCREMENT=30 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla abastecete.evento_analitica: ~22 rows (aproximadamente)
+-- Volcando datos para la tabla abastecete.evento_analitica: ~0 rows (aproximadamente)
 
 -- Volcando estructura para evento abastecete.expirar_ofertas_flash
 DELIMITER //
@@ -3891,7 +3717,7 @@ CREATE TABLE IF NOT EXISTS `galeria_local` (
   CONSTRAINT `FK_galeria_revisor` FOREIGN KEY (`FK_ID_USUARIO_REVISOR`) REFERENCES `usuario` (`PK_ID_USUARIO`) ON DELETE SET NULL
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Volcando datos para la tabla abastecete.galeria_local: ~0 rows (aproximadamente)
+-- Volcando datos para la tabla abastecete.galeria_local: ~1 rows (aproximadamente)
 INSERT INTO `galeria_local` (`PK_ID_GALERIA`, `FK_ID_LOCAL`, `CLOUDINARY_URL`, `CLOUDINARY_PUBLIC_ID`, `ESTADO`, `FECHA_SUBIDA`, `FECHA_REVISION`, `FK_ID_USUARIO_REVISOR`, `MOTIVO_RECHAZO`) VALUES
 	(1, 28, 'https://res.cloudinary.com/dwl5ggfhd/image/upload/v1766353804/galeria/locales/xtx4pvn7tyockpdhge4x.jpg', 'galeria/locales/xtx4pvn7tyockpdhge4x', 1, '2025-12-21 21:50:05', '2025-12-21 22:31:12', 2, NULL);
 
@@ -4056,6 +3882,18 @@ CREATE EVENT `limpiar_bloqueos_usuario` ON SCHEDULE EVERY 5 MINUTE STARTS '2025-
 END//
 DELIMITER ;
 
+-- Volcando estructura para procedimiento abastecete.limpiar_intentos_fallidos
+DELIMITER //
+CREATE PROCEDURE `limpiar_intentos_fallidos`(
+    IN p_id_usuario INT
+)
+BEGIN
+    UPDATE usuario
+    SET INTENTOS_FALLIDOS = 0, FECHA_BLOQUEO = NULL
+    WHERE PK_ID_USUARIO = p_id_usuario;
+END//
+DELIMITER ;
+
 -- Volcando estructura para procedimiento abastecete.listar_galeria_local
 DELIMITER //
 CREATE PROCEDURE `listar_galeria_local`(
@@ -4171,7 +4009,7 @@ CREATE TABLE IF NOT EXISTS `local` (
   CONSTRAINT `FK_local_usuario` FOREIGN KEY (`FK_ID_USUARIO`) REFERENCES `usuario` (`PK_ID_USUARIO`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla abastecete.local: ~15 rows (aproximadamente)
+-- Volcando datos para la tabla abastecete.local: ~0 rows (aproximadamente)
 
 -- Volcando estructura para tabla abastecete.localcategoria
 CREATE TABLE IF NOT EXISTS `localcategoria` (
@@ -4394,9 +4232,9 @@ CREATE TABLE IF NOT EXISTS `logs_sistema` (
   KEY `IDX_logs_tipo_accion` (`TIPO_ACCION`),
   KEY `IDX_logs_entidad` (`MODULO`,`ENTIDAD_ID`),
   CONSTRAINT `FK_logs_usuario` FOREIGN KEY (`FK_ID_USUARIO`) REFERENCES `usuario` (`PK_ID_USUARIO`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=75 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=76 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla abastecete.logs_sistema: ~55 rows (aproximadamente)
+-- Volcando datos para la tabla abastecete.logs_sistema: ~75 rows (aproximadamente)
 INSERT INTO `logs_sistema` (`PK_ID_LOG`, `FK_ID_USUARIO`, `NOMBRE_USUARIO`, `MODULO`, `TIPO_ACCION`, `ENTIDAD_ID`, `ENTIDAD_DESCRIPCION`, `DATOS_ANTERIORES`, `DATOS_NUEVOS`, `IP_CLIENTE`, `USER_AGENT`, `FECHA_REGISTRO`, `RESULTADO`, `MENSAJE_ERROR`, `CONTROLLER`, `ACTION`) VALUES
 	(1, 54, 'prueba123@gmail.com', 'AUTENTICACION', 'LOGIN', 54, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-22 05:25:06', 'EXITO', '', 'Login', 'Login'),
 	(2, 54, 'Usuario', 'AUTENTICACION', 'LOGOUT', 54, 'Cierre de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-22 05:27:25', 'EXITO', '', 'Login', 'Logout'),
@@ -4471,7 +4309,11 @@ INSERT INTO `logs_sistema` (`PK_ID_LOG`, `FK_ID_USUARIO`, `NOMBRE_USUARIO`, `MOD
 	(71, NULL, 'admin@abastecete.com', 'AUTENTICACION', 'LOGIN', NULL, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-28 02:27:05', 'ERROR', 'Credenciales incorrectas', 'Login', 'Login'),
 	(72, 1, 'admin@abastecete.com', 'AUTENTICACION', 'LOGIN', 1, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-28 02:29:48', 'EXITO', '', 'Login', 'Login'),
 	(73, 1, 'admin@abastecete.com', 'AUTENTICACION', 'LOGIN', 1, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-28 02:39:52', 'EXITO', '', 'Login', 'Login'),
-	(74, 1, 'admin@abastecete.com', 'AUTENTICACION', 'LOGIN', 1, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-28 02:44:53', 'EXITO', '', 'Login', 'Login');
+	(74, 1, 'admin@abastecete.com', 'AUTENTICACION', 'LOGIN', 1, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-28 02:44:53', 'EXITO', '', 'Login', 'Login'),
+	(75, NULL, 'admin@abastecete.com', 'AUTENTICACION', 'LOGIN', NULL, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-29 17:40:26', 'ERROR', 'Credenciales incorrectas', 'Login', 'Login'),
+	(76, 1, 'admin@abastecete.com', 'AUTENTICACION', 'LOGIN', 1, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-29 17:54:26', 'EXITO', '', 'Login', 'Login'),
+	(77, 1, 'Usuario', 'AUTENTICACION', 'LOGOUT', 1, 'Cierre de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-29 17:56:13', 'EXITO', '', 'Login', 'Logout'),
+	(78, 1, 'admin@abastecete.com', 'AUTENTICACION', 'LOGIN', 1, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-29 17:56:18', 'EXITO', '', 'Login', 'Login');
 
 -- Volcando estructura para tabla abastecete.marca
 CREATE TABLE IF NOT EXISTS `marca` (
@@ -4862,10 +4704,9 @@ BEGIN
         ps.ICONO,
         ps.CATEGORIA,
         ps.ORDEN
-    FROM permiso_sistema ps
+    FROM permiso ps
     INNER JOIN tipo_membresia_permiso tmp ON ps.PK_ID_PERMISO = tmp.FK_ID_PERMISO
     WHERE tmp.FK_ID_TIPO_MEMBRESIA = p_id_tipo_membresia
-        AND ps.ESTADO = 1
     ORDER BY ps.CATEGORIA, ps.ORDEN;
 END//
 DELIMITER ;
@@ -4883,7 +4724,7 @@ BEGIN
         CATEGORIA,
         ORDEN,
         ESTADO
-    FROM permiso_sistema
+    FROM permiso
     WHERE ESTADO = 1
     ORDER BY CATEGORIA, ORDEN;
 END//
@@ -4906,11 +4747,10 @@ BEGIN
         up.ORIGEN,
         up.FECHA_ASIGNACION,
         up.ESTADO
-    FROM permiso_sistema ps
-    INNER JOIN usuario_permiso up ON ps.PK_ID_PERMISO = up.FK_ID_PERMISO
+    FROM usuario_permiso up
+    INNER JOIN permiso ps ON up.FK_ID_PERMISO = ps.PK_ID_PERMISO
     WHERE up.FK_ID_USUARIO = p_id_usuario
-        AND up.ESTADO = 1
-        AND ps.ESTADO = 1
+      AND up.ESTADO = 1
     ORDER BY ps.CATEGORIA, ps.ORDEN;
 END//
 DELIMITER ;
@@ -5088,7 +4928,7 @@ CREATE TABLE IF NOT EXISTS `oferta_flash` (
   CONSTRAINT `FK_ID_LOCAL` FOREIGN KEY (`FK_ID_LOCAL`) REFERENCES `local` (`PK_ID_LOCAL`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla abastecete.oferta_flash: ~18 rows (aproximadamente)
+-- Volcando datos para la tabla abastecete.oferta_flash: ~0 rows (aproximadamente)
 
 -- Volcando estructura para tabla abastecete.opinion
 CREATE TABLE IF NOT EXISTS `opinion` (
@@ -5135,77 +4975,6 @@ CREATE TABLE IF NOT EXISTS `pagos` (
 -- Volcando estructura para tabla abastecete.permiso
 CREATE TABLE IF NOT EXISTS `permiso` (
   `PK_ID_PERMISO` int NOT NULL AUTO_INCREMENT,
-  `NOMBRE_PERMISO` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL,
-  `ESTADO_PERMISO` tinyint NOT NULL,
-  PRIMARY KEY (`PK_ID_PERMISO`)
-) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- Volcando datos para la tabla abastecete.permiso: ~13 rows (aproximadamente)
-INSERT INTO `permiso` (`PK_ID_PERMISO`, `NOMBRE_PERMISO`, `ESTADO_PERMISO`) VALUES
-	(2, 'Administrar Categorias', 1),
-	(3, 'Administrar Usuarios', 1),
-	(4, 'Publica tu negocio', 1),
-	(5, 'Dejanos tu reseña', 1),
-	(6, 'Administrar Roles', 1),
-	(7, 'Administrar Membresias', 1),
-	(8, 'Mi negocio', 1),
-	(9, 'Administrar Banners', 1),
-	(11, 'Administrar Marcas', 1),
-	(12, 'Administrar Productos', 1),
-	(13, 'Ver Logs Sistema', 1),
-	(14, 'Administrar Galeria', 1),
-	(15, 'Ver Dashboard Admin', 1);
-
--- Volcando estructura para tabla abastecete.permiso_de_rol
-CREATE TABLE IF NOT EXISTS `permiso_de_rol` (
-  `PK_ID_PERMISO_ROL` int NOT NULL AUTO_INCREMENT,
-  `PFK_ID_ROL` int NOT NULL,
-  `PFK_ID_PERMISO` int NOT NULL,
-  `ESTADO_PERMISO_ROL` tinyint(1) NOT NULL,
-  PRIMARY KEY (`PK_ID_PERMISO_ROL`,`PFK_ID_ROL`,`PFK_ID_PERMISO`) USING BTREE,
-  KEY `FK_permiso_de_rol_rol` (`PFK_ID_ROL`),
-  KEY `FK_permiso_de_rol_permiso` (`PFK_ID_PERMISO`),
-  CONSTRAINT `FK_permiso_de_rol_permiso` FOREIGN KEY (`PFK_ID_PERMISO`) REFERENCES `permiso` (`PK_ID_PERMISO`),
-  CONSTRAINT `FK_permiso_de_rol_rol` FOREIGN KEY (`PFK_ID_ROL`) REFERENCES `rol` (`PK_ID_ROL`)
-) ENGINE=InnoDB AUTO_INCREMENT=40 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- Volcando datos para la tabla abastecete.permiso_de_rol: ~31 rows (aproximadamente)
-INSERT INTO `permiso_de_rol` (`PK_ID_PERMISO_ROL`, `PFK_ID_ROL`, `PFK_ID_PERMISO`, `ESTADO_PERMISO_ROL`) VALUES
-	(2, 1, 2, 1),
-	(3, 3, 4, 1),
-	(4, 3, 5, 1),
-	(5, 1, 3, 1),
-	(6, 1, 6, 1),
-	(11, 2, 2, 0),
-	(12, 2, 5, 1),
-	(13, 3, 6, 0),
-	(14, 2, 2, 0),
-	(15, 1, 4, 0),
-	(16, 1, 7, 1),
-	(17, 3, 8, 0),
-	(18, 1, 8, 0),
-	(19, 2, 8, 1),
-	(20, 1, 9, 1),
-	(22, 8, 2, 1),
-	(23, 8, 8, 1),
-	(24, 8, 5, 1),
-	(25, 8, 9, 1),
-	(26, 8, 6, 1),
-	(27, 8, 3, 1),
-	(28, 8, 4, 1),
-	(29, 8, 7, 1),
-	(32, 1, 5, 0),
-	(33, 1, 11, 1),
-	(34, 8, 11, 1),
-	(35, 1, 12, 1),
-	(36, 8, 12, 1),
-	(37, 1, 13, 1),
-	(38, 1, 14, 1),
-	(39, 1, 15, 1);
-
--- Volcando estructura para tabla abastecete.permiso_sistema
-CREATE TABLE IF NOT EXISTS `permiso_sistema` (
-  `PK_ID_PERMISO` int NOT NULL AUTO_INCREMENT,
   `CODIGO` varchar(50) NOT NULL COMMENT 'Código único para verificar en código',
   `NOMBRE` varchar(100) NOT NULL COMMENT 'Nombre para mostrar en UI',
   `DESCRIPCION` varchar(255) DEFAULT NULL COMMENT 'Descripción del permiso',
@@ -5218,8 +4987,8 @@ CREATE TABLE IF NOT EXISTS `permiso_sistema` (
   KEY `idx_permiso_sistema_estado` (`ESTADO`)
 ) ENGINE=InnoDB AUTO_INCREMENT=39 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla abastecete.permiso_sistema: ~38 rows (aproximadamente)
-INSERT INTO `permiso_sistema` (`PK_ID_PERMISO`, `CODIGO`, `NOMBRE`, `DESCRIPCION`, `ICONO`, `CATEGORIA`, `ORDEN`, `ESTADO`) VALUES
+-- Volcando datos para la tabla abastecete.permiso: ~38 rows (aproximadamente)
+INSERT INTO `permiso` (`PK_ID_PERMISO`, `CODIGO`, `NOMBRE`, `DESCRIPCION`, `ICONO`, `CATEGORIA`, `ORDEN`, `ESTADO`) VALUES
 	(1, 'ADMIN_CATEGORIAS', 'Administrar Categorías', 'Crear, editar, eliminar categorías de productos', 'fa-folder-tree', 'ADMIN', 1, 1),
 	(2, 'ADMIN_USUARIOS', 'Administrar Usuarios', 'Ver, editar, bloquear usuarios del sistema', 'fa-users-gear', 'ADMIN', 2, 1),
 	(3, 'ADMIN_MEMBRESIAS', 'Administrar Membresías', 'Configurar planes, precios, permisos por plan', 'fa-id-card', 'ADMIN', 3, 1),
@@ -5280,7 +5049,7 @@ CREATE TABLE IF NOT EXISTS `producto` (
   CONSTRAINT `fk_tipounidad` FOREIGN KEY (`FK_ID_TIPOUNIDAD`) REFERENCES `tipo_unidad` (`ID_TIPOUNIDAD`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla abastecete.producto: ~574 rows (aproximadamente)
+-- Volcando datos para la tabla abastecete.producto: ~0 rows (aproximadamente)
 
 -- Volcando estructura para tabla abastecete.productoslocal
 CREATE TABLE IF NOT EXISTS `productoslocal` (
@@ -6243,6 +6012,20 @@ BEGIN
 END//
 DELIMITER ;
 
+-- Volcando estructura para procedimiento abastecete.registrar_intento_fallido
+DELIMITER //
+CREATE PROCEDURE `registrar_intento_fallido`(
+    IN p_id_usuario INT
+)
+BEGIN
+    UPDATE usuario
+    SET
+        INTENTOS_FALLIDOS = COALESCE(INTENTOS_FALLIDOS, 0) + 1,
+        FECHA_BLOQUEO = CASE WHEN COALESCE(INTENTOS_FALLIDOS, 0) + 1 >= 5 THEN NOW() ELSE FECHA_BLOQUEO END
+    WHERE PK_ID_USUARIO = p_id_usuario;
+END//
+DELIMITER ;
+
 -- Volcando estructura para procedimiento abastecete.registrar_pago
 DELIMITER //
 CREATE PROCEDURE `registrar_pago`(
@@ -6469,7 +6252,7 @@ CREATE TABLE IF NOT EXISTS `resumen_analitica_diario` (
   CONSTRAINT `fk_resumen_local` FOREIGN KEY (`FK_ID_LOCAL`) REFERENCES `local` (`PK_ID_LOCAL`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=27 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla abastecete.resumen_analitica_diario: ~4 rows (aproximadamente)
+-- Volcando datos para la tabla abastecete.resumen_analitica_diario: ~8 rows (aproximadamente)
 INSERT INTO `resumen_analitica_diario` (`PK_ID_RESUMEN`, `FK_ID_LOCAL`, `FECHA`, `VISITAS_LOCAL`, `VISITAS_PRODUCTOS`, `CLICS_WHATSAPP`, `CLICS_TELEFONO`, `APARICIONES_BUSQUEDA`, `COMPARTIDOS`) VALUES
 	(1, 28, '2025-12-23', 6, 2, 1, 0, 4, 0),
 	(2, 35, '2025-12-23', 0, 0, 0, 0, 3, 0),
@@ -6513,21 +6296,6 @@ BEGIN
     WHERE PK_ID_GALERIA = p_id_galeria;
 END//
 DELIMITER ;
-
--- Volcando estructura para tabla abastecete.rol
-CREATE TABLE IF NOT EXISTS `rol` (
-  `PK_ID_ROL` int NOT NULL AUTO_INCREMENT,
-  `NOMBRE_ROL` varchar(20) NOT NULL,
-  PRIMARY KEY (`PK_ID_ROL`)
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- Volcando datos para la tabla abastecete.rol: ~5 rows (aproximadamente)
-INSERT INTO `rol` (`PK_ID_ROL`, `NOMBRE_ROL`) VALUES
-	(1, 'Administrador'),
-	(2, 'Proveedor'),
-	(3, 'Cliente'),
-	(7, 'Prueba'),
-	(8, 'Director de Proyecto');
 
 -- Volcando estructura para procedimiento abastecete.sp_actualizar_marca_producto
 DELIMITER //
@@ -7084,7 +6852,7 @@ CREATE TABLE IF NOT EXISTS `suscripcion` (
   CONSTRAINT `FK_suscripcion_tipo` FOREIGN KEY (`FK_ID_TIPO_MEMBRESIA`) REFERENCES `tipo_membresia` (`PK_ID_TIPO_MEMBRESIA`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla abastecete.suscripcion: ~27 rows (aproximadamente)
+-- Volcando datos para la tabla abastecete.suscripcion: ~0 rows (aproximadamente)
 
 -- Volcando estructura para tabla abastecete.tipo_documento
 CREATE TABLE IF NOT EXISTS `tipo_documento` (
@@ -7116,7 +6884,7 @@ CREATE TABLE IF NOT EXISTS `tipo_membresia` (
   PRIMARY KEY (`PK_ID_TIPO_MEMBRESIA`)
 ) ENGINE=InnoDB AUTO_INCREMENT=20 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla abastecete.tipo_membresia: ~9 rows (aproximadamente)
+-- Volcando datos para la tabla abastecete.tipo_membresia: ~3 rows (aproximadamente)
 INSERT INTO `tipo_membresia` (`PK_ID_TIPO_MEMBRESIA`, `NOMBRE`, `COSTO`, `ESTADO`, `DURACION_OFERTA`, `COSTO_TRIMESTRAL`, `COSTO_SEMESTRAL`, `COSTO_ANUAL`, `CANTIDAD_PRODUCTOS`, `OFERTAS_FLASH_SIMULTANEAS`, `OFERTAS_FLASH_TOTAL`) VALUES
 	(1, 'Plan Básico', 0, 1, 6, 0, 0, 0, '10', 1, 5),
 	(2, 'Plan Pro', 50000, 1, 12, 0, 0, 0, '50', 3, 20),
@@ -7128,10 +6896,10 @@ CREATE TABLE IF NOT EXISTS `tipo_membresia_permiso` (
   `FK_ID_PERMISO` int NOT NULL,
   `FECHA_ASIGNACION` datetime DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`FK_ID_TIPO_MEMBRESIA`,`FK_ID_PERMISO`),
-  KEY `FK_ID_PERMISO` (`FK_ID_PERMISO`),
   KEY `idx_tipo_membresia_permiso` (`FK_ID_TIPO_MEMBRESIA`),
-  CONSTRAINT `tipo_membresia_permiso_ibfk_1` FOREIGN KEY (`FK_ID_TIPO_MEMBRESIA`) REFERENCES `tipo_membresia` (`PK_ID_TIPO_MEMBRESIA`) ON DELETE CASCADE,
-  CONSTRAINT `tipo_membresia_permiso_ibfk_2` FOREIGN KEY (`FK_ID_PERMISO`) REFERENCES `permiso_sistema` (`PK_ID_PERMISO`) ON DELETE CASCADE
+  KEY `FK_tipo_membresia_permiso_permiso` (`FK_ID_PERMISO`),
+  CONSTRAINT `FK_tipo_membresia_permiso_permiso` FOREIGN KEY (`FK_ID_PERMISO`) REFERENCES `permiso` (`PK_ID_PERMISO`) ON DELETE CASCADE,
+  CONSTRAINT `tipo_membresia_permiso_ibfk_1` FOREIGN KEY (`FK_ID_TIPO_MEMBRESIA`) REFERENCES `tipo_membresia` (`PK_ID_TIPO_MEMBRESIA`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Volcando datos para la tabla abastecete.tipo_membresia_permiso: ~51 rows (aproximadamente)
@@ -7253,7 +7021,6 @@ CREATE TABLE IF NOT EXISTS `usuario` (
   `FK_ID_TIPO_DOCUMENTO` int DEFAULT '1',
   `CODIGO_REFERIDO` varchar(20) DEFAULT NULL,
   `CODIGO_REFERIDO_USADO` varchar(20) DEFAULT NULL,
-  `FK_ID_ROL` int NOT NULL,
   `NOMBRE_USUARIO` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
   `CONTRASENIA` mediumtext CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
   `TOKEN_RECUPERACION` varchar(255) DEFAULT NULL,
@@ -7268,7 +7035,6 @@ CREATE TABLE IF NOT EXISTS `usuario` (
   `FECHA_ULTIMO_INTENTO_RECUPERACION` datetime DEFAULT NULL,
   PRIMARY KEY (`PK_ID_USUARIO`),
   UNIQUE KEY `UQ_NOMBRE_USUARIO` (`NOMBRE_USUARIO`),
-  KEY `FK_usuario_rol` (`FK_ID_ROL`),
   KEY `FK_usuario_tipo_autenticacion` (`TIPO_AUTENTICACION`),
   KEY `idx_usuario_token` (`TOKEN_RECUPERACION`),
   KEY `idx_usuario_bloqueo` (`ESTADO`,`FECHA_BLOQUEO`),
@@ -7276,14 +7042,13 @@ CREATE TABLE IF NOT EXISTS `usuario` (
   KEY `idx_usuario_codigo_referido` (`CODIGO_REFERIDO`),
   KEY `FK_usuario_tipo_documento` (`FK_ID_TIPO_DOCUMENTO`),
   KEY `idx_usuario_nombre_usuario` (`NOMBRE_USUARIO`),
-  CONSTRAINT `FK_usuario_rol` FOREIGN KEY (`FK_ID_ROL`) REFERENCES `rol` (`PK_ID_ROL`),
   CONSTRAINT `FK_usuario_tipo_autenticacion` FOREIGN KEY (`TIPO_AUTENTICACION`) REFERENCES `metodo_autenticacion` (`PK_ID_METODO_AUTENTICACION`),
   CONSTRAINT `FK_usuario_tipo_documento` FOREIGN KEY (`FK_ID_TIPO_DOCUMENTO`) REFERENCES `tipo_documento` (`PK_ID_TIPO_DOCUMENTO`) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Volcando datos para la tabla abastecete.usuario: ~1 rows (aproximadamente)
-INSERT INTO `usuario` (`PK_ID_USUARIO`, `NOMBRES`, `APELLIDOS`, `TELEFONO`, `DOCUMENTO_IDENTIDAD`, `FK_ID_TIPO_DOCUMENTO`, `CODIGO_REFERIDO`, `CODIGO_REFERIDO_USADO`, `FK_ID_ROL`, `NOMBRE_USUARIO`, `CONTRASENIA`, `TOKEN_RECUPERACION`, `FECHA_EXPIRACION_TOKEN`, `TIPO_AUTENTICACION`, `INTENTOS_FALLIDOS`, `FECHA_BLOQUEO`, `CORREO_VERIFICADO`, `ESTADO`, `CLIENTES_REFERIDOS_TOTAL`, `INTENTOS_RECUPERACION`, `FECHA_ULTIMO_INTENTO_RECUPERACION`) VALUES
-	(1, 'Administrador', 'Sistema', '0000000000', NULL, 1, 'ADMIN001', NULL, 1, 'admin@abastecete.com', '$2a$10$tIiBnpPxFbzj2m7BS10LB.5VawdKtiixmBdellpulhPbbWF6xvd.y', NULL, NULL, NULL, 0, NULL, 0, 1, 0, 0, NULL);
+INSERT INTO `usuario` (`PK_ID_USUARIO`, `NOMBRES`, `APELLIDOS`, `TELEFONO`, `DOCUMENTO_IDENTIDAD`, `FK_ID_TIPO_DOCUMENTO`, `CODIGO_REFERIDO`, `CODIGO_REFERIDO_USADO`, `NOMBRE_USUARIO`, `CONTRASENIA`, `TOKEN_RECUPERACION`, `FECHA_EXPIRACION_TOKEN`, `TIPO_AUTENTICACION`, `INTENTOS_FALLIDOS`, `FECHA_BLOQUEO`, `CORREO_VERIFICADO`, `ESTADO`, `CLIENTES_REFERIDOS_TOTAL`, `INTENTOS_RECUPERACION`, `FECHA_ULTIMO_INTENTO_RECUPERACION`) VALUES
+	(1, 'Administrador', 'Sistema', '0000000000', NULL, 1, 'ADMIN001', NULL, 'admin@abastecete.com', '$2a$10$tIiBnpPxFbzj2m7BS10LB.5VawdKtiixmBdellpulhPbbWF6xvd.y', NULL, NULL, NULL, 0, NULL, 0, 1, 0, 0, NULL);
 
 -- Volcando estructura para tabla abastecete.usuario_permiso
 CREATE TABLE IF NOT EXISTS `usuario_permiso` (
@@ -7295,10 +7060,10 @@ CREATE TABLE IF NOT EXISTS `usuario_permiso` (
   `ESTADO` tinyint DEFAULT '1' COMMENT '1=Activo, 0=Inactivo',
   PRIMARY KEY (`PK_ID`),
   UNIQUE KEY `UK_usuario_permiso` (`FK_ID_USUARIO`,`FK_ID_PERMISO`),
-  KEY `FK_ID_PERMISO` (`FK_ID_PERMISO`),
   KEY `idx_usuario_permiso_usuario` (`FK_ID_USUARIO`,`ESTADO`),
-  CONSTRAINT `usuario_permiso_ibfk_1` FOREIGN KEY (`FK_ID_USUARIO`) REFERENCES `usuario` (`PK_ID_USUARIO`) ON DELETE CASCADE,
-  CONSTRAINT `usuario_permiso_ibfk_2` FOREIGN KEY (`FK_ID_PERMISO`) REFERENCES `permiso_sistema` (`PK_ID_PERMISO`) ON DELETE CASCADE
+  KEY `FK_usuario_permiso_permiso` (`FK_ID_PERMISO`),
+  CONSTRAINT `FK_usuario_permiso_permiso` FOREIGN KEY (`FK_ID_PERMISO`) REFERENCES `permiso` (`PK_ID_PERMISO`) ON DELETE CASCADE,
+  CONSTRAINT `usuario_permiso_ibfk_1` FOREIGN KEY (`FK_ID_USUARIO`) REFERENCES `usuario` (`PK_ID_USUARIO`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Volcando datos para la tabla abastecete.usuario_permiso: ~13 rows (aproximadamente)
@@ -7469,13 +7234,16 @@ CREATE PROCEDURE `verificar_permiso_usuario`(
     IN p_codigo_permiso VARCHAR(50)
 )
 BEGIN
-    SELECT COUNT(*) > 0 as tiene_permiso
+    DECLARE v_tiene_permiso INT DEFAULT 0;
+
+    SELECT COUNT(*) INTO v_tiene_permiso
     FROM usuario_permiso up
-    INNER JOIN permiso_sistema ps ON up.FK_ID_PERMISO = ps.PK_ID_PERMISO
+    INNER JOIN permiso ps ON up.FK_ID_PERMISO = ps.PK_ID_PERMISO
     WHERE up.FK_ID_USUARIO = p_id_usuario
-        AND ps.CODIGO = p_codigo_permiso
-        AND up.ESTADO = 1
-        AND ps.ESTADO = 1;
+      AND ps.CODIGO = p_codigo_permiso
+      AND up.ESTADO = 1;
+
+    SELECT v_tiene_permiso > 0 as tiene_permiso;
 END//
 DELIMITER ;
 

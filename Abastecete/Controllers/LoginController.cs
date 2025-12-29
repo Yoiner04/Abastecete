@@ -126,10 +126,10 @@ namespace ConnectionProject.Controllers
 
             try
             {
-                int idRol = Convert.ToInt32(data.Rows[0]["FK_ID_ROL"]);
+                int codigoEstado = Convert.ToInt32(data.Rows[0]["CODIGO_ESTADO"]);
 
                 // Primero verificar errores de login antes de acceder a otros campos
-                switch (idRol)
+                switch (codigoEstado)
                 {
                     case 97:
                         RegistrarLogAutenticacion(null, usuario.Correo, TiposAccionAuditoria.LOGIN, "ERROR", "Cuenta inhabilitada");
@@ -177,7 +177,7 @@ namespace ConnectionProject.Controllers
                 HttpContext.Session.Remove("LastLoginError");
 
                 // Cargar permisos (unificado - evita llamadas duplicadas a DB)
-                GuardarTodosLosPermisos(idUsuario, idRol);
+                GuardarTodosLosPermisos(idUsuario);
 
                 // Registrar login exitoso
                 RegistrarLogAutenticacion(idUsuario, usuario.Correo, TiposAccionAuditoria.LOGIN, "EXITO");
@@ -218,31 +218,21 @@ namespace ConnectionProject.Controllers
         }
 
         /// <summary>
-        /// Carga todos los permisos (nuevo sistema + legacy) en una sola operación
+        /// Carga todos los permisos del usuario en sesión
         /// </summary>
-        private void GuardarTodosLosPermisos(int idUsuario, int idRol)
+        private void GuardarTodosLosPermisos(int idUsuario)
         {
             var sw = System.Diagnostics.Stopwatch.StartNew();
             ManejadorPermisos manejadorP = new ManejadorPermisos();
 
-            HttpContext.Session.SetString("idRol", idRol.ToString());
+            // Cargar permisos del nuevo sistema por membresía (UNA sola llamada a DB)
+            var permisos = manejadorP.ObtenerDiccionarioPermisos(idUsuario);
+            HttpContext.Session.SetString("permisosSistema", JsonConvert.SerializeObject(permisos));
 
-            // Cargar permisos del nuevo sistema (UNA sola llamada a DB)
-            var permisosNuevo = manejadorP.ObtenerDiccionarioPermisos(idUsuario);
-            HttpContext.Session.SetString("permisosSistema", JsonConvert.SerializeObject(permisosNuevo));
+            // También guardar en "permisos" para compatibilidad con código legacy
+            HttpContext.Session.SetString("permisos", JsonConvert.SerializeObject(permisos));
 
-            Console.WriteLine($"[PERMISOS TIMING] Nuevo sistema: {sw.ElapsedMilliseconds}ms ({permisosNuevo.Count} permisos)");
-            sw.Restart();
-
-            // Sistema legacy - solo si es necesario para compatibilidad
-            #pragma warning disable CS0618
-            Dictionary<string, bool> permisosLegacy = manejadorP.ObtenerPermisos(idRol)
-                .ToDictionary(c => c.Nombre, c => c.Estado);
-            #pragma warning restore CS0618
-
-            HttpContext.Session.SetString("permisos", JsonConvert.SerializeObject(permisosLegacy));
-
-            Console.WriteLine($"[PERMISOS TIMING] Sistema legacy: {sw.ElapsedMilliseconds}ms ({permisosLegacy.Count} permisos)");
+            Console.WriteLine($"[PERMISOS TIMING] Permisos cargados: {sw.ElapsedMilliseconds}ms ({permisos.Count} permisos)");
         }
 
         public IActionResult LoginWithGoogle()
@@ -294,10 +284,10 @@ namespace ConnectionProject.Controllers
                 // Usar el manejador existente en lugar de crear uno nuevo
                 DataTable data = _manejadorUsuario.LoginGoogle(email);
 
-                int rol = data.Rows.Count > 0 ? Convert.ToInt32(data.Rows[0]["FK_ID_ROL"]) : 0;
+                int codigoEstado = data.Rows.Count > 0 ? Convert.ToInt32(data.Rows[0]["CODIGO_ESTADO"]) : 0;
 
                 // Validar estados de error igual que en login normal
-                switch (rol)
+                switch (codigoEstado)
                 {
                     case 97:
                         TempData["Error"] = "Tu cuenta ha sido inhabilitada.";
@@ -308,7 +298,7 @@ namespace ConnectionProject.Controllers
                 }
 
                 // Usuario no existe, registrarlo
-                if (rol == 0 && data.Rows.Count == 0)
+                if (codigoEstado == 0 && data.Rows.Count == 0)
                 {
                     int userId = _manejadorUsuario.RegistrarUsuarioGoogle(email, name);
                     if (userId == 0)
@@ -318,7 +308,7 @@ namespace ConnectionProject.Controllers
                     }
 
                     data = _manejadorUsuario.LoginGoogle(email);
-                    rol = data.Rows.Count > 0 ? Convert.ToInt32(data.Rows[0]["FK_ID_ROL"]) : 0;
+                    codigoEstado = data.Rows.Count > 0 ? Convert.ToInt32(data.Rows[0]["CODIGO_ESTADO"]) : 0;
                 }
 
                 if (data.Rows.Count > 0)
@@ -343,13 +333,12 @@ namespace ConnectionProject.Controllers
 
                 HttpContext.Session.SetString("userEmail", email);
                 HttpContext.Session.SetString("userName", name);
-                HttpContext.Session.SetInt32("userRol", rol);
 
                 // Cargar permisos (unificado)
                 var idUsuarioGoogle = HttpContext.Session.GetInt32("idUsuario");
                 if (idUsuarioGoogle.HasValue)
                 {
-                    GuardarTodosLosPermisos(idUsuarioGoogle.Value, rol);
+                    GuardarTodosLosPermisos(idUsuarioGoogle.Value);
                 }
 
                 await HttpContext.SignInAsync(
