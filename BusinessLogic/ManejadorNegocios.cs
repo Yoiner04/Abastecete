@@ -32,36 +32,36 @@ namespace BusinessLogic
                 new Parametro("p_fk_id_tipomembresia", idTipoMembresia),
                 new Parametro("p_localizacion", negocio.Localizacion),
                 new Parametro("p_nombre_local", negocio.Nombre),
-                new Parametro("p_direccion_local", negocio.Direccion),
+                new Parametro("p_direccion_local", negocio.Direccion ?? (object)DBNull.Value),
                 new Parametro("p_telefono_local", negocio.Telefono),
-                new Parametro("p_fotos_local", negocio.LogotipoId),
-                new Parametro("p_descripcion_local", negocio.Descripcion),
+                new Parametro("p_fotos_local", negocio.LogotipoId ?? (object)DBNull.Value),
+                new Parametro("p_descripcion_local", negocio.Descripcion ?? (object)DBNull.Value),
 
                 // Campos nuevos de contacto
-                new Parametro("p_email_contacto", negocio.EmailContacto),
-                new Parametro("p_whatsapp", negocio.Whatsapp),
-                new Parametro("p_sitio_web", negocio.SitioWeb),
+                new Parametro("p_email_contacto", negocio.EmailContacto ?? (object)DBNull.Value),
+                new Parametro("p_whatsapp", negocio.Whatsapp ?? (object)DBNull.Value),
+                new Parametro("p_sitio_web", negocio.SitioWeb ?? (object)DBNull.Value),
 
                 // Redes sociales
-                new Parametro("p_instagram", negocio.Instagram),
-                new Parametro("p_facebook", negocio.Facebook),
-                new Parametro("p_tiktok", negocio.Tiktok),
-                new Parametro("p_youtube", negocio.Youtube),
-                new Parametro("p_twitter", negocio.Twitter),
+                new Parametro("p_instagram", negocio.Instagram ?? (object)DBNull.Value),
+                new Parametro("p_facebook", negocio.Facebook ?? (object)DBNull.Value),
+                new Parametro("p_tiktok", negocio.Tiktok ?? (object)DBNull.Value),
+                new Parametro("p_youtube", negocio.Youtube ?? (object)DBNull.Value),
+                new Parametro("p_twitter", negocio.Twitter ?? (object)DBNull.Value),
 
                 // Horarios
-                new Parametro("p_horario_lunes", negocio.HorarioLunes),
-                new Parametro("p_horario_martes", negocio.HorarioMartes),
-                new Parametro("p_horario_miercoles", negocio.HorarioMiercoles),
-                new Parametro("p_horario_jueves", negocio.HorarioJueves),
-                new Parametro("p_horario_viernes", negocio.HorarioViernes),
-                new Parametro("p_horario_sabado", negocio.HorarioSabado),
-                new Parametro("p_horario_domingo", negocio.HorarioDomingo)
+                new Parametro("p_horario_lunes", negocio.HorarioLunes ?? (object)DBNull.Value),
+                new Parametro("p_horario_martes", negocio.HorarioMartes ?? (object)DBNull.Value),
+                new Parametro("p_horario_miercoles", negocio.HorarioMiercoles ?? (object)DBNull.Value),
+                new Parametro("p_horario_jueves", negocio.HorarioJueves ?? (object)DBNull.Value),
+                new Parametro("p_horario_viernes", negocio.HorarioViernes ?? (object)DBNull.Value),
+                new Parametro("p_horario_sabado", negocio.HorarioSabado ?? (object)DBNull.Value),
+                new Parametro("p_horario_domingo", negocio.HorarioDomingo ?? (object)DBNull.Value)
             };
             return conexion.EjecutarTransaccion("crear_local", parametros);
         }
 
-        public Negocio ConsultarNegocioPoId(int idLocal)
+        public Negocio? ConsultarNegocioPoId(int idLocal)
         {
             List<Parametro> parametros = new List<Parametro>
             {
@@ -82,7 +82,7 @@ namespace BusinessLogic
         /// <summary>
         /// Helper para leer columnas de forma segura
         /// </summary>
-        private static string GetString(DataRow row, string columnName)
+        private static string? GetString(DataRow row, string columnName)
         {
             return row.Table.Columns.Contains(columnName) ? row[columnName]?.ToString() : null;
         }
@@ -120,9 +120,9 @@ namespace BusinessLogic
         /// </summary>
         private Negocio MapearNegocioDesdeRow(DataRow row)
         {
-            string fotosId = GetString(row, "FOTOS_LOCAL");
-            string bannerId = GetString(row, "BANNER_LOCAL");
-            string cloudinaryPublicIdLogotipo = GetString(row, "CLOUDINARY_PUBLIC_ID_LOGOTIPO");
+            string? fotosId = GetString(row, "FOTOS_LOCAL");
+            string? bannerId = GetString(row, "BANNER_LOCAL");
+            string? cloudinaryPublicIdLogotipo = GetString(row, "CLOUDINARY_PUBLIC_ID_LOGOTIPO");
 
             return new Negocio
             {
@@ -184,13 +184,13 @@ namespace BusinessLogic
                 categorias.Add(new Categoria
                 {
                     Id = Convert.ToInt32(row["PK_ID_CATEGORIA"]),
-                    Nombre = row["NOMBRE_CATEGORIA"].ToString()
+                    Nombre = row["NOMBRE_CATEGORIA"]?.ToString() ?? ""
                 });
             }
             return categorias;
         }
 
-        public Negocio ConsultarNegocio(int idUsuario)
+        public Negocio? ConsultarNegocio(int idUsuario)
         {
             List<Parametro> parametros = new List<Parametro>
             {
@@ -208,7 +208,7 @@ namespace BusinessLogic
             return MapearNegocioDesdeRow(datos.Rows[0]);
         }
 
-        public Producto ConsultarProductoNegocio(int idProducto, int IdLocal)
+        public Producto? ConsultarProductoNegocio(int idProducto, int IdLocal)
         {
             List<Parametro> parametros = new List<Parametro>
             {
@@ -257,39 +257,39 @@ namespace BusinessLogic
             {
                 new Parametro("p_id_local", negocio.Id),
                 new Parametro("p_nombre_local", !string.IsNullOrEmpty(negocio.Nombre) ? negocio.Nombre : actual.Nombre),
-                new Parametro("p_direccion_local", !string.IsNullOrEmpty(negocio.Direccion) ? negocio.Direccion : actual.Direccion),
-                new Parametro("p_localizacion_local", !string.IsNullOrEmpty(negocio.Localizacion) ? negocio.Localizacion : actual.Localizacion),
+                new Parametro("p_direccion_local", !string.IsNullOrEmpty(negocio.Direccion) ? negocio.Direccion : actual.Direccion ?? (object)DBNull.Value),
+                new Parametro("p_localizacion_local", !string.IsNullOrEmpty(negocio.Localizacion) ? negocio.Localizacion : actual.Localizacion ?? (object)DBNull.Value),
                 new Parametro("p_telefono_local", negocio.Telefono != 0 ? negocio.Telefono : actual.Telefono),
-                new Parametro("p_fotos_local", !string.IsNullOrEmpty(negocio.LogotipoId) ? negocio.LogotipoId : actual.LogotipoId),
-                new Parametro("p_cloudinary_public_id_logotipo", !string.IsNullOrEmpty(negocio.CloudinaryPublicIdLogotipo) ? negocio.CloudinaryPublicIdLogotipo : actual.CloudinaryPublicIdLogotipo),
-                new Parametro("p_descripcion_local", !string.IsNullOrEmpty(negocio.Descripcion) ? negocio.Descripcion : actual.Descripcion),
-                new Parametro("p_banner_local", !string.IsNullOrEmpty(negocio.BannerId) ? negocio.BannerId : actual.BannerId),
+                new Parametro("p_fotos_local", !string.IsNullOrEmpty(negocio.LogotipoId) ? negocio.LogotipoId : actual.LogotipoId ?? (object)DBNull.Value),
+                new Parametro("p_cloudinary_public_id_logotipo", !string.IsNullOrEmpty(negocio.CloudinaryPublicIdLogotipo) ? negocio.CloudinaryPublicIdLogotipo : actual.CloudinaryPublicIdLogotipo ?? (object)DBNull.Value),
+                new Parametro("p_descripcion_local", !string.IsNullOrEmpty(negocio.Descripcion) ? negocio.Descripcion : actual.Descripcion ?? (object)DBNull.Value),
+                new Parametro("p_banner_local", !string.IsNullOrEmpty(negocio.BannerId) ? negocio.BannerId : actual.BannerId ?? (object)DBNull.Value),
 
                 // Campos nuevos de contacto
-                new Parametro("p_email_contacto", negocio.EmailContacto ?? actual.EmailContacto),
-                new Parametro("p_whatsapp", negocio.Whatsapp ?? actual.Whatsapp),
-                new Parametro("p_sitio_web", negocio.SitioWeb ?? actual.SitioWeb),
-                new Parametro("p_nit", negocio.Nit ?? actual.Nit),
+                new Parametro("p_email_contacto", negocio.EmailContacto ?? actual.EmailContacto ?? (object)DBNull.Value),
+                new Parametro("p_whatsapp", negocio.Whatsapp ?? actual.Whatsapp ?? (object)DBNull.Value),
+                new Parametro("p_sitio_web", negocio.SitioWeb ?? actual.SitioWeb ?? (object)DBNull.Value),
+                new Parametro("p_nit", negocio.Nit ?? actual.Nit ?? (object)DBNull.Value),
 
                 // Redes sociales
-                new Parametro("p_instagram", negocio.Instagram ?? actual.Instagram),
-                new Parametro("p_facebook", negocio.Facebook ?? actual.Facebook),
-                new Parametro("p_tiktok", negocio.Tiktok ?? actual.Tiktok),
-                new Parametro("p_youtube", negocio.Youtube ?? actual.Youtube),
-                new Parametro("p_twitter", negocio.Twitter ?? actual.Twitter),
+                new Parametro("p_instagram", negocio.Instagram ?? actual.Instagram ?? (object)DBNull.Value),
+                new Parametro("p_facebook", negocio.Facebook ?? actual.Facebook ?? (object)DBNull.Value),
+                new Parametro("p_tiktok", negocio.Tiktok ?? actual.Tiktok ?? (object)DBNull.Value),
+                new Parametro("p_youtube", negocio.Youtube ?? actual.Youtube ?? (object)DBNull.Value),
+                new Parametro("p_twitter", negocio.Twitter ?? actual.Twitter ?? (object)DBNull.Value),
 
                 // Horarios
-                new Parametro("p_horario_lunes", negocio.HorarioLunes ?? actual.HorarioLunes),
-                new Parametro("p_horario_martes", negocio.HorarioMartes ?? actual.HorarioMartes),
-                new Parametro("p_horario_miercoles", negocio.HorarioMiercoles ?? actual.HorarioMiercoles),
-                new Parametro("p_horario_jueves", negocio.HorarioJueves ?? actual.HorarioJueves),
-                new Parametro("p_horario_viernes", negocio.HorarioViernes ?? actual.HorarioViernes),
-                new Parametro("p_horario_sabado", negocio.HorarioSabado ?? actual.HorarioSabado),
-                new Parametro("p_horario_domingo", negocio.HorarioDomingo ?? actual.HorarioDomingo),
+                new Parametro("p_horario_lunes", negocio.HorarioLunes ?? actual.HorarioLunes ?? (object)DBNull.Value),
+                new Parametro("p_horario_martes", negocio.HorarioMartes ?? actual.HorarioMartes ?? (object)DBNull.Value),
+                new Parametro("p_horario_miercoles", negocio.HorarioMiercoles ?? actual.HorarioMiercoles ?? (object)DBNull.Value),
+                new Parametro("p_horario_jueves", negocio.HorarioJueves ?? actual.HorarioJueves ?? (object)DBNull.Value),
+                new Parametro("p_horario_viernes", negocio.HorarioViernes ?? actual.HorarioViernes ?? (object)DBNull.Value),
+                new Parametro("p_horario_sabado", negocio.HorarioSabado ?? actual.HorarioSabado ?? (object)DBNull.Value),
+                new Parametro("p_horario_domingo", negocio.HorarioDomingo ?? actual.HorarioDomingo ?? (object)DBNull.Value),
 
                 // Coordenadas GPS
-                new Parametro("p_latitud", negocio.Latitud ?? actual.Latitud),
-                new Parametro("p_longitud", negocio.Longitud ?? actual.Longitud)
+                new Parametro("p_latitud", negocio.Latitud ?? actual.Latitud ?? (object)DBNull.Value),
+                new Parametro("p_longitud", negocio.Longitud ?? actual.Longitud ?? (object)DBNull.Value)
             };
 
             return conexion.EjecutarTransaccion("editar_local", parametros);
@@ -316,17 +316,17 @@ namespace BusinessLogic
 
             foreach (DataRow row in datos.Rows)
             {
-                string fotosId = row["FOTOS_LOCAL"].ToString();
-                string bannerId = row["BANNER_LOCAL"].ToString();
+                string? fotosId = row["FOTOS_LOCAL"]?.ToString();
+                string? bannerId = row["BANNER_LOCAL"]?.ToString();
 
                 negocios.Add(new Negocio
                 {
                     Id = Convert.ToInt32(row["PK_ID_LOCAL"]),
-                    Nombre = row["NOMBRE_LOCAL"].ToString(),
-                    Localizacion = row["LOCALIZACION"].ToString(),
+                    Nombre = row["NOMBRE_LOCAL"]?.ToString(),
+                    Localizacion = row["LOCALIZACION"]?.ToString(),
                     Telefono = Convert.ToInt64(row["TELEFONO_LOCAL"]),
                     LogotipoId = fotosId,
-                    Descripcion = row["DESCRIPCION_LOCAL"].ToString(),
+                    Descripcion = row["DESCRIPCION_LOCAL"]?.ToString(),
                     BannerId = bannerId,
                     imagen = null,
                     BannerImagen = null
@@ -378,14 +378,14 @@ namespace BusinessLogic
 
                 foreach (DataRow row in datos.Rows)
                 {
-                    string fotosId = row["FOTOS_LOCAL"].ToString();
-                    string bannerId = row["BANNER_LOCAL"].ToString();
+                    string? fotosId = row["FOTOS_LOCAL"]?.ToString();
+                    string? bannerId = row["BANNER_LOCAL"]?.ToString();
 
                     negocios.Add(new Negocio
                     {
                         Id = Convert.ToInt32(row["PK_ID_LOCAL"]),
-                        Nombre = row["NOMBRE_LOCAL"].ToString(),
-                        Direccion = row["LOCALIZACION"].ToString(),
+                        Nombre = row["NOMBRE_LOCAL"]?.ToString(),
+                        Direccion = row["LOCALIZACION"]?.ToString(),
                         Telefono = Convert.ToInt64(row["TELEFONO_LOCAL"]),
                         LogotipoId = fotosId,
                         BannerId = bannerId,
@@ -437,12 +437,12 @@ namespace BusinessLogic
 
             foreach (DataRow row in datos.Rows)
             {
-                string fotosId = row["FOTOS_LOCAL"].ToString();
+                string? fotosId = row["FOTOS_LOCAL"]?.ToString();
 
                 negocios.Add(new Negocio
                 {
                     Id = Convert.ToInt32(row["PK_ID_LOCAL"]),
-                    Nombre = row["NOMBRE_LOCAL"].ToString(),
+                    Nombre = row["NOMBRE_LOCAL"]?.ToString(),
                     LogotipoId = fotosId,
                     imagen = null
                 });
@@ -488,7 +488,7 @@ namespace BusinessLogic
         /// <summary>
         /// Consulta un negocio por ID incluyendo su suscripción activa
         /// </summary>
-        public Negocio ConsultarNegocioConSuscripcion(int idLocal)
+        public Negocio? ConsultarNegocioConSuscripcion(int idLocal)
         {
             var negocio = ConsultarNegocioPoId(idLocal);
             if (negocio != null)
@@ -501,7 +501,7 @@ namespace BusinessLogic
         /// <summary>
         /// DEPRECATED: Alias para compatibilidad, usar ConsultarNegocioUsuarioConSuscripcion
         /// </summary>
-        public Negocio ConsultarNegocioPersonaConSuscripcion(int idUsuario)
+        public Negocio? ConsultarNegocioPersonaConSuscripcion(int idUsuario)
         {
             return ConsultarNegocioUsuarioConSuscripcion(idUsuario);
         }
@@ -509,7 +509,7 @@ namespace BusinessLogic
         /// <summary>
         /// Consulta un negocio por ID de usuario
         /// </summary>
-        public Negocio ConsultarNegocioPorUsuario(int idUsuario)
+        public Negocio? ConsultarNegocioPorUsuario(int idUsuario)
         {
             List<Parametro> parametros = new List<Parametro>
             {
@@ -529,7 +529,7 @@ namespace BusinessLogic
         /// <summary>
         /// Consulta un negocio por ID de usuario incluyendo su suscripción activa
         /// </summary>
-        public Negocio ConsultarNegocioUsuarioConSuscripcion(int idUsuario)
+        public Negocio? ConsultarNegocioUsuarioConSuscripcion(int idUsuario)
         {
             var negocio = ConsultarNegocioPorUsuario(idUsuario);
             if (negocio != null)
@@ -542,7 +542,7 @@ namespace BusinessLogic
         /// <summary>
         /// Obtiene la suscripción activa de un local
         /// </summary>
-        public Models.Suscripcion ObtenerSuscripcionActiva(int idLocal)
+        public Models.Suscripcion? ObtenerSuscripcionActiva(int idLocal)
         {
             return _manejadorSuscripciones.ObtenerSuscripcionActiva(idLocal);
         }

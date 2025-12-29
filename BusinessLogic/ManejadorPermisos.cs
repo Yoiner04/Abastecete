@@ -28,8 +28,8 @@ namespace BusinessLogic
                 permisos.Add(new Permiso()
                 {
                     Id = Convert.ToInt32(row["PK_ID_PERMISO"].ToString()),
-                    Nombre = row["NOMBRE_PERMISO"].ToString(),
-                    Estado = string.IsNullOrEmpty(row["ESTADO_PERMISO_ROL"].ToString()) ? false : row["ESTADO_PERMISO_ROL"].ToString() == "1"
+                    Nombre = row["NOMBRE_PERMISO"]?.ToString() ?? "",
+                    Estado = string.IsNullOrEmpty(row["ESTADO_PERMISO_ROL"]?.ToString()) ? false : row["ESTADO_PERMISO_ROL"]?.ToString() == "1"
                 });
             }
             return permisos;
@@ -220,11 +220,11 @@ namespace BusinessLogic
                 permisos.Add(new PermisoSistema()
                 {
                     Id = Convert.ToInt32(row["PK_ID_PERMISO"]),
-                    Codigo = row["CODIGO"].ToString(),
-                    Nombre = row["NOMBRE"].ToString(),
+                    Codigo = row["CODIGO"]?.ToString() ?? "",
+                    Nombre = row["NOMBRE"]?.ToString() ?? "",
                     Descripcion = row["DESCRIPCION"]?.ToString() ?? "",
                     Icono = row["ICONO"]?.ToString() ?? "fa-check",
-                    Categoria = row["CATEGORIA"].ToString(),
+                    Categoria = row["CATEGORIA"]?.ToString() ?? "",
                     Orden = Convert.ToInt32(row["ORDEN"]),
                     Estado = true
                 });
@@ -240,11 +240,11 @@ namespace BusinessLogic
                 permisos.Add(new PermisoSistema()
                 {
                     Id = Convert.ToInt32(row["PK_ID_PERMISO"]),
-                    Codigo = row["CODIGO"].ToString(),
-                    Nombre = row["NOMBRE"].ToString(),
+                    Codigo = row["CODIGO"]?.ToString() ?? "",
+                    Nombre = row["NOMBRE"]?.ToString() ?? "",
                     Descripcion = row["DESCRIPCION"]?.ToString() ?? "",
                     Icono = row["ICONO"]?.ToString() ?? "fa-check",
-                    Categoria = row["CATEGORIA"].ToString(),
+                    Categoria = row["CATEGORIA"]?.ToString() ?? "",
                     Orden = Convert.ToInt32(row["ORDEN"]),
                     Origen = row["ORIGEN"]?.ToString() ?? "MEMBRESIA",
                     FechaAsignacion = row["FECHA_ASIGNACION"] != DBNull.Value

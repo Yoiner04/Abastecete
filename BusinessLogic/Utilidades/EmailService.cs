@@ -13,11 +13,11 @@ namespace BusinessLogic.Utilidades
     {
         private readonly string _smtpHost;
         private readonly int _smtpPort;
-        private readonly string _smtpUser;
-        private readonly string _smtpPass;
-        private readonly string _emailFrom;
+        private readonly string? _smtpUser;
+        private readonly string? _smtpPass;
+        private readonly string? _emailFrom;
         private readonly string _emailFromName;
-        private readonly string _emailAdmin;
+        private readonly string? _emailAdmin;
 
         public EmailService()
         {
@@ -199,7 +199,7 @@ namespace BusinessLogic.Utilidades
             string destinatario,
             string asunto,
             string htmlBody,
-            string replyTo = null)
+            string? replyTo = null)
         {
             try
             {

@@ -14,18 +14,18 @@ namespace BusinessLogic
         /// Registra un evento de analítica
         /// </summary>
         public bool RegistrarEvento(int idLocal, TipoEventoAnalitica tipoEvento, int? idProducto = null,
-            string ipVisitante = null, string userAgent = null, string referrer = null)
+            string? ipVisitante = null, string? userAgent = null, string? referrer = null)
         {
             try
             {
                 List<Parametro> parametros = new List<Parametro>
                 {
                     new Parametro("p_id_local", idLocal),
-                    new Parametro("p_id_producto", idProducto),
+                    new Parametro("p_id_producto", idProducto ?? (object)DBNull.Value),
                     new Parametro("p_tipo_evento", tipoEvento.ToString()),
-                    new Parametro("p_ip_visitante", ipVisitante),
-                    new Parametro("p_user_agent", userAgent?.Length > 500 ? userAgent.Substring(0, 500) : userAgent),
-                    new Parametro("p_referrer", referrer?.Length > 500 ? referrer.Substring(0, 500) : referrer)
+                    new Parametro("p_ip_visitante", ipVisitante ?? (object)DBNull.Value),
+                    new Parametro("p_user_agent", userAgent?.Length > 500 ? userAgent.Substring(0, 500) : userAgent ?? (object)DBNull.Value),
+                    new Parametro("p_referrer", referrer?.Length > 500 ? referrer.Substring(0, 500) : referrer ?? (object)DBNull.Value)
                 };
 
                 return conexion.EjecutarTransaccion("registrar_evento_analitica", parametros);
@@ -163,7 +163,7 @@ namespace BusinessLogic
                     lista.Add(new ProductoMasVisto
                     {
                         IdProducto = Convert.ToInt32(row["id_producto"]),
-                        NombreProducto = row["nombre_producto"].ToString(),
+                        NombreProducto = row["nombre_producto"]?.ToString() ?? "",
                         ImagenUrl = row["imagen_url"]?.ToString(),
                         TotalVistas = Convert.ToInt32(row["total_vistas"])
                     });
@@ -180,7 +180,7 @@ namespace BusinessLogic
         /// <summary>
         /// Obtiene comparativa con el período anterior
         /// </summary>
-        private EstadisticasLocal ObtenerComparativa(int idLocal, DateTime fechaInicio, DateTime fechaFin)
+        private EstadisticasLocal? ObtenerComparativa(int idLocal, DateTime fechaInicio, DateTime fechaFin)
         {
             try
             {
@@ -199,7 +199,7 @@ namespace BusinessLogic
 
                 foreach (DataRow row in data.Rows)
                 {
-                    string periodo = row["periodo"].ToString();
+                    string periodo = row["periodo"]?.ToString() ?? "";
                     if (periodo == "actual")
                     {
                         visitasActual = Convert.ToInt32(row["visitas"]);
@@ -453,7 +453,7 @@ namespace BusinessLogic
         /// <summary>
         /// Obtiene comparativa global con período anterior
         /// </summary>
-        private EstadisticasGlobales ObtenerComparativaGlobal(DateTime fechaInicio, DateTime fechaFin)
+        private EstadisticasGlobales? ObtenerComparativaGlobal(DateTime fechaInicio, DateTime fechaFin)
         {
             try
             {

@@ -80,7 +80,7 @@ namespace BusinessLogic
         /// <summary>
         /// Rechaza una imagen de galería
         /// </summary>
-        public bool RechazarImagen(int idGaleria, int idRevisor, string motivo)
+        public bool RechazarImagen(int idGaleria, int idRevisor, string? motivo)
         {
             return RevisarImagen(idGaleria, EstadoGaleria.Rechazada, idRevisor, motivo);
         }
@@ -88,7 +88,7 @@ namespace BusinessLogic
         /// <summary>
         /// Revisa (aprueba o rechaza) una imagen
         /// </summary>
-        private bool RevisarImagen(int idGaleria, EstadoGaleria estado, int idRevisor, string motivo)
+        private bool RevisarImagen(int idGaleria, EstadoGaleria estado, int idRevisor, string? motivo)
         {
             List<Parametro> parametros = new List<Parametro>
             {

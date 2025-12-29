@@ -70,7 +70,7 @@ namespace BusinessLogic
                     // Verificar contraseña con BCrypt
                     if (result.Columns.Contains("CONTRASENIA_HASH") && result.Rows[0]["CONTRASENIA_HASH"] != DBNull.Value)
                     {
-                        string hashAlmacenado = result.Rows[0]["CONTRASENIA_HASH"].ToString();
+                        string hashAlmacenado = result.Rows[0]["CONTRASENIA_HASH"]?.ToString() ?? "";
                         Console.WriteLine($"[LOGIN DEBUG] Verificando BCrypt...");
 
                         bool contraseniaValida = Seguridad.VerificarContrasenia(contrasenia, hashAlmacenado);
@@ -265,7 +265,7 @@ namespace BusinessLogic
 
 
 
-        public string ObtenerTokenRecuperacion(int userId)
+        public string? ObtenerTokenRecuperacion(int userId)
         {
             List<Parametro> parametros = new List<Parametro>
             {
@@ -274,12 +274,12 @@ namespace BusinessLogic
 
             DataTable data = conexion.EjecutarConsulta("obtener_token_recuperacion", parametros);
 
-            if (data == null || data.Rows.Count == 0 || string.IsNullOrEmpty(data.Rows[0]["TOKEN_RECUPERACION"].ToString()))
+            if (data == null || data.Rows.Count == 0 || string.IsNullOrEmpty(data.Rows[0]["TOKEN_RECUPERACION"]?.ToString()))
             {
                 return null;
             }
 
-            string token = data.Rows[0]["TOKEN_RECUPERACION"].ToString();
+            string? token = data.Rows[0]["TOKEN_RECUPERACION"]?.ToString();
             return token;
         }
 
@@ -412,7 +412,7 @@ namespace BusinessLogic
         /// <summary>
         /// Consulta usuarios paginados con información de local y suscripción en una sola query
         /// </summary>
-        public ResultadoPaginado<UsuarioConLocalViewModel> ConsultarUsuariosPaginado(int pagina, int registrosPorPagina, string busqueda = null)
+        public ResultadoPaginado<UsuarioConLocalViewModel> ConsultarUsuariosPaginado(int pagina, int registrosPorPagina, string? busqueda = null)
         {
             var resultado = new ResultadoPaginado<UsuarioConLocalViewModel>
             {

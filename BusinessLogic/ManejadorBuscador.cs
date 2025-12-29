@@ -33,15 +33,15 @@ namespace BusinessLogic
                 ofertas.Add(new OfertaFlash
                 {
                     Id = Convert.ToInt32(row["ID_OFERTAFLASH"] + ""),
-                    Titulo = row["TITULO_OFERTA_FLASH"].ToString(),
-                    Descripcion = row["DESCRIPCION_OFERTA_FLASH"].ToString(),
+                    Titulo = row["TITULO_OFERTA_FLASH"]?.ToString() ?? "",
+                    Descripcion = row["DESCRIPCION_OFERTA_FLASH"]?.ToString() ?? "",
                     Estado = Convert.ToInt32(row["ESTADO_OFERTA_FLASH"]),
                     TiempoOferta = Convert.ToDateTime(row["TIEMPO_OFERTA_FLASH"]),
-                    NombreLocal = row["NOMBRE_LOCAL"].ToString(),
-                    FotoLocal = row["FOTOS_LOCAL"].ToString(),
-                    ProductoOfertaFlash = row["PRODUCTO_OFERTA_FLASH"].ToString(),
-                    ImagenProductoOfertaFlash = row["IMAGEN_PRODUCTO_OFERTA_FLASH"].ToString(),
-                    ImagenLocal = _manejadorMongo.ObtenerImagen(row["FOTOS_LOCAL"].ToString()),
+                    NombreLocal = row["NOMBRE_LOCAL"]?.ToString() ?? "",
+                    FotoLocal = row["FOTOS_LOCAL"]?.ToString() ?? "",
+                    ProductoOfertaFlash = row["PRODUCTO_OFERTA_FLASH"]?.ToString() ?? "",
+                    ImagenProductoOfertaFlash = row["IMAGEN_PRODUCTO_OFERTA_FLASH"]?.ToString() ?? "",
+                    ImagenLocal = _manejadorMongo.ObtenerImagen(row["FOTOS_LOCAL"]?.ToString()),
                     IdLocal = Convert.ToInt32(row["PK_ID_LOCAL"])
                 });
             }
@@ -62,14 +62,14 @@ namespace BusinessLogic
                 {
                     Id = Convert.ToInt32(row["PK_ID_PRODUCTO"]),
                     IdSubCategoria = Convert.ToInt32(row["FK_ID_SUB_CATEGORIA"]),
-                    Nombre = row["NOMBRE_PRODUCTO"].ToString(),
+                    Nombre = row["NOMBRE_PRODUCTO"]?.ToString() ?? "",
                     Precio = row["VALOR_PRODUCTS_LOCAL"] + "",
-                    ImagenUrl = row["IMAGEN_URL"].ToString(),
-                    NombreLocal = row["NOMBRE_LOCAL"].ToString(),
-                    DireccionLocal = row["DIRECCION_LOCAL"].ToString(),
-                    FotoLocal = row["FOTOS_LOCAL"].ToString(),
+                    ImagenUrl = row["IMAGEN_URL"]?.ToString() ?? "",
+                    NombreLocal = row["NOMBRE_LOCAL"]?.ToString() ?? "",
+                    DireccionLocal = row["DIRECCION_LOCAL"]?.ToString() ?? "",
+                    FotoLocal = row["FOTOS_LOCAL"]?.ToString() ?? "",
                     IdLocal = Convert.ToInt32(row["PK_ID_LOCAL"]),
-                    ImagenLocal = _manejadorMongo.ObtenerImagen(row["FOTOS_LOCAL"].ToString())
+                    ImagenLocal = _manejadorMongo.ObtenerImagen(row["FOTOS_LOCAL"]?.ToString())
                 });
             }
             return productos;

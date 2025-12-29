@@ -88,7 +88,7 @@ namespace BusinessLogic
         /// <summary>
         /// Obtiene un banner por su ID
         /// </summary>
-        public Banner ObtenerBanner(int id)
+        public Banner? ObtenerBanner(int id)
         {
             var parametros = new List<Parametro>
             {
@@ -108,7 +108,7 @@ namespace BusinessLogic
         /// <summary>
         /// Crea un nuevo banner
         /// </summary>
-        public (int Id, string Mensaje) CrearBanner(string cloudinaryUrl, string cloudinaryPublicId, string nombre, string tipo, string formato, int? categoriaId = null)
+        public (int Id, string Mensaje) CrearBanner(string cloudinaryUrl, string cloudinaryPublicId, string? nombre, string tipo, string? formato, int? categoriaId = null)
         {
             var parametros = new List<Parametro>
             {
@@ -226,7 +226,7 @@ namespace BusinessLogic
         /// <summary>
         /// Elimina un banner y retorna el PublicId para eliminar de Cloudinary
         /// </summary>
-        public (bool Success, string Mensaje, string PublicId) EliminarBanner(int id)
+        public (bool Success, string Mensaje, string? PublicId) EliminarBanner(int id)
         {
             using (var connection = new MySql.Data.MySqlClient.MySqlConnection("server=167.71.91.199; database=abastecete; user=bd_abastecete; password=root_abastecete; port=3306"))
             {

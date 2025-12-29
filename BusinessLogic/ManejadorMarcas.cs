@@ -51,7 +51,7 @@ namespace BusinessLogic
         /// <summary>
         /// Obtiene una marca por ID
         /// </summary>
-        public Marca ObtenerMarca(int id)
+        public Marca? ObtenerMarca(int id)
         {
             var parametros = new List<Parametro>
             {
@@ -72,7 +72,7 @@ namespace BusinessLogic
         /// Crea una nueva marca
         /// </summary>
         /// <returns>Tupla con (ID de la marca creada, mensaje)</returns>
-        public (int Id, string Mensaje) CrearMarca(string nombre, string descripcion, string logoUrl, string cloudinaryPublicId)
+        public (int Id, string Mensaje) CrearMarca(string nombre, string? descripcion, string? logoUrl, string? cloudinaryPublicId)
         {
             var parametros = new List<Parametro>
             {
@@ -100,17 +100,17 @@ namespace BusinessLogic
         /// <summary>
         /// Actualiza una marca existente
         /// </summary>
-        public (bool Success, string Mensaje) EditarMarca(int id, string nombre, string descripcion, string logoUrl, string cloudinaryPublicId)
+        public (bool Success, string Mensaje) EditarMarca(int id, string nombre, string? descripcion, string? logoUrl, string? cloudinaryPublicId)
         {
             var parametros = new List<Parametro>
             {
                 new Parametro("p_id", id),
                 new Parametro("p_nombre", nombre),
                 new Parametro("p_descripcion", descripcion ?? ""),
-                new Parametro("p_logo_url", logoUrl),
-                new Parametro("p_cloudinary_public_id", cloudinaryPublicId),
-                new Parametro("mensaje", null),
-                new Parametro("resultado", null)
+                new Parametro("p_logo_url", logoUrl ?? (object)DBNull.Value),
+                new Parametro("p_cloudinary_public_id", cloudinaryPublicId ?? (object)DBNull.Value),
+                new Parametro("mensaje", DBNull.Value),
+                new Parametro("resultado", DBNull.Value)
             };
 
             var resultado = conexion.EjecutarTransaccion("editar_marca", parametros);
@@ -121,7 +121,7 @@ namespace BusinessLogic
         /// Elimina o desactiva una marca
         /// </summary>
         /// <returns>Tupla con (éxito, mensaje, publicId para eliminar de Cloudinary)</returns>
-        public (bool Success, string Mensaje, string PublicId) EliminarMarca(int id)
+        public (bool Success, string Mensaje, string? PublicId) EliminarMarca(int id)
         {
             // Primero obtenemos el public ID para poder eliminar de Cloudinary
             var marca = ObtenerMarca(id);
@@ -130,9 +130,9 @@ namespace BusinessLogic
             var parametros = new List<Parametro>
             {
                 new Parametro("p_id", id),
-                new Parametro("mensaje", null),
-                new Parametro("resultado", null),
-                new Parametro("public_id", null)
+                new Parametro("mensaje", DBNull.Value),
+                new Parametro("resultado", DBNull.Value),
+                new Parametro("public_id", DBNull.Value)
             };
 
             var resultado = conexion.EjecutarTransaccion("eliminar_marca", parametros);
@@ -147,8 +147,8 @@ namespace BusinessLogic
             var parametros = new List<Parametro>
             {
                 new Parametro("p_id", id),
-                new Parametro("mensaje", null),
-                new Parametro("resultado", null)
+                new Parametro("mensaje", DBNull.Value),
+                new Parametro("resultado", DBNull.Value)
             };
 
             var resultado = conexion.EjecutarTransaccion("activar_marca", parametros);

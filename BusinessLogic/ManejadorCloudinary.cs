@@ -50,7 +50,7 @@ namespace BusinessLogic
         /// <param name="archivo">Archivo de imagen</param>
         /// <param name="folder">Carpeta en Cloudinary (ej: "categorias", "productos", "banners")</param>
         /// <returns>Resultado con URL y PublicId</returns>
-        public CloudinaryResult SubirImagen(IFormFile archivo, string folder = "abastecete")
+        public CloudinaryResult SubirImagen(IFormFile? archivo, string folder = "abastecete")
         {
             if (archivo == null || archivo.Length == 0)
             {
@@ -115,7 +115,7 @@ namespace BusinessLogic
         /// <summary>
         /// Sube una imagen con transformaciones personalizadas
         /// </summary>
-        public CloudinaryResult SubirImagenConTransformacion(IFormFile archivo, string folder, int maxWidth, int maxHeight)
+        public CloudinaryResult SubirImagenConTransformacion(IFormFile? archivo, string folder, int maxWidth, int maxHeight)
         {
             if (archivo == null || archivo.Length == 0)
             {
@@ -182,7 +182,7 @@ namespace BusinessLogic
         /// </summary>
         /// <param name="publicId">ID público de la imagen</param>
         /// <returns>True si se eliminó correctamente</returns>
-        public bool EliminarImagen(string publicId)
+        public bool EliminarImagen(string? publicId)
         {
             if (string.IsNullOrEmpty(publicId))
                 return false;
@@ -208,7 +208,7 @@ namespace BusinessLogic
         /// <param name="oldPublicId">ID público de la imagen anterior (puede ser null)</param>
         /// <param name="folder">Carpeta destino</param>
         /// <returns>Resultado de la nueva imagen</returns>
-        public CloudinaryResult ActualizarImagen(IFormFile archivo, string oldPublicId, string folder = "abastecete")
+        public CloudinaryResult ActualizarImagen(IFormFile? archivo, string? oldPublicId, string folder = "abastecete")
         {
             // Eliminar imagen anterior si existe
             if (!string.IsNullOrEmpty(oldPublicId))
@@ -227,7 +227,7 @@ namespace BusinessLogic
         /// <param name="width">Ancho deseado</param>
         /// <param name="height">Alto deseado</param>
         /// <returns>URL transformada</returns>
-        public string GenerarUrlTransformada(string publicId, int width, int height)
+        public string? GenerarUrlTransformada(string? publicId, int width, int height)
         {
             if (string.IsNullOrEmpty(publicId))
                 return null;
@@ -245,7 +245,7 @@ namespace BusinessLogic
         /// <summary>
         /// Genera una URL thumbnail
         /// </summary>
-        public string GenerarThumbnail(string publicId, int size = 150)
+        public string? GenerarThumbnail(string? publicId, int size = 150)
         {
             return GenerarUrlTransformada(publicId, size, size);
         }
@@ -253,7 +253,7 @@ namespace BusinessLogic
         /// <summary>
         /// Verifica si una URL es de Cloudinary
         /// </summary>
-        public static bool EsUrlCloudinary(string url)
+        public static bool EsUrlCloudinary(string? url)
         {
             if (string.IsNullOrEmpty(url))
                 return false;

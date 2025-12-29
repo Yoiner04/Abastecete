@@ -27,7 +27,7 @@ namespace BusinessLogic
             {
                 membresias.Add(new Membresia
                 {
-                    Nombre = row["Membresia"] + ""
+                    Nombre = row["Membresia"]?.ToString() ?? ""
                 });
             }
             return membresias;
@@ -48,16 +48,16 @@ namespace BusinessLogic
                 membresias.Add(new Membresia
                 {
                     Id = Convert.ToInt32(row["PK_ID_TIPO_MEMBRESIA"]),
-                    Nombre = row["NOMBRE"].ToString(),
-                    Costo = float.Parse(row["COSTO"].ToString()),
+                    Nombre = row["NOMBRE"]?.ToString() ?? "",
+                    Costo = float.Parse(row["COSTO"]?.ToString() ?? "0"),
                     Estado = Convert.ToInt32(row["ESTADO"]),
                     Duracion = row.Table.Columns.Contains("DURACION_OFERTA") ? Convert.ToInt32(row["DURACION_OFERTA"]) : 0,
                     Cantidad = row.Table.Columns.Contains("CANTIDAD_PRODUCTOS") ? Convert.ToInt32(row["CANTIDAD_PRODUCTOS"]) : 0,
                     OfertasFlashSimultaneas = row.Table.Columns.Contains("OFERTAS_FLASH_SIMULTANEAS") ? Convert.ToInt32(row["OFERTAS_FLASH_SIMULTANEAS"]) : 1,
                     OfertasFlashTotal = row.Table.Columns.Contains("OFERTAS_FLASH_TOTAL") ? Convert.ToInt32(row["OFERTAS_FLASH_TOTAL"]) : 0,
-                    Costo_trimestral = float.Parse(row["COSTO_TRIMESTRAL"].ToString()),
-                    Costo_semestral = float.Parse(row["COSTO_SEMESTRAL"].ToString()),
-                    Costo_anual = float.Parse(row["COSTO_ANUAL"].ToString())
+                    Costo_trimestral = float.Parse(row["COSTO_TRIMESTRAL"]?.ToString() ?? "0"),
+                    Costo_semestral = float.Parse(row["COSTO_SEMESTRAL"]?.ToString() ?? "0"),
+                    Costo_anual = float.Parse(row["COSTO_ANUAL"]?.ToString() ?? "0")
                 });
             }
             return membresias;
@@ -135,7 +135,7 @@ namespace BusinessLogic
         }
 
         // Obtener una membresía por ID
-        public Membresia ObtenerMembresia(int id)
+        public Membresia? ObtenerMembresia(int id)
         {
             List<Parametro> parametros = new List<Parametro>
             {
@@ -149,16 +149,16 @@ namespace BusinessLogic
                 return new Membresia
                 {
                     Id = Convert.ToInt32(row["PK_ID_TIPO_MEMBRESIA"]),
-                    Nombre = row["NOMBRE"].ToString(),
-                    Costo = float.Parse(row["COSTO"].ToString()),
+                    Nombre = row["NOMBRE"]?.ToString() ?? "",
+                    Costo = float.Parse(row["COSTO"]?.ToString() ?? "0"),
                     Estado = Convert.ToInt32(row["ESTADO"]),
                     Duracion = Convert.ToInt32(row["DURACION_OFERTA"]),
                     Cantidad = Convert.ToInt32(row["CANTIDAD_PRODUCTOS"]),
                     OfertasFlashSimultaneas = row.Table.Columns.Contains("OFERTAS_FLASH_SIMULTANEAS") ? Convert.ToInt32(row["OFERTAS_FLASH_SIMULTANEAS"]) : 1,
                     OfertasFlashTotal = row.Table.Columns.Contains("OFERTAS_FLASH_TOTAL") ? Convert.ToInt32(row["OFERTAS_FLASH_TOTAL"]) : 0,
-                    Costo_trimestral = float.Parse(row["COSTO_TRIMESTRAL"].ToString()),
-                    Costo_semestral = float.Parse(row["COSTO_SEMESTRAL"].ToString()),
-                    Costo_anual = float.Parse(row["COSTO_ANUAL"].ToString())
+                    Costo_trimestral = float.Parse(row["COSTO_TRIMESTRAL"]?.ToString() ?? "0"),
+                    Costo_semestral = float.Parse(row["COSTO_SEMESTRAL"]?.ToString() ?? "0"),
+                    Costo_anual = float.Parse(row["COSTO_ANUAL"]?.ToString() ?? "0")
                 };
             }
 
@@ -168,7 +168,7 @@ namespace BusinessLogic
         /// <summary>
         /// Obtiene una membresía con sus permisos cargados
         /// </summary>
-        public Membresia ObtenerMembresiaConPermisos(int id)
+        public Membresia? ObtenerMembresiaConPermisos(int id)
         {
             var membresia = ObtenerMembresia(id);
             if (membresia != null)
@@ -192,8 +192,8 @@ namespace BusinessLogic
                 membresias.Add(new Membresia
                 {
                     Id = Convert.ToInt32(row["PK_ID_TIPO_MEMBRESIA"]),
-                    Nombre = row["NOMBRE"].ToString(),
-                    Costo = row["COSTO"] != DBNull.Value ? float.Parse(row["COSTO"].ToString()) : 0,
+                    Nombre = row["NOMBRE"]?.ToString() ?? "",
+                    Costo = row["COSTO"] != DBNull.Value ? float.Parse(row["COSTO"]?.ToString() ?? "0") : 0,
                     Estado = row["ESTADO"] != DBNull.Value ? Convert.ToInt32(row["ESTADO"]) : 1,
                     Cantidad = row["CANTIDAD_PRODUCTOS"] != DBNull.Value ? Convert.ToInt32(row["CANTIDAD_PRODUCTOS"]) : 0,
                     OfertasFlashSimultaneas = row["OFERTAS_FLASH_SIMULTANEAS"] != DBNull.Value ? Convert.ToInt32(row["OFERTAS_FLASH_SIMULTANEAS"]) : 1,

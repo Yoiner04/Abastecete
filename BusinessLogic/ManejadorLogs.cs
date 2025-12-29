@@ -23,19 +23,19 @@ namespace BusinessLogic
         /// </summary>
         public bool RegistrarLog(
             int? usuarioId,
-            string nombreUsuario,
-            string modulo,
-            string tipoAccion,
+            string? nombreUsuario,
+            string? modulo,
+            string? tipoAccion,
             int? entidadId,
-            string entidadDescripcion,
-            string datosAnteriores,
-            string datosNuevos,
-            string ipCliente,
-            string userAgent,
-            string resultado,
-            string mensajeError,
-            string controller,
-            string action)
+            string? entidadDescripcion,
+            string? datosAnteriores,
+            string? datosNuevos,
+            string? ipCliente,
+            string? userAgent,
+            string? resultado,
+            string? mensajeError,
+            string? controller,
+            string? action)
         {
             try
             {
@@ -45,14 +45,14 @@ namespace BusinessLogic
                 // Usar null en lugar de DBNull.Value - MySQL.Data lo maneja mejor
                 var parametros = new List<Parametro>
                 {
-                    new Parametro("p_id_usuario", usuarioId.HasValue ? (object)usuarioId.Value : null),
+                    new Parametro("p_id_usuario", usuarioId.HasValue ? (object)usuarioId.Value : DBNull.Value),
                     new Parametro("p_nombre_usuario", nombreUsuario ?? ""),
                     new Parametro("p_modulo", modulo ?? ""),
                     new Parametro("p_tipo_accion", tipoAccion ?? ""),
-                    new Parametro("p_entidad_id", entidadId.HasValue ? (object)entidadId.Value : null),
+                    new Parametro("p_entidad_id", entidadId.HasValue ? (object)entidadId.Value : DBNull.Value),
                     new Parametro("p_entidad_descripcion", entidadDescripcion ?? ""),
-                    new Parametro("p_datos_anteriores", string.IsNullOrEmpty(datosAnteriores) ? null : datosAnteriores),
-                    new Parametro("p_datos_nuevos", string.IsNullOrEmpty(datosNuevos) ? null : datosNuevos),
+                    new Parametro("p_datos_anteriores", string.IsNullOrEmpty(datosAnteriores) ? (object)DBNull.Value : datosAnteriores),
+                    new Parametro("p_datos_nuevos", string.IsNullOrEmpty(datosNuevos) ? (object)DBNull.Value : datosNuevos),
                     new Parametro("p_ip_cliente", ipCliente ?? ""),
                     new Parametro("p_user_agent", string.IsNullOrEmpty(userAgent) ? "" : (userAgent.Length > 500 ? userAgent.Substring(0, 500) : userAgent)),
                     new Parametro("p_resultado", resultado ?? "EXITO"),
@@ -79,10 +79,10 @@ namespace BusinessLogic
         public ResultadoPaginado<LogSistema> ConsultarLogs(
             DateTime? fechaDesde,
             DateTime? fechaHasta,
-            string modulo,
-            string tipoAccion,
+            string? modulo,
+            string? tipoAccion,
             int? usuarioId,
-            string terminoBusqueda,
+            string? terminoBusqueda,
             int pagina,
             int registrosPorPagina)
         {
@@ -149,10 +149,10 @@ namespace BusinessLogic
         private List<Parametro> CrearParametrosFiltro(
             DateTime? fechaDesde,
             DateTime? fechaHasta,
-            string modulo,
-            string tipoAccion,
+            string? modulo,
+            string? tipoAccion,
             int? usuarioId,
-            string terminoBusqueda)
+            string? terminoBusqueda)
         {
             return new List<Parametro>
             {

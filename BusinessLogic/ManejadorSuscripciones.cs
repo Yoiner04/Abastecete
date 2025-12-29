@@ -18,7 +18,7 @@ namespace BusinessLogic
         /// <summary>
         /// Obtiene la suscripción activa de un local
         /// </summary>
-        public Suscripcion ObtenerSuscripcionActiva(int idLocal)
+        public Suscripcion? ObtenerSuscripcionActiva(int idLocal)
         {
             List<Parametro> parametros = new List<Parametro>
             {
@@ -66,7 +66,7 @@ namespace BusinessLogic
             string periodo,
             decimal monto,
             string metodoPago,
-            string notas = null)
+            string? notas = null)
         {
             List<Parametro> parametros = new List<Parametro>
             {
@@ -85,11 +85,11 @@ namespace BusinessLogic
                 DataRow row = resultado.Rows[0];
                 return (
                     Convert.ToInt32(row["IdSuscripcion"]),
-                    row["TipoCambio"].ToString()
+                    row["TipoCambio"]?.ToString() ?? ""
                 );
             }
 
-            return (0, null);
+            return (0, "");
         }
 
         /// <summary>
@@ -348,24 +348,24 @@ namespace BusinessLogic
                 suscripcion.MontoPagado = Convert.ToDecimal(row["MontoPagado"]);
 
             if (row["MetodoPago"] != DBNull.Value)
-                suscripcion.MetodoPago = row["MetodoPago"].ToString();
+                suscripcion.MetodoPago = row["MetodoPago"]?.ToString();
 
             // Mapear tipo de membresía
             suscripcion.TipoMembresia = new Membresia
             {
                 Id = Convert.ToInt32(row["TipoMembresiaId"]),
-                Nombre = row["TipoMembresiaNombre"].ToString(),
+                Nombre = row["TipoMembresiaNombre"]?.ToString() ?? "",
                 Costo = row["TipoMembresiaCostoMes"] != DBNull.Value
-                    ? float.Parse(row["TipoMembresiaCostoMes"].ToString())
+                    ? float.Parse(row["TipoMembresiaCostoMes"]?.ToString() ?? "0")
                     : 0,
                 Costo_trimestral = row["TipoMembresiaCostoTrimestre"] != DBNull.Value
-                    ? float.Parse(row["TipoMembresiaCostoTrimestre"].ToString())
+                    ? float.Parse(row["TipoMembresiaCostoTrimestre"]?.ToString() ?? "0")
                     : 0,
                 Costo_semestral = row["TipoMembresiaCostoSemestre"] != DBNull.Value
-                    ? float.Parse(row["TipoMembresiaCostoSemestre"].ToString())
+                    ? float.Parse(row["TipoMembresiaCostoSemestre"]?.ToString() ?? "0")
                     : 0,
                 Costo_anual = row["TipoMembresiaCostoAnio"] != DBNull.Value
-                    ? float.Parse(row["TipoMembresiaCostoAnio"].ToString())
+                    ? float.Parse(row["TipoMembresiaCostoAnio"]?.ToString() ?? "0")
                     : 0,
                 Estado = row["TipoMembresiaEstado"] != DBNull.Value
                     ? Convert.ToInt32(row["TipoMembresiaEstado"])
@@ -405,14 +405,14 @@ namespace BusinessLogic
                 suscripcion.MontoPagado = Convert.ToDecimal(row["MontoPagado"]);
 
             if (row["MetodoPago"] != DBNull.Value)
-                suscripcion.MetodoPago = row["MetodoPago"].ToString();
+                suscripcion.MetodoPago = row["MetodoPago"]?.ToString();
 
             suscripcion.TipoMembresia = new Membresia
             {
                 Id = Convert.ToInt32(row["TipoMembresiaId"]),
-                Nombre = row["TipoMembresiaNombre"].ToString(),
+                Nombre = row["TipoMembresiaNombre"]?.ToString() ?? "",
                 Costo = row["TipoMembresiaCostoMes"] != DBNull.Value
-                    ? float.Parse(row["TipoMembresiaCostoMes"].ToString())
+                    ? float.Parse(row["TipoMembresiaCostoMes"]?.ToString() ?? "0")
                     : 0
             };
 
@@ -425,7 +425,7 @@ namespace BusinessLogic
             {
                 Id = Convert.ToInt32(row["Id"]),
                 LocalId = Convert.ToInt32(row["LocalId"]),
-                TipoCambio = row["TipoCambio"].ToString(),
+                TipoCambio = row["TipoCambio"]?.ToString() ?? "",
                 FechaCambio = Convert.ToDateTime(row["FechaCambio"]),
                 FechaInicioPeriodo = Convert.ToDateTime(row["FechaInicioPeriodo"]),
                 FechaFinPeriodo = Convert.ToDateTime(row["FechaFinPeriodo"]),
@@ -439,7 +439,7 @@ namespace BusinessLogic
                 historial.Monto = Convert.ToDecimal(row["Monto"]);
 
             if (row["Periodo"] != DBNull.Value)
-                historial.Periodo = row["Periodo"].ToString();
+                historial.Periodo = row["Periodo"]?.ToString();
 
             // Tipo anterior (puede ser null)
             if (row["TipoAnteriorId"] != DBNull.Value)
@@ -455,7 +455,7 @@ namespace BusinessLogic
             historial.TipoNuevo = new Membresia
             {
                 Id = Convert.ToInt32(row["TipoNuevoId"]),
-                Nombre = row["TipoNuevoNombre"].ToString()
+                Nombre = row["TipoNuevoNombre"]?.ToString() ?? ""
             };
 
             return historial;

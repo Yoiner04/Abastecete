@@ -50,7 +50,7 @@ namespace BusinessLogic
         /// <summary>
         /// Obtiene un producto por ID
         /// </summary>
-        public Producto ObtenerProducto(int id)
+        public Producto? ObtenerProducto(int id)
         {
             var parametros = new List<Parametro>
             {
@@ -216,13 +216,13 @@ namespace BusinessLogic
                 productos.Add(new Producto
                 {
                     Id = Convert.ToInt32(row["PK_ID_PRODUCTO"]),
-                    Nombre = row["NOMBRE_PRODUCTO"].ToString(),
+                    Nombre = row["NOMBRE_PRODUCTO"]?.ToString() ?? "",
                     Precio = row["PRECIOS"] + "",
                     Unidad = new Unidad
                     {
-                        Nombre = row["UNIDADES"].ToString()
+                        Nombre = row["UNIDADES"]?.ToString() ?? ""
                     },
-                    ImagenUrl = row["IMAGEN_URL"].ToString(),
+                    ImagenUrl = row["IMAGEN_URL"]?.ToString() ?? "",
                     IdSubCategoria = Convert.ToInt32(row["FK_ID_SUB_CATEGORIA"]),
                     Categoria = Convert.ToInt32(row["PK_ID_CATEGORIA"])
                 });

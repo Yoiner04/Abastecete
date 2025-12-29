@@ -20,7 +20,7 @@ namespace BusinessLogic
         /// <summary>
         /// Obtiene una imagen por su URL
         /// </summary>
-        public ImagenModel ObtenerImagen(string imagenId)
+        public ImagenModel? ObtenerImagen(string? imagenId)
         {
             if (string.IsNullOrEmpty(imagenId)) return null;
 
@@ -59,7 +59,7 @@ namespace BusinessLogic
         /// <summary>
         /// Sube una imagen a Cloudinary
         /// </summary>
-        public string SubirImagen(IFormFile archivo, string folder = "abastecete")
+        public string? SubirImagen(IFormFile? archivo, string folder = "abastecete")
         {
             if (archivo == null || archivo.Length == 0)
                 return null;

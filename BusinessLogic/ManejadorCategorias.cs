@@ -41,7 +41,7 @@ namespace BusinessLogic
                 categorias.Add(new Categoria
                 {
                     Id = Convert.ToInt32(row["PK_ID_CATEGORIA"]),
-                    Nombre = row["NOMBRE_CATEGORIA"].ToString(),
+                    Nombre = row["NOMBRE_CATEGORIA"]?.ToString() ?? "",
                     Estado = Convert.ToInt32(row["ESTADO_CATEGORIA"]),
                     ImagenId = imagenId,
                     BannerId = bannerId,
@@ -118,7 +118,7 @@ namespace BusinessLogic
         }
 
         // Obtener una categoría por ID - Usa SP específico para mejor performance
-        public Categoria ObtenerCategoria(int id)
+        public Categoria? ObtenerCategoria(int id)
         {
             List<Parametro> parametros = new List<Parametro>
             {
