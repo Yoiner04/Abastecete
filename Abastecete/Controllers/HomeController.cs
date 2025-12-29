@@ -55,6 +55,7 @@ namespace Abastecete.Controllers
             List<Negocio> localesAleatorios = null;
             List<OfertaFlash> ofertasFlash = null;
             List<Banner> bannersInicio = null;
+            Dictionary<int, List<Banner>> todosBannersCategorias = null;
 
             var tasks = new List<Task>
             {
@@ -62,13 +63,13 @@ namespace Abastecete.Controllers
                 Task.Run(() => negocios = manejadorNegocios.ConsultarTodosLosNegocios()),
                 Task.Run(() => localesAleatorios = manejadorNegocios.ObtenerLocalesAleatorios()),
                 Task.Run(() => ofertasFlash = manejadorOfertasFlash.ConsultarOfertasFlash()),
-                Task.Run(() => bannersInicio = manejadorImagenes.ListarBannersInicio())
+                Task.Run(() => bannersInicio = manejadorImagenes.ListarBannersInicio()),
+                Task.Run(() => todosBannersCategorias = manejadorImagenes.ListarTodosBannersCategorias())
             };
 
             Task.WaitAll(tasks.ToArray());
 
             Console.WriteLine($"[PRINCIPAL TIMING] Consultas principales (paralelo): {swTotal.ElapsedMilliseconds}ms");
-            var swBanners = System.Diagnostics.Stopwatch.StartNew();
 
             // Banners de inicio
             if (bannersInicio != null && bannersInicio.Count > 0)
@@ -86,32 +87,33 @@ namespace Abastecete.Controllers
                 ViewBag.BannerInicio = new List<object>();
             }
 
-            // Banners por categoría en paralelo
-            var bannersPorCategoria = new System.Collections.Concurrent.ConcurrentDictionary<string, List<object>>();
-
-            if (categorias != null && categorias.Count > 0)
+            // Mapear banners por nombre de categoría (ya cargados en una sola consulta)
+            var bannersPorCategoria = new Dictionary<string, List<object>>();
+            if (categorias != null && todosBannersCategorias != null)
             {
-                Parallel.ForEach(categorias, categoria =>
+                foreach (var categoria in categorias)
                 {
-                    var banners = manejadorImagenes.ListarBannersPorCategoria(categoria.Id);
-                    var lista = banners.Select(b => new {
-                        Id = b.Id,
-                        Nombre = b.Nombre ?? "",
-                        Url = b.CloudinaryUrl,
-                        Formato = b.Formato
-                    }).Cast<object>().ToList();
-
-                    bannersPorCategoria[categoria.Nombre] = lista;
-                });
+                    if (todosBannersCategorias.TryGetValue(categoria.Id, out var banners))
+                    {
+                        bannersPorCategoria[categoria.Nombre] = banners.Select(b => new {
+                            Id = b.Id,
+                            Nombre = b.Nombre ?? "",
+                            Url = b.CloudinaryUrl,
+                            Formato = b.Formato
+                        }).Cast<object>().ToList();
+                    }
+                    else
+                    {
+                        bannersPorCategoria[categoria.Nombre] = new List<object>();
+                    }
+                }
             }
-
-            Console.WriteLine($"[PRINCIPAL TIMING] Banners por categoría (paralelo): {swBanners.ElapsedMilliseconds}ms");
 
             ViewBag.rol = LoginController.rol;
             ViewBag.Negocios = negocios ?? new List<Negocio>();
             ViewBag.LocalesAleatoriosJson = JsonConvert.SerializeObject(localesAleatorios ?? new List<Negocio>());
             ViewBag.OfertasFlash = ofertasFlash ?? new List<OfertaFlash>();
-            ViewBag.BannersPorCategoria = new Dictionary<string, List<object>>(bannersPorCategoria);
+            ViewBag.BannersPorCategoria = bannersPorCategoria;
 
             Console.WriteLine($"[PRINCIPAL TIMING] TOTAL: {swTotal.ElapsedMilliseconds}ms");
 

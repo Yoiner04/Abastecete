@@ -60,6 +60,32 @@ namespace BusinessLogic
         }
 
         /// <summary>
+        /// Lista TODOS los banners de categoría en una sola consulta (optimizado)
+        /// </summary>
+        public Dictionary<int, List<Banner>> ListarTodosBannersCategorias()
+        {
+            var resultado = new Dictionary<int, List<Banner>>();
+
+            DataTable data = conexion.EjecutarConsulta("consultar_todos_banners_categorias");
+
+            foreach (DataRow row in data.Rows)
+            {
+                var banner = MapearBanner(row);
+                int categoriaId = row["FK_ID_CATEGORIA"] != DBNull.Value ? Convert.ToInt32(row["FK_ID_CATEGORIA"]) : 0;
+
+                if (categoriaId > 0)
+                {
+                    if (!resultado.ContainsKey(categoriaId))
+                        resultado[categoriaId] = new List<Banner>();
+
+                    resultado[categoriaId].Add(banner);
+                }
+            }
+
+            return resultado;
+        }
+
+        /// <summary>
         /// Obtiene un banner por su ID
         /// </summary>
         public Banner ObtenerBanner(int id)

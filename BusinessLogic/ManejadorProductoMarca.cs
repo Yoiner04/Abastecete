@@ -178,7 +178,7 @@ namespace BusinessLogic
                     Descripcion = row["Descripcion"]?.ToString() ?? "",
                     LogoUrl = row["LogoUrl"]?.ToString() ?? "",
                     CloudinaryPublicId = row["CloudinaryPublicId"]?.ToString() ?? "",
-                    Activo = row["Activa"] != DBNull.Value && Convert.ToBoolean(row["Activa"])
+                    Activo = row["Activo"] != DBNull.Value && Convert.ToBoolean(row["Activo"])
                 });
             }
 

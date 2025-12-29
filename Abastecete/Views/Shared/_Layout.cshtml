@@ -30,6 +30,8 @@
         string permisos = !string.IsNullOrEmpty(permisosSistema) ? permisosSistema : permisosLegacy;
         string membresia = HttpContextAccessor.HttpContext.Session.GetString("membresia") ?? "0";
         bool estaLogueado = permisos != null || permisosSistema != null;
+        int? idLocal = HttpContextAccessor.HttpContext.Session.GetInt32("idLocal");
+        bool tieneLocal = idLocal.HasValue && idLocal.Value > 0;
     }
     <!-- Header Principal Modernizado -->
     <header id="header" class="fixed top-0 left-0 w-full z-40 shadow-lg transition-shadow duration-300" style="background-color: #F4F1E9;">
@@ -109,7 +111,7 @@
                                         <span class="font-medium">Editar perfil</span>
                                     </a>
                                 </li>
-                                @if (!RolPermisos.TienePermiso("Ver Dashboard Admin,ADMIN_DASHBOARD", permisos))
+                                @if (tieneLocal && !RolPermisos.TienePermiso("Ver Dashboard Admin,ADMIN_DASHBOARD", permisos))
                                 {
                                     <li class="border-b border-gray-100">
                                         <a href="@Url.Action("Index", "Analiticas")"
@@ -154,7 +156,7 @@
                 @if (estaLogueado)
                 {
                     @* Opciones para usuarios sin negocio (pueden publicar) *@
-                    @if (RolPermisos.TienePermiso("Publica tu negocio", permisos))
+                    @if (!tieneLocal && RolPermisos.TienePermiso("Publica tu negocio", permisos))
                     {
                         <li>
                             <a href="@Url.Action("Crear", "Negocios")" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium hover:bg-[#23916A]/10 hover:text-[#23916A] transition-all duration-200" style="color: #374151;">

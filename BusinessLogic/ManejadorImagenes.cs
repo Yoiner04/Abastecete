@@ -199,6 +199,14 @@ namespace BusinessLogic
             return _banners.ListarBannersPorCategoria(categoriaId);
         }
 
+        /// <summary>
+        /// Obtiene TODOS los banners de categorías en una sola consulta (optimizado)
+        /// </summary>
+        public Dictionary<int, List<Banner>> ListarTodosBannersCategorias()
+        {
+            return _banners.ListarTodosBannersCategorias();
+        }
+
         public int AgregarBannerCategoria(IFormFile archivo, int categoriaId, string formato)
         {
             var result = SubirImagenCompleto(archivo, "banners/categorias");

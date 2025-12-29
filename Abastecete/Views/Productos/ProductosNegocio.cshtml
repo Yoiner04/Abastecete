@@ -797,19 +797,45 @@
                             </div>
                         }
 
+                        <!-- Código de Referido -->
+                        @if (!string.IsNullOrEmpty(Model.Persona?.CodigoReferido))
+                        {
+                            <div class="mb-4">
+                                <h5 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                                    <i class="fas fa-gift mr-1"></i>
+                                    Tu Código de Referido
+                                </h5>
+                                <div class="bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl p-3 border border-orange-200">
+                                    <div class="flex items-center justify-between gap-2">
+                                        <code id="codigoReferido" class="text-lg font-bold text-orange-600 tracking-wider">@Model.Persona.CodigoReferido</code>
+                                        <button onclick="copiarCodigo()" class="flex items-center gap-1.5 px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white text-xs font-medium rounded-lg transition-colors">
+                                            <i class="fas fa-copy"></i>
+                                            Copiar
+                                        </button>
+                                    </div>
+                                    <p class="text-xs text-gray-500 mt-2">Comparte tu código y gana créditos cuando tus referidos compren membresías</p>
+                                </div>
+                            </div>
+                        }
+
                         <!-- Botones de acción -->
-                        <div class="space-y-2">
+                        <div class="grid grid-cols-2 gap-2">
                             <a href="@Url.Action("MiMembresia", "Negocios")"
-                               class="block w-full py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-center font-medium text-sm hover:shadow-lg hover:shadow-purple-500/30 transition-all">
-                                <i class="fas fa-crown mr-1.5"></i>
-                                Mi Membresía
+                               class="flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-center font-medium text-sm hover:shadow-lg hover:shadow-purple-500/30 transition-all">
+                                <i class="fas fa-crown text-xs"></i>
+                                <span>Membresía</span>
                             </a>
                             <a href="@Url.Action("EditarNegocio", "Negocios")"
-                               class="block w-full py-2.5 rounded-xl bg-gradient-to-r from-[#23916A] to-emerald-500 text-white text-center font-medium text-sm hover:shadow-lg transition-all">
-                                <i class="fas fa-pen-to-square mr-1.5"></i>
-                                Editar mi negocio
+                               class="flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-gradient-to-r from-[#23916A] to-emerald-500 text-white text-center font-medium text-sm hover:shadow-lg transition-all">
+                                <i class="fas fa-pen-to-square text-xs"></i>
+                                <span>Editar</span>
                             </a>
                         </div>
+                        <a href="@Url.Action("Index", "Analiticas")"
+                           class="mt-2 flex items-center justify-center gap-1.5 w-full py-2.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 text-center font-medium text-sm transition-all">
+                            <i class="fas fa-chart-line text-xs"></i>
+                            <span>Ver Analíticas</span>
+                        </a>
                     </div>
                 </div>
             </div>
@@ -1152,6 +1178,28 @@
         let productoSeleccionado = null;
         let productoIdActual = null;
         let detalleAbierto = false;
+
+        // ==========================================
+        // COPIAR CÓDIGO DE REFERIDO
+        // ==========================================
+        function copiarCodigo() {
+            const codigo = document.getElementById('codigoReferido').textContent;
+            navigator.clipboard.writeText(codigo).then(function() {
+                // Mostrar feedback
+                const btn = event.target.closest('button');
+                const originalHTML = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-check"></i> Copiado';
+                btn.classList.remove('bg-orange-500', 'hover:bg-orange-600');
+                btn.classList.add('bg-green-500');
+                setTimeout(function() {
+                    btn.innerHTML = originalHTML;
+                    btn.classList.remove('bg-green-500');
+                    btn.classList.add('bg-orange-500', 'hover:bg-orange-600');
+                }, 2000);
+            }).catch(function(err) {
+                console.error('Error al copiar: ', err);
+            });
+        }
 
         // ==========================================
         // LIGHTBOX GALERÍA

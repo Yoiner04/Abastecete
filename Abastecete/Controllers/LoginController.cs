@@ -31,42 +31,46 @@ namespace ConnectionProject.Controllers
             _manejadorLogs = new ManejadorLogs();
         }
 
+        /// <summary>
+        /// Registra log de autenticación de forma asíncrona (fire-and-forget) para no bloquear el login
+        /// </summary>
         private void RegistrarLogAutenticacion(int? usuarioId, string nombreUsuario, string tipoAccion, string resultado, string mensajeError = null)
         {
-            try
+            // Capturar datos del contexto antes del Task (HttpContext no es thread-safe)
+            var ipCliente = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+            var forwardedFor = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            if (!string.IsNullOrEmpty(forwardedFor))
+                ipCliente = forwardedFor.Split(',').First().Trim();
+            var userAgent = HttpContext.Request.Headers["User-Agent"].FirstOrDefault() ?? "";
+
+            // Fire-and-forget: no esperamos el resultado
+            Task.Run(() =>
             {
-                Console.WriteLine($"[AUTH LOG] Iniciando registro: usuario={nombreUsuario}, accion={tipoAccion}, resultado={resultado}");
-
-                var ipCliente = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
-                var forwardedFor = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
-                if (!string.IsNullOrEmpty(forwardedFor))
-                    ipCliente = forwardedFor.Split(',').First().Trim();
-
-                var userAgent = HttpContext.Request.Headers["User-Agent"].FirstOrDefault() ?? "";
-
-                bool exito = _manejadorLogs.RegistrarLog(
-                    usuarioId,
-                    nombreUsuario ?? "Anonimo",
-                    ModulosAuditoria.AUTENTICACION,
-                    tipoAccion,
-                    usuarioId,
-                    tipoAccion == TiposAccionAuditoria.LOGIN ? "Inicio de sesion" : "Cierre de sesion",
-                    null,
-                    null,
-                    ipCliente,
-                    userAgent,
-                    resultado,
-                    mensajeError,
-                    "Login",
-                    tipoAccion == TiposAccionAuditoria.LOGIN ? "Login" : "Logout"
-                );
-
-                Console.WriteLine($"[AUTH LOG] Resultado del registro: {exito}");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[AUTH LOG ERROR] {ex.Message}");
-            }
+                try
+                {
+                    var manejadorLogs = new ManejadorLogs();
+                    manejadorLogs.RegistrarLog(
+                        usuarioId,
+                        nombreUsuario ?? "Anonimo",
+                        ModulosAuditoria.AUTENTICACION,
+                        tipoAccion,
+                        usuarioId,
+                        tipoAccion == TiposAccionAuditoria.LOGIN ? "Inicio de sesion" : "Cierre de sesion",
+                        null,
+                        null,
+                        ipCliente,
+                        userAgent,
+                        resultado,
+                        mensajeError,
+                        "Login",
+                        tipoAccion == TiposAccionAuditoria.LOGIN ? "Login" : "Logout"
+                    );
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[AUTH LOG ERROR] {ex.Message}");
+                }
+            });
         }
 
         public IActionResult Login()
@@ -163,6 +167,17 @@ namespace ConnectionProject.Controllers
 
                 HttpContext.Session.SetInt32("idUsuario", idUsuario);
                 HttpContext.Session.SetString("membresia", idTipoMembresia > 0 ? idTipoMembresia.ToString() : "sin membresia");
+
+                // Guardar ID del local si el usuario tiene uno
+                var idLocalValue = data.Rows[0]["ID_LOCAL"];
+                if (idLocalValue != DBNull.Value && idLocalValue != null)
+                {
+                    int idLocal = Convert.ToInt32(idLocalValue);
+                    if (idLocal > 0)
+                    {
+                        HttpContext.Session.SetInt32("idLocal", idLocal);
+                    }
+                }
 
                 Console.WriteLine($"[LOGIN TIMING] Session setup: {sw.ElapsedMilliseconds}ms");
                 sw.Restart();
