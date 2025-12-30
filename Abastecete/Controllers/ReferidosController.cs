@@ -19,7 +19,7 @@ namespace Abastecete.Controllers
         /// <summary>
         /// Vista de configuración del sistema de referidos (admin)
         /// </summary>
-        [RequierePermiso("ADMIN_SISTEMA")]
+        [RequierePermiso("ADMIN_REFERIDOS")]
         public IActionResult Configuracion()
         {
             var config = manejadorReferidos.ObtenerConfiguracion();
@@ -30,7 +30,7 @@ namespace Abastecete.Controllers
         /// Obtiene la configuración actual (AJAX)
         /// </summary>
         [HttpGet]
-        [RequierePermiso("ADMIN_SISTEMA")]
+        [RequierePermiso("ADMIN_REFERIDOS")]
         public IActionResult ObtenerConfiguracion()
         {
             try
@@ -61,7 +61,7 @@ namespace Abastecete.Controllers
         /// Actualiza la configuración del sistema de referidos
         /// </summary>
         [HttpPost]
-        [RequierePermiso("ADMIN_SISTEMA")]
+        [RequierePermiso("ADMIN_REFERIDOS")]
         [Auditar(ModulosAuditoria.USUARIOS, TiposAccionAuditoria.UPDATE)]
         public IActionResult ActualizarConfiguracion([FromBody] ConfiguracionReferidosRequest request)
         {
@@ -75,7 +75,8 @@ namespace Abastecete.Controllers
                     ValorDescuentoReferido = request.ValorDescuentoReferido,
                     TipoDescuentoDueno = request.TipoDescuentoDueno,
                     ValorDescuentoDueno = request.ValorDescuentoDueno,
-                    DescuentoActivo = request.DescuentoActivo
+                    DescuentoActivo = request.DescuentoActivo,
+                    LimiteUsosCodigo = request.LimiteUsosCodigo
                 };
 
                 bool resultado = manejadorReferidos.ActualizarConfiguracion(config, usuarioId);
@@ -244,6 +245,7 @@ namespace Abastecete.Controllers
             public string TipoDescuentoDueno { get; set; } = "";
             public decimal ValorDescuentoDueno { get; set; }
             public bool DescuentoActivo { get; set; }
+            public int LimiteUsosCodigo { get; set; } = 0;
         }
 
         #endregion

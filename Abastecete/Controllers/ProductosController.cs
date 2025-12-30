@@ -16,8 +16,10 @@ namespace Abastecete.Controllers
         private readonly ManejadorMarcas manejadorMarcas;
         private readonly ManejadorImagenes manejadorImagenes;
         private readonly ManejadorTipoUnidad manejadorTipoUnidad;
+        private readonly ManejadorUnidad manejadorUnidad;
         private readonly ManejadorGaleriaLocal manejadorGaleria;
         private readonly ManejadorSuscripciones manejadorSuscripciones;
+        private readonly ManejadorProductoMarca manejadorProductoMarca;
         private readonly IConfiguration _configuration;
 
         public ProductosController(IConfiguration configuration)
@@ -29,8 +31,10 @@ namespace Abastecete.Controllers
             manejadorMarcas = new ManejadorMarcas();
             manejadorImagenes = new ManejadorImagenes();
             manejadorTipoUnidad = new ManejadorTipoUnidad();
+            manejadorUnidad = new ManejadorUnidad();
             manejadorGaleria = new ManejadorGaleriaLocal();
             manejadorSuscripciones = new ManejadorSuscripciones();
+            manejadorProductoMarca = new ManejadorProductoMarca();
             _configuration = configuration;
         }
 
@@ -77,6 +81,18 @@ namespace Abastecete.Controllers
 
             var usuarios = manejadorUsuario.ConsultarUsuarios(usuarioId.Value);
             List<Producto> productos = manejadorProductos.ConsultarProductosLocal(negocio.Id);
+
+            // Cargar información de marcas para cada producto
+            foreach (var producto in productos)
+            {
+                producto.Marcas = manejadorProductoMarca.ListarMarcasProducto(negocio.Id, producto.Id);
+                if (producto.Marcas.Any())
+                {
+                    producto.PrecioMinimo = producto.Marcas.Min(m => m.Precio);
+                    producto.PrecioMaximo = producto.Marcas.Max(m => m.Precio);
+                    producto.CantidadMarcas = producto.Marcas.Count;
+                }
+            }
 
             // Cargar galería aprobada del local
             negocio.Galeria = manejadorGaleria.ListarGaleriaAprobada(negocio.Id);
@@ -582,10 +598,8 @@ namespace Abastecete.Controllers
 
         #region Producto-Marca (Múltiples marcas por producto)
 
-        private readonly ManejadorProductoMarca manejadorProductoMarca = new ManejadorProductoMarca();
-
         /// <summary>
-        /// Lista las marcas asociadas a un producto en un local específico
+        /// Lista las presentaciones (marca + unidad + precio) de un producto en un local específico
         /// </summary>
         [HttpGet]
         public IActionResult ListarMarcasProducto(int idLocal, int idProducto)
@@ -600,6 +614,9 @@ namespace Abastecete.Controllers
                     idMarca = m.IdMarca,
                     nombreMarca = m.NombreMarca,
                     logoMarca = m.LogoMarca,
+                    idUnidad = m.IdUnidad,
+                    nombreUnidad = m.NombreUnidad,
+                    descripcionPresentacion = m.DescripcionPresentacion,
                     precio = m.Precio,
                     stock = m.Stock,
                     disponible = m.Disponible
@@ -607,8 +624,8 @@ namespace Abastecete.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error al listar marcas del producto: {ex.Message}");
-                return BadRequest(new { mensaje = "Error al obtener marcas del producto" });
+                Console.WriteLine($"Error al listar presentaciones del producto: {ex.Message}");
+                return BadRequest(new { mensaje = "Error al obtener presentaciones del producto" });
             }
         }
 
@@ -637,44 +654,44 @@ namespace Abastecete.Controllers
         }
 
         /// <summary>
-        /// Agrega una marca a un producto en un local específico
+        /// Agrega una presentación (marca + unidad) a un producto en un local específico
         /// </summary>
         [HttpPost]
-        public IActionResult AgregarMarcaProducto(int idLocal, int idProducto, int idMarca, decimal precio, int stock = 0, bool disponible = true)
+        public IActionResult AgregarMarcaProducto(int idLocal, int idProducto, int idMarca, decimal precio, int stock = 0, bool disponible = true, int? idUnidad = null)
         {
             try
             {
-                var id = manejadorProductoMarca.AgregarMarcaProducto(idLocal, idProducto, idMarca, precio, stock, disponible);
+                var id = manejadorProductoMarca.AgregarMarcaProducto(idLocal, idProducto, idMarca, precio, stock, disponible, idUnidad);
                 if (id > 0)
-                    return Json(new { success = true, id, mensaje = "Marca agregada correctamente" });
+                    return Json(new { success = true, id, mensaje = "Presentación agregada correctamente" });
 
-                return BadRequest(new { success = false, mensaje = "Error al agregar marca" });
+                return BadRequest(new { success = false, mensaje = "Error al agregar presentación" });
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error al agregar marca al producto: {ex.Message}");
-                return BadRequest(new { success = false, mensaje = "Error al agregar marca al producto" });
+                Console.WriteLine($"Error al agregar presentación al producto: {ex.Message}");
+                return BadRequest(new { success = false, mensaje = "Error al agregar presentación al producto" });
             }
         }
 
         /// <summary>
-        /// Actualiza el precio/stock de una marca de un producto
+        /// Actualiza una presentación (marca + unidad + precio) de un producto
         /// </summary>
         [HttpPost]
-        public IActionResult ActualizarMarcaProducto(int id, decimal precio, int stock, bool disponible)
+        public IActionResult ActualizarMarcaProducto(int id, decimal precio, int stock, bool disponible, int? idUnidad = null)
         {
             try
             {
-                var success = manejadorProductoMarca.ActualizarMarcaProducto(id, precio, stock, disponible);
+                var success = manejadorProductoMarca.ActualizarMarcaProducto(id, precio, stock, disponible, idUnidad);
                 if (success)
-                    return Json(new { success = true, mensaje = "Marca actualizada correctamente" });
+                    return Json(new { success = true, mensaje = "Presentación actualizada correctamente" });
 
-                return BadRequest(new { success = false, mensaje = "Error al actualizar marca" });
+                return BadRequest(new { success = false, mensaje = "Error al actualizar presentación" });
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error al actualizar marca del producto: {ex.Message}");
-                return BadRequest(new { success = false, mensaje = "Error al actualizar marca" });
+                Console.WriteLine($"Error al actualizar presentación del producto: {ex.Message}");
+                return BadRequest(new { success = false, mensaje = "Error al actualizar presentación" });
             }
         }
 
@@ -731,9 +748,32 @@ namespace Abastecete.Controllers
         public class ProductoMarcaRequest
         {
             public int IdMarca { get; set; }
+            public int? IdUnidad { get; set; }
             public decimal Precio { get; set; }
             public int Stock { get; set; }
             public bool Disponible { get; set; } = true;
+        }
+
+        /// <summary>
+        /// Lista todas las unidades disponibles para presentaciones
+        /// </summary>
+        [HttpGet]
+        public IActionResult ObtenerUnidades()
+        {
+            try
+            {
+                var unidades = manejadorUnidad.ConsultarTodasUnidades();
+                return Json(unidades.Select(u => new
+                {
+                    id = u.Id,
+                    nombre = u.Nombre
+                }));
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error al listar unidades: {ex.Message}");
+                return BadRequest(new { mensaje = "Error al obtener unidades" });
+            }
         }
 
         #endregion

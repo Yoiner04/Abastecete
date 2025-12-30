@@ -19,15 +19,16 @@ namespace BusinessLogic
         }
 
         /// <summary>
-        /// Agrega o actualiza una marca para un producto en un local específico
+        /// Agrega o actualiza una presentación (marca + unidad) para un producto en un local específico
         /// </summary>
-        public int AgregarMarcaProducto(int idLocal, int idProducto, int idMarca, decimal precio, int stock = 0, bool disponible = true)
+        public int AgregarMarcaProducto(int idLocal, int idProducto, int idMarca, decimal precio, int stock = 0, bool disponible = true, int? idUnidad = null)
         {
             List<Parametro> parametros = new List<Parametro>
             {
                 new Parametro("p_id_local", idLocal),
                 new Parametro("p_id_producto", idProducto),
                 new Parametro("p_id_marca", idMarca),
+                new Parametro("p_id_unidad", idUnidad ?? 0),
                 new Parametro("p_precio", precio),
                 new Parametro("p_stock", stock),
                 new Parametro("p_disponible", disponible ? 1 : 0)
@@ -42,13 +43,14 @@ namespace BusinessLogic
         }
 
         /// <summary>
-        /// Actualiza una relación producto-marca existente
+        /// Actualiza una presentación existente (marca + unidad + precio)
         /// </summary>
-        public bool ActualizarMarcaProducto(int id, decimal precio, int stock, bool disponible)
+        public bool ActualizarMarcaProducto(int id, decimal precio, int stock, bool disponible, int? idUnidad = null)
         {
             List<Parametro> parametros = new List<Parametro>
             {
                 new Parametro("p_id", id),
+                new Parametro("p_id_unidad", idUnidad ?? 0),
                 new Parametro("p_precio", precio),
                 new Parametro("p_stock", stock),
                 new Parametro("p_disponible", disponible ? 1 : 0)
@@ -191,10 +193,12 @@ namespace BusinessLogic
             {
                 Id = Convert.ToInt32(row["Id"]),
                 IdLocal = row.Table.Columns.Contains("IdLocal") && row["IdLocal"] != DBNull.Value ? Convert.ToInt32(row["IdLocal"]) : 0,
-                IdProducto = row["IdProducto"] != DBNull.Value ? Convert.ToInt32(row["IdProducto"]) : 0,
+                IdProducto = row.Table.Columns.Contains("IdProducto") && row["IdProducto"] != DBNull.Value ? Convert.ToInt32(row["IdProducto"]) : 0,
                 IdMarca = Convert.ToInt32(row["IdMarca"]),
                 NombreMarca = row["NombreMarca"]?.ToString() ?? "",
                 LogoMarca = row["LogoMarca"]?.ToString() ?? "",
+                IdUnidad = row.Table.Columns.Contains("IdUnidad") && row["IdUnidad"] != DBNull.Value ? Convert.ToInt32(row["IdUnidad"]) : null,
+                NombreUnidad = row.Table.Columns.Contains("NombreUnidad") ? row["NombreUnidad"]?.ToString() ?? "" : "",
                 Precio = Convert.ToDecimal(row["Precio"]),
                 Stock = row["Stock"] != DBNull.Value ? Convert.ToInt32(row["Stock"]) : 0,
                 Disponible = row["Disponible"] != DBNull.Value && Convert.ToBoolean(row["Disponible"]),

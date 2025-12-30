@@ -42,6 +42,31 @@ BEGIN
 END//
 DELIMITER ;
 
+-- Volcando estructura para procedimiento abastecete.actualizar_addon
+DELIMITER //
+CREATE PROCEDURE `actualizar_addon`(
+    IN p_id INT,
+    IN p_codigo VARCHAR(50),
+    IN p_nombre VARCHAR(100),
+    IN p_descripcion VARCHAR(500),
+    IN p_tipo_limite VARCHAR(50),
+    IN p_cantidad INT,
+    IN p_precio DECIMAL(10,2),
+    IN p_icono VARCHAR(50)
+)
+BEGIN
+    UPDATE addon_tipo
+    SET CODIGO = p_codigo,
+        NOMBRE = p_nombre,
+        DESCRIPCION = p_descripcion,
+        TIPO_LIMITE = p_tipo_limite,
+        CANTIDAD = p_cantidad,
+        PRECIO = p_precio,
+        ICONO = p_icono
+    WHERE PK_ID_ADDON = p_id;
+END//
+DELIMITER ;
+
 -- Volcando estructura para procedimiento abastecete.actualizar_banner
 DELIMITER //
 CREATE PROCEDURE `actualizar_banner`(
@@ -69,6 +94,45 @@ BEGIN
         SET mensaje = 'Banner actualizado exitosamente';
         SET resultado = 1;
     END IF;
+END//
+DELIMITER ;
+
+-- Volcando estructura para procedimiento abastecete.actualizar_configuracion_referidos
+DELIMITER //
+CREATE PROCEDURE `actualizar_configuracion_referidos`(
+    IN p_tipo_descuento_referido VARCHAR(20),
+    IN p_valor_descuento_referido DECIMAL(10,2),
+    IN p_tipo_descuento_dueno VARCHAR(20),
+    IN p_valor_descuento_dueno DECIMAL(10,2),
+    IN p_descuento_activo INT,
+    IN p_usuario_id INT
+)
+BEGIN
+    -- Verificar si existe la configuración
+    IF EXISTS (SELECT 1 FROM configuracion_referidos WHERE PK_ID = 1) THEN
+        UPDATE configuracion_referidos
+        SET
+            TIPO_DESCUENTO_REFERIDO = p_tipo_descuento_referido,
+            VALOR_DESCUENTO_REFERIDO = p_valor_descuento_referido,
+            TIPO_DESCUENTO_DUENO = p_tipo_descuento_dueno,
+            VALOR_DESCUENTO_DUENO = p_valor_descuento_dueno,
+            DESCUENTO_ACTIVO = p_descuento_activo,
+            FECHA_ACTUALIZACION = NOW(),
+            ACTUALIZADO_POR = p_usuario_id
+        WHERE PK_ID = 1;
+    ELSE
+        INSERT INTO configuracion_referidos (
+            TIPO_DESCUENTO_REFERIDO, VALOR_DESCUENTO_REFERIDO,
+            TIPO_DESCUENTO_DUENO, VALOR_DESCUENTO_DUENO,
+            DESCUENTO_ACTIVO, FECHA_ACTUALIZACION, ACTUALIZADO_POR
+        ) VALUES (
+            p_tipo_descuento_referido, p_valor_descuento_referido,
+            p_tipo_descuento_dueno, p_valor_descuento_dueno,
+            p_descuento_activo, NOW(), p_usuario_id
+        );
+    END IF;
+
+    SELECT ROW_COUNT() AS filas_afectadas;
 END//
 DELIMITER ;
 
@@ -277,6 +341,83 @@ BEGIN
 END//
 DELIMITER ;
 
+-- Volcando estructura para procedimiento abastecete.aplicar_descuento_referido
+DELIMITER //
+CREATE PROCEDURE `aplicar_descuento_referido`(
+    IN p_id_usuario_referido INT,
+    IN p_id_tipo_membresia INT,
+    IN p_monto_compra DECIMAL(10,2),
+    IN p_descuento_aplicado DECIMAL(10,2),
+    IN p_usar_credito DECIMAL(10,2)
+)
+BEGIN
+    DECLARE v_codigo_usado VARCHAR(20) DEFAULT NULL;
+    DECLARE v_id_dueno INT DEFAULT NULL;
+    DECLARE v_tipo_credito VARCHAR(20) DEFAULT 'PORCENTAJE';
+    DECLARE v_valor_credito DECIMAL(10,2) DEFAULT 0;
+    DECLARE v_credito_a_dar DECIMAL(10,2) DEFAULT 0;
+    DECLARE v_descuento_activo INT DEFAULT 0;
+
+    -- Obtener código usado por el referido
+    SELECT CODIGO_REFERIDO_USADO INTO v_codigo_usado
+    FROM usuario
+    WHERE PK_ID_USUARIO = p_id_usuario_referido;
+
+    -- Si usó un código, obtener el dueño
+    IF v_codigo_usado IS NOT NULL AND v_codigo_usado != '' THEN
+        SELECT PK_ID_USUARIO INTO v_id_dueno
+        FROM usuario
+        WHERE CODIGO_REFERIDO = v_codigo_usado;
+    END IF;
+
+    -- Obtener configuración
+    SELECT
+        TIPO_DESCUENTO_DUENO,
+        VALOR_DESCUENTO_DUENO,
+        DESCUENTO_ACTIVO
+    INTO v_tipo_credito, v_valor_credito, v_descuento_activo
+    FROM configuracion_referidos
+    WHERE PK_ID = 1;
+
+    -- Marcar que el referido ya usó su descuento (si aplicó alguno)
+    IF p_descuento_aplicado > 0 THEN
+        UPDATE usuario
+        SET YA_USO_DESCUENTO_REFERIDO = 1
+        WHERE PK_ID_USUARIO = p_id_usuario_referido;
+    END IF;
+
+    -- Descontar crédito usado (si lo usó)
+    IF p_usar_credito > 0 THEN
+        UPDATE usuario
+        SET CREDITO_REFERIDOS = GREATEST(CREDITO_REFERIDOS - p_usar_credito, 0)
+        WHERE PK_ID_USUARIO = p_id_usuario_referido;
+    END IF;
+
+    -- Dar crédito al dueño del código (si el sistema está activo)
+    IF v_descuento_activo = 1 AND v_id_dueno IS NOT NULL THEN
+        -- Calcular crédito a dar
+        IF v_tipo_credito = 'PORCENTAJE' THEN
+            SET v_credito_a_dar = ROUND(p_monto_compra * (v_valor_credito / 100), 2);
+        ELSE
+            SET v_credito_a_dar = v_valor_credito;
+        END IF;
+
+        -- Actualizar crédito del dueño
+        UPDATE usuario
+        SET CREDITO_REFERIDOS = CREDITO_REFERIDOS + v_credito_a_dar
+        WHERE PK_ID_USUARIO = v_id_dueno;
+
+        -- Actualizar la referencia como "compró membresía"
+        UPDATE referencias
+        SET MEMBRESIA_COMPRADA = 1
+        WHERE FK_ID_DUENO_CODIGO = v_id_dueno
+        AND FK_ID_CLIENTE_REFERIDO = p_id_usuario_referido;
+    END IF;
+
+    SELECT 'OK' AS resultado, v_credito_a_dar AS credito_dado_a_dueno;
+END//
+DELIMITER ;
+
 -- Volcando estructura para procedimiento abastecete.aprobar_ofertas_flash
 DELIMITER //
 CREATE PROCEDURE `aprobar_ofertas_flash`(
@@ -351,38 +492,6 @@ BEGIN
 END//
 DELIMITER ;
 
--- Volcando estructura para procedimiento abastecete.asignar_permiso_rol
-DELIMITER //
-CREATE PROCEDURE `asignar_permiso_rol`(
-  IN `p_id_rol` INT,
-  IN `p_id_permiso` INT
-)
-BEGIN
-  SELECT @MAX_ID := MAX(PK_ID_PERMISO_ROL)
-  FROM permiso_de_rol pr
-  WHERE pr.PFK_ID_ROL = p_id_rol AND pr.PFK_ID_PERMISO = p_id_permiso;
-
-  IF (@MAX_ID IS NULL) THEN
-    INSERT INTO permiso_de_rol (PFK_ID_ROL, PFK_ID_PERMISO, ESTADO_PERMISO_ROL)
-    VALUES (p_id_rol, p_id_permiso, TRUE);
-  ELSE
-    SELECT @ESTADO := ESTADO_PERMISO_ROL
-    FROM permiso_de_rol pr
-    WHERE pr.PFK_ID_ROL = p_id_rol AND pr.PFK_ID_PERMISO = p_id_permiso;
-
-    IF (@ESTADO != TRUE) THEN
-      UPDATE permiso_de_rol
-      SET ESTADO_PERMISO_ROL = 1
-      WHERE PFK_ID_ROL = p_id_rol AND PFK_ID_PERMISO = p_id_permiso;
-    ELSE
-      UPDATE permiso_de_rol
-      SET ESTADO_PERMISO_ROL = 0
-      WHERE PFK_ID_ROL = p_id_rol AND PFK_ID_PERMISO = p_id_permiso;
-    END IF;
-  END IF;
-END//
-DELIMITER ;
-
 -- Volcando estructura para procedimiento abastecete.asignar_permiso_usuario
 DELIMITER //
 CREATE PROCEDURE `asignar_permiso_usuario`(
@@ -396,6 +505,23 @@ BEGIN
     ON DUPLICATE KEY UPDATE ESTADO = 1, ORIGEN = p_origen;
 
     SELECT ROW_COUNT() as resultado;
+END//
+DELIMITER ;
+
+-- Volcando estructura para procedimiento abastecete.asignar_rol
+DELIMITER //
+CREATE PROCEDURE `asignar_rol`(IN p_id_usuario INT, IN p_id_rol INT)
+BEGIN
+    INSERT IGNORE INTO usuario_permiso (FK_ID_USUARIO, FK_ID_PERMISO, ORIGEN, ESTADO)
+    SELECT
+        p_id_usuario,
+        rp.FK_ID_PERMISO,
+        CONCAT('ROL_', p_id_rol),
+        1
+    FROM rol_permiso rp
+    WHERE rp.FK_ID_ROL = p_id_rol
+      AND rp.ESTADO = 1;
+    SELECT ROW_COUNT() AS permisos_asignados;
 END//
 DELIMITER ;
 
@@ -505,6 +631,35 @@ BEGIN
 END//
 DELIMITER ;
 
+-- Volcando estructura para procedimiento abastecete.buscador_locales_sugerencias
+DELIMITER //
+CREATE PROCEDURE `buscador_locales_sugerencias`(
+    IN p_busqueda VARCHAR(100),
+    IN p_limite INT
+)
+BEGIN
+    SELECT
+        l.PK_ID_LOCAL AS id,
+        l.NOMBRE_LOCAL AS nombre,
+        l.DIRECCION_LOCAL AS direccion,
+        l.FOTOS_LOCAL AS imagen
+    FROM `local` l
+    WHERE l.FK_ID_ESTADO_LOCAL = 1
+    AND (
+        l.NOMBRE_LOCAL LIKE CONCAT('%', p_busqueda, '%')
+        OR l.DESCRIPCION_LOCAL LIKE CONCAT('%', p_busqueda, '%')
+    )
+    ORDER BY
+        CASE
+            WHEN l.NOMBRE_LOCAL LIKE CONCAT(p_busqueda, '%') THEN 1
+            WHEN l.NOMBRE_LOCAL LIKE CONCAT('%', p_busqueda, '%') THEN 2
+            ELSE 3
+        END,
+        l.NOMBRE_LOCAL ASC
+    LIMIT p_limite;
+END//
+DELIMITER ;
+
 -- Volcando estructura para procedimiento abastecete.buscador_ofertas
 DELIMITER //
 CREATE PROCEDURE `buscador_ofertas`(
@@ -517,6 +672,36 @@ BEGIN
 	INNER JOIN local ON oferta_flash.FK_ID_LOCAL = `local`.PK_ID_LOCAL
 	WHERE oferta_flash.PRODUCTO_OFERTA_FLASH LIKE CONCAT('%', busqueda, '%') AND oferta_flash.ESTADO_OFERTA_FLASH = 1;
 
+END//
+DELIMITER ;
+
+-- Volcando estructura para procedimiento abastecete.buscador_ofertas_sugerencias
+DELIMITER //
+CREATE PROCEDURE `buscador_ofertas_sugerencias`(
+    IN p_busqueda VARCHAR(100),
+    IN p_limite INT
+)
+BEGIN
+    SELECT
+        o.ID_OFERTAFLASH AS id,
+        o.TITULO_OFERTA_FLASH AS titulo,
+        o.PRODUCTO_OFERTA_FLASH AS producto,
+        o.IMAGEN_PRODUCTO_OFERTA_FLASH AS imagen,
+        o.TIEMPO_OFERTA_FLASH AS tiempoExpira,
+        l.PK_ID_LOCAL AS idLocal,
+        l.NOMBRE_LOCAL AS nombreLocal,
+        l.FOTOS_LOCAL AS imagenLocal
+    FROM oferta_flash o
+    INNER JOIN `local` l ON o.FK_ID_LOCAL = l.PK_ID_LOCAL
+    WHERE o.ESTADO_OFERTA_FLASH = 1
+    AND l.FK_ID_ESTADO_LOCAL = 1
+    AND o.TIEMPO_OFERTA_FLASH > NOW()
+    AND (
+        o.TITULO_OFERTA_FLASH LIKE CONCAT('%', p_busqueda, '%')
+        OR o.PRODUCTO_OFERTA_FLASH LIKE CONCAT('%', p_busqueda, '%')
+    )
+    ORDER BY o.TIEMPO_OFERTA_FLASH ASC
+    LIMIT p_limite;
 END//
 DELIMITER ;
 
@@ -533,6 +718,37 @@ BEGIN
 	INNER JOIN `local` ON productoslocal.FK_ID_LOCAL = `local`.PK_ID_LOCAL
 	WHERE NOMBRE_PRODUCTO LIKE CONCAT('%', busqueda, '%');
     
+END//
+DELIMITER ;
+
+-- Volcando estructura para procedimiento abastecete.buscador_productos_sugerencias
+DELIMITER //
+CREATE PROCEDURE `buscador_productos_sugerencias`(
+    IN p_busqueda VARCHAR(100),
+    IN p_limite INT
+)
+BEGIN
+    SELECT
+        p.PK_ID_PRODUCTO AS id,
+        p.NOMBRE_PRODUCTO AS nombre,
+        pl.VALOR_PRODUCTS_LOCAL AS precio,
+        p.IMAGEN_URL AS imagen,
+        l.PK_ID_LOCAL AS idLocal,
+        l.NOMBRE_LOCAL AS nombreLocal,
+        l.FOTOS_LOCAL AS imagenLocal
+    FROM producto p
+    INNER JOIN productoslocal pl ON pl.FK_ID_PRODUCTO = p.PK_ID_PRODUCTO
+    INNER JOIN `local` l ON pl.FK_ID_LOCAL = l.PK_ID_LOCAL
+    WHERE l.FK_ID_ESTADO_LOCAL = 1
+    AND p.NOMBRE_PRODUCTO LIKE CONCAT('%', p_busqueda, '%')
+    ORDER BY
+        CASE
+            WHEN p.NOMBRE_PRODUCTO LIKE CONCAT(p_busqueda, '%') THEN 1
+            WHEN p.NOMBRE_PRODUCTO LIKE CONCAT('%', p_busqueda, '%') THEN 2
+            ELSE 3
+        END,
+        p.NOMBRE_PRODUCTO ASC
+    LIMIT p_limite;
 END//
 DELIMITER ;
 
@@ -573,6 +789,67 @@ BEGIN
         AND (p_id_subcategoria IS NULL OR p_id_subcategoria = 0 OR p.FK_ID_SUB_CATEGORIA = p_id_subcategoria)
         AND (p_id_marca IS NULL OR p_id_marca = 0 OR p.FK_ID_MARCA = p_id_marca)
     ORDER BY p.NOMBRE_PRODUCTO;
+END//
+DELIMITER ;
+
+-- Volcando estructura para procedimiento abastecete.calcular_descuento_referido
+DELIMITER //
+CREATE PROCEDURE `calcular_descuento_referido`(
+    IN p_id_usuario INT,
+    IN p_monto_base DECIMAL(10,2)
+)
+BEGIN
+    DECLARE v_codigo_usado VARCHAR(20) DEFAULT NULL;
+    DECLARE v_ya_uso_descuento INT DEFAULT 0;
+    DECLARE v_credito_disponible DECIMAL(10,2) DEFAULT 0;
+    DECLARE v_tipo_descuento VARCHAR(20) DEFAULT 'PORCENTAJE';
+    DECLARE v_valor_descuento DECIMAL(10,2) DEFAULT 0;
+    DECLARE v_descuento_activo INT DEFAULT 0;
+    DECLARE v_descuento_calculado DECIMAL(10,2) DEFAULT 0;
+    DECLARE v_monto_final DECIMAL(10,2);
+
+    -- Obtener datos del usuario
+    SELECT
+        CODIGO_REFERIDO_USADO,
+        YA_USO_DESCUENTO_REFERIDO,
+        CREDITO_REFERIDOS
+    INTO v_codigo_usado, v_ya_uso_descuento, v_credito_disponible
+    FROM usuario
+    WHERE PK_ID_USUARIO = p_id_usuario;
+
+    -- Obtener configuración de descuentos
+    SELECT
+        TIPO_DESCUENTO_REFERIDO,
+        VALOR_DESCUENTO_REFERIDO,
+        DESCUENTO_ACTIVO
+    INTO v_tipo_descuento, v_valor_descuento, v_descuento_activo
+    FROM configuracion_referidos
+    WHERE PK_ID = 1;
+
+    -- Calcular descuento solo si:
+    -- 1. El sistema de descuentos está activo
+    -- 2. El usuario tiene un código de referido usado
+    -- 3. El usuario NO ha usado su descuento de primera compra
+    IF v_descuento_activo = 1 AND v_codigo_usado IS NOT NULL AND v_codigo_usado != '' AND v_ya_uso_descuento = 0 THEN
+        IF v_tipo_descuento = 'PORCENTAJE' THEN
+            SET v_descuento_calculado = ROUND(p_monto_base * (v_valor_descuento / 100), 2);
+        ELSE
+            SET v_descuento_calculado = LEAST(v_valor_descuento, p_monto_base);
+        END IF;
+    END IF;
+
+    -- Calcular monto final
+    SET v_monto_final = GREATEST(p_monto_base - v_descuento_calculado, 0);
+
+    -- Retornar resultado
+    SELECT
+        v_descuento_calculado AS descuento_referido,
+        COALESCE(v_credito_disponible, 0) AS credito_disponible,
+        v_ya_uso_descuento AS ya_uso_descuento,
+        COALESCE(v_codigo_usado, '') AS codigo_usado,
+        v_tipo_descuento AS tipo_descuento,
+        v_valor_descuento AS valor_configurado,
+        v_monto_final AS monto_final;
 END//
 DELIMITER ;
 
@@ -620,6 +897,19 @@ BEGIN
     END IF;
 
     SELECT v_resultado AS resultado, v_mensaje AS mensaje;
+END//
+DELIMITER ;
+
+-- Volcando estructura para procedimiento abastecete.cambiar_estado_addon
+DELIMITER //
+CREATE PROCEDURE `cambiar_estado_addon`(
+    IN p_id INT,
+    IN p_estado INT
+)
+BEGIN
+    UPDATE addon_tipo
+    SET ESTADO = p_estado
+    WHERE PK_ID_ADDON = p_id;
 END//
 DELIMITER ;
 
@@ -703,6 +993,24 @@ INSERT INTO `categoria` (`PK_ID_CATEGORIA`, `NOMBRE_CATEGORIA`, `ESTADO_CATEGORI
 	(14, 'Aseo del Hogar', 1, '68309f978e2dc61914d38cdc', '68309f988e2dc61914d38cde', NULL, NULL),
 	(15, 'Cuidado Personal', 1, '68309f798e2dc61914d38cd8', '68309f7a8e2dc61914d38cda', NULL, NULL),
 	(16, 'Licores y Tabaco', 1, '68309f2f8e2dc61914d38cd4', '68309f2f8e2dc61914d38cd6', NULL, NULL);
+
+-- Volcando estructura para tabla abastecete.configuracion_referidos
+CREATE TABLE IF NOT EXISTS `configuracion_referidos` (
+  `PK_ID` int NOT NULL AUTO_INCREMENT,
+  `TIPO_DESCUENTO_REFERIDO` enum('PORCENTAJE','MONTO_FIJO') NOT NULL DEFAULT 'PORCENTAJE',
+  `VALOR_DESCUENTO_REFERIDO` decimal(10,2) NOT NULL DEFAULT '10.00',
+  `TIPO_DESCUENTO_DUENO` enum('PORCENTAJE','MONTO_FIJO') NOT NULL DEFAULT 'PORCENTAJE',
+  `VALOR_DESCUENTO_DUENO` decimal(10,2) NOT NULL DEFAULT '10.00',
+  `DESCUENTO_ACTIVO` tinyint(1) NOT NULL DEFAULT '1',
+  `FECHA_CREACION` datetime DEFAULT CURRENT_TIMESTAMP,
+  `FECHA_ACTUALIZACION` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `ACTUALIZADO_POR` int DEFAULT NULL,
+  PRIMARY KEY (`PK_ID`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+-- Volcando datos para la tabla abastecete.configuracion_referidos: ~1 rows (aproximadamente)
+INSERT INTO `configuracion_referidos` (`PK_ID`, `TIPO_DESCUENTO_REFERIDO`, `VALOR_DESCUENTO_REFERIDO`, `TIPO_DESCUENTO_DUENO`, `VALOR_DESCUENTO_DUENO`, `DESCUENTO_ACTIVO`, `FECHA_CREACION`, `FECHA_ACTUALIZACION`, `ACTUALIZADO_POR`) VALUES
+	(1, 'PORCENTAJE', 10.00, 'PORCENTAJE', 10.00, 1, '2025-12-29 18:25:59', '2025-12-29 18:25:59', NULL);
 
 -- Volcando estructura para procedimiento abastecete.confirmar_pago
 DELIMITER //
@@ -1116,6 +1424,41 @@ BEGIN
 END//
 DELIMITER ;
 
+-- Volcando estructura para procedimiento abastecete.consultar_mis_referidos
+DELIMITER //
+CREATE PROCEDURE `consultar_mis_referidos`(
+    IN p_id_usuario INT
+)
+BEGIN
+    SELECT
+        r.PK_ID_REFERENCIA,
+        r.FK_ID_CLIENTE_REFERIDO AS FK_ID_USUARIO_REFERIDO,
+        u.NOMBRES,
+        u.APELLIDOS,
+        r.FECHA_REGISTRO,
+        p.FECHA_PAGO AS FECHA_COMPRA,
+        p.MONTO AS MONTO_COMPRA,
+        CASE
+            WHEN r.MEMBRESIA_COMPRADA = 1 THEN
+                ROUND(
+                    CASE
+                        WHEN c.TIPO_DESCUENTO_DUENO = 'PORCENTAJE' THEN p.MONTO * (c.VALOR_DESCUENTO_DUENO / 100)
+                        ELSE c.VALOR_DESCUENTO_DUENO
+                    END, 2)
+            ELSE 0
+        END AS credito_recibido,
+        tm.NOMBRE_TIPO_MEMBRESIA AS membresia_comprada,
+        r.MEMBRESIA_COMPRADA AS ha_comprado
+    FROM referencias r
+    INNER JOIN usuario u ON r.FK_ID_CLIENTE_REFERIDO = u.PK_ID_USUARIO
+    LEFT JOIN pagos p ON p.FK_ID_USUARIO = r.FK_ID_CLIENTE_REFERIDO AND p.ESTADO_PAGO = 'APROBADO'
+    LEFT JOIN tipo_membresia tm ON p.FK_ID_TIPO_MEMBRESIA = tm.PK_ID_TIPO_MEMBRESIA
+    CROSS JOIN configuracion_referidos c
+    WHERE r.FK_ID_DUENO_CODIGO = p_id_usuario
+    ORDER BY r.FECHA_REGISTRO DESC;
+END//
+DELIMITER ;
+
 -- Volcando estructura para procedimiento abastecete.consultar_negocio
 DELIMITER //
 CREATE PROCEDURE `consultar_negocio`(
@@ -1163,6 +1506,48 @@ BEGIN
 END//
 DELIMITER ;
 
+-- Volcando estructura para procedimiento abastecete.consultar_negocio_usuario
+DELIMITER //
+CREATE PROCEDURE `consultar_negocio_usuario`(IN p_id_usuario INT)
+BEGIN
+    SELECT
+        l.PK_ID_LOCAL,
+        l.FK_ID_USUARIO,
+        l.FK_ID_ESTADO_LOCAL,
+        l.NOMBRE_LOCAL,
+        l.LOCALIZACION,
+        l.DIRECCION_LOCAL,
+        l.TELEFONO_LOCAL,
+        l.FOTOS_LOCAL,
+        l.CLOUDINARY_PUBLIC_ID_LOGOTIPO,
+        l.BANNER_LOCAL,
+        l.DESCRIPCION_LOCAL,
+        l.EMAIL_CONTACTO,
+        l.WHATSAPP,
+        l.SITIO_WEB,
+        l.NIT,
+        l.INSTAGRAM,
+        l.FACEBOOK,
+        l.TIKTOK,
+        l.YOUTUBE,
+        l.TWITTER,
+        l.HORARIO_LUNES,
+        l.HORARIO_MARTES,
+        l.HORARIO_MIERCOLES,
+        l.HORARIO_JUEVES,
+        l.HORARIO_VIERNES,
+        l.HORARIO_SABADO,
+        l.HORARIO_DOMINGO,
+        l.LATITUD,
+        l.LONGITUD,
+        l.FECHA_REGISTRO,
+        l.FK_ID_SUSCRIPCION_ACTIVA
+    FROM `local` l
+    WHERE l.FK_ID_USUARIO = p_id_usuario
+    LIMIT 1;
+END//
+DELIMITER ;
+
 -- Volcando estructura para procedimiento abastecete.consultar_ofertas_flash
 DELIMITER //
 CREATE PROCEDURE `consultar_ofertas_flash`()
@@ -1198,23 +1583,6 @@ CREATE PROCEDURE `consultar_opinion`()
 BEGIN
   
   SELECT * FROM opinion;
-END//
-DELIMITER ;
-
--- Volcando estructura para procedimiento abastecete.consultar_permiso
-DELIMITER //
-CREATE PROCEDURE `consultar_permiso`(
-  IN `p_id_rol` INT
-)
-BEGIN
-  IF p_id_rol = 0 THEN
-    SELECT *, 'False' AS 'ESTADO_PERMISO_ROL' 
-    FROM permiso;
-  ELSE  
-    SELECT p.*, COALESCE(pr.ESTADO_PERMISO_ROL, 'False') AS ESTADO_PERMISO_ROL
-    FROM permiso p
-    LEFT JOIN permiso_de_rol pr ON pr.PFK_ID_ROL = p_id_rol AND p.PK_ID_PERMISO = pr.PFK_ID_PERMISO;
-  END IF;
 END//
 DELIMITER ;
 
@@ -1284,13 +1652,13 @@ DELIMITER ;
 -- Volcando estructura para procedimiento abastecete.consultar_persona
 DELIMITER //
 CREATE PROCEDURE `consultar_persona`(
-	IN `p_id_persona` INT
+    IN p_id_persona INT
 )
 BEGIN
-    IF p_id_persona > 0 THEN
-        SELECT * FROM persona WHERE PK_ID_PERSONA = p_id_persona;
+    IF p_id_persona IS NOT NULL AND p_id_persona > 0 THEN
+        SELECT * FROM usuario WHERE PK_ID_USUARIO = p_id_persona;
     ELSE
-        SELECT * FROM persona;
+        SELECT * FROM usuario;
     END IF;
 END//
 DELIMITER ;
@@ -1591,6 +1959,28 @@ BEGIN
 END//
 DELIMITER ;
 
+-- Volcando estructura para procedimiento abastecete.consultar_todos_banners_categorias
+DELIMITER //
+CREATE PROCEDURE `consultar_todos_banners_categorias`()
+BEGIN
+    SELECT
+        b.PK_ID_BANNER,
+        b.CLOUDINARY_URL,
+        b.CLOUDINARY_PUBLIC_ID,
+        b.NOMBRE,
+        b.TIPO,
+        b.FORMATO,
+        b.FK_ID_CATEGORIA,
+        b.ACTIVO,
+        b.FECHA_REGISTRO
+    FROM banner b
+    WHERE b.TIPO = 'categoria'
+      AND b.ACTIVO = 1
+      AND b.FK_ID_CATEGORIA IS NOT NULL
+    ORDER BY b.FK_ID_CATEGORIA, b.FECHA_REGISTRO DESC;
+END//
+DELIMITER ;
+
 -- Volcando estructura para procedimiento abastecete.consultar_unidad
 DELIMITER //
 CREATE PROCEDURE `consultar_unidad`(
@@ -1654,7 +2044,7 @@ BEGIN
     IF p_id_usuario > 0 THEN
         SELECT
             PK_ID_USUARIO, NOMBRES, APELLIDOS, TELEFONO, NOMBRE_USUARIO AS CORREO,
-            DOCUMENTO_IDENTIDAD, FK_ID_TIPO_DOCUMENTO, FK_ID_ROL, ESTADO,
+            DOCUMENTO_IDENTIDAD, FK_ID_TIPO_DOCUMENTO, ESTADO,
             CODIGO_REFERIDO, CODIGO_REFERIDO_USADO, CORREO_VERIFICADO,
             CLIENTES_REFERIDOS_TOTAL
         FROM usuario
@@ -1662,11 +2052,74 @@ BEGIN
     ELSE
         SELECT
             PK_ID_USUARIO, NOMBRES, APELLIDOS, TELEFONO, NOMBRE_USUARIO AS CORREO,
-            DOCUMENTO_IDENTIDAD, FK_ID_TIPO_DOCUMENTO, FK_ID_ROL, ESTADO,
+            DOCUMENTO_IDENTIDAD, FK_ID_TIPO_DOCUMENTO, ESTADO,
             CODIGO_REFERIDO, CODIGO_REFERIDO_USADO, CORREO_VERIFICADO,
             CLIENTES_REFERIDOS_TOTAL
         FROM usuario;
     END IF;
+END//
+DELIMITER ;
+
+-- Volcando estructura para procedimiento abastecete.consultar_usuarios
+DELIMITER //
+CREATE PROCEDURE `consultar_usuarios`(IN id_usuario INT)
+BEGIN
+    SELECT
+        u.PK_ID_USUARIO,
+        u.NOMBRES,
+        u.APELLIDOS,
+        u.TELEFONO,
+        u.NOMBRE_USUARIO AS CORREO,
+        u.ESTADO,
+        u.DOCUMENTO_IDENTIDAD,
+        u.FK_ID_TIPO_DOCUMENTO,
+        u.CODIGO_REFERIDO
+    FROM usuario u
+    WHERE id_usuario IS NULL
+       OR id_usuario = 0
+       OR u.PK_ID_USUARIO = id_usuario
+    ORDER BY u.PK_ID_USUARIO DESC;
+END//
+DELIMITER ;
+
+-- Volcando estructura para procedimiento abastecete.consultar_usuarios_paginado
+DELIMITER //
+CREATE PROCEDURE `consultar_usuarios_paginado`(
+    IN `p_pagina` INT,
+    IN `p_registros_por_pagina` INT,
+    IN `p_busqueda` VARCHAR(100)
+)
+BEGIN
+    DECLARE v_offset INT;
+    SET v_offset = (p_pagina - 1) * p_registros_por_pagina;
+
+    SELECT
+        u.PK_ID_USUARIO AS UsuarioId,
+        u.NOMBRES AS Nombres,
+        u.APELLIDOS AS Apellidos,
+        u.TELEFONO AS Telefono,
+        u.NOMBRE_USUARIO AS Correo,
+        u.ESTADO AS UsuarioEstado,
+        '' AS RolNombre,
+        l.PK_ID_LOCAL AS LocalId,
+        l.NOMBRE_LOCAL AS LocalNombre,
+        s.PK_ID_SUSCRIPCION AS SuscripcionId,
+        s.FECHA_INICIO AS SuscripcionFechaInicio,
+        s.FECHA_FIN AS SuscripcionFechaFin,
+        s.ESTADO AS SuscripcionEstado,
+        tm.PK_ID_TIPO_MEMBRESIA AS TipoMembresiaId,
+        tm.NOMBRE AS TipoMembresiaNombre
+    FROM usuario u
+    LEFT JOIN local l ON l.FK_ID_USUARIO = u.PK_ID_USUARIO
+    LEFT JOIN suscripcion s ON s.PK_ID_SUSCRIPCION = l.FK_ID_SUSCRIPCION_ACTIVA
+    LEFT JOIN tipo_membresia tm ON tm.PK_ID_TIPO_MEMBRESIA = s.FK_ID_TIPO_MEMBRESIA
+    WHERE (p_busqueda IS NULL OR p_busqueda = '' OR
+           u.NOMBRES LIKE CONCAT('%', p_busqueda, '%') OR
+           u.APELLIDOS LIKE CONCAT('%', p_busqueda, '%') OR
+           u.NOMBRE_USUARIO LIKE CONCAT('%', p_busqueda, '%') OR
+           l.NOMBRE_LOCAL LIKE CONCAT('%', p_busqueda, '%'))
+    ORDER BY u.PK_ID_USUARIO DESC
+    LIMIT v_offset, p_registros_por_pagina;
 END//
 DELIMITER ;
 
@@ -1711,13 +2164,39 @@ CREATE PROCEDURE `contar_usuarios`(
 BEGIN
     SELECT COUNT(DISTINCT u.PK_ID_USUARIO) AS Total
     FROM usuario u
-    LEFT JOIN persona p ON u.FK_ID_PERSONA = p.PK_ID_PERSONA
-    LEFT JOIN local l ON l.FK_ID_PERSONA = p.PK_ID_PERSONA
+    LEFT JOIN local l ON l.FK_ID_USUARIO = u.PK_ID_USUARIO
     WHERE (p_busqueda IS NULL OR p_busqueda = '' OR
-           p.NOMBRES LIKE CONCAT('%', p_busqueda, '%') OR
-           p.APELLIDOS LIKE CONCAT('%', p_busqueda, '%') OR
-           p.CORREO LIKE CONCAT('%', p_busqueda, '%') OR
+           u.NOMBRES LIKE CONCAT('%', p_busqueda, '%') OR
+           u.APELLIDOS LIKE CONCAT('%', p_busqueda, '%') OR
+           u.NOMBRE_USUARIO LIKE CONCAT('%', p_busqueda, '%') OR
            l.NOMBRE_LOCAL LIKE CONCAT('%', p_busqueda, '%'));
+END//
+DELIMITER ;
+
+-- Volcando estructura para procedimiento abastecete.crear_addon
+DELIMITER //
+CREATE PROCEDURE `crear_addon`(
+    IN p_codigo VARCHAR(50),
+    IN p_nombre VARCHAR(100),
+    IN p_descripcion VARCHAR(500),
+    IN p_tipo_limite VARCHAR(50),
+    IN p_cantidad INT,
+    IN p_precio DECIMAL(10,2),
+    IN p_icono VARCHAR(50)
+)
+BEGIN
+    DECLARE v_id INT;
+
+    -- Verificar que no exista un addon con el mismo código
+    IF EXISTS (SELECT 1 FROM addon_tipo WHERE CODIGO = p_codigo) THEN
+        SELECT 0 AS id_addon, 'Ya existe un addon con ese código' AS mensaje;
+    ELSE
+        INSERT INTO addon_tipo (CODIGO, NOMBRE, DESCRIPCION, TIPO_LIMITE, CANTIDAD, PRECIO, ICONO, ESTADO)
+        VALUES (p_codigo, p_nombre, p_descripcion, p_tipo_limite, p_cantidad, p_precio, p_icono, 1);
+
+        SET v_id = LAST_INSERT_ID();
+        SELECT v_id AS id_addon, 'Addon creado exitosamente' AS mensaje;
+    END IF;
 END//
 DELIMITER ;
 
@@ -1804,7 +2283,7 @@ DELIMITER ;
 -- Volcando estructura para procedimiento abastecete.crear_local
 DELIMITER //
 CREATE PROCEDURE `crear_local`(
-    IN p_fk_id_persona INT,
+    IN p_fk_id_usuario INT,
     IN p_fk_id_estado_local INT,
     IN p_fk_id_tipomembresia INT,
     IN p_localizacion VARCHAR(100),
@@ -1834,9 +2313,11 @@ CREATE PROCEDURE `crear_local`(
 )
 BEGIN
     DECLARE v_id_local INT;
+    DECLARE v_id_suscripcion INT;
 
+    -- Insertar el local con FK_ID_USUARIO (no FK_ID_PERSONA)
     INSERT INTO `local` (
-        FK_ID_PERSONA,
+        FK_ID_USUARIO,
         FK_ID_ESTADO_LOCAL,
         LOCALIZACION,
         NOMBRE_LOCAL,
@@ -1861,7 +2342,7 @@ BEGIN
         HORARIO_DOMINGO,
         FECHA_REGISTRO
     ) VALUES (
-        p_fk_id_persona,
+        p_fk_id_usuario,
         p_fk_id_estado_local,
         p_localizacion,
         p_nombre_local,
@@ -1890,7 +2371,6 @@ BEGIN
     SET v_id_local = LAST_INSERT_ID();
 
     -- Crear suscripción inicial (si se pasa tipo membresía)
-    -- CORREGIDO: ESTADO debe ser 1 (numérico), no 'Activa' (texto)
     IF p_fk_id_tipomembresia IS NOT NULL AND p_fk_id_tipomembresia > 0 THEN
         INSERT INTO suscripcion (
             FK_ID_LOCAL,
@@ -1903,8 +2383,15 @@ BEGIN
             p_fk_id_tipomembresia,
             NOW(),
             DATE_ADD(NOW(), INTERVAL 30 DAY),
-            1  -- 1 = Activa (era 'Activa' texto, causaba error)
+            1  -- 1 = Activa
         );
+
+        SET v_id_suscripcion = LAST_INSERT_ID();
+
+        -- Actualizar el local con la suscripción activa
+        UPDATE `local`
+        SET FK_ID_SUSCRIPCION_ACTIVA = v_id_suscripcion
+        WHERE PK_ID_LOCAL = v_id_local;
     END IF;
 
     SELECT v_id_local AS id_local;
@@ -2336,21 +2823,22 @@ CREATE PROCEDURE `crear_usuario`(
     IN p_documento BIGINT,
     IN p_fk_tipo_documento INT,
     IN p_fk_rol INT,
-    OUT p_mensaje VARCHAR(255),
-    OUT p_id_usuario INT
+    IN p_codigo_referido_usado VARCHAR(50)
 )
 BEGIN
     DECLARE v_codigo_referido VARCHAR(20);
     DECLARE v_codigo_existe INT DEFAULT 1;
-
-    SET p_mensaje = '';
-    SET p_id_usuario = 0;
+    DECLARE v_id_dueno INT DEFAULT 0;
+    DECLARE v_id_usuario INT DEFAULT 0;
+    DECLARE v_mensaje VARCHAR(255) DEFAULT '';
 
     -- Validaciones
     IF EXISTS (SELECT 1 FROM usuario WHERE NOMBRE_USUARIO = LOWER(TRIM(p_correo))) THEN
-        SET p_mensaje = 'El correo electrónico ya está registrado.';
-    ELSEIF p_documento IS NOT NULL AND EXISTS (SELECT 1 FROM usuario WHERE DOCUMENTO_IDENTIDAD = p_documento AND FK_ID_TIPO_DOCUMENTO = p_fk_tipo_documento) THEN
-        SET p_mensaje = 'El documento de identidad ya está registrado.';
+        SET v_mensaje = 'El correo electrónico ya está registrado.';
+        SELECT 0 AS resultado, v_mensaje AS mensaje;
+    ELSEIF p_documento IS NOT NULL AND p_documento > 0 AND EXISTS (SELECT 1 FROM usuario WHERE DOCUMENTO_IDENTIDAD = p_documento AND FK_ID_TIPO_DOCUMENTO = p_fk_tipo_documento) THEN
+        SET v_mensaje = 'El documento de identidad ya está registrado.';
+        SELECT 0 AS resultado, v_mensaje AS mensaje;
     ELSE
         -- Generar código de referido único
         WHILE v_codigo_existe > 0 DO
@@ -2358,17 +2846,41 @@ BEGIN
             SELECT COUNT(*) INTO v_codigo_existe FROM usuario WHERE CODIGO_REFERIDO = v_codigo_referido;
         END WHILE;
 
-        -- Insertar usuario
+        -- Insertar usuario (sin FK_ID_ROL - el sistema usa usuario_permiso)
         INSERT INTO usuario (
             NOMBRES, APELLIDOS, TELEFONO, DOCUMENTO_IDENTIDAD, FK_ID_TIPO_DOCUMENTO,
-            CODIGO_REFERIDO, NOMBRE_USUARIO, CONTRASENIA, FK_ID_ROL, ESTADO
+            CODIGO_REFERIDO, CODIGO_REFERIDO_USADO, NOMBRE_USUARIO, CONTRASENIA, ESTADO,
+            CREDITO_REFERIDOS, YA_USO_DESCUENTO_REFERIDO
         ) VALUES (
-            p_nombres, p_apellidos, p_telefono, p_documento, COALESCE(p_fk_tipo_documento, 1),
-            v_codigo_referido, LOWER(TRIM(p_correo)), p_contrasenia, p_fk_rol, 1
+            p_nombres, p_apellidos, p_telefono,
+            CASE WHEN p_documento > 0 THEN p_documento ELSE NULL END,
+            COALESCE(p_fk_tipo_documento, 1),
+            v_codigo_referido,
+            CASE WHEN p_codigo_referido_usado IS NOT NULL AND p_codigo_referido_usado != '' THEN p_codigo_referido_usado ELSE NULL END,
+            LOWER(TRIM(p_correo)), p_contrasenia, 1, 0, 0
         );
 
-        SET p_id_usuario = LAST_INSERT_ID();
-        SET p_mensaje = 'Usuario creado exitosamente.';
+        SET v_id_usuario = LAST_INSERT_ID();
+
+        -- Registrar referencia si hay código usado
+        IF p_codigo_referido_usado IS NOT NULL AND p_codigo_referido_usado != '' THEN
+            SELECT PK_ID_USUARIO INTO v_id_dueno
+            FROM usuario WHERE CODIGO_REFERIDO = p_codigo_referido_usado AND ESTADO = 1
+            LIMIT 1;
+
+            IF v_id_dueno > 0 THEN
+                INSERT INTO referencias (FK_ID_DUENO_CODIGO, FK_ID_CLIENTE_REFERIDO, MEMBRESIA_COMPRADA)
+                VALUES (v_id_dueno, v_id_usuario, 0);
+
+                -- Incrementar contador de referidos del dueño
+                UPDATE usuario
+                SET CLIENTES_REFERIDOS_TOTAL = COALESCE(CLIENTES_REFERIDOS_TOTAL, 0) + 1
+                WHERE PK_ID_USUARIO = v_id_dueno;
+            END IF;
+        END IF;
+
+        SET v_mensaje = 'Usuario creado exitosamente.';
+        SELECT v_id_usuario AS resultado, v_mensaje AS mensaje;
     END IF;
 END//
 DELIMITER ;
@@ -3229,6 +3741,26 @@ UPDATE persona
   WHERE CORREO = p_correo//
 DELIMITER ;
 
+-- Volcando estructura para procedimiento abastecete.eliminar_addon
+DELIMITER //
+CREATE PROCEDURE `eliminar_addon`(
+    IN p_id INT
+)
+BEGIN
+    DECLARE v_compras INT;
+
+    -- Verificar si tiene compras asociadas
+    SELECT COUNT(*) INTO v_compras FROM addon_local WHERE FK_ID_ADDON = p_id;
+
+    IF v_compras > 0 THEN
+        SELECT 0 AS resultado, 'No se puede eliminar: el addon tiene compras asociadas' AS mensaje;
+    ELSE
+        DELETE FROM addon_tipo WHERE PK_ID_ADDON = p_id;
+        SELECT 1 AS resultado, 'Addon eliminado exitosamente' AS mensaje;
+    END IF;
+END//
+DELIMITER ;
+
 -- Volcando estructura para procedimiento abastecete.eliminar_banner
 DELIMITER //
 CREATE PROCEDURE `eliminar_banner`(
@@ -3686,14 +4218,27 @@ CREATE TABLE IF NOT EXISTS `evento_analitica` (
   KEY `fk_evento_producto` (`FK_ID_PRODUCTO`),
   CONSTRAINT `fk_evento_local` FOREIGN KEY (`FK_ID_LOCAL`) REFERENCES `local` (`PK_ID_LOCAL`) ON DELETE CASCADE,
   CONSTRAINT `fk_evento_producto` FOREIGN KEY (`FK_ID_PRODUCTO`) REFERENCES `producto` (`PK_ID_PRODUCTO`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=30 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=47 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla abastecete.evento_analitica: ~0 rows (aproximadamente)
+-- Volcando datos para la tabla abastecete.evento_analitica: ~17 rows (aproximadamente)
 INSERT INTO `evento_analitica` (`PK_ID_EVENTO`, `FK_ID_LOCAL`, `FK_ID_PRODUCTO`, `TIPO_EVENTO`, `IP_VISITANTE`, `USER_AGENT`, `REFERRER`, `FECHA_EVENTO`) VALUES
 	(30, 1, NULL, 'BUSQUEDA_APARICION', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'http://localhost:5235/Productos/ProductosNegocio', '2025-12-29 22:11:30'),
 	(31, 1, NULL, 'VISITA_LOCAL', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'http://localhost:5235/Negocios/ConsultarProductos?idLocal=1', '2025-12-29 22:11:34'),
 	(32, 1, NULL, 'BUSQUEDA_APARICION', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'http://localhost:5235/Buscador/Index?query=os', '2025-12-30 00:31:31'),
-	(33, 1, NULL, 'VISITA_LOCAL', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'http://localhost:5235/Negocios/ConsultarProductos?idLocal=1', '2025-12-30 00:31:35');
+	(33, 1, NULL, 'VISITA_LOCAL', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'http://localhost:5235/Negocios/ConsultarProductos?idLocal=1', '2025-12-30 00:31:35'),
+	(34, 1, NULL, 'BUSQUEDA_APARICION', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'http://localhost:5235/Home/Principal', '2025-12-30 03:29:03'),
+	(35, 1, NULL, 'VISITA_LOCAL', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'http://localhost:5235/Negocios/ConsultarProductos?idLocal=1', '2025-12-30 03:37:46'),
+	(36, 1, NULL, 'CLIC_WHATSAPP', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'http://localhost:5235/Negocios/ConsultarProductos?idLocal=1', '2025-12-30 03:40:34'),
+	(37, 1, NULL, 'VISITA_LOCAL', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'http://localhost:5235/Negocios/ConsultarProductos?idLocal=1', '2025-12-30 03:46:21'),
+	(38, 1, 10, 'VISITA_PRODUCTO', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'http://localhost:5235/Negocios/ConsultarProductos?idLocal=1', '2025-12-30 03:46:36'),
+	(39, 1, NULL, 'VISITA_PRODUCTO', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'http://localhost:5235/Productos/ProductDetailLocal?idlocal=1&idProducto=10', '2025-12-30 03:46:37'),
+	(40, 1, NULL, 'VISITA_LOCAL', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'http://localhost:5235/Negocios/ConsultarProductos?idLocal=1', '2025-12-30 03:46:49'),
+	(41, 1, NULL, 'VISITA_LOCAL', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'http://localhost:5235/Negocios/ConsultarProductos?idLocal=1', '2025-12-30 03:49:30'),
+	(42, 1, NULL, 'VISITA_LOCAL', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'http://localhost:5235/Negocios/ConsultarProductos?idLocal=1', '2025-12-30 03:50:37'),
+	(43, 1, NULL, 'VISITA_LOCAL', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'http://localhost:5235/Negocios/ConsultarProductos?idLocal=1', '2025-12-30 03:51:38'),
+	(44, 1, NULL, 'VISITA_LOCAL', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'http://localhost:5235/Negocios/ConsultarProductos?idLocal=1', '2025-12-30 03:51:54'),
+	(45, 1, NULL, '', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'http://localhost:5235/Productos/ProductosNegocio', '2025-12-30 18:08:18'),
+	(46, 1, NULL, 'VISITA_LOCAL', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'http://localhost:5235/Negocios/ConsultarProductos?idLocal=1', '2025-12-30 18:08:22');
 
 -- Volcando estructura para evento abastecete.expirar_ofertas_flash
 DELIMITER //
@@ -4009,10 +4554,11 @@ CREATE TABLE IF NOT EXISTS `local` (
   KEY `FK_local_estado_local` (`FK_ID_ESTADO_LOCAL`),
   KEY `FK_local_suscripcion_activa` (`FK_ID_SUSCRIPCION_ACTIVA`),
   KEY `idx_local_fk_usuario` (`FK_ID_USUARIO`),
+  KEY `idx_local_usuario` (`FK_ID_USUARIO`),
   CONSTRAINT `FK_local_estado` FOREIGN KEY (`FK_ID_ESTADO_LOCAL`) REFERENCES `estado` (`PK_ID_ESTADO`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `FK_local_suscripcion_activa` FOREIGN KEY (`FK_ID_SUSCRIPCION_ACTIVA`) REFERENCES `suscripcion` (`PK_ID_SUSCRIPCION`) ON DELETE SET NULL,
   CONSTRAINT `FK_local_usuario` FOREIGN KEY (`FK_ID_USUARIO`) REFERENCES `usuario` (`PK_ID_USUARIO`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Volcando datos para la tabla abastecete.local: ~1 rows (aproximadamente)
 INSERT INTO `local` (`PK_ID_LOCAL`, `FK_ID_USUARIO`, `FK_ID_ESTADO_LOCAL`, `NOMBRE_LOCAL`, `LOCALIZACION`, `DIRECCION_LOCAL`, `TELEFONO_LOCAL`, `FOTOS_LOCAL`, `CLOUDINARY_PUBLIC_ID_LOGOTIPO`, `BANNER_LOCAL`, `IMAGENES_LOCAL`, `DESCRIPCION_LOCAL`, `EMAIL_CONTACTO`, `WHATSAPP`, `SITIO_WEB`, `NIT`, `INSTAGRAM`, `FACEBOOK`, `TIKTOK`, `YOUTUBE`, `TWITTER`, `HORARIO_LUNES`, `HORARIO_MARTES`, `HORARIO_MIERCOLES`, `HORARIO_JUEVES`, `HORARIO_VIERNES`, `HORARIO_SABADO`, `HORARIO_DOMINGO`, `LATITUD`, `LONGITUD`, `FECHA_REGISTRO`, `FECHA_ACTUALIZACION`, `FK_ID_SUSCRIPCION_ACTIVA`) VALUES
@@ -4030,9 +4576,9 @@ CREATE TABLE IF NOT EXISTS `localcategoria` (
   KEY `idx_localcategoria_categoria` (`FK_ID_CATEGORIA`),
   CONSTRAINT `FK1` FOREIGN KEY (`FK_ID_LOCAL`) REFERENCES `local` (`PK_ID_LOCAL`),
   CONSTRAINT `FK2` FOREIGN KEY (`FK_ID_CATEGORIA`) REFERENCES `categoria` (`PK_ID_CATEGORIA`)
-) ENGINE=InnoDB AUTO_INCREMENT=40 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=42 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla abastecete.localcategoria: ~18 rows (aproximadamente)
+-- Volcando datos para la tabla abastecete.localcategoria: ~20 rows (aproximadamente)
 INSERT INTO `localcategoria` (`PK_ID_LOCALCATEGORIA`, `FK_ID_LOCAL`, `FK_ID_CATEGORIA`) VALUES
 	(22, 28, 4),
 	(23, 34, 7),
@@ -4051,74 +4597,59 @@ INSERT INTO `localcategoria` (`PK_ID_LOCALCATEGORIA`, `FK_ID_LOCAL`, `FK_ID_CATE
 	(36, 27, 12),
 	(37, 27, 16),
 	(38, 28, 6),
-	(39, 28, 10);
+	(39, 28, 10),
+	(40, 1, 11),
+	(41, 1, 4);
 
 -- Volcando estructura para procedimiento abastecete.login_google
 DELIMITER //
 CREATE PROCEDURE `login_google`(
-    IN `p_correo` VARCHAR(100)
+    IN p_email VARCHAR(100),
+    IN p_nombre VARCHAR(100),
+    IN p_apellido VARCHAR(100),
+    IN p_google_id VARCHAR(255)
 )
 BEGIN
-    DECLARE v_id_usuario INT;
-    DECLARE v_id_persona INT;
-    DECLARE v_estado INT;
-    DECLARE v_fecha_bloqueo DATETIME;
-    DECLARE v_id_tipo_membresia INT DEFAULT NULL;
+    DECLARE v_id_usuario INT DEFAULT 0;
+    DECLARE v_estado INT DEFAULT 1;
 
-    -- Obtener datos del usuario por correo
-    SELECT u.PK_ID_USUARIO, u.FK_ID_PERSONA, u.ESTADO, u.FECHA_BLOQUEO
-    INTO v_id_usuario, v_id_persona, v_estado, v_fecha_bloqueo
-    FROM usuario u
-    INNER JOIN persona p ON u.FK_ID_PERSONA = p.PK_ID_PERSONA
-    WHERE p.CORREO = p_correo
+    SELECT PK_ID_USUARIO, ESTADO
+    INTO v_id_usuario, v_estado
+    FROM usuario
+    WHERE LOWER(NOMBRE_USUARIO) = LOWER(TRIM(p_email))
     LIMIT 1;
 
-    -- Si el usuario no existe
-    IF v_id_usuario IS NULL THEN
+    -- Usuario no existe: código 0
+    IF v_id_usuario = 0 THEN
         SELECT
-            0 AS FK_ID_ROL,
-            NULL AS FK_ID_PERSONA,
-            NULL AS NOMBRE_USUARIO,
-            NULL AS FK_ID_TIPOMEMBRESIA,
-            'NO_EXISTE' AS estado_login;
+            0 AS PK_ID_USUARIO,
+            0 AS CODIGO_ESTADO,
+            NULL AS NOMBRES,
+            NULL AS APELLIDOS,
+            NULL AS ID_LOCAL,
+            NULL AS NOMBRE_LOCAL;
 
-    -- Si el usuario está inhabilitado
-    ELSEIF v_estado = 97 THEN
+    -- Usuario inhabilitado: código 97
+    ELSEIF v_estado = 0 THEN
         SELECT
-            97 AS FK_ID_ROL,
-            NULL AS FK_ID_PERSONA,
-            NULL AS NOMBRE_USUARIO,
-            NULL AS FK_ID_TIPOMEMBRESIA,
-            'INHABILITADO' AS estado_login;
+            v_id_usuario AS PK_ID_USUARIO,
+            97 AS CODIGO_ESTADO,
+            NULL AS NOMBRES,
+            NULL AS APELLIDOS,
+            NULL AS ID_LOCAL,
+            NULL AS NOMBRE_LOCAL;
 
-    -- Si el usuario está bloqueado
-    ELSEIF v_estado = 0 AND v_fecha_bloqueo IS NOT NULL AND v_fecha_bloqueo > NOW() THEN
-        SELECT
-            0 AS FK_ID_ROL,
-            NULL AS FK_ID_PERSONA,
-            NULL AS NOMBRE_USUARIO,
-            NULL AS FK_ID_TIPOMEMBRESIA,
-            'BLOQUEADO' AS estado_login;
-
+    -- Usuario activo: código 1
     ELSE
-        -- Obtener tipo de membresía desde la suscripción activa
-        SELECT s.FK_ID_TIPO_MEMBRESIA
-        INTO v_id_tipo_membresia
-        FROM persona p
-        LEFT JOIN local l ON l.FK_ID_PERSONA = p.PK_ID_PERSONA
-        LEFT JOIN suscripcion s ON l.FK_ID_SUSCRIPCION_ACTIVA = s.PK_ID_SUSCRIPCION AND s.ESTADO = 1
-        WHERE p.PK_ID_PERSONA = v_id_persona
-        LIMIT 1;
-
-        -- Retornar datos del usuario
         SELECT
             u.PK_ID_USUARIO,
-            u.FK_ID_ROL,
-            u.FK_ID_PERSONA,
-            u.NOMBRE_USUARIO,
-            COALESCE(v_id_tipo_membresia, 0) AS FK_ID_TIPOMEMBRESIA,
-            'OK' AS estado_login
+            1 AS CODIGO_ESTADO,
+            u.NOMBRES,
+            u.APELLIDOS,
+            l.PK_ID_LOCAL AS ID_LOCAL,
+            l.NOMBRE_LOCAL AS NOMBRE_LOCAL
         FROM usuario u
+        LEFT JOIN local l ON l.FK_ID_USUARIO = u.PK_ID_USUARIO
         WHERE u.PK_ID_USUARIO = v_id_usuario;
     END IF;
 END//
@@ -4128,60 +4659,54 @@ DELIMITER ;
 DELIMITER //
 CREATE PROCEDURE `login_usuario`(
     IN p_nombre_usuario VARCHAR(100),
-    IN p_contrasenia VARCHAR(255)  -- No se usa, pero se mantiene por compatibilidad
+    IN p_contrasenia TEXT
 )
 BEGIN
     DECLARE v_id_usuario INT DEFAULT 0;
-    DECLARE v_contrasenia_db VARCHAR(255);
-    DECLARE v_estado INT DEFAULT 1;
+    DECLARE v_estado INT DEFAULT 0;
+    DECLARE v_fecha_bloqueo DATETIME DEFAULT NULL;
+    DECLARE v_contrasenia_hash TEXT DEFAULT NULL;
     DECLARE v_intentos INT DEFAULT 0;
-    DECLARE v_fecha_bloqueo DATETIME;
-    DECLARE v_id_rol INT DEFAULT 0;
 
-    -- Buscar usuario por correo/nombre_usuario
-    SELECT
-        PK_ID_USUARIO,
-        CONTRASENIA,
-        ESTADO,
-        COALESCE(INTENTOS_FALLIDOS, 0),
-        FECHA_BLOQUEO,
-        COALESCE(FK_ID_ROL, 3)
-    INTO v_id_usuario, v_contrasenia_db, v_estado, v_intentos, v_fecha_bloqueo, v_id_rol
+    -- Buscar usuario
+    SELECT PK_ID_USUARIO, ESTADO, FECHA_BLOQUEO, CONTRASENIA, INTENTOS_FALLIDOS
+    INTO v_id_usuario, v_estado, v_fecha_bloqueo, v_contrasenia_hash, v_intentos
     FROM usuario
-    WHERE LOWER(NOMBRE_USUARIO) = LOWER(TRIM(p_nombre_usuario))
+    WHERE NOMBRE_USUARIO = LOWER(TRIM(p_nombre_usuario))
     LIMIT 1;
 
-    -- Si no existe el usuario
-    IF v_id_usuario = 0 THEN
-        SELECT 98 AS FK_ID_ROL, NULL AS CONTRASENIA_HASH, 0 AS PK_ID_USUARIO;
-
-    -- Si la cuenta está inhabilitada
+    -- Usuario no existe
+    IF v_id_usuario = 0 OR v_id_usuario IS NULL THEN
+        SELECT 98 AS CODIGO_ESTADO, NULL AS CONTRASENIA_HASH, 0 AS PK_ID_USUARIO;
+    -- Usuario inhabilitado
     ELSEIF v_estado = 0 THEN
-        SELECT 97 AS FK_ID_ROL, NULL AS CONTRASENIA_HASH, v_id_usuario AS PK_ID_USUARIO;
-
-    -- Si está bloqueada por intentos fallidos (verificar si pasó 1 hora)
-    ELSEIF v_intentos >= 5 AND v_fecha_bloqueo IS NOT NULL AND v_fecha_bloqueo > DATE_SUB(NOW(), INTERVAL 1 HOUR) THEN
-        SELECT 0 AS FK_ID_ROL, NULL AS CONTRASENIA_HASH, v_id_usuario AS PK_ID_USUARIO;
-
+        SELECT 97 AS CODIGO_ESTADO, NULL AS CONTRASENIA_HASH, v_id_usuario AS PK_ID_USUARIO;
+    -- Usuario bloqueado temporalmente
+    ELSEIF v_fecha_bloqueo IS NOT NULL AND v_fecha_bloqueo > NOW() THEN
+        SELECT 0 AS CODIGO_ESTADO, NULL AS CONTRASENIA_HASH, v_id_usuario AS PK_ID_USUARIO;
+    -- Usuario válido - retornar datos para verificación
     ELSE
-        -- Retornar datos del usuario incluyendo el hash para verificación en C#
         SELECT
+            1 AS CODIGO_ESTADO,
+            u.CONTRASENIA AS CONTRASENIA_HASH,
             u.PK_ID_USUARIO,
             u.NOMBRES,
             u.APELLIDOS,
             u.NOMBRE_USUARIO AS CORREO,
-            u.FK_ID_ROL,
+            u.TELEFONO,
+            u.DOCUMENTO_IDENTIDAD,
+            u.FK_ID_TIPO_DOCUMENTO,
             u.ESTADO,
-            u.CONTRASENIA AS CONTRASENIA_HASH,
+            u.INTENTOS_FALLIDOS,
+            u.FECHA_BLOQUEO,
+            u.CODIGO_REFERIDO,
+            u.CREDITO_REFERIDOS,
             l.PK_ID_LOCAL AS ID_LOCAL,
             l.NOMBRE_LOCAL AS NOMBRE_LOCAL,
-            s.FK_ID_TIPO_MEMBRESIA AS FK_ID_TIPOMEMBRESIA,
-            tm.NOMBRE AS NOMBRE_MEMBRESIA,
-            CASE WHEN s.PK_ID_SUSCRIPCION IS NOT NULL AND s.ESTADO = 1 THEN 1 ELSE 0 END AS TIENE_MEMBRESIA_ACTIVA
+            COALESCE(s.FK_ID_TIPO_MEMBRESIA, 0) AS FK_ID_TIPOMEMBRESIA
         FROM usuario u
         LEFT JOIN local l ON l.FK_ID_USUARIO = u.PK_ID_USUARIO
-        LEFT JOIN suscripcion s ON s.FK_ID_LOCAL = l.PK_ID_LOCAL AND s.ESTADO = 1
-        LEFT JOIN tipo_membresia tm ON s.FK_ID_TIPO_MEMBRESIA = tm.PK_ID_TIPO_MEMBRESIA
+        LEFT JOIN suscripcion s ON s.PK_ID_SUSCRIPCION = l.FK_ID_SUSCRIPCION_ACTIVA
         WHERE u.PK_ID_USUARIO = v_id_usuario;
     END IF;
 END//
@@ -4198,10 +4723,10 @@ BEGIN
         u.NOMBRES,
         u.APELLIDOS,
         u.NOMBRE_USUARIO AS CORREO,
-        u.FK_ID_ROL,
+        1 AS CODIGO_ESTADO,
         u.ESTADO,
         l.PK_ID_LOCAL AS ID_LOCAL,
-        l.NOMBRE AS NOMBRE_LOCAL,
+        l.NOMBRE_LOCAL AS NOMBRE_LOCAL,
         s.FK_ID_TIPO_MEMBRESIA AS FK_ID_TIPOMEMBRESIA,
         tm.NOMBRE AS NOMBRE_MEMBRESIA,
         CASE WHEN s.PK_ID_SUSCRIPCION IS NOT NULL AND s.ESTADO = 1 THEN 1 ELSE 0 END AS TIENE_MEMBRESIA_ACTIVA
@@ -4239,9 +4764,9 @@ CREATE TABLE IF NOT EXISTS `logs_sistema` (
   KEY `IDX_logs_tipo_accion` (`TIPO_ACCION`),
   KEY `IDX_logs_entidad` (`MODULO`,`ENTIDAD_ID`),
   CONSTRAINT `FK_logs_usuario` FOREIGN KEY (`FK_ID_USUARIO`) REFERENCES `usuario` (`PK_ID_USUARIO`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=76 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=133 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla abastecete.logs_sistema: ~92 rows (aproximadamente)
+-- Volcando datos para la tabla abastecete.logs_sistema: ~132 rows (aproximadamente)
 INSERT INTO `logs_sistema` (`PK_ID_LOG`, `FK_ID_USUARIO`, `NOMBRE_USUARIO`, `MODULO`, `TIPO_ACCION`, `ENTIDAD_ID`, `ENTIDAD_DESCRIPCION`, `DATOS_ANTERIORES`, `DATOS_NUEVOS`, `IP_CLIENTE`, `USER_AGENT`, `FECHA_REGISTRO`, `RESULTADO`, `MENSAJE_ERROR`, `CONTROLLER`, `ACTION`) VALUES
 	(1, 54, 'prueba123@gmail.com', 'AUTENTICACION', 'LOGIN', 54, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-22 05:25:06', 'EXITO', '', 'Login', 'Login'),
 	(2, 54, 'Usuario', 'AUTENTICACION', 'LOGOUT', 54, 'Cierre de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-22 05:27:25', 'EXITO', '', 'Login', 'Logout'),
@@ -4359,7 +4884,27 @@ INSERT INTO `logs_sistema` (`PK_ID_LOG`, `FK_ID_USUARIO`, `NOMBRE_USUARIO`, `MOD
 	(114, 2, 'johans.ramirez@udla.edu.co', 'AUTENTICACION', 'LOGIN', 2, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-30 00:29:24', 'EXITO', '', 'Login', 'Login'),
 	(115, 2, 'Usuario', 'AUTENTICACION', 'LOGOUT', 2, 'Cierre de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-30 00:42:13', 'EXITO', '', 'Login', 'Logout'),
 	(116, 1, 'admin@abastecete.com', 'AUTENTICACION', 'LOGIN', 1, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-30 00:42:25', 'EXITO', '', 'Login', 'Login'),
-	(117, 1, 'admin@abastecete.com', 'AUTENTICACION', 'LOGIN', 1, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-30 01:45:51', 'EXITO', '', 'Login', 'Login');
+	(117, 1, 'admin@abastecete.com', 'AUTENTICACION', 'LOGIN', 1, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-30 01:45:51', 'EXITO', '', 'Login', 'Login'),
+	(118, 1, 'admin@abastecete.com', 'AUTENTICACION', 'LOGIN', 1, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-30 02:18:18', 'EXITO', '', 'Login', 'Login'),
+	(119, 1, 'admin@abastecete.com', 'AUTENTICACION', 'LOGIN', 1, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-30 02:40:26', 'EXITO', '', 'Login', 'Login'),
+	(120, 1, 'admin@abastecete.com', 'AUTENTICACION', 'LOGIN', 1, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-30 02:42:32', 'EXITO', '', 'Login', 'Login'),
+	(121, 1, 'admin@abastecete.com', 'AUTENTICACION', 'LOGIN', 1, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-30 03:02:05', 'EXITO', '', 'Login', 'Login'),
+	(122, 1, 'admin@abastecete.com', 'AUTENTICACION', 'LOGIN', 1, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-30 03:30:53', 'EXITO', '', 'Login', 'Login'),
+	(123, 1, 'Usuario', 'AUTENTICACION', 'LOGOUT', 1, 'Cierre de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-30 03:35:35', 'EXITO', '', 'Login', 'Logout'),
+	(124, 2, 'johans.ramirez@udla.edu.co', 'AUTENTICACION', 'LOGIN', 2, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-30 03:35:56', 'EXITO', '', 'Login', 'Login'),
+	(125, 2, 'johans.ramirez@udla.edu.co', 'AUTENTICACION', 'LOGIN', 2, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-30 03:46:55', 'EXITO', '', 'Login', 'Login'),
+	(126, 2, 'Usuario', 'AUTENTICACION', 'LOGOUT', 2, 'Cierre de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-30 03:52:29', 'EXITO', '', 'Login', 'Logout'),
+	(127, 1, 'admin@abastecete.com', 'AUTENTICACION', 'LOGIN', 1, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-30 03:52:48', 'EXITO', '', 'Login', 'Login'),
+	(128, NULL, 'johans.ramirez@udla.edu.co', 'AUTENTICACION', 'LOGIN', NULL, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36 OPR/125.0.0.0', '2025-12-30 16:36:19', 'ERROR', 'Contrasena incorrecta', 'Login', 'Login'),
+	(129, 1, 'admin@abastecete.com', 'AUTENTICACION', 'LOGIN', 1, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-30 16:40:41', 'EXITO', '', 'Login', 'Login'),
+	(130, NULL, 'Usuario', 'AUTENTICACION', 'LOGOUT', NULL, 'Cierre de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-30 18:06:34', 'EXITO', '', 'Login', 'Logout'),
+	(131, 2, 'johans.ramirez@udla.edu.co', 'AUTENTICACION', 'LOGIN', 2, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-30 18:06:41', 'EXITO', '', 'Login', 'Login'),
+	(132, 2, 'johans.ramirez@udla.edu.co', 'AUTENTICACION', 'LOGIN', 2, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-30 18:16:58', 'EXITO', '', 'Login', 'Login'),
+	(133, 1, 'admin@abastecete.com', 'AUTENTICACION', 'LOGIN', 1, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-30 18:42:57', 'EXITO', '', 'Login', 'Login'),
+	(134, 1, 'Usuario', 'AUTENTICACION', 'LOGOUT', 1, 'Cierre de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-30 18:48:33', 'EXITO', '', 'Login', 'Logout'),
+	(135, 1, 'admin@abastecete.com', 'AUTENTICACION', 'LOGIN', 1, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-30 18:48:35', 'EXITO', '', 'Login', 'Login'),
+	(136, 1, 'Usuario', 'AUTENTICACION', 'LOGOUT', 1, 'Cierre de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-30 18:49:51', 'EXITO', '', 'Login', 'Logout'),
+	(137, 2, 'johans.ramirez@udla.edu.co', 'AUTENTICACION', 'LOGIN', 2, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-30 18:50:19', 'EXITO', '', 'Login', 'Login');
 
 -- Volcando estructura para tabla abastecete.marca
 CREATE TABLE IF NOT EXISTS `marca` (
@@ -4508,6 +5053,24 @@ BEGIN
 END//
 DELIMITER ;
 
+-- Volcando estructura para procedimiento abastecete.obtener_configuracion_referidos
+DELIMITER //
+CREATE PROCEDURE `obtener_configuracion_referidos`()
+BEGIN
+    SELECT
+        PK_ID,
+        TIPO_DESCUENTO_REFERIDO,
+        VALOR_DESCUENTO_REFERIDO,
+        TIPO_DESCUENTO_DUENO,
+        VALOR_DESCUENTO_DUENO,
+        DESCUENTO_ACTIVO,
+        FECHA_ACTUALIZACION,
+        ACTUALIZADO_POR
+    FROM configuracion_referidos
+    WHERE PK_ID = 1;
+END//
+DELIMITER ;
+
 -- Volcando estructura para procedimiento abastecete.obtener_duracion_oferta
 DELIMITER //
 CREATE PROCEDURE `obtener_duracion_oferta`(
@@ -4519,6 +5082,41 @@ BEGIN
     LEFT JOIN suscripcion s ON l.FK_ID_SUSCRIPCION_ACTIVA = s.PK_ID_SUSCRIPCION AND s.ESTADO = 1
     LEFT JOIN tipo_membresia tm ON s.FK_ID_TIPO_MEMBRESIA = tm.PK_ID_TIPO_MEMBRESIA
     WHERE l.PK_ID_LOCAL = p_id_local;
+END//
+DELIMITER ;
+
+-- Volcando estructura para procedimiento abastecete.obtener_estadisticas_addons
+DELIMITER //
+CREATE PROCEDURE `obtener_estadisticas_addons`()
+BEGIN
+    SELECT
+        at.PK_ID_ADDON AS id_addon,
+        at.NOMBRE AS nombre,
+        COUNT(al.PK_ID) AS total_ventas,
+        COALESCE(SUM(al.CANTIDAD_COMPRADA), 0) AS cantidad_total,
+        COALESCE(SUM(al.CANTIDAD_COMPRADA * at.PRECIO), 0) AS ingreso_total
+    FROM addon_tipo at
+    LEFT JOIN addon_local al ON at.PK_ID_ADDON = al.FK_ID_ADDON AND al.ESTADO = 1
+    GROUP BY at.PK_ID_ADDON, at.NOMBRE
+    ORDER BY ingreso_total DESC;
+END//
+DELIMITER ;
+
+-- Volcando estructura para procedimiento abastecete.obtener_estadisticas_dashboard
+DELIMITER //
+CREATE PROCEDURE `obtener_estadisticas_dashboard`(
+    IN p_fecha_inicio DATE,
+    IN p_fecha_fin DATE
+)
+BEGIN
+    -- Estadísticas generales
+    SELECT
+        (SELECT COUNT(*) FROM usuario WHERE ESTADO = 1) AS TotalUsuariosActivos,
+        (SELECT COUNT(*) FROM local WHERE ESTADO = 1) AS TotalNegociosActivos,
+        (SELECT COUNT(*) FROM producto WHERE ESTADO = 1) AS TotalProductosActivos,
+        (SELECT COUNT(*) FROM suscripcion WHERE ESTADO = 1 AND FECHA_FIN >= NOW()) AS SuscripcionesActivas,
+        (SELECT COUNT(*) FROM usuario WHERE DATE(FECHA_BLOQUEO) BETWEEN p_fecha_inicio AND p_fecha_fin) AS NuevosUsuariosPeriodo,
+        (SELECT COALESCE(SUM(MONTO), 0) FROM suscripcion WHERE DATE(FECHA_INICIO) BETWEEN p_fecha_inicio AND p_fecha_fin) AS IngresosPeriodo;
 END//
 DELIMITER ;
 
@@ -4826,6 +5424,59 @@ BEGIN
 END//
 DELIMITER ;
 
+-- Volcando estructura para procedimiento abastecete.obtener_resumen_referidos
+DELIMITER //
+CREATE PROCEDURE `obtener_resumen_referidos`(
+    IN p_id_usuario INT
+)
+BEGIN
+    DECLARE v_codigo_referido VARCHAR(20) DEFAULT '';
+    DECLARE v_total_referidos INT DEFAULT 0;
+    DECLARE v_referidos_compraron INT DEFAULT 0;
+    DECLARE v_credito_total DECIMAL(10,2) DEFAULT 0;
+    DECLARE v_credito_disponible DECIMAL(10,2) DEFAULT 0;
+
+    -- Obtener código y crédito del usuario
+    SELECT
+        COALESCE(CODIGO_REFERIDO, ''),
+        COALESCE(CREDITO_REFERIDOS, 0)
+    INTO v_codigo_referido, v_credito_disponible
+    FROM usuario
+    WHERE PK_ID_USUARIO = p_id_usuario;
+
+    -- Contar total de referidos
+    SELECT COUNT(*) INTO v_total_referidos
+    FROM referencias
+    WHERE FK_ID_DUENO_CODIGO = p_id_usuario;
+
+    -- Contar referidos que compraron
+    SELECT COUNT(*) INTO v_referidos_compraron
+    FROM referencias
+    WHERE FK_ID_DUENO_CODIGO = p_id_usuario
+    AND MEMBRESIA_COMPRADA = 1;
+
+    -- Calcular crédito total ganado históricamente
+    SELECT COALESCE(SUM(
+        CASE
+            WHEN c.TIPO_DESCUENTO_DUENO = 'PORCENTAJE' THEN p.MONTO * (c.VALOR_DESCUENTO_DUENO / 100)
+            ELSE c.VALOR_DESCUENTO_DUENO
+        END
+    ), 0) INTO v_credito_total
+    FROM referencias r
+    INNER JOIN pagos p ON p.FK_ID_USUARIO = r.FK_ID_CLIENTE_REFERIDO AND p.ESTADO_PAGO = 'APROBADO'
+    CROSS JOIN configuracion_referidos c
+    WHERE r.FK_ID_DUENO_CODIGO = p_id_usuario
+    AND r.MEMBRESIA_COMPRADA = 1;
+
+    SELECT
+        v_codigo_referido AS codigo_referido,
+        v_total_referidos AS total_referidos,
+        v_referidos_compraron AS referidos_compraron,
+        ROUND(v_credito_total, 2) AS credito_total_ganado,
+        ROUND(v_credito_disponible, 2) AS credito_disponible;
+END//
+DELIMITER ;
+
 -- Volcando estructura para procedimiento abastecete.obtener_suscripciones_local
 DELIMITER //
 CREATE PROCEDURE `obtener_suscripciones_local`(
@@ -4913,6 +5564,25 @@ BEGIN
     FROM tipo_membresia
     WHERE ESTADO = 1
     ORDER BY NOMBRE;
+END//
+DELIMITER ;
+
+-- Volcando estructura para procedimiento abastecete.obtener_todos_addons_admin
+DELIMITER //
+CREATE PROCEDURE `obtener_todos_addons_admin`()
+BEGIN
+    SELECT
+        PK_ID_ADDON,
+        CODIGO,
+        NOMBRE,
+        DESCRIPCION,
+        TIPO_LIMITE,
+        CANTIDAD,
+        PRECIO,
+        ICONO,
+        ESTADO
+    FROM addon_tipo
+    ORDER BY TIPO_LIMITE, NOMBRE;
 END//
 DELIMITER ;
 
@@ -5072,7 +5742,8 @@ INSERT INTO `permiso` (`PK_ID_PERMISO`, `CODIGO`, `NOMBRE`, `DESCRIPCION`, `ICON
 	(35, 'EMAIL_CONTACTO', 'Email de Contacto', 'Mostrar email público', 'fa-envelope', 'COMUNICACION', 73, 1),
 	(36, 'HORARIOS_ATENCION', 'Horarios de Atención', 'Configurar y mostrar horarios', 'fa-clock', 'NEGOCIO', 80, 1),
 	(37, 'UBICACION_MAPA', 'Ubicación en Mapa', 'Mostrar ubicación con Google Maps', 'fa-location-dot', 'NEGOCIO', 81, 1),
-	(38, 'DESCRIPCION_EXTENDIDA', 'Descripción Extendida', 'Descripción detallada del negocio', 'fa-align-left', 'NEGOCIO', 82, 1);
+	(38, 'DESCRIPCION_EXTENDIDA', 'Descripción Extendida', 'Descripción detallada del negocio', 'fa-align-left', 'NEGOCIO', 82, 1),
+	(39, 'ADMIN_REFERIDOS', 'Configurar Referidos', 'Configurar descuentos y sistema de referidos', 'fa-user-group', 'ADMIN', 14, 1);
 
 -- Volcando estructura para tabla abastecete.producto
 CREATE TABLE IF NOT EXISTS `producto` (
@@ -5093,9 +5764,584 @@ CREATE TABLE IF NOT EXISTS `producto` (
   CONSTRAINT `fk_producto_marca` FOREIGN KEY (`FK_ID_MARCA`) REFERENCES `marca` (`PK_ID_MARCA`),
   CONSTRAINT `FK_producto_sub_categoria` FOREIGN KEY (`FK_ID_SUB_CATEGORIA`) REFERENCES `sub_categoria` (`PK_ID_SUB_CATEGORIA`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `fk_tipounidad` FOREIGN KEY (`FK_ID_TIPOUNIDAD`) REFERENCES `tipo_unidad` (`ID_TIPOUNIDAD`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=585 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla abastecete.producto: ~0 rows (aproximadamente)
+-- Volcando datos para la tabla abastecete.producto: ~574 rows (aproximadamente)
+INSERT INTO `producto` (`PK_ID_PRODUCTO`, `FK_ID_SUB_CATEGORIA`, `NOMBRE_PRODUCTO`, `IMAGEN_URL`, `FK_ID_TIPOUNIDAD`, `FK_ID_MARCA`, `DESCRIPCION`, `SKU`, `CLOUDINARY_PUBLIC_ID`) VALUES
+	(1, 1, 'Manzanas', '/images/PRODUCTOS ABASTECETE/Frutas y Verduras/Frutas frescas/Manzanas.webp', 1, 1, NULL, NULL, NULL),
+	(2, 1, 'Bananas', '/images/PRODUCTOS ABASTECETE/Frutas y Verduras/Frutas frescas/Bananas.webp', 1, 1, NULL, NULL, NULL),
+	(3, 1, 'Naranjas', '/images/PRODUCTOS ABASTECETE/Frutas y Verduras/Frutas frescas/Naranjas.webp', 1, 1, NULL, NULL, NULL),
+	(4, 1, 'Peras', '/images/PRODUCTOS ABASTECETE/Frutas y Verduras/Frutas frescas/Peras.webp', 1, 1, NULL, NULL, NULL),
+	(5, 1, 'Uvas', '/images/PRODUCTOS ABASTECETE/Frutas y Verduras/Frutas frescas/Uvas.webp', 1, 1, NULL, NULL, NULL),
+	(6, 1, 'Mangos', '/images/PRODUCTOS ABASTECETE/Frutas y Verduras/Frutas frescas/Mangos.webp', 1, 1, NULL, NULL, NULL),
+	(7, 1, 'Papayas', '/images/PRODUCTOS ABASTECETE/Frutas y Verduras/Frutas frescas/Papayas.webp', 1, 1, NULL, NULL, NULL),
+	(8, 1, 'Piñas', '/images/PRODUCTOS ABASTECETE/Frutas y Verduras/Frutas frescas/Piñas.webp', 1, 1, NULL, NULL, NULL),
+	(9, 1, 'Fresas', '/images/PRODUCTOS ABASTECETE/Frutas y Verduras/Frutas frescas/Fresas.webp', 1, 1, NULL, NULL, NULL),
+	(10, 1, 'Kiwis', '/images/PRODUCTOS ABASTECETE/Frutas y Verduras/Frutas frescas/Kiwis.webp', 1, 1, NULL, NULL, NULL),
+	(11, 1, 'Limones', '/images/PRODUCTOS ABASTECETE/Frutas y Verduras/Frutas frescas/Limones.webp', 1, 1, NULL, NULL, NULL),
+	(12, 1, 'Mandarinas', '/images/PRODUCTOS ABASTECETE/Frutas y Verduras/Frutas frescas/Mandarinas.webp', 1, 1, NULL, NULL, NULL),
+	(13, 1, 'Cerezas', '/images/PRODUCTOS ABASTECETE/Frutas y Verduras/Frutas frescas/Cerezas.webp', 1, 1, NULL, NULL, NULL),
+	(14, 1, 'Melones', '/images/PRODUCTOS ABASTECETE/Frutas y Verduras/Frutas frescas/Melones.webp', 1, 1, NULL, NULL, NULL),
+	(15, 1, 'Sandías', '/images/PRODUCTOS ABASTECETE/Frutas y Verduras/Frutas frescas/Sandías.webp', 1, 1, NULL, NULL, NULL),
+	(16, 1, 'Duraznos', '/images/PRODUCTOS ABASTECETE/Frutas y Verduras/Frutas frescas/Duraznos.webp', 1, 1, NULL, NULL, NULL),
+	(17, 1, 'Ciruelas', '/images/PRODUCTOS ABASTECETE/Frutas y Verduras/Frutas frescas/Ciruelas.webp', 1, 1, NULL, NULL, NULL),
+	(18, 1, 'Aguacates', '/images/PRODUCTOS ABASTECETE/Frutas y Verduras/Frutas frescas/Aguacates.webp', 1, 1, NULL, NULL, NULL),
+	(19, 1, 'Granadillas', '/images/PRODUCTOS ABASTECETE/Frutas y Verduras/Frutas frescas/Granadillas.webp', 1, 1, NULL, NULL, NULL),
+	(21, 2, 'Tomates', '/images/PRODUCTOS ABASTECETE/Frutas y Verduras/Verduras frescas/Tomates.webp', 1, 1, NULL, NULL, NULL),
+	(22, 2, 'Lechugas', '/images/PRODUCTOS ABASTECETE/Frutas y Verduras/Verduras frescas/Lechugas.webp', 1, 1, NULL, NULL, NULL),
+	(23, 2, 'Zanahorias', '/images/PRODUCTOS ABASTECETE/Frutas y Verduras/Verduras frescas/Zanahorias.webp', 1, 1, NULL, NULL, NULL),
+	(24, 2, 'Cebollas', '/images/PRODUCTOS ABASTECETE/Frutas y Verduras/Verduras frescas/Cebollas.webp', 1, 1, NULL, NULL, NULL),
+	(25, 2, 'Pimientos', '/images/PRODUCTOS ABASTECETE/Frutas y Verduras/Verduras frescas/Pimientos.webp', 1, 1, NULL, NULL, NULL),
+	(26, 2, 'Pepinos', '/images/PRODUCTOS ABASTECETE/Frutas y Verduras/Verduras frescas/Pepinos.webp', 1, 1, NULL, NULL, NULL),
+	(27, 2, 'Espinacas', '/images/PRODUCTOS ABASTECETE/Frutas y Verduras/Verduras frescas/Espinacas.webp', 1, 1, NULL, NULL, NULL),
+	(29, 2, 'Coliflores', '/images/PRODUCTOS ABASTECETE/Frutas y Verduras/Verduras frescas/Coliflores.webp', 1, 1, NULL, NULL, NULL),
+	(30, 2, 'Berenjenas', '/images/PRODUCTOS ABASTECETE/Frutas y Verduras/Verduras frescas/Berenjenas.webp', 1, 1, NULL, NULL, NULL),
+	(31, 2, 'Calabacines', '/images/PRODUCTOS ABASTECETE/Frutas y Verduras/Verduras frescas/Calabacines.webp', 1, 1, NULL, NULL, NULL),
+	(32, 2, 'Ajos', '/images/PRODUCTOS ABASTECETE/Frutas y Verduras/Verduras frescas/Ajos.webp', 1, 1, NULL, NULL, NULL),
+	(33, 2, 'Apios', '/images/PRODUCTOS ABASTECETE/Frutas y Verduras/Verduras frescas/Apios.webp', 1, 1, NULL, NULL, NULL),
+	(34, 2, 'Repollo', '/images/PRODUCTOS ABASTECETE/Frutas y Verduras/Verduras frescas/Repollo.webp', 1, 1, NULL, NULL, NULL),
+	(35, 2, 'Remolachas', '/images/PRODUCTOS ABASTECETE/Frutas y Verduras/Verduras frescas/Remolachas.webp', 1, 1, NULL, NULL, NULL),
+	(36, 2, 'Rábanos', '/images/PRODUCTOS ABASTECETE/Frutas y Verduras/Verduras frescas/Rábanos.webp', 1, 1, NULL, NULL, NULL),
+	(37, 2, 'Guisantes', '/images/PRODUCTOS ABASTECETE/Frutas y Verduras/Verduras frescas/Guisantes.webp', 1, 1, NULL, NULL, NULL),
+	(38, 2, 'Habichuelas', '/images/PRODUCTOS ABASTECETE/Frutas y Verduras/Verduras frescas/Habichuelas.webp', 1, 1, NULL, NULL, NULL),
+	(39, 2, 'Champiñones', '/images/PRODUCTOS ABASTECETE/Frutas y Verduras/Verduras frescas/Champiñones.webp', 1, 1, NULL, NULL, NULL),
+	(40, 2, 'Alcachofas', '/images/PRODUCTOS ABASTECETE/Frutas y Verduras/Verduras frescas/Alcachofas.webp', 1, 1, NULL, NULL, NULL),
+	(41, 3, 'Cilantro', '/images/PRODUCTOS ABASTECETE/Frutas y Verduras/Hierbas y especias frescas/Cilantro.webp', 1, 1, NULL, NULL, NULL),
+	(42, 3, 'Perejil', '/images/PRODUCTOS ABASTECETE/Frutas y Verduras/Hierbas y especias frescas/Perejil.webp', 1, 1, NULL, NULL, NULL),
+	(43, 3, 'Albahaca', '/images/PRODUCTOS ABASTECETE/Frutas y Verduras/Hierbas y especias frescas/Albahaca.webp', 1, 1, NULL, NULL, NULL),
+	(44, 3, 'Hierbabuena', '/images/PRODUCTOS ABASTECETE/Frutas y Verduras/Hierbas y especias frescas/Hierbabuena.webp', 1, 1, NULL, NULL, NULL),
+	(45, 3, 'Orégano', '/images/PRODUCTOS ABASTECETE/Frutas y Verduras/Hierbas y especias frescas/Orégano.webp', 1, 1, NULL, NULL, NULL),
+	(46, 3, 'Tomillo', '/images/PRODUCTOS ABASTECETE/Frutas y Verduras/Hierbas y especias frescas/Tomillo.webp', 1, 1, NULL, NULL, NULL),
+	(47, 3, 'Romero', '/images/PRODUCTOS ABASTECETE/Frutas y Verduras/Hierbas y especias frescas/Romero.webp', 1, 1, NULL, NULL, NULL),
+	(48, 3, 'Laurel', '/images/PRODUCTOS ABASTECETE/Frutas y Verduras/Hierbas y especias frescas/Laurel.webp', 1, 1, NULL, NULL, NULL),
+	(49, 3, 'Menta', '/images/PRODUCTOS ABASTECETE/Frutas y Verduras/Hierbas y especias frescas/Menta.webp', 1, 1, NULL, NULL, NULL),
+	(50, 3, 'Estragón', '/images/PRODUCTOS ABASTECETE/Frutas y Verduras/Hierbas y especias frescas/Estragón.webp', 1, 1, NULL, NULL, NULL),
+	(51, 3, 'Salvia', '/images/PRODUCTOS ABASTECETE/Frutas y Verduras/Hierbas y especias frescas/Salvia.webp', 1, 1, NULL, NULL, NULL),
+	(53, 3, 'Cebollín', '/images/PRODUCTOS ABASTECETE/Frutas y Verduras/Hierbas y especias frescas/Cebollín.webp', 1, 1, NULL, NULL, NULL),
+	(54, 3, 'Ajedrea', '/images/PRODUCTOS ABASTECETE/Frutas y Verduras/Hierbas y especias frescas/Ajedrea.webp', 1, 1, NULL, NULL, NULL),
+	(55, 3, 'Mejorana', '/images/PRODUCTOS ABASTECETE/Frutas y Verduras/Hierbas y especias frescas/Mejorana.webp', 1, 1, NULL, NULL, NULL),
+	(56, 3, 'Hinojo', '/images/PRODUCTOS ABASTECETE/Frutas y Verduras/Hierbas y especias frescas/Hinojo.webp', 1, 1, NULL, NULL, NULL),
+	(57, 3, 'Lemongrass', '/images/PRODUCTOS ABASTECETE/Frutas y Verduras/Hierbas y especias frescas/Lemongrass.webp', 1, 1, NULL, NULL, NULL),
+	(58, 3, 'Cúrcuma fresca', '/images/PRODUCTOS ABASTECETE/Frutas y Verduras/Hierbas y especias frescas/Cúrcuma fresca.webp', 1, 1, NULL, NULL, NULL),
+	(59, 3, 'Jengibre fresco', '/images/PRODUCTOS ABASTECETE/Frutas y Verduras/Hierbas y especias frescas/Jengibre fresco.webp', 1, 1, NULL, NULL, NULL),
+	(62, 4, 'Yucas', '/images/PRODUCTOS ABASTECETE/Frutas y Verduras/Tubérculos y raíces/Yucas.webp', 1, 1, NULL, NULL, NULL),
+	(65, 4, 'Arracachas', '/images/PRODUCTOS ABASTECETE/Frutas y Verduras/Tubérculos y raíces/Arracachas.webp', 1, 1, NULL, NULL, NULL),
+	(66, 4, 'Rábano', '/images/PRODUCTOS ABASTECETE/Frutas y Verduras/Tubérculos y raíces/Rábano.webp', 1, 1, NULL, NULL, NULL),
+	(67, 4, 'Jengibre', '/images/PRODUCTOS ABASTECETE/Frutas y Verduras/Tubérculos y raíces/Jengibre.webp', 1, 1, NULL, NULL, NULL),
+	(68, 4, 'Cúrcuma', '/images/PRODUCTOS ABASTECETE/Frutas y Verduras/Tubérculos y raíces/Cúrcuma.webp', 1, 1, NULL, NULL, NULL),
+	(69, 4, 'Zanahorias', '/images/PRODUCTOS ABASTECETE/Frutas y Verduras/Tubérculos y raíces/Zanahorias.webp', 1, 1, NULL, NULL, NULL),
+	(70, 4, 'Remolachas', '/images/PRODUCTOS ABASTECETE/Frutas y Verduras/Tubérculos y raíces/Remolachas.webp', 1, 1, NULL, NULL, NULL),
+	(71, 4, 'Yacón', '/images/PRODUCTOS ABASTECETE/Frutas y Verduras/Tubérculos y raíces/Yacón.webp', 1, 1, NULL, NULL, NULL),
+	(72, 4, 'Malanga', '/images/PRODUCTOS ABASTECETE/Frutas y Verduras/Tubérculos y raíces/Malanga.webp', 1, 1, NULL, NULL, NULL),
+	(73, 4, 'Ocas', '/images/PRODUCTOS ABASTECETE/Frutas y Verduras/Tubérculos y raíces/Ocas.webp', 1, 1, NULL, NULL, NULL),
+	(74, 4, 'Mashuas', '/images/PRODUCTOS ABASTECETE/Frutas y Verduras/Tubérculos y raíces/Mashuas.webp', 1, 1, NULL, NULL, NULL),
+	(75, 4, 'Achiras', '/images/PRODUCTOS ABASTECETE/Frutas y Verduras/Tubérculos y raíces/Achiras.webp', 1, 1, NULL, NULL, NULL),
+	(76, 4, 'Chirivías', '/images/PRODUCTOS ABASTECETE/Frutas y Verduras/Tubérculos y raíces/Chirivías.webp', 1, 1, NULL, NULL, NULL),
+	(77, 4, 'Topinambur', '/images/PRODUCTOS ABASTECETE/Frutas y Verduras/Tubérculos y raíces/Topinambur.webp', 1, 1, NULL, NULL, NULL),
+	(78, 4, 'Taro', '/images/PRODUCTOS ABASTECETE/Frutas y Verduras/Tubérculos y raíces/Taro.webp', 1, 1, NULL, NULL, NULL),
+	(79, 4, 'Celeriaco', '/images/PRODUCTOS ABASTECETE/Frutas y Verduras/Tubérculos y raíces/Celeriaco.webp', 1, 1, NULL, NULL, NULL),
+	(80, 4, 'Jícama', '/images/PRODUCTOS ABASTECETE/Frutas y Verduras/Tubérculos y raíces/Jícama.webp', 1, 1, NULL, NULL, NULL),
+	(81, 5, 'Lomo de res', '/images/PRODUCTOS ABASTECETE/Proteínas/Carnes de res/Lomo de res.webp', 1, 1, NULL, NULL, NULL),
+	(82, 5, 'Solomo', '/images/PRODUCTOS ABASTECETE/Proteínas/Carnes de res/Solomo.webp', 1, 1, NULL, NULL, NULL),
+	(83, 5, 'Punta de anca', '/images/PRODUCTOS ABASTECETE/Proteínas/Carnes de res/Punta de anca.webp', 1, 1, NULL, NULL, NULL),
+	(84, 5, 'Costilla de res', '/images/PRODUCTOS ABASTECETE/Proteínas/Carnes de res/Costilla de res.webp', 1, 1, NULL, NULL, NULL),
+	(85, 5, 'Carne molida', '/images/PRODUCTOS ABASTECETE/Proteínas/Carnes de res/Carne molida.webp', 1, 1, NULL, NULL, NULL),
+	(86, 5, 'Bistec', '/images/PRODUCTOS ABASTECETE/Proteínas/Carnes de res/Bistec.webp', 1, 1, NULL, NULL, NULL),
+	(87, 5, 'Hígado de res', '/images/PRODUCTOS ABASTECETE/Proteínas/Carnes de res/Hígado de res.webp', 1, 1, NULL, NULL, NULL),
+	(88, 5, 'Rabo de res', '/images/PRODUCTOS ABASTECETE/Proteínas/Carnes de res/Rabo de res.webp', 1, 1, NULL, NULL, NULL),
+	(89, 5, 'Morrillo', '/images/PRODUCTOS ABASTECETE/Proteínas/Carnes de res/Morrillo.webp', 1, 1, NULL, NULL, NULL),
+	(90, 5, 'Chatas', '/images/PRODUCTOS ABASTECETE/Proteínas/Carnes de res/Chatas.webp', 1, 1, NULL, NULL, NULL),
+	(91, 5, 'Paletero', '/images/PRODUCTOS ABASTECETE/Proteínas/Carnes de res/Paletero.webp', 1, 1, NULL, NULL, NULL),
+	(92, 5, 'Posta', '/images/PRODUCTOS ABASTECETE/Proteínas/Carnes de res/Posta.webp', 1, 1, NULL, NULL, NULL),
+	(93, 5, 'Muchacho', '/images/PRODUCTOS ABASTECETE/Proteínas/Carnes de res/Muchacho.webp', 1, 1, NULL, NULL, NULL),
+	(94, 5, 'Pecho de res', '/images/PRODUCTOS ABASTECETE/Proteínas/Carnes de res/Pecho de res.webp', 1, 1, NULL, NULL, NULL),
+	(95, 5, 'Entrecot', '/images/PRODUCTOS ABASTECETE/Proteínas/Carnes de res/Entrecot.webp', 1, 1, NULL, NULL, NULL),
+	(96, 5, 'T-bone', '/images/PRODUCTOS ABASTECETE/Proteínas/Carnes de res/T-bone.webp', 1, 1, NULL, NULL, NULL),
+	(97, 5, 'Tomahawk', '/images/PRODUCTOS ABASTECETE/Proteínas/Carnes de res/Tomahawk.webp', 1, 1, NULL, NULL, NULL),
+	(98, 5, 'Asado de tira', '/images/PRODUCTOS ABASTECETE/Proteínas/Carnes de res/Asado de tira.webp', 1, 1, NULL, NULL, NULL),
+	(99, 5, 'Colita de cuadril', '/images/PRODUCTOS ABASTECETE/Proteínas/Carnes de res/Colita de cuadril.webp', 1, 1, NULL, NULL, NULL),
+	(100, 5, 'Punta trasera', '/images/PRODUCTOS ABASTECETE/Proteínas/Carnes de res/Punta trasera.webp', 1, 1, NULL, NULL, NULL),
+	(101, 6, 'Chuletas de cerdo', '/images/PRODUCTOS ABASTECETE/Proteínas/Carnes de cerdo/Chuletas de cerdo.webp', 1, 1, NULL, NULL, NULL),
+	(102, 6, 'Costillas de cerdo', '/images/PRODUCTOS ABASTECETE/Proteínas/Carnes de cerdo/Costillas de cerdo.webp', 1, 1, NULL, NULL, NULL),
+	(103, 6, 'Lomo de cerdo', '/images/PRODUCTOS ABASTECETE/Proteínas/Carnes de cerdo/Lomo de cerdo.webp', 1, 1, NULL, NULL, NULL),
+	(104, 6, 'Pernil de cerdo', '/images/PRODUCTOS ABASTECETE/Proteínas/Carnes de cerdo/Pernil de cerdo.webp', 1, 1, NULL, NULL, NULL),
+	(105, 6, 'Tocino', '/images/PRODUCTOS ABASTECETE/Proteínas/Carnes de cerdo/Tocino.webp', 1, 1, NULL, NULL, NULL),
+	(106, 6, 'Chicharrón', '/images/PRODUCTOS ABASTECETE/Proteínas/Carnes de cerdo/Chicharrón.webp', 1, 1, NULL, NULL, NULL),
+	(107, 6, 'Jamón', '/images/PRODUCTOS ABASTECETE/Proteínas/Carnes de cerdo/Jamón.webp', 1, 1, NULL, NULL, NULL),
+	(108, 6, 'Salchichas', '/images/PRODUCTOS ABASTECETE/Proteínas/Carnes de cerdo/Salchichas.webp', 1, 1, NULL, NULL, NULL),
+	(109, 6, 'Morcilla', '/images/PRODUCTOS ABASTECETE/Proteínas/Carnes de cerdo/Morcilla.webp', 1, 1, NULL, NULL, NULL),
+	(110, 6, 'Chorizo', '/images/PRODUCTOS ABASTECETE/Proteínas/Carnes de cerdo/Chorizo.webp', 1, 1, NULL, NULL, NULL),
+	(111, 6, 'Panceta', '/images/PRODUCTOS ABASTECETE/Proteínas/Carnes de cerdo/Panceta.webp', 1, 1, NULL, NULL, NULL),
+	(112, 6, 'Bondiola', '/images/PRODUCTOS ABASTECETE/Proteínas/Carnes de cerdo/Bondiola.webp', 1, 1, NULL, NULL, NULL),
+	(113, 6, 'Cabeza de lomo', '/images/PRODUCTOS ABASTECETE/Proteínas/Carnes de cerdo/Cabeza de lomo.webp', 1, 1, NULL, NULL, NULL),
+	(114, 6, 'Paleta de cerdo', '/images/PRODUCTOS ABASTECETE/Proteínas/Carnes de cerdo/Paleta de cerdo.webp', 1, 1, NULL, NULL, NULL),
+	(115, 6, 'Pata de cerdo', '/images/PRODUCTOS ABASTECETE/Proteínas/Carnes de cerdo/Pata de cerdo.webp', 1, 1, NULL, NULL, NULL),
+	(116, 6, 'Carrilleras de cerdo', '/images/PRODUCTOS ABASTECETE/Proteínas/Carnes de cerdo/Carrilleras de cerdo.webp', 1, 1, NULL, NULL, NULL),
+	(117, 6, 'Secreto ibérico', '/images/PRODUCTOS ABASTECETE/Proteínas/Carnes de cerdo/Secreto ibérico.webp', 1, 1, NULL, NULL, NULL),
+	(118, 6, 'Pluma ibérica', '/images/PRODUCTOS ABASTECETE/Proteínas/Carnes de cerdo/Pluma ibérica.webp', 1, 1, NULL, NULL, NULL),
+	(119, 6, 'Abanico de cerdo', '/images/PRODUCTOS ABASTECETE/Proteínas/Carnes de cerdo/Abanico de cerdo.webp', 1, 1, NULL, NULL, NULL),
+	(120, 6, 'Lagarto de cerdo', '/images/PRODUCTOS ABASTECETE/Proteínas/Carnes de cerdo/Lagarto de cerdo.webp', 1, 1, NULL, NULL, NULL),
+	(121, 7, 'Pechuga de pollo', '/images/PRODUCTOS ABASTECETE/Proteínas/Carnes de pollo/Pechuga de pollo.webp', 1, 1, NULL, NULL, NULL),
+	(122, 7, 'Muslos de pollo', '/images/PRODUCTOS ABASTECETE/Proteínas/Carnes de pollo/Muslos de pollo.webp', 1, 1, NULL, NULL, NULL),
+	(123, 7, 'Alitas de pollo', '/images/PRODUCTOS ABASTECETE/Proteínas/Carnes de pollo/Alitas de pollo.webp', 1, 1, NULL, NULL, NULL),
+	(124, 7, 'Piernas de pollo', '/images/PRODUCTOS ABASTECETE/Proteínas/Carnes de pollo/Piernas de pollo.webp', 1, 1, NULL, NULL, NULL),
+	(125, 7, 'Contramuslos de pollo', '/images/PRODUCTOS ABASTECETE/Proteínas/Carnes de pollo/Contramuslos de pollo.webp', 1, 1, NULL, NULL, NULL),
+	(126, 7, 'Pollo entero', '/images/PRODUCTOS ABASTECETE/Proteínas/Carnes de pollo/Pollo entero.webp', 1, 1, NULL, NULL, NULL),
+	(127, 7, 'Filete de pechuga', '/images/PRODUCTOS ABASTECETE/Proteínas/Carnes de pollo/Filete de pechuga.webp', 1, 1, NULL, NULL, NULL),
+	(128, 7, 'Mollejas de pollo', '/images/PRODUCTOS ABASTECETE/Proteínas/Carnes de pollo/Mollejas de pollo.webp', 1, 1, NULL, NULL, NULL),
+	(129, 7, 'Hígados de pollo', '/images/PRODUCTOS ABASTECETE/Proteínas/Carnes de pollo/Hígados de pollo.webp', 1, 1, NULL, NULL, NULL),
+	(130, 7, 'Corazones de pollo', '/images/PRODUCTOS ABASTECETE/Proteínas/Carnes de pollo/Corazones de pollo.webp', 1, 1, NULL, NULL, NULL),
+	(131, 7, 'Cuartos traseros', '/images/PRODUCTOS ABASTECETE/Proteínas/Carnes de pollo/Cuartos traseros.webp', 1, 1, NULL, NULL, NULL),
+	(132, 7, 'Cuartos delanteros', '/images/PRODUCTOS ABASTECETE/Proteínas/Carnes de pollo/Cuartos delanteros.webp', 1, 1, NULL, NULL, NULL),
+	(133, 7, 'Carcasa de pollo', '/images/PRODUCTOS ABASTECETE/Proteínas/Carnes de pollo/Carcasa de pollo.webp', 1, 1, NULL, NULL, NULL),
+	(134, 7, 'Nuggets de pollo', '/images/PRODUCTOS ABASTECETE/Proteínas/Carnes de pollo/Nuggets de pollo.webp', 1, 1, NULL, NULL, NULL),
+	(135, 7, 'Tiras de pollo', '/images/PRODUCTOS ABASTECETE/Proteínas/Carnes de pollo/Tiras de pollo.webp', 1, 1, NULL, NULL, NULL),
+	(136, 7, 'Hamburguesas de pollo', '/images/PRODUCTOS ABASTECETE/Proteínas/Carnes de pollo/Hamburguesas de pollo.webp', 1, 1, NULL, NULL, NULL),
+	(137, 7, 'Salchichas de pollo', '/images/PRODUCTOS ABASTECETE/Proteínas/Carnes de pollo/Salchichas de pollo.webp', 1, 1, NULL, NULL, NULL),
+	(138, 7, 'Chorizo de pollo', '/images/PRODUCTOS ABASTECETE/Proteínas/Carnes de pollo/Chorizo de pollo.webp', 1, 1, NULL, NULL, NULL),
+	(139, 7, 'Brochetas de pollo', '/images/PRODUCTOS ABASTECETE/Proteínas/Carnes de pollo/Brochetas de pollo.webp', 1, 1, NULL, NULL, NULL),
+	(140, 7, 'Pollo desmechado', '/images/PRODUCTOS ABASTECETE/Proteínas/Carnes de pollo/Pollo desmechado.webp', 1, 1, NULL, NULL, NULL),
+	(141, 8, 'Salmón', '/images/PRODUCTOS ABASTECETE/Proteínas/Pescados y mariscos/Salmón.webp', 1, 1, NULL, NULL, NULL),
+	(142, 8, 'Tilapia', '/images/PRODUCTOS ABASTECETE/Proteínas/Pescados y mariscos/Tilapia.webp', 1, 1, NULL, NULL, NULL),
+	(143, 8, 'Trucha', '/images/PRODUCTOS ABASTECETE/Proteínas/Pescados y mariscos/Trucha.webp', 1, 1, NULL, NULL, NULL),
+	(144, 8, 'Bagre', '/images/PRODUCTOS ABASTECETE/Proteínas/Pescados y mariscos/Bagre.webp', 1, 1, NULL, NULL, NULL),
+	(145, 8, 'Atún', '/images/PRODUCTOS ABASTECETE/Proteínas/Pescados y mariscos/Atún.webp', 1, 1, NULL, NULL, NULL),
+	(146, 8, 'Sardinas', '/images/PRODUCTOS ABASTECETE/Proteínas/Pescados y mariscos/Sardinas.webp', 1, 1, NULL, NULL, NULL),
+	(147, 8, 'Camarones', '/images/PRODUCTOS ABASTECETE/Proteínas/Pescados y mariscos/Camarones.webp', 1, 1, NULL, NULL, NULL),
+	(149, 8, 'Calamares', '/images/PRODUCTOS ABASTECETE/Proteínas/Pescados y mariscos/Calamares.webp', 1, 1, NULL, NULL, NULL),
+	(150, 8, 'Pulpo', '/images/PRODUCTOS ABASTECETE/Proteínas/Pescados y mariscos/Pulpo.webp', 1, 1, NULL, NULL, NULL),
+	(151, 8, 'Mejillones', '/images/PRODUCTOS ABASTECETE/Proteínas/Pescados y mariscos/Mejillones.webp', 1, 1, NULL, NULL, NULL),
+	(152, 8, 'Almejas', '/images/PRODUCTOS ABASTECETE/Proteínas/Pescados y mariscos/Almejas.webp', 1, 1, NULL, NULL, NULL),
+	(153, 8, 'Ostras', '/images/PRODUCTOS ABASTECETE/Proteínas/Pescados y mariscos/Ostras.webp', 1, 1, NULL, NULL, NULL),
+	(154, 8, 'Cangrejo', '/images/PRODUCTOS ABASTECETE/Proteínas/Pescados y mariscos/Cangrejo.webp', 1, 1, NULL, NULL, NULL),
+	(155, 8, 'Langosta', '/images/PRODUCTOS ABASTECETE/Proteínas/Pescados y mariscos/Langosta.webp', 1, 1, NULL, NULL, NULL),
+	(156, 8, 'Merluza', '/images/PRODUCTOS ABASTECETE/Proteínas/Pescados y mariscos/Merluza.webp', 1, 1, NULL, NULL, NULL),
+	(157, 8, 'Bacalao', '/images/PRODUCTOS ABASTECETE/Proteínas/Pescados y mariscos/Bacalao.webp', 1, 1, NULL, NULL, NULL),
+	(158, 8, 'Róbalo', '/images/PRODUCTOS ABASTECETE/Proteínas/Pescados y mariscos/Róbalo.webp', 1, 1, NULL, NULL, NULL),
+	(159, 8, 'Pargo', '/images/PRODUCTOS ABASTECETE/Proteínas/Pescados y mariscos/Pargo.webp', 1, 1, NULL, NULL, NULL),
+	(160, 8, 'Mojarra', '/images/PRODUCTOS ABASTECETE/Proteínas/Pescados y mariscos/Mojarra.webp', 1, 1, NULL, NULL, NULL),
+	(161, 9, 'Jamón de cerdo', '/images/PRODUCTOS ABASTECETE/Proteínas/Carnes procesadas/Jamón de cerdo.webp', 1, 1, NULL, NULL, NULL),
+	(162, 9, 'Jamón de pavo', '/images/PRODUCTOS ABASTECETE/Proteínas/Carnes procesadas/Jamón de pavo.webp', 1, 1, NULL, NULL, NULL),
+	(163, 9, 'Salchichas tipo Frankfurt', '/images/PRODUCTOS ABASTECETE/Proteínas/Carnes procesadas/Salchichas tipo Frankfurt.webp', 1, 1, NULL, NULL, NULL),
+	(164, 9, 'Chorizo procesado', '/images/PRODUCTOS ABASTECETE/Proteínas/Carnes procesadas/Chorizo procesado.webp', 1, 1, NULL, NULL, NULL),
+	(165, 9, 'Morcilla procesada', '/images/PRODUCTOS ABASTECETE/Proteínas/Carnes procesadas/Morcilla procesada.webp', 1, 1, NULL, NULL, NULL),
+	(166, 9, 'Tocineta', '/images/PRODUCTOS ABASTECETE/Proteínas/Carnes procesadas/Tocineta.webp', 1, 1, NULL, NULL, NULL),
+	(167, 9, 'Salami', '/images/PRODUCTOS ABASTECETE/Proteínas/Carnes procesadas/Salami.webp', 1, 1, NULL, NULL, NULL),
+	(168, 9, 'Mortadela', '/images/PRODUCTOS ABASTECETE/Proteínas/Carnes procesadas/Mortadela.webp', 1, 1, NULL, NULL, NULL),
+	(169, 9, 'Pepperoni', '/images/PRODUCTOS ABASTECETE/Proteínas/Carnes procesadas/Pepperoni.webp', 1, 1, NULL, NULL, NULL),
+	(170, 9, 'Pastrami', '/images/PRODUCTOS ABASTECETE/Proteínas/Carnes procesadas/Pastrami.webp', 1, 1, NULL, NULL, NULL),
+	(171, 9, 'Lomo embuchado', '/images/PRODUCTOS ABASTECETE/Proteínas/Carnes procesadas/Lomo embuchado.webp', 1, 1, NULL, NULL, NULL),
+	(172, 9, 'Cecina', '/images/PRODUCTOS ABASTECETE/Proteínas/Carnes procesadas/Cecina.webp', 1, 1, NULL, NULL, NULL),
+	(173, 9, 'Prosciutto', '/images/PRODUCTOS ABASTECETE/Proteínas/Carnes procesadas/Prosciutto.webp', 1, 1, NULL, NULL, NULL),
+	(174, 9, 'Bresaola', '/images/PRODUCTOS ABASTECETE/Proteínas/Carnes procesadas/Bresaola.webp', 1, 1, NULL, NULL, NULL),
+	(175, 9, 'Lomo canadiense', '/images/PRODUCTOS ABASTECETE/Proteínas/Carnes procesadas/Lomo canadiense.webp', 1, 1, NULL, NULL, NULL),
+	(176, 9, 'Fuet', '/images/PRODUCTOS ABASTECETE/Proteínas/Carnes procesadas/Fuet.webp', 1, 1, NULL, NULL, NULL),
+	(177, 9, 'Sobrasada', '/images/PRODUCTOS ABASTECETE/Proteínas/Carnes procesadas/Sobrasada.webp', 1, 1, NULL, NULL, NULL),
+	(179, 9, 'Butifarra', '/images/PRODUCTOS ABASTECETE/Proteínas/Carnes procesadas/Butifarra.webp', 1, 1, NULL, NULL, NULL),
+	(180, 9, 'Salchichón', '/images/PRODUCTOS ABASTECETE/Proteínas/Carnes procesadas/Salchichón.webp', 1, 1, NULL, NULL, NULL),
+	(181, 10, 'Leche entera', '/images/PRODUCTOS ABASTECETE/Lácteos y Huevos/Leche y derivado/Leche entera.webp', 2, 1, NULL, NULL, NULL),
+	(182, 10, 'Leche descremada', '/images/PRODUCTOS ABASTECETE/Lácteos y Huevos/Leche y derivado/Leche descremada.webp', 2, 1, NULL, NULL, NULL),
+	(183, 10, 'Leche semidescremada', '/images/PRODUCTOS ABASTECETE/Lácteos y Huevos/Leche y derivado/Leche semidescremada.webp', 2, 1, NULL, NULL, NULL),
+	(184, 10, 'Leche deslactosada', '/images/PRODUCTOS ABASTECETE/Lácteos y Huevos/Leche y derivado/Leche deslactosada.webp', 2, 1, NULL, NULL, NULL),
+	(185, 10, 'Leche en polvo', '/images/PRODUCTOS ABASTECETE/Lácteos y Huevos/Leche y derivado/Leche en polvo.webp', 2, 1, NULL, NULL, NULL),
+	(186, 10, 'Leche condensada', '/images/PRODUCTOS ABASTECETE/Lácteos y Huevos/Leche y derivado/Leche condensada.webp', 2, 1, NULL, NULL, NULL),
+	(187, 10, 'Leche evaporada', '/images/PRODUCTOS ABASTECETE/Lácteos y Huevos/Leche y derivado/Leche evaporada.webp', 2, 1, NULL, NULL, NULL),
+	(188, 10, 'Crema de leche', '/images/PRODUCTOS ABASTECETE/Lácteos y Huevos/Leche y derivados/Crema de leche.webp', 2, 1, NULL, NULL, NULL),
+	(189, 10, 'Suero costeño', '/images/PRODUCTOS ABASTECETE/Lácteos y Huevos/Leche y derivado/Suero costeño.webp', 2, 1, NULL, NULL, NULL),
+	(190, 10, 'Kéfir', '/images/PRODUCTOS ABASTECETE/Lácteos y Huevos/Leche y derivado/Kéfir.webp', 2, 1, NULL, NULL, NULL),
+	(191, 10, 'Leche de cabra', '/images/PRODUCTOS ABASTECETE/Lácteos y Huevos/Leche y derivado/Leche de cabra.webp', 2, 1, NULL, NULL, NULL),
+	(192, 10, 'Leche de búfala', '/images/PRODUCTOS ABASTECETE/Lácteos y Huevos/Leche y derivado/Leche de búfala.webp', 2, 1, NULL, NULL, NULL),
+	(193, 10, 'Leche saborizada', '/images/PRODUCTOS ABASTECETE/Lácteos y Huevos/Leche y derivado/Leche saborizada.webp', 2, 1, NULL, NULL, NULL),
+	(194, 11, 'Queso campesino', '/images/PRODUCTOS ABASTECETE/Lácteos y Huevos/Quesos y cuajadas/Queso campesino.webp', 1, 1, NULL, NULL, NULL),
+	(195, 11, 'Queso costeño', '/images/PRODUCTOS ABASTECETE/Lácteos y Huevos/Quesos y cuajadas/Queso costeño.webp', 1, 1, NULL, NULL, NULL),
+	(196, 11, 'Queso doble crema', '/images/PRODUCTOS ABASTECETE/Lácteos y Huevos/Quesos y cuajadas/Queso doble crema.webp', 1, 1, NULL, NULL, NULL),
+	(197, 11, 'Queso mozzarella', '/images/PRODUCTOS ABASTECETE/Lácteos y Huevos/Quesos y cuajadas/Queso mozzarella.webp', 1, 1, NULL, NULL, NULL),
+	(198, 11, 'Queso parmesano', '/images/PRODUCTOS ABASTECETE/Lácteos y Huevos/Quesos y cuajadas/Queso parmesano.webp', 1, 1, NULL, NULL, NULL),
+	(199, 11, 'Queso cheddar', '/images/PRODUCTOS ABASTECETE/Lácteos y Huevos/Quesos y cuajadas/Queso cheddar.webp', 1, 1, NULL, NULL, NULL),
+	(200, 11, 'Queso feta', '/images/PRODUCTOS ABASTECETE/Lácteos y Huevos/Quesos y cuajadas/Queso feta.webp', 1, 1, NULL, NULL, NULL),
+	(201, 11, 'Queso azul', '/images/PRODUCTOS ABASTECETE/Lácteos y Huevos/Quesos y cuajadas/Queso azul.webp', 1, 1, NULL, NULL, NULL),
+	(202, 11, 'Cuajada', '/images/PRODUCTOS ABASTECETE/Lácteos y Huevos/Quesos y cuajadas/Cuajada.webp', 1, 1, NULL, NULL, NULL),
+	(203, 11, 'Queso ricotta', '/images/PRODUCTOS ABASTECETE/Lácteos y Huevos/Quesos y cuajadas/Queso ricotta.webp', 1, 1, NULL, NULL, NULL),
+	(204, 11, 'Queso crema', '/images/PRODUCTOS ABASTECETE/Lácteos y Huevos/Quesos y cuajadas/Queso crema.webp', 1, 1, NULL, NULL, NULL),
+	(205, 11, 'Queso gouda', '/images/PRODUCTOS ABASTECETE/Lácteos y Huevos/Quesos y cuajadas/Queso gouda.webp', 1, 1, NULL, NULL, NULL),
+	(206, 11, 'Queso suizo', '/images/PRODUCTOS ABASTECETE/Lácteos y Huevos/Quesos y cuajadas/Queso suizo.webp', 1, 1, NULL, NULL, NULL),
+	(207, 11, 'Queso brie', '/images/PRODUCTOS ABASTECETE/Lácteos y Huevos/Quesos y cuajadas/Queso brie.webp', 1, 1, NULL, NULL, NULL),
+	(208, 12, 'Yogurt natural', '/images/PRODUCTOS ABASTECETE/Lácteos y Huevos/Yogurt y bebidas lácteas/Yogurt natural.webp', 2, 1, NULL, NULL, NULL),
+	(209, 12, 'Yogurt griego', '/images/PRODUCTOS ABASTECETE/Lácteos y Huevos/Yogurt y bebidas lácteas/Yogurt griego.webp', 2, 1, NULL, NULL, NULL),
+	(210, 12, 'Yogurt de frutas', '/images/PRODUCTOS ABASTECETE/Lácteos y Huevos/Yogurt y bebidas lácteas/Yogurt de frutas.webp', 2, 1, NULL, NULL, NULL),
+	(211, 12, 'Yogurt bebible', '/images/PRODUCTOS ABASTECETE/Lácteos y Huevos/Yogurt y bebidas lácteas/Yogurt bebible.webp', 2, 1, NULL, NULL, NULL),
+	(212, 12, 'Yogurt deslactosado', '/images/PRODUCTOS ABASTECETE/Lácteos y Huevos/Yogurt y bebidas lácteas/Yogurt deslactosado.webp', 2, 1, NULL, NULL, NULL),
+	(213, 12, 'Bebidas probióticas', '/images/PRODUCTOS ABASTECETE/Lácteos y Huevos/Yogurt y bebidas lácteas/Bebidas probióticas.webp', 2, 1, NULL, NULL, NULL),
+	(214, 12, 'Yogurt con granola', '/images/PRODUCTOS ABASTECETE/Lácteos y Huevos/Yogurt y bebidas lácteas/Yogurt con granola.webp', 2, 1, NULL, NULL, NULL),
+	(215, 13, 'Mantequilla sin sal', '/images/PRODUCTOS ABASTECETE/Lácteos y Huevos/Mantequilla y margarinas/Mantequilla sin sal.webp', 3, 1, NULL, NULL, NULL),
+	(216, 13, 'Mantequilla con sal', '/images/PRODUCTOS ABASTECETE/Lácteos y Huevos/Mantequilla y margarinas/Mantequilla con sal.webp', 3, 1, NULL, NULL, NULL),
+	(217, 13, 'Margarina vegetal', '/images/PRODUCTOS ABASTECETE/Lácteos y Huevos/Mantequilla y margarinas/Margarina vegetal.webp', 3, 1, NULL, NULL, NULL),
+	(218, 13, 'Margarina con sabor a mantequilla', '/images/PRODUCTOS ABASTECETE/Lácteos y Huevos/Mantequilla y margarinas/Margarina con sabor a mantequilla.webp', 3, 1, NULL, NULL, NULL),
+	(219, 14, 'Huevos blancos', '/images/PRODUCTOS ABASTECETE/Lácteos y Huevos/Huevos/Huevos blancos.webp', 3, 1, NULL, NULL, NULL),
+	(220, 14, 'Huevos rojos', '/images/PRODUCTOS ABASTECETE/Lácteos y Huevos/Huevos/Huevos rojos.webp', 3, 1, NULL, NULL, NULL),
+	(221, 14, 'Huevos de codorniz', '/images/PRODUCTOS ABASTECETE/Lácteos y Huevos/Huevos/Huevos de codorniz.webp', 3, 1, NULL, NULL, NULL),
+	(222, 14, 'Huevos orgánicos', '/images/PRODUCTOS ABASTECETE/Lácteos y Huevos/Huevos/Huevos orgánicos.webp', 3, 1, NULL, NULL, NULL),
+	(223, 14, 'Huevos enriquecidos con omega 3', '/images/PRODUCTOS ABASTECETE/Lácteos y Huevos/Huevos/Huevos enriquecidos con omega 3.webp', 3, 1, NULL, NULL, NULL),
+	(224, 15, 'Pan de masa madre', '/images/PRODUCTOS ABASTECETE/Panadería y Repostería/Pan fresco y artesanal/Pan de masa madre.webp', 3, 1, NULL, NULL, NULL),
+	(225, 15, 'Pan francés', '/images/PRODUCTOS ABASTECETE/Panadería y Repostería/Pan fresco y artesanal/Pan francés.webp', 3, 1, NULL, NULL, NULL),
+	(226, 15, 'Pan campesino', '/images/PRODUCTOS ABASTECETE/Panadería y Repostería/Pan fresco y artesanal/Pan campesino.webp', 3, 1, NULL, NULL, NULL),
+	(227, 15, 'Baguette', '/images/PRODUCTOS ABASTECETE/Panadería y Repostería/Pan fresco y artesanal/Baguette.webp', 3, 1, NULL, NULL, NULL),
+	(228, 15, 'Pan ciabatta', '/images/PRODUCTOS ABASTECETE/Panadería y Repostería/Pan fresco y artesanal/Pan ciabatta.webp', 3, 1, NULL, NULL, NULL),
+	(229, 15, 'Pan brioche', '/images/PRODUCTOS ABASTECETE/Panadería y Repostería/Pan fresco y artesanal/Pan brioche.webp', 3, 1, NULL, NULL, NULL),
+	(230, 15, 'Pan integral', '/images/PRODUCTOS ABASTECETE/Panadería y Repostería/Pan fresco y artesanal/Pan integral.webp', 3, 1, NULL, NULL, NULL),
+	(231, 15, 'Pan de queso', '/images/PRODUCTOS ABASTECETE/Panadería y Repostería/Pan fresco y artesanal/Pan de queso.webp', 3, 1, NULL, NULL, NULL),
+	(232, 15, 'Pan de coco', '/images/PRODUCTOS ABASTECETE/Panadería y Repostería/Pan fresco y artesanal/Pan de coco.webp', 3, 1, NULL, NULL, NULL),
+	(233, 15, 'Pan de yuca', '/images/PRODUCTOS ABASTECETE/Panadería y Repostería/Pan fresco y artesanal/Pan de yuca.webp', 3, 1, NULL, NULL, NULL),
+	(234, 16, 'Pan blanco empacado', '/images/PRODUCTOS ABASTECETE/Panadería y Repostería/Panadería empacada/Pan blanco empacado.webp', 3, 1, NULL, NULL, NULL),
+	(235, 16, 'Pan integral empacado', '/images/PRODUCTOS ABASTECETE/Panadería y Repostería/Panadería empacada/Pan integral empacado.webp', 3, 1, NULL, NULL, NULL),
+	(236, 16, 'Pan tostado', '/images/PRODUCTOS ABASTECETE/Panadería y Repostería/Panadería empacada/Pan tostado.webp', 3, 1, NULL, NULL, NULL),
+	(237, 16, 'Pan de molde', '/images/PRODUCTOS ABASTECETE/Panadería y Repostería/Panadería empacada/Pan de molde.webp', 3, 1, NULL, NULL, NULL),
+	(238, 16, 'Pan para hamburguesa', '/images/PRODUCTOS ABASTECETE/Panadería y Repostería/Panadería empacada/Pan para hamburguesa.webp', 3, 1, NULL, NULL, NULL),
+	(239, 16, 'Pan para perro caliente', '/images/PRODUCTOS ABASTECETE/Panadería y Repostería/Panadería empacada/Pan para perro caliente.webp', 3, 1, NULL, NULL, NULL),
+	(240, 16, 'Pan pita', '/images/PRODUCTOS ABASTECETE/Panadería y Repostería/Panadería empacada/Pan pita.webp', 3, 1, NULL, NULL, NULL),
+	(241, 17, 'Torta de chocolate', '/images/PRODUCTOS ABASTECETE/Panadería y Repostería/Tortas y postres frescos/Torta de chocolate.webp', 3, 1, NULL, NULL, NULL),
+	(242, 17, 'Torta de zanahoria', '/images/PRODUCTOS ABASTECETE/Panadería y Repostería/Tortas y postres frescos/Torta de zanahoria.webp', 3, 1, NULL, NULL, NULL),
+	(243, 17, 'Tres leches', '/images/PRODUCTOS ABASTECETE/Panadería y Repostería/Tortas y postres frescos/Tres leches.webp', 3, 1, NULL, NULL, NULL),
+	(244, 17, 'Cheesecake', '/images/PRODUCTOS ABASTECETE/Panadería y Repostería/Tortas y postres frescos/Cheesecake.webp', 3, 1, NULL, NULL, NULL),
+	(245, 17, 'Flan', '/images/PRODUCTOS ABASTECETE/Panadería y Repostería/Tortas y postres frescos/Flan.webp', 3, 1, NULL, NULL, NULL),
+	(246, 17, 'Pionono', '/images/PRODUCTOS ABASTECETE/Panadería y Repostería/Tortas y postres frescos/Pionono.webp', 3, 1, NULL, NULL, NULL),
+	(247, 17, 'Tiramisú', '/images/PRODUCTOS ABASTECETE/Panadería y Repostería/Tortas y postres frescos/Tiramisú.webp', 3, 1, NULL, NULL, NULL),
+	(248, 17, 'Postres individuales', '/images/PRODUCTOS ABASTECETE/Panadería y Repostería/Tortas y postres frescos/Postres individuales.webp', 3, 1, NULL, NULL, NULL),
+	(249, 17, 'Volcán de chocolate', '/images/PRODUCTOS ABASTECETE/Panadería y Repostería/Tortas y postres frescos/Volcán de chocolate.webp', 3, 1, NULL, NULL, NULL),
+	(250, 18, 'Galletas de chocolate', '/images/PRODUCTOS ABASTECETE/Panadería y Repostería/Repostería industrial/Galletas de chocolate.webp', 3, 1, NULL, NULL, NULL),
+	(251, 18, 'Galletas de avena', '/images/PRODUCTOS ABASTECETE/Panadería y Repostería/Repostería industrial/Galletas de avena.webp', 3, 1, NULL, NULL, NULL),
+	(252, 18, 'Brownies', '/images/PRODUCTOS ABASTECETE/Panadería y Repostería/Repostería industrial/Brownies.webp', 3, 1, NULL, NULL, NULL),
+	(253, 18, 'Muffins', '/images/PRODUCTOS ABASTECETE/Panadería y Repostería/Repostería industrial/Muffins.webp', 3, 1, NULL, NULL, NULL),
+	(254, 18, 'Cupcakes', '/images/PRODUCTOS ABASTECETE/Panadería y Repostería/Repostería industrial/Cupcakes.webp', 3, 1, NULL, NULL, NULL),
+	(255, 18, 'Alfajores', '/images/PRODUCTOS ABASTECETE/Panadería y Repostería/Repostería industrial/Alfajores.webp', 3, 1, NULL, NULL, NULL),
+	(256, 18, 'Macarons', '/images/PRODUCTOS ABASTECETE/Panadería y Repostería/Repostería industrial/Macarons.webp', 3, 1, NULL, NULL, NULL),
+	(257, 19, 'Arroz blanco', '/images/PRODUCTOS ABASTECETE/Despensa/Arroz, granos y legumbres/Arroz blanco.webp', 1, 1, NULL, NULL, NULL),
+	(258, 19, 'Arroz integral', '/images/PRODUCTOS ABASTECETE/Despensa/Arroz, granos y legumbres/Arroz integral.webp', 1, 1, NULL, NULL, NULL),
+	(259, 19, 'Arroz para sushi', '/images/PRODUCTOS ABASTECETE/Despensa/Arroz, granos y legumbres/Arroz para sushi.webp', 1, 1, NULL, NULL, NULL),
+	(260, 19, 'Arroz basmati', '/images/PRODUCTOS ABASTECETE/Despensa/Arroz, granos y legumbres/Arroz basmati.webp', 1, 1, NULL, NULL, NULL),
+	(261, 19, 'Arroz jazmín', '/images/PRODUCTOS ABASTECETE/Despensa/Arroz, granos y legumbres/Arroz jazmín.webp', 1, 1, NULL, NULL, NULL),
+	(262, 19, 'Frijoles rojos', '/images/PRODUCTOS ABASTECETE/Despensa/Arroz, granos y legumbres/Frijoles rojos.webp', 1, 1, NULL, NULL, NULL),
+	(263, 19, 'Frijoles negros', '/images/PRODUCTOS ABASTECETE/Despensa/Arroz, granos y legumbres/Frijoles negros.webp', 1, 1, NULL, NULL, NULL),
+	(264, 19, 'Lentejas', '/images/PRODUCTOS ABASTECETE/Despensa/Arroz, granos y legumbres/Lentejas.webp', 1, 1, NULL, NULL, NULL),
+	(265, 19, 'Garbanzo', '/images/PRODUCTOS ABASTECETE/Despensa/Arroz, granos y legumbres/Garbanzo.webp', 1, 1, NULL, NULL, NULL),
+	(266, 19, 'Arveja seca', '/images/PRODUCTOS ABASTECETE/Despensa/Arroz, granos y legumbres/Arveja seca.webp', 1, 1, NULL, NULL, NULL),
+	(267, 20, 'Espagueti', '/images/PRODUCTOS ABASTECETE/Despensa/Pastas y harinas/Espagueti.webp', 3, 1, NULL, NULL, NULL),
+	(268, 20, 'Fettuccine', '/images/PRODUCTOS ABASTECETE/Despensa/Pastas y harinas/Fettuccine.webp', 3, 1, NULL, NULL, NULL),
+	(269, 20, 'Macarrones', '/images/PRODUCTOS ABASTECETE/Despensa/Pastas y harinas/Macarrones.webp', 3, 1, NULL, NULL, NULL),
+	(270, 20, 'Lasaña', '/images/PRODUCTOS ABASTECETE/Despensa/Pastas y harinas/Lasaña.webp', 3, 1, NULL, NULL, NULL),
+	(271, 20, 'Cavatappi', '/images/PRODUCTOS ABASTECETE/Despensa/Pastas y harinas/Cavatappi.webp', 3, 1, NULL, NULL, NULL),
+	(272, 20, 'Harina de trigo', '/images/PRODUCTOS ABASTECETE/Despensa/Pastas y harinas/Harina de trigo.webp', 3, 1, NULL, NULL, NULL),
+	(273, 20, 'Harina de maíz', '/images/PRODUCTOS ABASTECETE/Despensa/Pastas y harinas/Harina de maíz.webp', 3, 1, NULL, NULL, NULL),
+	(274, 20, 'Harina de avena', '/images/PRODUCTOS ABASTECETE/Despensa/Pastas y harinas/Harina de avena.webp', 3, 1, NULL, NULL, NULL),
+	(275, 20, 'Harina para pizza', '/images/PRODUCTOS ABASTECETE/Despensa/Pastas y harinas/Harina para pizza.webp', 3, 1, NULL, NULL, NULL),
+	(276, 21, 'Aceite de girasol', '/images/PRODUCTOS ABASTECETE/Despensa/Aceites y vinagres/Aceite de girasol.webp', 2, 1, NULL, NULL, NULL),
+	(277, 21, 'Aceite de oliva extra virgen', '/images/PRODUCTOS ABASTECETE/Despensa/Aceites y vinagres/Aceite de oliva extra virgen.webp', 2, 1, NULL, NULL, NULL),
+	(278, 21, 'Aceite de coco', '/images/PRODUCTOS ABASTECETE/Despensa/Aceites y vinagres/Aceite de coco.webp', 2, 1, NULL, NULL, NULL),
+	(279, 21, 'Aceite de canola', '/images/PRODUCTOS ABASTECETE/Despensa/Aceites y vinagres/Aceite de canola.webp', 2, 1, NULL, NULL, NULL),
+	(280, 21, 'Vinagre blanco', '/images/PRODUCTOS ABASTECETE/Despensa/Aceites y vinagres/Vinagre blanco.webp', 2, 1, NULL, NULL, NULL),
+	(281, 21, 'Vinagre balsámico', '/images/PRODUCTOS ABASTECETE/Despensa/Aceites y vinagres/Vinagre balsámico.webp', 2, 1, NULL, NULL, NULL),
+	(282, 21, 'Vinagre de manzana', '/images/PRODUCTOS ABASTECETE/Despensa/Aceites y vinagres/Vinagre de manzana.webp', 2, 1, NULL, NULL, NULL),
+	(283, 22, 'Salsa de tomate', '/images/PRODUCTOS ABASTECETE/Despensa/Salsas y condimentos/Salsa de tomate.webp', 3, 1, NULL, NULL, NULL),
+	(284, 22, 'Mayonesa', '/images/PRODUCTOS ABASTECETE/Despensa/Salsas y condimentos/Mayonesa.webp', 3, 1, NULL, NULL, NULL),
+	(285, 22, 'Mostaza', '/images/PRODUCTOS ABASTECETE/Despensa/Salsas y condimentos/Mostaza.webp', 3, 1, NULL, NULL, NULL),
+	(286, 22, 'Salsa barbacoa', '/images/PRODUCTOS ABASTECETE/Despensa/Salsas y condimentos/Salsa barbacoa.webp', 3, 1, NULL, NULL, NULL),
+	(287, 22, 'Salsa teriyaki', '/images/PRODUCTOS ABASTECETE/Despensa/Salsas y condimentos/Salsa teriyaki.webp', 3, 1, NULL, NULL, NULL),
+	(288, 22, 'Pimienta negra', '/images/PRODUCTOS ABASTECETE/Despensa/Salsas y condimentos/Pimienta negra.webp', 3, 1, NULL, NULL, NULL),
+	(289, 22, 'Comino', '/images/PRODUCTOS ABASTECETE/Despensa/Salsas y condimentos/Comino.webp', 3, 1, NULL, NULL, NULL),
+	(290, 22, 'Curry', '/images/PRODUCTOS ABASTECETE/Despensa/Salsas y condimentos/Curry.webp', 3, 1, NULL, NULL, NULL),
+	(291, 22, 'Orégano seco', '/images/PRODUCTOS ABASTECETE/Despensa/Salsas y condimentos/Orégano seco.webp', 3, 1, NULL, NULL, NULL),
+	(292, 22, 'Ajo en polvo', '/images/PRODUCTOS ABASTECETE/Despensa/Salsas y condimentos/Ajo en polvo.webp', 3, 1, NULL, NULL, NULL),
+	(293, 23, 'Café molido', '/images/PRODUCTOS ABASTECETE/Despensa/Café y bebidas calientes/Café molido.webp', 3, 1, NULL, NULL, NULL),
+	(294, 23, 'Café instantáneo', '/images/PRODUCTOS ABASTECETE/Despensa/Café y bebidas calientes/Café instantáneo.webp', 3, 1, NULL, NULL, NULL),
+	(295, 23, 'Café en grano', '/images/PRODUCTOS ABASTECETE/Despensa/Café y bebidas calientes/Café en grano.webp', 3, 1, NULL, NULL, NULL),
+	(296, 23, 'Café descafeinado', '/images/PRODUCTOS ABASTECETE/Despensa/Café y bebidas calientes/Café descafeinado.webp', 3, 1, NULL, NULL, NULL),
+	(297, 23, 'Chocolate en polvo', '/images/PRODUCTOS ABASTECETE/Despensa/Café y bebidas calientes/Chocolate en polvo.webp', 3, 1, NULL, NULL, NULL),
+	(298, 23, 'Cacao instantáneo', '/images/PRODUCTOS ABASTECETE/Despensa/Café y bebidas calientes/Cacao instantáneo.webp', 3, 1, NULL, NULL, NULL),
+	(299, 23, 'Té negro', '/images/PRODUCTOS ABASTECETE/Despensa/Café y bebidas calientes/Té negro.webp', 3, 1, NULL, NULL, NULL),
+	(300, 23, 'Té verde', '/images/PRODUCTOS ABASTECETE/Despensa/Café y bebidas calientes/Té verde.webp', 3, 1, NULL, NULL, NULL),
+	(301, 24, 'Atún en aceite', '/images/PRODUCTOS ABASTECETE/Despensa/Conservas y enlatados/Atún en aceite.webp', 3, 1, NULL, NULL, NULL),
+	(302, 24, 'Atún en agua', '/images/PRODUCTOS ABASTECETE/Despensa/Conservas y enlatados/Atún en agua.webp', 3, 1, NULL, NULL, NULL),
+	(303, 24, 'Sardinas enlatadas', '/images/PRODUCTOS ABASTECETE/Despensa/Conservas y enlatados/Sardinas enlatadas.webp', 3, 1, NULL, NULL, NULL),
+	(304, 24, 'Vegetales mixtos enlatados', '/images/PRODUCTOS ABASTECETE/Despensa/Conservas y enlatados/Vegetales mixtos enlatados.webp', 3, 1, NULL, NULL, NULL),
+	(305, 24, 'Chícharos enlatados', '/images/PRODUCTOS ABASTECETE/Despensa/Conservas y enlatados/Chícharos enlatados.webp', 3, 1, NULL, NULL, NULL),
+	(306, 24, 'Maíz dulce enlatado', '/images/PRODUCTOS ABASTECETE/Despensa/Conservas y enlatados/Maíz dulce enlatado.webp', 3, 1, NULL, NULL, NULL),
+	(307, 24, 'Frutas en almíbar', '/images/PRODUCTOS ABASTECETE/Despensa/Conservas y enlatados/Frutas en almíbar.webp', 3, 1, NULL, NULL, NULL),
+	(308, 24, 'Purés de tomate', '/images/PRODUCTOS ABASTECETE/Despensa/Conservas y enlatados/Purés de tomate.webp', 3, 1, NULL, NULL, NULL),
+	(309, 25, 'Corn Flakes', '/images/PRODUCTOS ABASTECETE/Despensa/Cereales y granolas/Corn Flakes.webp', 3, 1, NULL, NULL, NULL),
+	(310, 25, 'Granola con frutos secos', '/images/PRODUCTOS ABASTECETE/Despensa/Cereales y granolas/Granola con frutos secos.webp', 3, 1, NULL, NULL, NULL),
+	(311, 25, 'Granola con chocolate', '/images/PRODUCTOS ABASTECETE/Despensa/Cereales y granolas/Granola con chocolate.webp', 3, 1, NULL, NULL, NULL),
+	(312, 25, 'Avena instantánea', '/images/PRODUCTOS ABASTECETE/Despensa/Cereales y granolas/Avena instantánea.webp', 3, 1, NULL, NULL, NULL),
+	(313, 25, 'Cereal integral', '/images/PRODUCTOS ABASTECETE/Despensa/Cereales y granolas/Cereal integral.webp', 3, 1, NULL, NULL, NULL),
+	(314, 25, 'Cereal con miel', '/images/PRODUCTOS ABASTECETE/Despensa/Cereales y granolas/Cereal con miel.webp', 3, 1, NULL, NULL, NULL),
+	(315, 25, 'Cereal para niños', '/images/PRODUCTOS ABASTECETE/Despensa/Cereales y granolas/Cereal para niños.webp', 3, 1, NULL, NULL, NULL),
+	(316, 25, 'Barritas de cereal', '/images/PRODUCTOS ABASTECETE/Despensa/Cereales y granolas/Barritas de cereal.webp', 3, 1, NULL, NULL, NULL),
+	(317, 26, 'Azúcar blanca', '/images/PRODUCTOS ABASTECETE/Despensa/Azúcar, endulzantes y sal/Azúcar blanca.webp', 3, 1, NULL, NULL, NULL),
+	(318, 26, 'Azúcar morena', '/images/PRODUCTOS ABASTECETE/Despensa/Azúcar, endulzantes y sal/Azúcar morena.webp', 3, 1, NULL, NULL, NULL),
+	(319, 26, 'Panela en bloques', '/images/PRODUCTOS ABASTECETE/Despensa/Azúcar, endulzantes y sal/Panela en bloques.webp', 3, 1, NULL, NULL, NULL),
+	(320, 26, 'Panela pulverizada', '/images/PRODUCTOS ABASTECETE/Despensa/Azúcar, endulzantes y sal/Panela pulverizada.webp', 3, 1, NULL, NULL, NULL),
+	(321, 26, 'Miel de abejas', '/images/PRODUCTOS ABASTECETE/Despensa/Azúcar, endulzantes y sal/Miel de abejas.webp', 3, 1, NULL, NULL, NULL),
+	(322, 26, 'Stevia', '/images/PRODUCTOS ABASTECETE/Despensa/Azúcar, endulzantes y sal/Stevia.webp', 3, 1, NULL, NULL, NULL),
+	(323, 26, 'Eritritol', '/images/PRODUCTOS ABASTECETE/Despensa/Azúcar, endulzantes y sal/Eritritol.webp', 3, 1, NULL, NULL, NULL),
+	(324, 26, 'Sal marina', '/images/PRODUCTOS ABASTECETE/Despensa/Azúcar, endulzantes y sal/Sal marina.webp', 3, 1, NULL, NULL, NULL),
+	(325, 26, 'Sal rosada del Himalaya', '/images/PRODUCTOS ABASTECETE/Despensa/Azúcar, endulzantes y sal/Sal rosada del Himalaya.webp', 3, 1, NULL, NULL, NULL),
+	(326, 27, 'Papas congeladas', '/images/PRODUCTOS ABASTECETE/Congelados/Verduras y tubérculos congelados/Papas congeladas.webp', 1, 1, NULL, NULL, NULL),
+	(327, 27, 'Brócoli congelado', '/images/PRODUCTOS ABASTECETE/Congelados/Verduras y tubérculos congelados/Brócoli congelado.webp', 1, 1, NULL, NULL, NULL),
+	(328, 27, 'Espinacas congeladas', '/images/PRODUCTOS ABASTECETE/Congelados/Verduras y tubérculos congelados/Espinacas congeladas.webp', 1, 1, NULL, NULL, NULL),
+	(329, 27, 'Zanahorias congeladas', '/images/PRODUCTOS ABASTECETE/Congelados/Verduras y tubérculos congelados/Zanahorias congeladas.webp', 1, 1, NULL, NULL, NULL),
+	(330, 27, 'Yuca congelada', '/images/PRODUCTOS ABASTECETE/Congelados/Verduras y tubérculos congelados/Yuca congelada.webp', 1, 1, NULL, NULL, NULL),
+	(331, 27, 'Mazorca congelada', '/images/PRODUCTOS ABASTECETE/Congelados/Verduras y tubérculos congelados/Mazorca congelada.webp', 1, 1, NULL, NULL, NULL),
+	(332, 27, 'Arvejas congeladas', '/images/PRODUCTOS ABASTECETE/Congelados/Verduras y tubérculos congelados/Arvejas congeladas.webp', 1, 1, NULL, NULL, NULL),
+	(333, 27, 'Mezcla de verduras congeladas', '/images/PRODUCTOS ABASTECETE/Congelados/Verduras y tubérculos congelados/Mezcla de verduras congeladas.webp', 1, 1, NULL, NULL, NULL),
+	(334, 28, 'Lasagna congelada', '/images/PRODUCTOS ABASTECETE/Congelados/Comidas listas para calentar/Lasagna congelada.webp', 3, 1, NULL, NULL, NULL),
+	(335, 28, 'Pizza congelada', '/images/PRODUCTOS ABASTECETE/Congelados/Comidas listas para calentar/Pizza congelada.webp', 3, 1, NULL, NULL, NULL),
+	(336, 28, 'Hamburguesas precocinadas', '/images/PRODUCTOS ABASTECETE/Congelados/Comidas listas para calentar/Hamburguesas precocinadas.webp', 3, 1, NULL, NULL, NULL),
+	(337, 28, 'Pollo apanado congelado', '/images/PRODUCTOS ABASTECETE/Congelados/Comidas listas para calentar/Pollo apanado congelado.webp', 3, 1, NULL, NULL, NULL),
+	(338, 28, 'Tacos congelados', '/images/PRODUCTOS ABASTECETE/Congelados/Comidas listas para calentar/Tacos congelados.webp', 3, 1, NULL, NULL, NULL),
+	(339, 28, 'Enchiladas congeladas', '/images/PRODUCTOS ABASTECETE/Congelados/Comidas listas para calentar/Enchiladas congeladas.webp', 3, 1, NULL, NULL, NULL),
+	(340, 28, 'Burritos congelados', '/images/PRODUCTOS ABASTECETE/Congelados/Comidas listas para calentar/Burritos congelados.webp', 3, 1, NULL, NULL, NULL),
+	(341, 29, 'Deditos de queso', '/images/PRODUCTOS ABASTECETE/Congelados/Pasabocas congelados/Deditos de queso.webp', 3, 1, NULL, NULL, NULL),
+	(342, 29, 'Empanadas congeladas', '/images/PRODUCTOS ABASTECETE/Congelados/Pasabocas congelados/Empanadas congeladas.webp', 3, 1, NULL, NULL, NULL),
+	(343, 29, 'Croquetas de pollo', '/images/PRODUCTOS ABASTECETE/Congelados/Pasabocas congelados/Croquetas de pollo.webp', 3, 1, NULL, NULL, NULL),
+	(344, 29, 'Palitos de pescado', '/images/PRODUCTOS ABASTECETE/Congelados/Pasabocas congelados/Palitos de pescado.webp', 3, 1, NULL, NULL, NULL),
+	(345, 29, 'Spring rolls', '/images/PRODUCTOS ABASTECETE/Congelados/Pasabocas congelados/Spring rolls.webp', 3, 1, NULL, NULL, NULL),
+	(346, 29, 'Mini arepas', '/images/PRODUCTOS ABASTECETE/Congelados/Pasabocas congelados/Mini arepas.webp', 3, 1, NULL, NULL, NULL),
+	(347, 29, 'Pasabocas de maíz', '/images/PRODUCTOS ABASTECETE/Congelados/Pasabocas congelados/Pasabocas de maíz.webp', 3, 1, NULL, NULL, NULL),
+	(348, 30, 'Helado de vainilla', '/images/PRODUCTOS ABASTECETE/Congelados/Helados y postres congelados/Helado de vainilla.webp', 3, 1, NULL, NULL, NULL),
+	(349, 30, 'Helado de chocolate', '/images/PRODUCTOS ABASTECETE/Congelados/Helados y postres congelados/Helado de chocolate.webp', 3, 1, NULL, NULL, NULL),
+	(350, 30, 'Paletas de frutas', '/images/PRODUCTOS ABASTECETE/Congelados/Helados y postres congelados/Paletas de frutas.webp', 3, 1, NULL, NULL, NULL),
+	(351, 30, 'Brownies helados', '/images/PRODUCTOS ABASTECETE/Congelados/Helados y postres congelados/Brownies helados.webp', 3, 1, NULL, NULL, NULL),
+	(352, 30, 'Sundaes', '/images/PRODUCTOS ABASTECETE/Congelados/Helados y postres congelados/Sundaes.webp', 3, 1, NULL, NULL, NULL),
+	(353, 30, 'Helados sin lactosa', '/images/PRODUCTOS ABASTECETE/Congelados/Helados y postres congelados/Helados sin lactosa.webp', 3, 1, NULL, NULL, NULL),
+	(354, 30, 'Tartaletas congeladas', '/images/PRODUCTOS ABASTECETE/Congelados/Helados y postres congelados/Tartaletas congeladas.webp', 3, 1, NULL, NULL, NULL),
+	(355, 31, 'Coca-Cola', '/images/PRODUCTOS ABASTECETE/Bebidas/Gaseosas y sodas/Coca-Cola.webp', 2, 1, NULL, NULL, NULL),
+	(356, 31, 'Pepsi', '/images/PRODUCTOS ABASTECETE/Bebidas/Gaseosas y sodas/Pepsi.webp', 2, 1, NULL, NULL, NULL),
+	(357, 31, '7 Up', '/images/PRODUCTOS ABASTECETE/Bebidas/Gaseosas y sodas/7 Up.webp', 2, 1, NULL, NULL, NULL),
+	(358, 31, 'Postobón', '/images/PRODUCTOS ABASTECETE/Bebidas/Gaseosas y sodas/Postobón.webp', 2, 1, NULL, NULL, NULL),
+	(359, 31, 'Fanta', '/images/PRODUCTOS ABASTECETE/Bebidas/Gaseosas y sodas/Fanta.webp', 2, 1, NULL, NULL, NULL),
+	(360, 31, 'Sprite', '/images/PRODUCTOS ABASTECETE/Bebidas/Gaseosas y sodas/Sprite.webp', 2, 1, NULL, NULL, NULL),
+	(361, 31, 'Ginger Ale', '/images/PRODUCTOS ABASTECETE/Bebidas/Gaseosas y sodas/Ginger Ale.webp', 2, 1, NULL, NULL, NULL),
+	(362, 31, 'Kola Roman', '/images/PRODUCTOS ABASTECETE/Bebidas/Gaseosas y sodas/Kola Roman.webp', 2, 1, NULL, NULL, NULL),
+	(363, 32, 'Jugo de naranja', '/images/PRODUCTOS ABASTECETE/Bebidas/Jugos y zumos/Jugo de naranja.webp', 2, 1, NULL, NULL, NULL),
+	(364, 32, 'Jugo de mango', '/images/PRODUCTOS ABASTECETE/Bebidas/Jugos y zumos/Jugo de mango.webp', 2, 1, NULL, NULL, NULL),
+	(365, 32, 'Jugo de manzana', '/images/PRODUCTOS ABASTECETE/Bebidas/Jugos y zumos/Jugo de manzana.webp', 2, 1, NULL, NULL, NULL),
+	(366, 32, 'Jugo de uva', '/images/PRODUCTOS ABASTECETE/Bebidas/Jugos y zumos/Jugo de uva.webp', 2, 1, NULL, NULL, NULL),
+	(367, 32, 'Néctar de durazno', '/images/PRODUCTOS ABASTECETE/Bebidas/Jugos y zumos/Néctar de durazno.webp', 2, 1, NULL, NULL, NULL),
+	(368, 32, 'Limonada natural', '/images/PRODUCTOS ABASTECETE/Bebidas/Jugos y zumos/Limonada natural.webp', 2, 1, NULL, NULL, NULL),
+	(369, 32, 'Jugo tropical', '/images/PRODUCTOS ABASTECETE/Bebidas/Jugos y zumos/Jugo tropical.webp', 2, 1, NULL, NULL, NULL),
+	(370, 32, 'Smoothies envasados', '/images/PRODUCTOS ABASTECETE/Bebidas/Jugos y zumos/Smoothies envasados.webp', 2, 1, NULL, NULL, NULL),
+	(371, 33, 'Agua mineral', '/images/PRODUCTOS ABASTECETE/Bebidas/Agua embotellada y té/Agua mineral.webp', 2, 1, NULL, NULL, NULL),
+	(372, 33, 'Agua con gas', '/images/PRODUCTOS ABASTECETE/Bebidas/Agua embotellada y té/Agua con gas.webp', 2, 1, NULL, NULL, NULL),
+	(373, 33, 'Té negro', '/images/PRODUCTOS ABASTECETE/Bebidas/Agua embotellada y té/Té negro.webp', 2, 1, NULL, NULL, NULL),
+	(374, 33, 'Té verde', '/images/PRODUCTOS ABASTECETE/Bebidas/Agua embotellada y té/Té verde.webp', 2, 1, NULL, NULL, NULL),
+	(375, 33, 'Té de hierbas', '/images/PRODUCTOS ABASTECETE/Bebidas/Agua embotellada y té/Té de hierbas.webp', 2, 1, NULL, NULL, NULL),
+	(376, 33, 'Té chai', '/images/PRODUCTOS ABASTECETE/Bebidas/Agua embotellada y té/Té chai.webp', 2, 1, NULL, NULL, NULL),
+	(377, 33, 'Té helado', '/images/PRODUCTOS ABASTECETE/Bebidas/Agua embotellada y té/Té helado.webp', 2, 1, NULL, NULL, NULL),
+	(378, 33, 'Infusiones frutales', '/images/PRODUCTOS ABASTECETE/Bebidas/Agua embotellada y té/Infusiones frutales.webp', 2, 1, NULL, NULL, NULL),
+	(379, 34, 'Gatorade', '/images/PRODUCTOS ABASTECETE/Bebidas/Bebidas isotónicas y energizantes/Gatorade.webp', 2, 1, NULL, NULL, NULL),
+	(380, 34, 'Powerade', '/images/PRODUCTOS ABASTECETE/Bebidas/Bebidas isotónicas y energizantes/Powerade.webp', 2, 1, NULL, NULL, NULL),
+	(381, 34, 'Red Bull', '/images/PRODUCTOS ABASTECETE/Bebidas/Bebidas isotónicas y energizantes/Red Bull.webp', 2, 1, NULL, NULL, NULL),
+	(382, 34, 'Monster Energy', '/images/PRODUCTOS ABASTECETE/Bebidas/Bebidas isotónicas y energizantes/Monster Energy.webp', 2, 1, NULL, NULL, NULL),
+	(383, 34, 'Bebidas hidratantes sin azúcar', '/images/PRODUCTOS ABASTECETE/Bebidas/Bebidas isotónicas y energizantes/Bebidas hidratantes sin azúcar.webp', 2, 1, NULL, NULL, NULL),
+	(384, 35, 'Chips de papa', '/images/PRODUCTOS ABASTECETE/Snacks y Aperitivos/Pasabocas empacados/Chips de papa.webp', 3, 1, NULL, NULL, NULL),
+	(385, 35, 'Nachos', '/images/PRODUCTOS ABASTECETE/Snacks y Aperitivos/Pasabocas empacados/Nachos.webp', 3, 1, NULL, NULL, NULL),
+	(386, 35, 'Platanitos', '/images/PRODUCTOS ABASTECETE/Snacks y Aperitivos/Pasabocas empacados/Platanitos.webp', 3, 1, NULL, NULL, NULL),
+	(387, 35, 'Palomitas de maíz', '/images/PRODUCTOS ABASTECETE/Snacks y Aperitivos/Pasabocas empacados/Palomitas de maíz.webp', 3, 1, NULL, NULL, NULL),
+	(388, 35, 'Cortezas de cerdo', '/images/PRODUCTOS ABASTECETE/Snacks y Aperitivos/Pasabocas empacados/Cortezas de cerdo.webp', 3, 1, NULL, NULL, NULL),
+	(389, 35, 'Pasabocas de queso', '/images/PRODUCTOS ABASTECETE/Snacks y Aperitivos/Pasabocas empacados/Pasabocas de queso.webp', 3, 1, NULL, NULL, NULL),
+	(390, 35, 'Pasabocas picantes', '/images/PRODUCTOS ABASTECETE/Snacks y Aperitivos/Pasabocas empacados/Pasabocas picantes.webp', 3, 1, NULL, NULL, NULL),
+	(391, 36, 'Almendras', '/images/PRODUCTOS ABASTECETE/Snacks y Aperitivos/Frutos secos y semillas/Almendras.webp', 3, 1, NULL, NULL, NULL),
+	(392, 36, 'Nueces', '/images/PRODUCTOS ABASTECETE/Snacks y Aperitivos/Frutos secos y semillas/Nueces.webp', 3, 1, NULL, NULL, NULL),
+	(393, 36, 'Pistachos', '/images/PRODUCTOS ABASTECETE/Snacks y Aperitivos/Frutos secos y semillas/Pistachos.webp', 3, 1, NULL, NULL, NULL),
+	(394, 36, 'Avellanas', '/images/PRODUCTOS ABASTECETE/Snacks y Aperitivos/Frutos secos y semillas/Avellanas.webp', 3, 1, NULL, NULL, NULL),
+	(395, 36, 'Semillas de girasol', '/images/PRODUCTOS ABASTECETE/Snacks y Aperitivos/Frutos secos y semillas/Semillas de girasol.webp', 3, 1, NULL, NULL, NULL),
+	(396, 36, 'Semillas de calabaza', '/images/PRODUCTOS ABASTECETE/Snacks y Aperitivos/Frutos secos y semillas/Semillas de calabaza.webp', 3, 1, NULL, NULL, NULL),
+	(397, 36, 'Mix de frutos secos', '/images/PRODUCTOS ABASTECETE/Snacks y Aperitivos/Frutos secos y semillas/Mix de frutos secos.webp', 3, 1, NULL, NULL, NULL),
+	(398, 36, 'Maní salado', '/images/PRODUCTOS ABASTECETE/Snacks y Aperitivos/Frutos secos y semillas/Maní salado.webp', 3, 1, NULL, NULL, NULL),
+	(399, 36, 'Maní confitado', '/images/PRODUCTOS ABASTECETE/Snacks y Aperitivos/Frutos secos y semillas/Maní confitado.webp', 3, 1, NULL, NULL, NULL),
+	(400, 37, 'Galletas de avena', '/images/PRODUCTOS ABASTECETE/Snacks y Aperitivos/Galletas dulces y saladas/Galletas de avena.webp', 3, 1, NULL, NULL, NULL),
+	(401, 37, 'Galletas de chocolate', '/images/PRODUCTOS ABASTECETE/Snacks y Aperitivos/Galletas dulces y saladas/Galletas de chocolate.webp', 3, 1, NULL, NULL, NULL),
+	(402, 37, 'Galletas de mantequilla', '/images/PRODUCTOS ABASTECETE/Snacks y Aperitivos/Galletas dulces y saladas/Galletas de mantequilla.webp', 3, 1, NULL, NULL, NULL),
+	(403, 37, 'Crackers saladas', '/images/PRODUCTOS ABASTECETE/Snacks y Aperitivos/Galletas dulces y saladas/Crackers saladas.webp', 3, 1, NULL, NULL, NULL),
+	(404, 37, 'Galletas integrales', '/images/PRODUCTOS ABASTECETE/Snacks y Aperitivos/Galletas dulces y saladas/Galletas integrales.webp', 3, 1, NULL, NULL, NULL),
+	(405, 37, 'Galletas rellenas', '/images/PRODUCTOS ABASTECETE/Snacks y Aperitivos/Galletas dulces y saladas/Galletas rellenas.webp', 3, 1, NULL, NULL, NULL),
+	(406, 38, 'Barritas de chocolate', '/images/PRODUCTOS ABASTECETE/Dulces y Chocolatería/Chocolatería fina/Barritas de chocolate.webp', 3, 1, NULL, NULL, NULL),
+	(407, 38, 'Chocolates rellenos', '/images/PRODUCTOS ABASTECETE/Dulces y Chocolatería/Chocolatería fina/Chocolates rellenos.webp', 3, 1, NULL, NULL, NULL),
+	(408, 38, 'Trufas', '/images/PRODUCTOS ABASTECETE/Dulces y Chocolatería/Chocolatería fina/Trufas.webp', 3, 1, NULL, NULL, NULL),
+	(409, 38, 'Bombones de chocolate', '/images/PRODUCTOS ABASTECETE/Dulces y Chocolatería/Chocolatería fina/Bombones de chocolate.webp', 3, 1, NULL, NULL, NULL),
+	(410, 39, 'Caramelos duros', '/images/PRODUCTOS ABASTECETE/Dulces y Chocolatería/Confitería/Caramelos duros.webp', 3, 1, NULL, NULL, NULL),
+	(411, 39, 'Caramelos masticables', '/images/PRODUCTOS ABASTECETE/Dulces y Chocolatería/Confitería/Caramelos masticables.webp', 3, 1, NULL, NULL, NULL),
+	(412, 39, 'Gomitas', '/images/PRODUCTOS ABASTECETE/Dulces y Chocolatería/Confitería/Gomitas.webp', 3, 1, NULL, NULL, NULL),
+	(413, 39, 'Masmelos', '/images/PRODUCTOS ABASTECETE/Dulces y Chocolatería/Confitería/Masmelos.webp', 3, 1, NULL, NULL, NULL),
+	(414, 39, 'Dulces ácidos', '/images/PRODUCTOS ABASTECETE/Dulces y Chocolatería/Confitería/Dulces ácidos.webp', 3, 1, NULL, NULL, NULL),
+	(415, 40, 'Arequipe tradicional', '/images/PRODUCTOS ABASTECETE/Dulces y Chocolatería/Arequipe y derivados lácteos dulces/Arequipe tradicional.webp', 3, 1, NULL, NULL, NULL),
+	(416, 40, 'Arequipe con chocolate', '/images/PRODUCTOS ABASTECETE/Dulces y Chocolatería/Arequipe y derivados lácteos dulces/Arequipe con chocolate.webp', 3, 1, NULL, NULL, NULL),
+	(417, 40, 'Leche condensada', '/images/PRODUCTOS ABASTECETE/Dulces y Chocolatería/Arequipe y derivados lácteos dulces/Leche condensada.webp', 3, 1, NULL, NULL, NULL),
+	(418, 40, 'Dulce de leche', '/images/PRODUCTOS ABASTECETE/Dulces y Chocolatería/Arequipe y derivados lácteos dulces/Dulce de leche.webp', 3, 1, NULL, NULL, NULL),
+	(419, 41, 'Chicles de menta', '/images/PRODUCTOS ABASTECETE/Dulces y Chocolatería/Chicles y masticables/Chicles de menta.webp', 3, 1, NULL, NULL, NULL),
+	(420, 41, 'Chicles de frutas', '/images/PRODUCTOS ABASTECETE/Dulces y Chocolatería/Chicles y masticables/Chicles de frutas.webp', 3, 1, NULL, NULL, NULL),
+	(421, 41, 'Chicles sin azúcar', '/images/PRODUCTOS ABASTECETE/Dulces y Chocolatería/Chicles y masticables/Chicles sin azúcar.webp', 3, 1, NULL, NULL, NULL),
+	(422, 41, 'Caramelos elásticos', '/images/PRODUCTOS ABASTECETE/Dulces y Chocolatería/Chicles y masticables/Caramelos elásticos.webp', 3, 1, NULL, NULL, NULL),
+	(423, 42, 'Queso parmesano', '/images/PRODUCTOS ABASTECETE/Charcutería y Especialidades/Quesos madurados y gourmet/Queso parmesano.webp', 1, 1, NULL, NULL, NULL),
+	(424, 42, 'Queso gouda', '/images/PRODUCTOS ABASTECETE/Charcutería y Especialidades/Quesos madurados y gourmet/Queso gouda.webp', 1, 1, NULL, NULL, NULL),
+	(425, 42, 'Queso brie', '/images/PRODUCTOS ABASTECETE/Charcutería y Especialidades/Quesos madurados y gourmet/Queso brie.webp', 1, 1, NULL, NULL, NULL),
+	(426, 42, 'Queso camembert', '/images/PRODUCTOS ABASTECETE/Charcutería y Especialidades/Quesos madurados y gourmet/Queso camembert.webp', 1, 1, NULL, NULL, NULL),
+	(427, 42, 'Queso roquefort', '/images/PRODUCTOS ABASTECETE/Charcutería y Especialidades/Quesos madurados y gourmet/Queso roquefort.webp', 1, 1, NULL, NULL, NULL),
+	(428, 42, 'Queso pecorino', '/images/PRODUCTOS ABASTECETE/Charcutería y Especialidades/Quesos madurados y gourmet/Queso pecorino.webp', 1, 1, NULL, NULL, NULL),
+	(429, 42, 'Queso emmental', '/images/PRODUCTOS ABASTECETE/Charcutería y Especialidades/Quesos madurados y gourmet/Queso emmental.webp', 1, 1, NULL, NULL, NULL),
+	(430, 42, 'Queso gruyere', '/images/PRODUCTOS ABASTECETE/Charcutería y Especialidades/Quesos madurados y gourmet/Queso gruyere.webp', 1, 1, NULL, NULL, NULL),
+	(431, 42, 'Queso manchego', '/images/PRODUCTOS ABASTECETE/Charcutería y Especialidades/Quesos madurados y gourmet/Queso manchego.webp', 1, 1, NULL, NULL, NULL),
+	(432, 42, 'Queso azul', '/images/PRODUCTOS ABASTECETE/Charcutería y Especialidades/Quesos madurados y gourmet/Queso azul.webp', 1, 1, NULL, NULL, NULL),
+	(433, 43, 'Jamón serrano', '/images/PRODUCTOS ABASTECETE/Charcutería y Especialidades/Carnes curadas y especiales/Jamón serrano.webp', 1, 1, NULL, NULL, NULL),
+	(434, 43, 'Jamón ibérico', '/images/PRODUCTOS ABASTECETE/Charcutería y Especialidades/Carnes curadas y especiales/Jamón ibérico.webp', 1, 1, NULL, NULL, NULL),
+	(435, 43, 'Prosciutto', '/images/PRODUCTOS ABASTECETE/Charcutería y Especialidades/Carnes curadas y especiales/Prosciutto.webp', 1, 1, NULL, NULL, NULL),
+	(436, 43, 'Salami', '/images/PRODUCTOS ABASTECETE/Charcutería y Especialidades/Carnes curadas y especiales/Salami.webp', 1, 1, NULL, NULL, NULL),
+	(437, 43, 'Pastrami', '/images/PRODUCTOS ABASTECETE/Charcutería y Especialidades/Carnes curadas y especiales/Pastrami.webp', 1, 1, NULL, NULL, NULL),
+	(438, 43, 'Bresaola', '/images/PRODUCTOS ABASTECETE/Charcutería y Especialidades/Carnes curadas y especiales/Bresaola.webp', 1, 1, NULL, NULL, NULL),
+	(439, 43, 'Lomo embuchado', '/images/PRODUCTOS ABASTECETE/Charcutería y Especialidades/Carnes curadas y especiales/Lomo embuchado.webp', 1, 1, NULL, NULL, NULL),
+	(440, 43, 'Longaniza', '/images/PRODUCTOS ABASTECETE/Charcutería y Especialidades/Carnes curadas y especiales/Longaniza.webp', 1, 1, NULL, NULL, NULL),
+	(441, 43, 'Cecina', '/images/PRODUCTOS ABASTECETE/Charcutería y Especialidades/Carnes curadas y especiales/Cecina.webp', 1, 1, NULL, NULL, NULL),
+	(442, 43, 'Sobrasada', '/images/PRODUCTOS ABASTECETE/Charcutería y Especialidades/Carnes curadas y especiales/Sobrasada.webp', 1, 1, NULL, NULL, NULL),
+	(443, 44, 'Pepinillos encurtidos', '/images/PRODUCTOS ABASTECETE/Charcutería y Especialidades/Encurtidos, conservas y patés/Pepinillos encurtidos.webp', 3, 1, NULL, NULL, NULL),
+	(444, 44, 'Aceitunas verdes', '/images/PRODUCTOS ABASTECETE/Charcutería y Especialidades/Encurtidos, conservas y patés/Aceitunas verdes.webp', 3, 1, NULL, NULL, NULL),
+	(445, 44, 'Aceitunas negras', '/images/PRODUCTOS ABASTECETE/Charcutería y Especialidades/Encurtidos, conservas y patés/Aceitunas negras.webp', 3, 1, NULL, NULL, NULL),
+	(446, 44, 'Corazones de alcachofa', '/images/PRODUCTOS ABASTECETE/Charcutería y Especialidades/Encurtidos, conservas y patés/Corazones de alcachofa.webp', 3, 1, NULL, NULL, NULL),
+	(447, 44, 'Paté de hígado', '/images/PRODUCTOS ABASTECETE/Charcutería y Especialidades/Encurtidos, conservas y patés/Paté de hígado.webp', 3, 1, NULL, NULL, NULL),
+	(448, 44, 'Paté de cerdo', '/images/PRODUCTOS ABASTECETE/Charcutería y Especialidades/Encurtidos, conservas y patés/Paté de cerdo.webp', 3, 1, NULL, NULL, NULL),
+	(449, 44, 'Conserva de champiñones', '/images/PRODUCTOS ABASTECETE/Charcutería y Especialidades/Encurtidos, conservas y patés/Conserva de champiñones.webp', 3, 1, NULL, NULL, NULL),
+	(450, 44, 'Conserva de espárragos', '/images/PRODUCTOS ABASTECETE/Charcutería y Especialidades/Encurtidos, conservas y patés/Conserva de espárragos.webp', 3, 1, NULL, NULL, NULL),
+	(451, 44, 'Chiles encurtidos', '/images/PRODUCTOS ABASTECETE/Charcutería y Especialidades/Encurtidos, conservas y patés/Chiles encurtidos.webp', 3, 1, NULL, NULL, NULL),
+	(452, 44, 'Tapenade', '/images/PRODUCTOS ABASTECETE/Charcutería y Especialidades/Encurtidos, conservas y patés/Tapenade.webp', 3, 1, NULL, NULL, NULL),
+	(453, 45, 'Detergente líquido', '/images/PRODUCTOS ABASTECETE/Aseo del Hogar/Jabones y detergentes/Detergente líquido.webp', 3, 1, NULL, NULL, NULL),
+	(454, 45, 'Detergente en polvo', '/images/PRODUCTOS ABASTECETE/Aseo del Hogar/Jabones y detergentes/Detergente en polvo.webp', 3, 1, NULL, NULL, NULL),
+	(455, 45, 'Jabón para ropa delicada', '/images/PRODUCTOS ABASTECETE/Aseo del Hogar/Jabones y detergentes/Jabón para ropa delicada.webp', 3, 1, NULL, NULL, NULL),
+	(456, 45, 'Jabón líquido multiuso', '/images/PRODUCTOS ABASTECETE/Aseo del Hogar/Jabones y detergentes/Jabón líquido multiuso.webp', 3, 1, NULL, NULL, NULL),
+	(457, 45, 'Detergente para ropa oscura', '/images/PRODUCTOS ABASTECETE/Aseo del Hogar/Jabones y detergentes/Detergente para ropa oscura.webp', 3, 1, NULL, NULL, NULL),
+	(458, 45, 'Detergente para ropa blanca', '/images/PRODUCTOS ABASTECETE/Aseo del Hogar/Jabones y detergentes/Detergente para ropa blanca.webp', 3, 1, NULL, NULL, NULL),
+	(459, 45, 'Jabón en barra', '/images/PRODUCTOS ABASTECETE/Aseo del Hogar/Jabones y detergentes/Jabón en barra.webp', 3, 1, NULL, NULL, NULL),
+	(460, 46, 'Limpiador en spray', '/images/PRODUCTOS ABASTECETE/Aseo del Hogar/Limpiadores multiusos/Limpiador en spray.webp', 2, 1, NULL, NULL, NULL),
+	(461, 46, 'Limpiador concentrado', '/images/PRODUCTOS ABASTECETE/Aseo del Hogar/Limpiadores multiusos/Limpiador concentrado.webp', 2, 1, NULL, NULL, NULL),
+	(462, 46, 'Limpiador con cloro', '/images/PRODUCTOS ABASTECETE/Aseo del Hogar/Limpiadores multiusos/Limpiador con cloro.webp', 2, 1, NULL, NULL, NULL),
+	(463, 46, 'Limpiador antibacterial', '/images/PRODUCTOS ABASTECETE/Aseo del Hogar/Limpiadores multiusos/Limpiador antibacterial.webp', 2, 1, NULL, NULL, NULL),
+	(464, 46, 'Limpiador ecológico', '/images/PRODUCTOS ABASTECETE/Aseo del Hogar/Limpiadores multiusos/Limpiador ecológico.webp', 2, 1, NULL, NULL, NULL),
+	(465, 46, 'Limpiador aromático', '/images/PRODUCTOS ABASTECETE/Aseo del Hogar/Limpiadores multiusos/Limpiador aromático.webp', 2, 1, NULL, NULL, NULL),
+	(466, 47, 'Papel higiénico de hoja sencilla', '/images/PRODUCTOS ABASTECETE/Aseo del Hogar/Papel higiénico y servilletas/Papel higiénico de hoja sencilla.webp', 3, 1, NULL, NULL, NULL),
+	(467, 47, 'Papel higiénico de hoja doble', '/images/PRODUCTOS ABASTECETE/Aseo del Hogar/Papel higiénico y servilletas/Papel higiénico de hoja doble.webp', 3, 1, NULL, NULL, NULL),
+	(468, 47, 'Servilletas blancas', '/images/PRODUCTOS ABASTECETE/Aseo del Hogar/Papel higiénico y servilletas/Servilletas blancas.webp', 3, 1, NULL, NULL, NULL),
+	(469, 47, 'Servilletas decorativas', '/images/PRODUCTOS ABASTECETE/Aseo del Hogar/Papel higiénico y servilletas/Servilletas decorativas.webp', 3, 1, NULL, NULL, NULL),
+	(470, 47, 'Rollos de cocina', '/images/PRODUCTOS ABASTECETE/Aseo del Hogar/Papel higiénico y servilletas/Rollos de cocina.webp', 3, 1, NULL, NULL, NULL),
+	(471, 47, 'Toallas de papel absorbente', '/images/PRODUCTOS ABASTECETE/Aseo del Hogar/Papel higiénico y servilletas/Toallas de papel absorbente.webp', 3, 1, NULL, NULL, NULL),
+	(472, 48, 'Ambientador en spray', '/images/PRODUCTOS ABASTECETE/Aseo del Hogar/Ambientadores y control de plagas/Ambientador en spray.webp', 2, 1, NULL, NULL, NULL),
+	(473, 48, 'Ambientador en gel', '/images/PRODUCTOS ABASTECETE/Aseo del Hogar/Ambientadores y control de plagas/Ambientador en gel.webp', 2, 1, NULL, NULL, NULL),
+	(474, 48, 'Velas aromáticas', '/images/PRODUCTOS ABASTECETE/Aseo del Hogar/Ambientadores y control de plagas/Velas aromáticas.webp', 2, 1, NULL, NULL, NULL),
+	(475, 48, 'Difusores de aroma', '/images/PRODUCTOS ABASTECETE/Aseo del Hogar/Ambientadores y control de plagas/Difusores de aroma.webp', 2, 1, NULL, NULL, NULL),
+	(476, 48, 'Insecticida en aerosol', '/images/PRODUCTOS ABASTECETE/Aseo del Hogar/Ambientadores y control de plagas/Insecticida en aerosol.webp', 2, 1, NULL, NULL, NULL),
+	(477, 48, 'Insecticida eléctrico', '/images/PRODUCTOS ABASTECETE/Aseo del Hogar/Ambientadores y control de plagas/Insecticida eléctrico.webp', 2, 1, NULL, NULL, NULL),
+	(478, 48, 'Trampas para insectos', '/images/PRODUCTOS ABASTECETE/Aseo del Hogar/Ambientadores y control de plagas/Trampas para insectos.webp', 2, 1, NULL, NULL, NULL),
+	(479, 49, 'Esponjas', '/images/PRODUCTOS ABASTECETE/Aseo del Hogar/Implementos de limpieza/Esponjas.webp', 3, 1, NULL, NULL, NULL),
+	(480, 49, 'Trapos de microfibra', '/images/PRODUCTOS ABASTECETE/Aseo del Hogar/Implementos de limpieza/Trapos de microfibra.webp', 3, 1, NULL, NULL, NULL),
+	(481, 49, 'Escobas', '/images/PRODUCTOS ABASTECETE/Aseo del Hogar/Implementos de limpieza/Escobas.webp', 3, 1, NULL, NULL, NULL),
+	(482, 49, 'Cepillos de limpieza', '/images/PRODUCTOS ABASTECETE/Aseo del Hogar/Implementos de limpieza/Cepillos de limpieza.webp', 3, 1, NULL, NULL, NULL),
+	(483, 49, 'Trapeadores', '/images/PRODUCTOS ABASTECETE/Aseo del Hogar/Implementos de limpieza/Trapeadores.webp', 3, 1, NULL, NULL, NULL),
+	(484, 49, 'Plumeros', '/images/PRODUCTOS ABASTECETE/Aseo del Hogar/Implementos de limpieza/Plumeros.webp', 3, 1, NULL, NULL, NULL),
+	(485, 49, 'Baldes', '/images/PRODUCTOS ABASTECETE/Aseo del Hogar/Implementos de limpieza/Baldes.webp', 3, 1, NULL, NULL, NULL),
+	(486, 49, 'Guantes de látex', '/images/PRODUCTOS ABASTECETE/Aseo del Hogar/Implementos de limpieza/Guantes de látex.webp', 3, 1, NULL, NULL, NULL),
+	(487, 49, 'Paños absorbentes', '/images/PRODUCTOS ABASTECETE/Aseo del Hogar/Implementos de limpieza/Paños absorbentes.webp', 3, 1, NULL, NULL, NULL),
+	(488, 49, 'Raspadores', '/images/PRODUCTOS ABASTECETE/Aseo del Hogar/Implementos de limpieza/Raspadores.webp', 3, 1, NULL, NULL, NULL),
+	(489, 50, 'Shampoo para cabello seco', '/images/PRODUCTOS ABASTECETE/Cuidado Personal/Cuidado capilar/Shampoo para cabello seco.webp', 2, 1, NULL, NULL, NULL),
+	(490, 50, 'Shampoo para cabello graso', '/images/PRODUCTOS ABASTECETE/Cuidado Personal/Cuidado capilar/Shampoo para cabello graso.webp', 2, 1, NULL, NULL, NULL),
+	(491, 50, 'Acondicionador hidratante', '/images/PRODUCTOS ABASTECETE/Cuidado Personal/Cuidado capilar/Acondicionador hidratante.webp', 2, 1, NULL, NULL, NULL),
+	(492, 50, 'Mascarilla capilar', '/images/PRODUCTOS ABASTECETE/Cuidado Personal/Cuidado capilar/Mascarilla capilar.webp', 2, 1, NULL, NULL, NULL),
+	(493, 50, 'Sérum para puntas abiertas', '/images/PRODUCTOS ABASTECETE/Cuidado Personal/Cuidado capilar/Sérum para puntas abiertas.webp', 2, 1, NULL, NULL, NULL),
+	(494, 50, 'Aceite capilar', '/images/PRODUCTOS ABASTECETE/Cuidado Personal/Cuidado capilar/Aceite capilar.webp', 2, 1, NULL, NULL, NULL),
+	(495, 50, 'Spray para peinar', '/images/PRODUCTOS ABASTECETE/Cuidado Personal/Cuidado capilar/Spray para peinar.webp', 2, 1, NULL, NULL, NULL),
+	(496, 51, 'Crema hidratante facial', '/images/PRODUCTOS ABASTECETE/Cuidado Personal/Cuidado facial y corporal/Crema hidratante facial.webp', 2, 1, NULL, NULL, NULL),
+	(497, 51, 'Protector solar', '/images/PRODUCTOS ABASTECETE/Cuidado Personal/Cuidado facial y corporal/Protector solar.webp', 2, 1, NULL, NULL, NULL),
+	(498, 51, 'Tónico facial', '/images/PRODUCTOS ABASTECETE/Cuidado Personal/Cuidado facial y corporal/Tónico facial.webp', 2, 1, NULL, NULL, NULL),
+	(499, 51, 'Jabón corporal líquido', '/images/PRODUCTOS ABASTECETE/Cuidado Personal/Cuidado facial y corporal/Jabón corporal líquido.webp', 2, 1, NULL, NULL, NULL),
+	(500, 51, 'Exfoliante corporal', '/images/PRODUCTOS ABASTECETE/Cuidado Personal/Cuidado facial y corporal/Exfoliante corporal.webp', 2, 1, NULL, NULL, NULL),
+	(501, 51, 'Crema para manos', '/images/PRODUCTOS ABASTECETE/Cuidado Personal/Cuidado facial y corporal/Crema para manos.webp', 2, 1, NULL, NULL, NULL),
+	(502, 51, 'Aceite corporal', '/images/PRODUCTOS ABASTECETE/Cuidado Personal/Cuidado facial y corporal/Aceite corporal.webp', 2, 1, NULL, NULL, NULL),
+	(503, 51, 'Gel de aloe vera', '/images/PRODUCTOS ABASTECETE/Cuidado Personal/Cuidado facial y corporal/Gel de aloe vera.webp', 2, 1, NULL, NULL, NULL),
+	(504, 52, 'Toallas higiénicas', '/images/PRODUCTOS ABASTECETE/Cuidado Personal/Higiene íntima/Toallas higiénicas.webp', 3, 1, NULL, NULL, NULL),
+	(505, 52, 'Tampones', '/images/PRODUCTOS ABASTECETE/Cuidado Personal/Higiene íntima/Tampones.webp', 3, 1, NULL, NULL, NULL),
+	(506, 52, 'Copa menstrual', '/images/PRODUCTOS ABASTECETE/Cuidado Personal/Higiene íntima/Copa menstrual.webp', 3, 1, NULL, NULL, NULL),
+	(507, 52, 'Jabón íntimo', '/images/PRODUCTOS ABASTECETE/Cuidado Personal/Higiene íntima/Jabón íntimo.webp', 3, 1, NULL, NULL, NULL),
+	(508, 52, 'Toallas húmedas íntimas', '/images/PRODUCTOS ABASTECETE/Cuidado Personal/Higiene íntima/Toallas húmedas íntimas.webp', 3, 1, NULL, NULL, NULL),
+	(509, 52, 'Protegeslips', '/images/PRODUCTOS ABASTECETE/Cuidado Personal/Higiene íntima/Protegeslips.webp', 3, 1, NULL, NULL, NULL),
+	(510, 53, 'Pañales desechables', '/images/PRODUCTOS ABASTECETE/Cuidado Personal/Higiene para bebés y niños/Pañales desechables.webp', 3, 1, NULL, NULL, NULL),
+	(511, 53, 'Pañales ecológicos', '/images/PRODUCTOS ABASTECETE/Cuidado Personal/Higiene para bebés y niños/Pañales ecológicos.webp', 3, 1, NULL, NULL, NULL),
+	(512, 53, 'Toallitas húmedas', '/images/PRODUCTOS ABASTECETE/Cuidado Personal/Higiene para bebés y niños/Toallitas húmedas.webp', 3, 1, NULL, NULL, NULL),
+	(513, 53, 'Jabón líquido para bebés', '/images/PRODUCTOS ABASTECETE/Cuidado Personal/Higiene para bebés y niños/Jabón líquido para bebés.webp', 3, 1, NULL, NULL, NULL),
+	(514, 53, 'Shampoo para bebés', '/images/PRODUCTOS ABASTECETE/Cuidado Personal/Higiene para bebés y niños/Shampoo para bebés.webp', 3, 1, NULL, NULL, NULL),
+	(515, 53, 'Crema antipañalitis', '/images/PRODUCTOS ABASTECETE/Cuidado Personal/Higiene para bebés y niños/Crema antipañalitis.webp', 3, 1, NULL, NULL, NULL),
+	(516, 53, 'Loción hidratante para bebés', '/images/PRODUCTOS ABASTECETE/Cuidado Personal/Higiene para bebés y niños/Loción hidratante para bebés.webp', 3, 1, NULL, NULL, NULL),
+	(517, 54, 'Preservativos de látex', '/images/PRODUCTOS ABASTECETE/Cuidado Personal/Bienestar sexual/Preservativos de látex.webp', 3, 1, NULL, NULL, NULL),
+	(518, 54, 'Preservativos sin látex', '/images/PRODUCTOS ABASTECETE/Cuidado Personal/Bienestar sexual/Preservativos sin látex.webp', 3, 1, NULL, NULL, NULL),
+	(519, 54, 'Lubricantes a base de agua', '/images/PRODUCTOS ABASTECETE/Cuidado Personal/Bienestar sexual/Lubricantes a base de agua.webp', 3, 1, NULL, NULL, NULL),
+	(520, 54, 'Lubricantes a base de silicona', '/images/PRODUCTOS ABASTECETE/Cuidado Personal/Bienestar sexual/Lubricantes a base de silicona.webp', 3, 1, NULL, NULL, NULL),
+	(521, 54, 'Anillos estimulantes', '/images/PRODUCTOS ABASTECETE/Cuidado Personal/Bienestar sexual/Anillos estimulantes.webp', 3, 1, NULL, NULL, NULL),
+	(522, 55, 'Bloqueador solar FPS 30', '/images/PRODUCTOS ABASTECETE/Cuidado Personal/Protección solar y repelentes/Bloqueador solar FPS 30.webp', 2, 1, NULL, NULL, NULL),
+	(523, 55, 'Bloqueador solar FPS 50', '/images/PRODUCTOS ABASTECETE/Cuidado Personal/Protección solar y repelentes/Bloqueador solar FPS 50.webp', 2, 1, NULL, NULL, NULL),
+	(524, 55, 'Protector solar en spray', '/images/PRODUCTOS ABASTECETE/Cuidado Personal/Protección solar y repelentes/Protector solar en spray.webp', 2, 1, NULL, NULL, NULL),
+	(525, 55, 'Repelente en crema', '/images/PRODUCTOS ABASTECETE/Cuidado Personal/Protección solar y repelentes/Repelente en crema.webp', 2, 1, NULL, NULL, NULL),
+	(526, 55, 'Repelente en aerosol', '/images/PRODUCTOS ABASTECETE/Cuidado Personal/Protección solar y repelentes/Repelente en aerosol.webp', 2, 1, NULL, NULL, NULL),
+	(527, 55, 'Pulseras repelentes', '/images/PRODUCTOS ABASTECETE/Cuidado Personal/Protección solar y repelentes/Pulseras repelentes.webp', 2, 1, NULL, NULL, NULL),
+	(528, 56, 'Analgésicos', '/images/PRODUCTOS ABASTECETE/Cuidado Personal/Salud y medicamentos/Analgésicos.webp', 3, 1, NULL, NULL, NULL),
+	(529, 56, 'Antiinflamatorios', '/images/PRODUCTOS ABASTECETE/Cuidado Personal/Salud y medicamentos/Antiinflamatorios.webp', 3, 1, NULL, NULL, NULL),
+	(530, 56, 'Jarabe para la tos', '/images/PRODUCTOS ABASTECETE/Cuidado Personal/Salud y medicamentos/Jarabe para la tos.webp', 3, 1, NULL, NULL, NULL),
+	(531, 56, 'Vitaminas y suplementos', '/images/PRODUCTOS ABASTECETE/Cuidado Personal/Salud y medicamentos/Vitaminas y suplementos.webp', 3, 1, NULL, NULL, NULL),
+	(532, 56, 'Medicamentos antialérgicos', '/images/PRODUCTOS ABASTECETE/Cuidado Personal/Salud y medicamentos/Medicamentos antialérgicos.webp', 3, 1, NULL, NULL, NULL),
+	(533, 56, 'Pastillas para el dolor de garganta', '/images/PRODUCTOS ABASTECETE/Cuidado Personal/Salud y medicamentos/Pastillas para el dolor de garganta.webp', 3, 1, NULL, NULL, NULL),
+	(534, 56, 'Ungüentos tópicos', '/images/PRODUCTOS ABASTECETE/Cuidado Personal/Salud y medicamentos/Ungüentos tópicos.webp', 3, 1, NULL, NULL, NULL),
+	(535, 57, 'Cerveza lager', '/images/PRODUCTOS ABASTECETE/Licores y Tabaco/Cervezas/Cerveza lager.webp', 2, 1, NULL, NULL, NULL),
+	(536, 57, 'Cerveza pilsner', '/images/PRODUCTOS ABASTECETE/Licores y Tabaco/Cervezas/Cerveza pilsner.webp', 2, 1, NULL, NULL, NULL),
+	(537, 57, 'Cerveza stout', '/images/PRODUCTOS ABASTECETE/Licores y Tabaco/Cervezas/Cerveza stout.webp', 2, 1, NULL, NULL, NULL),
+	(538, 57, 'Cerveza IPA', '/images/PRODUCTOS ABASTECETE/Licores y Tabaco/Cervezas/Cerveza IPA.webp', 2, 1, NULL, NULL, NULL),
+	(539, 57, 'Cerveza artesanal', '/images/PRODUCTOS ABASTECETE/Licores y Tabaco/Cervezas/Cerveza artesanal.webp', 2, 1, NULL, NULL, NULL),
+	(540, 57, 'Cerveza sin alcohol', '/images/PRODUCTOS ABASTECETE/Licores y Tabaco/Cervezas/Cerveza sin alcohol.webp', 2, 1, NULL, NULL, NULL),
+	(541, 57, 'Cerveza rubia', '/images/PRODUCTOS ABASTECETE/Licores y Tabaco/Cervezas/Cerveza rubia.webp', 2, 1, NULL, NULL, NULL),
+	(542, 57, 'Cerveza roja', '/images/PRODUCTOS ABASTECETE/Licores y Tabaco/Cervezas/Cerveza roja.webp', 2, 1, NULL, NULL, NULL),
+	(543, 58, 'Vino tinto', '/images/PRODUCTOS ABASTECETE/Licores y Tabaco/Vinos/Vino tinto.webp', 2, 1, NULL, NULL, NULL),
+	(544, 58, 'Vino blanco', '/images/PRODUCTOS ABASTECETE/Licores y Tabaco/Vinos/Vino blanco.webp', 2, 1, NULL, NULL, NULL),
+	(545, 58, 'Vino rosado', '/images/PRODUCTOS ABASTECETE/Licores y Tabaco/Vinos/Vino rosado.webp', 2, 1, NULL, NULL, NULL),
+	(546, 58, 'Vino espumoso', '/images/PRODUCTOS ABASTECETE/Licores y Tabaco/Vinos/Vino espumoso.webp', 2, 1, NULL, NULL, NULL),
+	(547, 58, 'Vino de postre', '/images/PRODUCTOS ABASTECETE/Licores y Tabaco/Vinos/Vino de postre.webp', 2, 1, NULL, NULL, NULL),
+	(548, 58, 'Vino orgánico', '/images/PRODUCTOS ABASTECETE/Licores y Tabaco/Vinos/Vino orgánico.webp', 2, 1, NULL, NULL, NULL),
+	(549, 58, 'Vino crianza', '/images/PRODUCTOS ABASTECETE/Licores y Tabaco/Vinos/Vino crianza.webp', 2, 1, NULL, NULL, NULL),
+	(550, 58, 'Vino reserva', '/images/PRODUCTOS ABASTECETE/Licores y Tabaco/Vinos/Vino reserva.webp', 2, 1, NULL, NULL, NULL),
+	(551, 59, 'Whisky escocés', '/images/PRODUCTOS ABASTECETE/Licores y Tabaco/Whisky y ron/Whisky escocés.webp', 2, 1, NULL, NULL, NULL),
+	(552, 59, 'Whisky irlandés', '/images/PRODUCTOS ABASTECETE/Licores y Tabaco/Whisky y ron/Whisky irlandés.webp', 2, 1, NULL, NULL, NULL),
+	(553, 59, 'Whisky americano', '/images/PRODUCTOS ABASTECETE/Licores y Tabaco/Whisky y ron/Whisky americano.webp', 2, 1, NULL, NULL, NULL),
+	(554, 59, 'Ron oscuro', '/images/PRODUCTOS ABASTECETE/Licores y Tabaco/Whisky y ron/Ron oscuro.webp', 2, 1, NULL, NULL, NULL),
+	(555, 59, 'Ron dorado', '/images/PRODUCTOS ABASTECETE/Licores y Tabaco/Whisky y ron/Ron dorado.webp', 2, 1, NULL, NULL, NULL),
+	(556, 59, 'Ron blanco', '/images/PRODUCTOS ABASTECETE/Licores y Tabaco/Whisky y ron/Ron blanco.webp', 2, 1, NULL, NULL, NULL),
+	(557, 59, 'Ron especiado', '/images/PRODUCTOS ABASTECETE/Licores y Tabaco/Whisky y ron/Ron especiado.webp', 2, 1, NULL, NULL, NULL),
+	(558, 60, 'Tequila blanco', '/images/PRODUCTOS ABASTECETE/Licores y Tabaco/Tequilas y otros destilados/Tequila blanco.webp', 2, 1, NULL, NULL, NULL),
+	(559, 60, 'Tequila reposado', '/images/PRODUCTOS ABASTECETE/Licores y Tabaco/Tequilas y otros destilados/Tequila reposado.webp', 2, 1, NULL, NULL, NULL),
+	(560, 60, 'Tequila añejo', '/images/PRODUCTOS ABASTECETE/Licores y Tabaco/Tequilas y otros destilados/Tequila añejo.webp', 2, 1, NULL, NULL, NULL),
+	(561, 60, 'Tequila extra añejo', '/images/PRODUCTOS ABASTECETE/Licores y Tabaco/Tequilas y otros destilados/Tequila extra añejo.webp', 2, 1, NULL, NULL, NULL),
+	(562, 60, 'Mezcal', '/images/PRODUCTOS ABASTECETE/Licores y Tabaco/Tequilas y otros destilados/Mezcal.webp', 2, 1, NULL, NULL, NULL),
+	(563, 60, 'Vodka', '/images/PRODUCTOS ABASTECETE/Licores y Tabaco/Tequilas y otros destilados/Vodka.webp', 2, 1, NULL, NULL, NULL),
+	(564, 60, 'Gin', '/images/PRODUCTOS ABASTECETE/Licores y Tabaco/Tequilas y otros destilados/Gin.webp', 2, 1, NULL, NULL, NULL),
+	(565, 60, 'Aguardiente', '/images/PRODUCTOS ABASTECETE/Licores y Tabaco/Tequilas y otros destilados/Aguardiente.webp', 2, 1, NULL, NULL, NULL),
+	(566, 61, 'Vermouth', '/images/PRODUCTOS ABASTECETE/Licores y Tabaco/Coctelería/Vermouth.webp', 2, 1, NULL, NULL, NULL),
+	(567, 61, 'Aperol', '/images/PRODUCTOS ABASTECETE/Licores y Tabaco/Coctelería/Aperol.webp', 2, 1, NULL, NULL, NULL),
+	(568, 61, 'Campari', '/images/PRODUCTOS ABASTECETE/Licores y Tabaco/Coctelería/Campari.webp', 2, 1, NULL, NULL, NULL),
+	(569, 61, 'Triple sec', '/images/PRODUCTOS ABASTECETE/Licores y Tabaco/Coctelería/Triple sec.webp', 2, 1, NULL, NULL, NULL),
+	(570, 61, 'Cointreau', '/images/PRODUCTOS ABASTECETE/Licores y Tabaco/Coctelería/Cointreau.webp', 2, 1, NULL, NULL, NULL),
+	(571, 61, 'Jugo de limón para coctelería', '/images/PRODUCTOS ABASTECETE/Licores y Tabaco/Coctelería/Jugo de limón para coctelería.webp', 2, 1, NULL, NULL, NULL),
+	(572, 61, 'Jarabe de azúcar', '/images/PRODUCTOS ABASTECETE/Licores y Tabaco/Coctelería/Jarabe de azúcar.webp', 2, 1, NULL, NULL, NULL),
+	(573, 61, 'Bitters', '/images/PRODUCTOS ABASTECETE/Licores y Tabaco/Coctelería/Bitters.webp', 2, 1, NULL, NULL, NULL),
+	(574, 62, 'Cigarrillos mentolados', '/images/PRODUCTOS ABASTECETE/Licores y Tabaco/Cigarrillos y vapeadores/Cigarrillos mentolados.webp', 3, 1, NULL, NULL, NULL),
+	(575, 62, 'Cigarrillos light', '/images/PRODUCTOS ABASTECETE/Licores y Tabaco/Cigarrillos y vapeadores/Cigarrillos light.webp', 3, 1, NULL, NULL, NULL),
+	(576, 62, 'Vapeadores desechables', '/images/PRODUCTOS ABASTECETE/Licores y Tabaco/Cigarrillos y vapeadores/Vapeadores desechables.webp', 3, 1, NULL, NULL, NULL),
+	(577, 62, 'Vapeadores recargables', '/images/PRODUCTOS ABASTECETE/Licores y Tabaco/Cigarrillos y vapeadores/Vapeadores recargables.webp', 3, 1, NULL, NULL, NULL),
+	(578, 62, 'Pods de nicotina', '/images/PRODUCTOS ABASTECETE/Licores y Tabaco/Cigarrillos y vapeadores/Pods de nicotina.webp', 3, 1, NULL, NULL, NULL),
+	(579, 62, 'Líquidos para vapeadores', '/images/PRODUCTOS ABASTECETE/Licores y Tabaco/Cigarrillos y vapeadores/Líquidos para vapeadores.webp', 3, 1, NULL, NULL, NULL),
+	(580, 62, 'Cigarrillos electrónicos', '/images/PRODUCTOS ABASTECETE/Licores y Tabaco/Cigarrillos y vapeadores/Cigarrillos electrónicos.webp', 3, 1, NULL, NULL, NULL),
+	(581, 38, 'Chocolatería fina', '/images/PRODUCTOS ABASTECETE/Dulces y Chocolatería/Chocolatería fina/Chocolatería fina.webp', 3, 1, NULL, NULL, NULL),
+	(583, 51, 'Prueba', 'https://res.cloudinary.com/dwl5ggfhd/image/upload/v1766234586/productos/ffjleq3lqniflonmphg0.png', 3, 1, 'aaaaaaaaaaaaaaaa', 'prueba-000', 'productos/ffjleq3lqniflonmphg0'),
+	(584, 31, 'Prueba', 'https://res.cloudinary.com/dwl5ggfhd/image/upload/v1766466953/productos/fz4q2ofmamjmnlaapacg.png', 3, 2, 'aaaa', 'prueba-111', 'productos/fz4q2ofmamjmnlaapacg');
 
 -- Volcando estructura para tabla abastecete.productoslocal
 CREATE TABLE IF NOT EXISTS `productoslocal` (
@@ -5116,9 +6362,9 @@ CREATE TABLE IF NOT EXISTS `productoslocal` (
   CONSTRAINT `fk4` FOREIGN KEY (`FK_ID_UNIDAD`) REFERENCES `unidad` (`ID_UNIDAD`),
   CONSTRAINT `fk_estado` FOREIGN KEY (`FK_ESTADO`) REFERENCES `estado` (`PK_ID_ESTADO`),
   CONSTRAINT `fk_local` FOREIGN KEY (`FK_ID_LOCAL`) REFERENCES `local` (`PK_ID_LOCAL`)
-) ENGINE=InnoDB AUTO_INCREMENT=132 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=134 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla abastecete.productoslocal: ~28 rows (aproximadamente)
+-- Volcando datos para la tabla abastecete.productoslocal: ~30 rows (aproximadamente)
 INSERT INTO `productoslocal` (`PK_ID_PRODUCTS_LOCAL`, `FK_ID_PRODUCTO`, `FK_ID_UNIDAD`, `VALOR_PRODUCTS_LOCAL`, `FK_ID_LOCAL`, `FK_ESTADO`) VALUES
 	(104, 1, 6, 5000, 28, 1),
 	(105, 5, 6, 7000, 28, 1),
@@ -5147,7 +6393,9 @@ INSERT INTO `productoslocal` (`PK_ID_PRODUCTS_LOCAL`, `FK_ID_PRODUCTO`, `FK_ID_U
 	(128, 535, 5, 8000, 27, 1),
 	(129, 143, 1, 6000, 27, 1),
 	(130, 205, 1, 5000, 28, 1),
-	(131, 584, 10, 1, 28, 1);
+	(131, 584, 10, 1, 28, 1),
+	(132, 387, 10, 5000, 1, 1),
+	(133, 10, 1, 2500, 1, 1);
 
 -- Volcando estructura para procedimiento abastecete.productos_local
 DELIMITER //
@@ -5183,6 +6431,7 @@ CREATE TABLE IF NOT EXISTS `producto_marca` (
   `PK_ID` int NOT NULL AUTO_INCREMENT,
   `FK_ID_PRODUCTO` int NOT NULL,
   `FK_ID_MARCA` int NOT NULL,
+  `FK_ID_UNIDAD` int DEFAULT NULL,
   `FK_ID_LOCAL` int NOT NULL,
   `PRECIO` decimal(12,2) NOT NULL,
   `STOCK` int DEFAULT '0',
@@ -5193,38 +6442,40 @@ CREATE TABLE IF NOT EXISTS `producto_marca` (
   UNIQUE KEY `uk_producto_marca` (`FK_ID_PRODUCTO`,`FK_ID_MARCA`),
   KEY `fk_pm_marca` (`FK_ID_MARCA`),
   KEY `fk_pm_local` (`FK_ID_LOCAL`),
+  KEY `fk_pm_unidad` (`FK_ID_UNIDAD`),
   CONSTRAINT `fk_pm_local` FOREIGN KEY (`FK_ID_LOCAL`) REFERENCES `local` (`PK_ID_LOCAL`) ON DELETE CASCADE,
   CONSTRAINT `fk_pm_marca` FOREIGN KEY (`FK_ID_MARCA`) REFERENCES `marca` (`PK_ID_MARCA`) ON DELETE CASCADE,
-  CONSTRAINT `fk_pm_producto` FOREIGN KEY (`FK_ID_PRODUCTO`) REFERENCES `producto` (`PK_ID_PRODUCTO`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=33 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  CONSTRAINT `fk_pm_producto` FOREIGN KEY (`FK_ID_PRODUCTO`) REFERENCES `producto` (`PK_ID_PRODUCTO`) ON DELETE CASCADE,
+  CONSTRAINT `fk_pm_unidad` FOREIGN KEY (`FK_ID_UNIDAD`) REFERENCES `unidad` (`ID_UNIDAD`) ON DELETE SET NULL
+) ENGINE=InnoDB AUTO_INCREMENT=35 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Volcando datos para la tabla abastecete.producto_marca: ~25 rows (aproximadamente)
-INSERT INTO `producto_marca` (`PK_ID`, `FK_ID_PRODUCTO`, `FK_ID_MARCA`, `FK_ID_LOCAL`, `PRECIO`, `STOCK`, `DISPONIBLE`, `FECHA_REGISTRO`, `FECHA_ACTUALIZACION`) VALUES
-	(1, 1, 1, 28, 5000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
-	(2, 5, 1, 28, 7000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
-	(3, 34, 1, 28, 10000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
-	(4, 224, 1, 34, 2000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
-	(5, 227, 1, 35, 3000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
-	(6, 13, 1, 35, 4200.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
-	(7, 429, 1, 35, 11000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
-	(8, 462, 1, 35, 13500.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
-	(9, 90, 1, 35, 60000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
-	(10, 81, 1, 36, 10000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
-	(11, 189, 1, 36, 10000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
-	(12, 192, 1, 36, 20000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
-	(13, 360, 1, 36, 5000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
-	(14, 110, 1, 36, 13000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
-	(15, 111, 1, 36, 20000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
-	(16, 113, 1, 36, 8000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
-	(17, 267, 1, 36, 1000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
-	(18, 269, 1, 36, 2000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
-	(19, 173, 1, 36, 150000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
-	(20, 84, 1, 27, 20000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
-	(21, 355, 1, 27, 7000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
-	(22, 410, 1, 27, 2000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
-	(23, 535, 1, 27, 8000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
-	(24, 143, 1, 27, 6000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
-	(25, 205, 1, 28, 5000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04');
+INSERT INTO `producto_marca` (`PK_ID`, `FK_ID_PRODUCTO`, `FK_ID_MARCA`, `FK_ID_UNIDAD`, `FK_ID_LOCAL`, `PRECIO`, `STOCK`, `DISPONIBLE`, `FECHA_REGISTRO`, `FECHA_ACTUALIZACION`) VALUES
+	(1, 1, 1, NULL, 28, 5000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
+	(2, 5, 1, NULL, 28, 7000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
+	(3, 34, 1, NULL, 28, 10000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
+	(4, 224, 1, NULL, 34, 2000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
+	(5, 227, 1, NULL, 35, 3000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
+	(6, 13, 1, NULL, 35, 4200.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
+	(7, 429, 1, NULL, 35, 11000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
+	(8, 462, 1, NULL, 35, 13500.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
+	(9, 90, 1, NULL, 35, 60000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
+	(10, 81, 1, NULL, 36, 10000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
+	(11, 189, 1, NULL, 36, 10000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
+	(12, 192, 1, NULL, 36, 20000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
+	(13, 360, 1, NULL, 36, 5000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
+	(14, 110, 1, NULL, 36, 13000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
+	(15, 111, 1, NULL, 36, 20000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
+	(16, 113, 1, NULL, 36, 8000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
+	(17, 267, 1, NULL, 36, 1000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
+	(18, 269, 1, NULL, 36, 2000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
+	(19, 173, 1, NULL, 36, 150000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
+	(20, 84, 1, NULL, 27, 20000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
+	(21, 355, 1, NULL, 27, 7000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
+	(22, 410, 1, NULL, 27, 2000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
+	(23, 535, 1, NULL, 27, 8000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
+	(24, 143, 1, NULL, 27, 6000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
+	(25, 205, 1, NULL, 28, 5000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04');
 
 -- Volcando estructura para tabla abastecete.producto_marcas_disponibles
 CREATE TABLE IF NOT EXISTS `producto_marcas_disponibles` (
@@ -5976,6 +7227,11 @@ CREATE TABLE IF NOT EXISTS `referencias` (
   `FK_ID_CLIENTE_REFERIDO` int NOT NULL,
   `MEMBRESIA_COMPRADA` tinyint(1) DEFAULT '0',
   `FECHA_REFERENCIA` datetime DEFAULT CURRENT_TIMESTAMP,
+  `DESCUENTO_APLICADO_REFERIDO` decimal(10,2) DEFAULT NULL,
+  `DESCUENTO_APLICADO_DUENO` decimal(10,2) DEFAULT NULL,
+  `FK_ID_TIPO_MEMBRESIA_COMPRADA` int DEFAULT NULL,
+  `MONTO_COMPRA` decimal(10,2) DEFAULT NULL,
+  `FECHA_COMPRA` datetime DEFAULT NULL,
   PRIMARY KEY (`PK_ID_REFERENCIA`),
   KEY `FK_ID_DUENO_CODIGO` (`FK_ID_DUENO_CODIGO`),
   KEY `FK_ID_CLIENTE_REFERIDO` (`FK_ID_CLIENTE_REFERIDO`),
@@ -6123,68 +7379,34 @@ DELIMITER ;
 -- Volcando estructura para procedimiento abastecete.registrar_referencia
 DELIMITER //
 CREATE PROCEDURE `registrar_referencia`(
-    IN p_cliente_id INT,                  -- ID del cliente que usa el código
-    IN p_codigo_referido VARCHAR(20),     -- Código de recomendación ingresado
-    IN p_membresia_comprada BOOLEAN,      -- Si el cliente compró una membresía
-    OUT mensaje VARCHAR(500),             -- Mensaje de resultado
-    OUT resultado INT                     -- Resultado (0 = fallo, 1 = éxito)
+    IN p_id_usuario_referido INT,
+    IN p_codigo_referido VARCHAR(50)
 )
 BEGIN
-    DECLARE v_dueno_codigo_id INT;
-    DECLARE v_clientes_validos INT;
-    DECLARE v_finalizar BOOLEAN DEFAULT FALSE; -- Bandera para controlar la terminación
+    DECLARE v_id_dueno INT DEFAULT 0;
 
-    -- Inicializar el resultado
-    SET resultado = 0;
+    -- Buscar dueño del código
+    SELECT PK_ID_USUARIO INTO v_id_dueno
+    FROM usuario WHERE CODIGO_REFERIDO = p_codigo_referido AND ESTADO = 1
+    LIMIT 1;
 
-    -- Obtener el dueño del código de recomendación
-    SELECT PK_ID_USUARIO INTO v_dueno_codigo_id
-    FROM usuario u
-    INNER JOIN persona p ON u.FK_ID_PERSONA = p.PK_ID_PERSONA
-    WHERE p.CODIGO_REFERIDO = p_codigo_referido;
+    IF v_id_dueno > 0 AND v_id_dueno != p_id_usuario_referido THEN
+        -- Verificar que no exista ya
+        IF NOT EXISTS (
+            SELECT 1 FROM referencias
+            WHERE FK_ID_CLIENTE_REFERIDO = p_id_usuario_referido
+        ) THEN
+            INSERT INTO referencias (FK_ID_DUENO_CODIGO, FK_ID_CLIENTE_REFERIDO, MEMBRESIA_COMPRADA)
+            VALUES (v_id_dueno, p_id_usuario_referido, 0);
 
-    -- Validar si el código existe
-    IF v_dueno_codigo_id IS NULL THEN
-        SET mensaje = 'El código de recomendación no es válido.';
-        SET v_finalizar = TRUE;
-    END IF;
-
-    -- Si no hay errores, registrar la referencia
-    IF NOT v_finalizar THEN
-        INSERT INTO referencias (FK_ID_DUENO_CODIGO, FK_ID_CLIENTE_REFERIDO, MEMBRESIA_COMPRADA)
-        VALUES (v_dueno_codigo_id, p_cliente_id, p_membresia_comprada);
-
-        -- Si el cliente no compró membresía, actualizar clientes referidos válidos
-        IF NOT p_membresia_comprada THEN
-            -- Incrementar el conteo de clientes referidos válidos
+            -- Incrementar contador de referidos del dueño
             UPDATE usuario
-            SET CLIENTES_REFERIDOS_VALIDOS = CLIENTES_REFERIDOS_VALIDOS + 1
-            WHERE PK_ID_USUARIO = v_dueno_codigo_id;
-
-            -- Verificar si el dueño alcanzó 10 clientes referidos
-            SELECT CLIENTES_REFERIDOS_VALIDOS INTO v_clientes_validos
-            FROM usuario
-            WHERE PK_ID_USUARIO = v_dueno_codigo_id;
-
-            IF v_clientes_validos >= 10 THEN
-                -- Resetear los clientes válidos y actualizar el descuento
-                UPDATE usuario
-                SET CLIENTES_REFERIDOS_VALIDOS = 0,
-                    DESCUENTOS_ACUMULADOS = DESCUENTOS_ACUMULADOS + 1,
-                    FECHA_ULTIMO_DESCUENTO = NOW()
-                WHERE PK_ID_USUARIO = v_dueno_codigo_id;
-
-                SET mensaje = 'El dueño del código tiene 10 clientes referidos válidos y puede obtener un descuento.';
-            ELSE
-                SET mensaje = CONCAT('Referencia registrada. El dueño del código tiene ', v_clientes_validos, ' clientes referidos válidos.');
-            END IF;
-        ELSE
-            -- Si el cliente compró una membresía, aplicar el descuento directamente
-            SET mensaje = 'Referencia registrada. Descuento aplicado al dueño del código.';
+            SET CLIENTES_REFERIDOS_TOTAL = COALESCE(CLIENTES_REFERIDOS_TOTAL, 0) + 1
+            WHERE PK_ID_USUARIO = v_id_dueno;
         END IF;
-
-        SET resultado = 1;
     END IF;
+
+    SELECT v_id_dueno as id_dueno;
 END//
 DELIMITER ;
 
@@ -6296,9 +7518,9 @@ CREATE TABLE IF NOT EXISTS `resumen_analitica_diario` (
   UNIQUE KEY `uk_local_fecha` (`FK_ID_LOCAL`,`FECHA`),
   KEY `idx_resumen_fecha` (`FECHA`),
   CONSTRAINT `fk_resumen_local` FOREIGN KEY (`FK_ID_LOCAL`) REFERENCES `local` (`PK_ID_LOCAL`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=27 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=44 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla abastecete.resumen_analitica_diario: ~8 rows (aproximadamente)
+-- Volcando datos para la tabla abastecete.resumen_analitica_diario: ~10 rows (aproximadamente)
 INSERT INTO `resumen_analitica_diario` (`PK_ID_RESUMEN`, `FK_ID_LOCAL`, `FECHA`, `VISITAS_LOCAL`, `VISITAS_PRODUCTOS`, `CLICS_WHATSAPP`, `CLICS_TELEFONO`, `APARICIONES_BUSQUEDA`, `COMPARTIDOS`) VALUES
 	(1, 28, '2025-12-23', 6, 2, 1, 0, 4, 0),
 	(2, 35, '2025-12-23', 0, 0, 0, 0, 3, 0),
@@ -6309,7 +7531,7 @@ INSERT INTO `resumen_analitica_diario` (`PK_ID_RESUMEN`, `FK_ID_LOCAL`, `FECHA`,
 	(25, 36, '2025-12-27', 0, 0, 0, 0, 1, 0),
 	(26, 27, '2025-12-27', 0, 0, 0, 0, 1, 0),
 	(27, 1, '2025-12-29', 1, 0, 0, 0, 1, 0),
-	(29, 1, '2025-12-30', 1, 0, 0, 0, 1, 0);
+	(29, 1, '2025-12-30', 9, 2, 1, 0, 2, 0);
 
 -- Volcando estructura para tabla abastecete.resumen_producto_vistas
 CREATE TABLE IF NOT EXISTS `resumen_producto_vistas` (
@@ -6323,9 +7545,11 @@ CREATE TABLE IF NOT EXISTS `resumen_producto_vistas` (
   KEY `idx_producto_local` (`FK_ID_LOCAL`),
   CONSTRAINT `fk_resumen_producto` FOREIGN KEY (`FK_ID_PRODUCTO`) REFERENCES `producto` (`PK_ID_PRODUCTO`) ON DELETE CASCADE,
   CONSTRAINT `fk_resumen_producto_local` FOREIGN KEY (`FK_ID_LOCAL`) REFERENCES `local` (`PK_ID_LOCAL`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla abastecete.resumen_producto_vistas: ~0 rows (aproximadamente)
+-- Volcando datos para la tabla abastecete.resumen_producto_vistas: ~1 rows (aproximadamente)
+INSERT INTO `resumen_producto_vistas` (`PK_ID_RESUMEN`, `FK_ID_PRODUCTO`, `FK_ID_LOCAL`, `FECHA`, `VISTAS`) VALUES
+	(1, 10, 1, '2025-12-30', 1);
 
 -- Volcando estructura para procedimiento abastecete.revisar_imagen_galeria
 DELIMITER //
@@ -6349,16 +7573,18 @@ DELIMITER ;
 DELIMITER //
 CREATE PROCEDURE `sp_actualizar_marca_producto`(
     IN p_id INT,
+    IN p_id_unidad INT,
     IN p_precio DECIMAL(12,2),
     IN p_stock INT,
     IN p_disponible TINYINT
 )
 BEGIN
     UPDATE producto_marca
-    SET PRECIO = p_precio,
-        STOCK = COALESCE(p_stock, STOCK),
-        DISPONIBLE = COALESCE(p_disponible, DISPONIBLE),
-        FECHA_ACTUALIZACION = CURRENT_TIMESTAMP
+    SET FK_ID_UNIDAD = NULLIF(p_id_unidad, 0),
+        PRECIO = p_precio,
+        STOCK = p_stock,
+        DISPONIBLE = p_disponible,
+        FECHA_ACTUALIZACION = NOW()
     WHERE PK_ID = p_id;
 
     SELECT ROW_COUNT() as FilasAfectadas;
@@ -6371,20 +7597,40 @@ CREATE PROCEDURE `sp_agregar_marca_producto`(
     IN p_id_local INT,
     IN p_id_producto INT,
     IN p_id_marca INT,
+    IN p_id_unidad INT,
     IN p_precio DECIMAL(12,2),
     IN p_stock INT,
     IN p_disponible TINYINT
 )
 BEGIN
-    INSERT INTO producto_marca (FK_ID_LOCAL, FK_ID_PRODUCTO, FK_ID_MARCA, PRECIO, STOCK, DISPONIBLE)
-    VALUES (p_id_local, p_id_producto, p_id_marca, p_precio, COALESCE(p_stock, 0), COALESCE(p_disponible, 1))
-    ON DUPLICATE KEY UPDATE
-        PRECIO = p_precio,
-        STOCK = COALESCE(p_stock, STOCK),
-        DISPONIBLE = COALESCE(p_disponible, DISPONIBLE),
-        FECHA_ACTUALIZACION = CURRENT_TIMESTAMP;
+    DECLARE v_existing_id INT DEFAULT 0;
 
-    SELECT LAST_INSERT_ID() as Id;
+    -- Verificar si ya existe esta combinación
+    SELECT PK_ID INTO v_existing_id
+    FROM producto_marca
+    WHERE FK_ID_LOCAL = p_id_local
+      AND FK_ID_PRODUCTO = p_id_producto
+      AND FK_ID_MARCA = p_id_marca
+      AND ((FK_ID_UNIDAD = p_id_unidad) OR (FK_ID_UNIDAD IS NULL AND (p_id_unidad IS NULL OR p_id_unidad = 0)))
+    LIMIT 1;
+
+    IF v_existing_id > 0 THEN
+        -- Ya existe, actualizar
+        UPDATE producto_marca
+        SET PRECIO = p_precio,
+            STOCK = p_stock,
+            DISPONIBLE = p_disponible,
+            FECHA_ACTUALIZACION = NOW()
+        WHERE PK_ID = v_existing_id;
+
+        SELECT v_existing_id as Id, 'Presentación actualizada' as Mensaje;
+    ELSE
+        -- No existe, insertar
+        INSERT INTO producto_marca (FK_ID_LOCAL, FK_ID_PRODUCTO, FK_ID_MARCA, FK_ID_UNIDAD, PRECIO, STOCK, DISPONIBLE)
+        VALUES (p_id_local, p_id_producto, p_id_marca, NULLIF(p_id_unidad, 0), p_precio, p_stock, p_disponible);
+
+        SELECT LAST_INSERT_ID() as Id, 'Presentación creada' as Mensaje;
+    END IF;
 END//
 DELIMITER ;
 
@@ -6550,6 +7796,8 @@ BEGIN
         pm.FK_ID_MARCA as IdMarca,
         m.NOMBRE as NombreMarca,
         m.LOGO_URL as LogoMarca,
+        pm.FK_ID_UNIDAD as IdUnidad,
+        COALESCE(u.NOMBRE_UNIDAD, '') as NombreUnidad,
         pm.PRECIO as Precio,
         pm.STOCK as Stock,
         pm.DISPONIBLE as Disponible,
@@ -6557,6 +7805,7 @@ BEGIN
         pm.FECHA_ACTUALIZACION as FechaActualizacion
     FROM producto_marca pm
     INNER JOIN marca m ON pm.FK_ID_MARCA = m.PK_ID_MARCA
+    LEFT JOIN unidad u ON pm.FK_ID_UNIDAD = u.ID_UNIDAD
     WHERE pm.FK_ID_LOCAL = p_id_local
       AND pm.FK_ID_PRODUCTO = p_id_producto
     ORDER BY pm.PRECIO ASC;
@@ -6898,9 +8147,9 @@ CREATE TABLE IF NOT EXISTS `suscripcion` (
   KEY `idx_suscripcion_local_estado` (`FK_ID_LOCAL`,`ESTADO`),
   CONSTRAINT `FK_suscripcion_local` FOREIGN KEY (`FK_ID_LOCAL`) REFERENCES `local` (`PK_ID_LOCAL`) ON DELETE CASCADE,
   CONSTRAINT `FK_suscripcion_tipo` FOREIGN KEY (`FK_ID_TIPO_MEMBRESIA`) REFERENCES `tipo_membresia` (`PK_ID_TIPO_MEMBRESIA`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla abastecete.suscripcion: ~0 rows (aproximadamente)
+-- Volcando datos para la tabla abastecete.suscripcion: ~1 rows (aproximadamente)
 INSERT INTO `suscripcion` (`PK_ID_SUSCRIPCION`, `FK_ID_LOCAL`, `FK_ID_TIPO_MEMBRESIA`, `ESTADO`, `FECHA_INICIO`, `FECHA_FIN`, `FECHA_CREACION`, `MONTO_PAGADO`, `METODO_PAGO`, `PERIODO`, `NOTAS`) VALUES
 	(1, 1, 1, 1, '2025-12-29 21:42:57', '2026-01-28 21:42:57', '2025-12-29 21:42:57', NULL, NULL, 'MENSUAL', NULL);
 
@@ -7083,6 +8332,8 @@ CREATE TABLE IF NOT EXISTS `usuario` (
   `CLIENTES_REFERIDOS_TOTAL` int DEFAULT '0',
   `INTENTOS_RECUPERACION` int DEFAULT '0',
   `FECHA_ULTIMO_INTENTO_RECUPERACION` datetime DEFAULT NULL,
+  `CREDITO_REFERIDOS` decimal(10,2) DEFAULT '0.00',
+  `YA_USO_DESCUENTO_REFERIDO` tinyint(1) DEFAULT '0',
   PRIMARY KEY (`PK_ID_USUARIO`),
   UNIQUE KEY `UQ_NOMBRE_USUARIO` (`NOMBRE_USUARIO`),
   KEY `FK_usuario_tipo_autenticacion` (`TIPO_AUTENTICACION`),
@@ -7092,9 +8343,10 @@ CREATE TABLE IF NOT EXISTS `usuario` (
   KEY `idx_usuario_codigo_referido` (`CODIGO_REFERIDO`),
   KEY `FK_usuario_tipo_documento` (`FK_ID_TIPO_DOCUMENTO`),
   KEY `idx_usuario_nombre_usuario` (`NOMBRE_USUARIO`),
+  KEY `idx_usuario_nombre_estado` (`NOMBRE_USUARIO`,`ESTADO`),
   CONSTRAINT `FK_usuario_tipo_autenticacion` FOREIGN KEY (`TIPO_AUTENTICACION`) REFERENCES `metodo_autenticacion` (`PK_ID_METODO_AUTENTICACION`),
   CONSTRAINT `FK_usuario_tipo_documento` FOREIGN KEY (`FK_ID_TIPO_DOCUMENTO`) REFERENCES `tipo_documento` (`PK_ID_TIPO_DOCUMENTO`) ON DELETE SET NULL ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Volcando datos para la tabla abastecete.usuario: ~2 rows (aproximadamente)
 INSERT INTO `usuario` (`PK_ID_USUARIO`, `NOMBRES`, `APELLIDOS`, `TELEFONO`, `DOCUMENTO_IDENTIDAD`, `FK_ID_TIPO_DOCUMENTO`, `CODIGO_REFERIDO`, `CODIGO_REFERIDO_USADO`, `NOMBRE_USUARIO`, `CONTRASENIA`, `TOKEN_RECUPERACION`, `FECHA_EXPIRACION_TOKEN`, `TIPO_AUTENTICACION`, `INTENTOS_FALLIDOS`, `FECHA_BLOQUEO`, `CORREO_VERIFICADO`, `ESTADO`, `CLIENTES_REFERIDOS_TOTAL`, `INTENTOS_RECUPERACION`, `FECHA_ULTIMO_INTENTO_RECUPERACION`, `CREDITO_REFERIDOS`, `YA_USO_DESCUENTO_REFERIDO`) VALUES
@@ -7113,9 +8365,10 @@ CREATE TABLE IF NOT EXISTS `usuario_permiso` (
   UNIQUE KEY `UK_usuario_permiso` (`FK_ID_USUARIO`,`FK_ID_PERMISO`),
   KEY `idx_usuario_permiso_usuario` (`FK_ID_USUARIO`,`ESTADO`),
   KEY `FK_usuario_permiso_permiso` (`FK_ID_PERMISO`),
+  KEY `idx_usuario_permiso_estado` (`FK_ID_USUARIO`,`ESTADO`),
   CONSTRAINT `FK_usuario_permiso_permiso` FOREIGN KEY (`FK_ID_PERMISO`) REFERENCES `permiso` (`PK_ID_PERMISO`) ON DELETE CASCADE,
   CONSTRAINT `usuario_permiso_ibfk_1` FOREIGN KEY (`FK_ID_USUARIO`) REFERENCES `usuario` (`PK_ID_USUARIO`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=31 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Volcando datos para la tabla abastecete.usuario_permiso: ~21 rows (aproximadamente)
 INSERT INTO `usuario_permiso` (`PK_ID`, `FK_ID_USUARIO`, `FK_ID_PERMISO`, `FECHA_ASIGNACION`, `ORIGEN`, `ESTADO`) VALUES
@@ -7139,7 +8392,50 @@ INSERT INTO `usuario_permiso` (`PK_ID`, `FK_ID_USUARIO`, `FK_ID_PERMISO`, `FECHA
 	(20, 2, 32, '2025-12-29 21:42:59', 'MEMBRESIA', 1),
 	(21, 2, 35, '2025-12-29 21:42:59', 'MEMBRESIA', 1),
 	(22, 2, 36, '2025-12-29 21:42:59', 'MEMBRESIA', 1),
-	(23, 2, 37, '2025-12-29 21:42:59', 'MEMBRESIA', 1);
+	(23, 2, 37, '2025-12-29 21:42:59', 'MEMBRESIA', 1),
+	(31, 1, 39, '2025-12-30 18:48:25', 'ADMIN', 1);
+
+-- Volcando estructura para procedimiento abastecete.validar_codigo_referido
+DELIMITER //
+CREATE PROCEDURE `validar_codigo_referido`(
+    IN p_codigo VARCHAR(50),
+    IN p_id_usuario_actual INT
+)
+BEGIN
+    DECLARE v_id_dueno INT DEFAULT 0;
+    DECLARE v_nombre_dueno VARCHAR(200);
+    DECLARE v_codigo_valido TINYINT DEFAULT 0;
+    DECLARE v_mensaje VARCHAR(200);
+    DECLARE v_descuento_activo TINYINT DEFAULT 0;
+
+    -- Verificar si el sistema de descuentos está activo
+    SELECT DESCUENTO_ACTIVO INTO v_descuento_activo
+    FROM configuracion_referidos LIMIT 1;
+
+    IF v_descuento_activo = 0 THEN
+        SELECT 0 AS valido, 'El sistema de referidos no está activo' AS mensaje,
+               0 AS id_dueno, NULL AS nombre_dueno;
+    ELSE
+        -- Buscar el dueño del código
+        SELECT PK_ID_USUARIO, CONCAT(NOMBRES, ' ', APELLIDOS)
+        INTO v_id_dueno, v_nombre_dueno
+        FROM usuario
+        WHERE CODIGO_REFERIDO = p_codigo AND ESTADO = 1
+        LIMIT 1;
+
+        IF v_id_dueno = 0 OR v_id_dueno IS NULL THEN
+            SELECT 0 AS valido, 'Código de referido no válido' AS mensaje,
+                   0 AS id_dueno, NULL AS nombre_dueno;
+        ELSEIF v_id_dueno = p_id_usuario_actual THEN
+            SELECT 0 AS valido, 'No puedes usar tu propio código' AS mensaje,
+                   0 AS id_dueno, NULL AS nombre_dueno;
+        ELSE
+            SELECT 1 AS valido, 'Código válido' AS mensaje,
+                   v_id_dueno AS id_dueno, v_nombre_dueno AS nombre_dueno;
+        END IF;
+    END IF;
+END//
+DELIMITER ;
 
 -- Volcando estructura para procedimiento abastecete.validar_limite_ofertas_flash
 DELIMITER //

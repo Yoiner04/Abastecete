@@ -30,6 +30,9 @@ namespace BusinessLogic
                     TipoDescuentoDueno = row["TIPO_DESCUENTO_DUENO"].ToString() ?? "PORCENTAJE",
                     ValorDescuentoDueno = Convert.ToDecimal(row["VALOR_DESCUENTO_DUENO"]),
                     DescuentoActivo = Convert.ToInt32(row["DESCUENTO_ACTIVO"]) == 1,
+                    LimiteUsosCodigo = row.Table.Columns.Contains("LIMITE_USOS_CODIGO") && row["LIMITE_USOS_CODIGO"] != DBNull.Value
+                        ? Convert.ToInt32(row["LIMITE_USOS_CODIGO"])
+                        : 0,
                     FechaActualizacion = row["FECHA_ACTUALIZACION"] != DBNull.Value
                         ? Convert.ToDateTime(row["FECHA_ACTUALIZACION"])
                         : (DateTime?)null,
@@ -54,6 +57,7 @@ namespace BusinessLogic
                 new Parametro("p_tipo_descuento_dueno", config.TipoDescuentoDueno),
                 new Parametro("p_valor_descuento_dueno", config.ValorDescuentoDueno),
                 new Parametro("p_descuento_activo", config.DescuentoActivo ? 1 : 0),
+                new Parametro("p_limite_usos_codigo", config.LimiteUsosCodigo),
                 new Parametro("p_usuario_id", usuarioId)
             };
 

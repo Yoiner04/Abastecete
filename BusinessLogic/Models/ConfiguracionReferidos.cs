@@ -10,6 +10,7 @@ namespace BusinessLogic.Models
         public string TipoDescuentoDueno { get; set; } = "PORCENTAJE";
         public decimal ValorDescuentoDueno { get; set; } = 10;
         public bool DescuentoActivo { get; set; } = true;
+        public int LimiteUsosCodigo { get; set; } = 0; // 0 = Ilimitado
         public DateTime? FechaActualizacion { get; set; }
         public int? ActualizadoPor { get; set; }
     }

@@ -13,6 +13,12 @@
     <link rel="stylesheet" href="~/css/styles.css" asp-append-version="true" />
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
+        /* Fondo que cubre toda la pantalla */
+        html, body {
+            min-height: 100vh;
+            background-color: #f9fafb !important;
+        }
+
         /* Animaciones de entrada */
         @@keyframes fadeInUp {
             from {
@@ -171,6 +177,65 @@
         .lightbox {
             transition: opacity 0.3s ease;
         }
+
+        /* Modal moderno con animaciones fluidas */
+        .modal-backdrop {
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .modal-backdrop.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        .modal-backdrop .modal-bg {
+            transition: opacity 0.3s ease;
+        }
+        .modal-backdrop .modal-content {
+            transform: scale(0.9) translateY(20px);
+            opacity: 0;
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
+        }
+        .modal-backdrop.show .modal-content {
+            transform: scale(1) translateY(0);
+            opacity: 1;
+        }
+
+        /* Scrollbar personalizado para modal */
+        .scrollbar-thin::-webkit-scrollbar {
+            width: 4px;
+        }
+        .scrollbar-thin::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .scrollbar-thin::-webkit-scrollbar-thumb {
+            background: #e5e7eb;
+            border-radius: 2px;
+        }
+        .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+            background: #d1d5db;
+        }
+
+        /* Animación de items en lista */
+        .marca-item {
+            animation: slideInItem 0.3s ease forwards;
+            opacity: 0;
+        }
+        @@keyframes slideInItem {
+            from {
+                opacity: 0;
+                transform: translateX(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        .marca-item:nth-child(1) { animation-delay: 0.05s; }
+        .marca-item:nth-child(2) { animation-delay: 0.1s; }
+        .marca-item:nth-child(3) { animation-delay: 0.15s; }
+        .marca-item:nth-child(4) { animation-delay: 0.2s; }
+        .marca-item:nth-child(5) { animation-delay: 0.25s; }
     </style>
 </head>
 
@@ -257,7 +322,7 @@
         </div>
     </header>
 
-    <div id="mensaje-modal" class="fixed inset-0 z-50 hidden bg-black/50 transition-opacity duration-300">
+    <div id="mensaje-modal" class="fixed inset-0 z-50 hidden bg-black/15 transition-opacity duration-300">
         <div class="flex min-h-screen items-center justify-center">
             <div class="w-full max-w-md rounded-lg p-6 shadow-lg" style="background-color: #F4F1E9;">
                 <div class="flex justify-center">
@@ -443,28 +508,12 @@
                                          class="producto-image h-full w-full object-contain p-1"
                                          loading="lazy" />
 
-                                    <!-- Overlay con acciones -->
-                                    <div class="producto-overlay absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent flex items-center justify-center gap-1">
-                                        <button onclick="mostrarDetalle('@producto.Nombre.Replace("'", "\\'"))', '@producto.Precio', '@producto.ImagenUrl', @producto.Id)"
-                                                class="w-6 h-6 rounded-full bg-white/95 backdrop-blur-sm flex items-center justify-center text-gray-700 hover:bg-green-500 hover:text-white transition-all shadow-lg hover:scale-110"
-                                                title="Ver detalle">
-                                            <i class="fas fa-eye text-[10px]"></i>
-                                        </button>
-                                        <button onclick="abrirModalMarcas(@producto.Id, '@producto.Nombre.Replace("'", "\\'")')"
-                                                class="w-6 h-6 rounded-full bg-white/95 backdrop-blur-sm flex items-center justify-center text-gray-700 hover:bg-indigo-500 hover:text-white transition-all shadow-lg hover:scale-110"
-                                                title="Gestionar marcas">
-                                            <i class="fas fa-tags text-[10px]"></i>
-                                        </button>
-                                        <button onclick="abrirModalEditar(@producto.Id, '@producto.Nombre.Replace("'", "\\'")', '@producto.Precio', '@producto.ImagenUrl')"
-                                                class="w-6 h-6 rounded-full bg-white/95 backdrop-blur-sm flex items-center justify-center text-gray-700 hover:bg-orange-500 hover:text-white transition-all shadow-lg hover:scale-110"
-                                                title="Editar producto">
-                                            <i class="fas fa-pen text-[10px]"></i>
-                                        </button>
-                                        <button onclick="confirmarEliminar(@producto.Id, '@producto.Nombre.Replace("'", "\\'")')"
-                                                class="w-6 h-6 rounded-full bg-white/95 backdrop-blur-sm flex items-center justify-center text-gray-700 hover:bg-red-500 hover:text-white transition-all shadow-lg hover:scale-110"
-                                                title="Eliminar producto">
-                                            <i class="fas fa-trash text-[10px]"></i>
-                                        </button>
+                                    <!-- Overlay simplificado - clic en toda la imagen abre el modal -->
+                                    <div class="producto-overlay absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent flex items-center justify-center cursor-pointer"
+                                         onclick="mostrarDetalle('@producto.Nombre.Replace("'", "\\'"))', '@producto.Precio', '@producto.ImagenUrl', @producto.Id, '@(producto.Unidad?.Nombre ?? "")')">
+                                        <div class="w-10 h-10 rounded-full bg-white/95 backdrop-blur-sm flex items-center justify-center text-gray-600 hover:bg-emerald-500 hover:text-white transition-all duration-300 shadow-xl transform hover:scale-110">
+                                            <i class="fas fa-eye text-base"></i>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -473,11 +522,26 @@
                                     <h3 class="text-xs font-medium text-gray-800 line-clamp-1 group-hover:text-green-600 transition-colors">
                                         @producto.Nombre
                                     </h3>
-                                    <div class="mt-0.5 flex items-center justify-between">
-                                        <p class="text-sm font-bold text-orange-500">$@producto.Precio</p>
-                                        @if (producto.Unidad?.Nombre != null)
+                                    <div class="mt-0.5">
+                                        @if (producto.TieneMultiplesMarcas && producto.PrecioMinimo.HasValue)
                                         {
-                                            <span class="text-[10px] text-gray-500 bg-gray-100 px-1 py-0.5 rounded">@producto.Unidad.Nombre</span>
+                                            <div class="flex items-center justify-between">
+                                                <div>
+                                                    <span class="text-[10px] text-gray-500">Desde</span>
+                                                    <p class="text-sm font-bold text-orange-500">$@producto.PrecioMinimo.Value.ToString("N0")</p>
+                                                </div>
+                                                <span class="text-[9px] text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded-full font-medium">@producto.CantidadMarcas marcas</span>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <div class="flex items-center justify-between">
+                                                <p class="text-sm font-bold text-orange-500">$@producto.Precio</p>
+                                                @if (producto.Unidad?.Nombre != null)
+                                                {
+                                                    <span class="text-[10px] text-gray-500 bg-gray-100 px-1 py-0.5 rounded">@producto.Unidad.Nombre</span>
+                                                }
+                                            </div>
                                         }
                                     </div>
                                 </div>
@@ -841,66 +905,140 @@
             </div>
         </div>
 
-        <!-- Panel lateral de detalle de producto (Modal overlay) -->
-        <div id="detalleOverlay" class="fixed inset-0 bg-black/50 z-40 hidden" onclick="ocultarDetalle()"></div>
-        <div id="detalleProducto"
-             class="panel-detalle fixed right-0 top-0 h-full w-80 max-w-[90vw] bg-white shadow-2xl z-50 overflow-y-auto transform translate-x-full transition-transform duration-300 ease-out border-l border-gray-200">
+        <!-- Modal de detalle de producto - Unificado con presentaciones -->
+        <div id="detalleModal" class="modal-backdrop fixed inset-0 z-50 hidden">
+            <!-- Fondo blur transparente -->
+            <div class="absolute inset-0 modal-bg backdrop-blur-md" style="background-color: transparent !important;"></div>
 
-            <!-- Header del panel -->
-            <div class="sticky top-0 bg-gradient-to-r from-[#23916A] to-emerald-500 px-4 py-3 flex items-center justify-between z-10">
-                <h3 class="text-sm font-bold text-white flex items-center gap-2">
-                    <i class="fas fa-box text-xs"></i>
-                    Detalle del Producto
-                </h3>
-                <button onclick="ocultarDetalle()"
-                        class="w-7 h-7 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-white transition-colors">
-                    <i class="fas fa-times text-sm"></i>
-                </button>
-            </div>
+            <!-- Contenedor del modal -->
+            <div class="flex min-h-screen items-center justify-center p-4 relative">
+                <div class="modal-content w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden">
 
-            <!-- Contenido del panel -->
-            <div class="p-4">
-                <!-- Imagen compacta -->
-                <div class="relative mb-4">
-                    <div class="aspect-square rounded-xl overflow-hidden bg-gray-50 border border-gray-200">
-                        <img id="detalleImagen" src="" alt="Producto" class="w-full h-full object-contain p-2" />
-                    </div>
-                    <!-- Badge del local pequeño -->
-                    <div class="absolute top-2 left-2 flex items-center gap-1.5 bg-white/95 backdrop-blur-sm px-2 py-1 rounded-full shadow text-xs">
-                        <div class="w-5 h-5 rounded-full overflow-hidden bg-gray-100 flex-shrink-0">
-                            @if (!string.IsNullOrWhiteSpace(Model.Negocio?.imagen?.Base64))
-                            {
-                                <img src="@Model.Negocio.imagen.Base64" alt="Logo" class="w-full h-full object-cover" />
-                            }
-                            else
-                            {
-                                <div class="w-full h-full flex items-center justify-center">
-                                    <i class="fas fa-store text-gray-400 text-[8px]"></i>
-                                </div>
-                            }
+                    <!-- Header compacto con imagen -->
+                    <div class="relative bg-gradient-to-br from-gray-50 to-gray-100">
+                        <div class="h-44 flex items-center justify-center p-4">
+                            <img id="detalleImagen" src="" alt="Producto" class="max-h-full max-w-full object-contain" />
                         </div>
-                        <span class="font-medium text-gray-600 truncate max-w-[100px]">@Model.Negocio?.Nombre</span>
+
+                        <!-- Botón cerrar flotante -->
+                        <button onclick="cerrarModalDetalle()"
+                                class="absolute top-3 right-3 w-8 h-8 rounded-full bg-gray-800/60 flex items-center justify-center text-white hover:bg-gray-800/80 transition-all">
+                            <i class="fas fa-times text-sm"></i>
+                        </button>
+
+                        <!-- Badge del local -->
+                        <div class="absolute bottom-3 left-3 flex items-center gap-2 bg-white/95 px-2.5 py-1.5 rounded-full shadow-md">
+                            <div class="w-5 h-5 rounded-full overflow-hidden bg-gray-100 flex-shrink-0">
+                                @if (!string.IsNullOrWhiteSpace(Model.Negocio?.imagen?.Base64))
+                                {
+                                    <img src="@Model.Negocio.imagen.Base64" alt="Logo" class="w-full h-full object-cover" />
+                                }
+                                else
+                                {
+                                    <div class="w-full h-full flex items-center justify-center bg-emerald-100">
+                                        <i class="fas fa-store text-emerald-500 text-[8px]"></i>
+                                    </div>
+                                }
+                            </div>
+                            <span class="font-medium text-gray-700 text-xs">@Model.Negocio?.Nombre</span>
+                        </div>
                     </div>
-                </div>
 
-                <!-- Info del producto -->
-                <div class="mb-4">
-                    <h4 id="detalleNombre" class="text-base font-bold text-gray-800 mb-1 leading-snug"></h4>
-                    <p id="detallePrecio" class="text-2xl font-bold text-green-600"></p>
-                </div>
+                    <!-- Contenido -->
+                    <div class="p-4">
+                        <input type="hidden" id="detalleProductoId" />
 
-                <!-- Acciones -->
-                <div class="space-y-2">
-                    <button id="btnEditarDetalle"
-                            class="w-full py-2.5 rounded-lg bg-orange-500 text-white text-sm font-semibold hover:bg-orange-600 transition-colors flex items-center justify-center gap-2">
-                        <i class="fas fa-pen text-xs"></i>
-                        Editar producto
-                    </button>
-                    <button id="btnEliminarDetalle"
-                            class="w-full py-2.5 rounded-lg bg-white border border-red-200 text-red-600 text-sm font-semibold hover:bg-red-50 transition-colors flex items-center justify-center gap-2">
-                        <i class="fas fa-trash text-xs"></i>
-                        Eliminar producto
-                    </button>
+                        <!-- Nombre y precio -->
+                        <div class="flex items-start justify-between mb-3">
+                            <div class="flex-1">
+                                <h3 id="detalleNombre" class="text-lg font-bold text-gray-800"></h3>
+                                <p id="detalleUnidad" class="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
+                                    <i class="fas fa-balance-scale text-gray-400 text-[10px]"></i>
+                                    <span></span>
+                                </p>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-[10px] text-emerald-600 font-medium">DESDE</span>
+                                <p id="detallePrecioMinimo" class="text-xl font-bold text-emerald-600"></p>
+                                <p id="detallePrecioMaximo" class="text-xs text-gray-500 hidden">hasta <span></span></p>
+                            </div>
+                        </div>
+
+                        <!-- Presentaciones - Lista y Formulario unificados -->
+                        <div class="bg-gray-50 rounded-xl p-3 mb-3">
+                            <div class="flex items-center justify-between mb-2">
+                                <h5 class="text-xs font-semibold text-gray-700 flex items-center gap-1.5">
+                                    <i class="fas fa-layer-group text-indigo-500 text-[10px]"></i>
+                                    Presentaciones
+                                </h5>
+                                <button id="btnToggleFormPresentacion" onclick="toggleFormPresentacion()"
+                                        class="text-[10px] text-indigo-600 hover:text-indigo-700 font-medium flex items-center gap-1">
+                                    <i class="fas fa-plus text-[8px]"></i>
+                                    Nueva
+                                </button>
+                            </div>
+
+                            <!-- Lista de presentaciones -->
+                            <div id="detalleMarcasLista" class="space-y-1.5 max-h-28 overflow-y-auto scrollbar-thin mb-2">
+                                <!-- Las marcas se cargan dinámicamente -->
+                            </div>
+
+                            <div id="detalleMarcasVacio" class="hidden py-3 text-center">
+                                <i class="fas fa-box-open text-gray-300 text-xl mb-1"></i>
+                                <p class="text-xs text-gray-400">Sin presentaciones</p>
+                            </div>
+
+                            <!-- Formulario agregar (oculto por defecto) -->
+                            <div id="formNuevaPresentacion" class="hidden border-t border-gray-200 pt-3 mt-2">
+                                <div class="grid grid-cols-3 gap-2 mb-2">
+                                    <div>
+                                        <label class="block text-[10px] text-gray-500 mb-0.5">Marca</label>
+                                        <select id="nueva-marca-select" class="w-full px-2 py-1.5 rounded-lg border border-gray-200 text-xs focus:border-indigo-500 outline-none bg-white">
+                                            <option value="">Seleccionar</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] text-gray-500 mb-0.5">Medida</label>
+                                        <select id="nueva-unidad-select" class="w-full px-2 py-1.5 rounded-lg border border-gray-200 text-xs focus:border-indigo-500 outline-none bg-white">
+                                            <option value="">Sin medida</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] text-gray-500 mb-0.5">Precio</label>
+                                        <div class="relative">
+                                            <span class="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs">$</span>
+                                            <input type="number" id="nueva-marca-precio" min="0" step="100" placeholder="0"
+                                                   class="w-full pl-5 pr-2 py-1.5 rounded-lg border border-gray-200 text-xs focus:border-indigo-500 outline-none" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flex gap-2">
+                                    <button onclick="toggleFormPresentacion()"
+                                            class="flex-1 py-1.5 rounded-lg border border-gray-200 text-gray-600 font-medium text-xs hover:bg-gray-100 transition-all">
+                                        Cancelar
+                                    </button>
+                                    <button onclick="agregarPresentacionDirecto()"
+                                            class="flex-1 py-1.5 rounded-lg bg-indigo-600 text-white font-medium text-xs hover:bg-indigo-700 transition-all flex items-center justify-center gap-1">
+                                        <i class="fas fa-plus text-[8px]"></i>
+                                        Agregar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Acciones del producto -->
+                        <div class="flex gap-2">
+                            <button id="btnEditarDetalle"
+                                    class="flex-1 py-2 rounded-xl bg-gray-100 text-gray-700 font-medium text-sm hover:bg-gray-200 transition-all flex items-center justify-center gap-2">
+                                <i class="fas fa-pen text-xs text-gray-500"></i>
+                                Editar producto
+                            </button>
+                            <button id="btnEliminarDetalle"
+                                    class="py-2 px-3 rounded-xl bg-red-50 text-red-600 font-medium hover:bg-red-100 transition-all flex items-center justify-center">
+                                <i class="fas fa-trash text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -915,7 +1053,7 @@
     </div>
 
     <!-- Modal de edición de producto -->
-    <div id="editar-modal" class="fixed inset-0 z-50 hidden bg-black/50 transition-opacity duration-300">
+    <div id="editar-modal" class="fixed inset-0 z-50 hidden transition-opacity duration-300 backdrop-blur-md" style="background-color: transparent !important;">
         <div class="flex min-h-screen items-center justify-center p-4">
             <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
                 <div class="flex items-center justify-between mb-4">
@@ -979,7 +1117,7 @@
     </div>
 
     <!-- Modal de confirmación de eliminación -->
-    <div id="eliminar-modal" class="fixed inset-0 z-50 hidden bg-black/50 transition-opacity duration-300">
+    <div id="eliminar-modal" class="fixed inset-0 z-50 hidden transition-opacity duration-300 backdrop-blur-md" style="background-color: transparent !important;">
         <div class="flex min-h-screen items-center justify-center p-4">
             <div class="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl text-center">
                 <div class="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
@@ -1004,85 +1142,6 @@
         </div>
     </div>
 
-    <!-- Modal de gestión de marcas -->
-    <div id="marcas-modal" class="fixed inset-0 z-50 hidden bg-black/50 transition-opacity duration-300">
-        <div class="flex min-h-screen items-center justify-center p-4">
-            <div class="w-full max-w-lg rounded-2xl bg-white shadow-xl overflow-hidden">
-                <!-- Header -->
-                <div class="bg-gradient-to-r from-indigo-600 to-purple-600 px-6 py-4">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <h2 class="text-lg font-bold text-white flex items-center gap-2">
-                                <i class="fas fa-tags"></i>
-                                Gestionar Marcas
-                            </h2>
-                            <p id="marcas-producto-nombre" class="text-sm text-white/80"></p>
-                        </div>
-                        <button onclick="cerrarModalMarcas()"
-                                class="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-white transition-colors">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                </div>
-
-                <div class="p-6">
-                    <input type="hidden" id="marcas-producto-id" />
-
-                    <!-- Lista de marcas actuales -->
-                    <div class="mb-6">
-                        <h4 class="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                            <i class="fas fa-list text-indigo-500"></i>
-                            Marcas configuradas
-                        </h4>
-                        <div id="marcas-lista" class="space-y-2 max-h-48 overflow-y-auto">
-                            <!-- Las marcas se cargan dinámicamente -->
-                        </div>
-                        <div id="marcas-vacio" class="hidden py-6 text-center">
-                            <i class="fas fa-box-open text-3xl text-gray-300 mb-2"></i>
-                            <p class="text-sm text-gray-500">Este producto no tiene marcas configuradas</p>
-                        </div>
-                    </div>
-
-                    <!-- Formulario para agregar nueva marca -->
-                    <div class="border-t border-gray-200 pt-4">
-                        <h4 class="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                            <i class="fas fa-plus-circle text-green-500"></i>
-                            Agregar nueva marca
-                        </h4>
-                        <div class="grid grid-cols-2 gap-3 mb-3">
-                            <div>
-                                <label class="block text-xs text-gray-500 mb-1">Marca</label>
-                                <select id="nueva-marca-select" class="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none">
-                                    <option value="">Seleccionar marca</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-xs text-gray-500 mb-1">Precio</label>
-                                <div class="relative">
-                                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">$</span>
-                                    <input type="number" id="nueva-marca-precio" min="0" step="100" placeholder="0"
-                                           class="w-full pl-7 pr-3 py-2 rounded-lg border border-gray-200 text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none" />
-                                </div>
-                            </div>
-                        </div>
-                        <button onclick="agregarMarcaProducto()"
-                                class="w-full py-2.5 rounded-lg bg-indigo-600 text-white font-medium text-sm hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2">
-                            <i class="fas fa-plus"></i>
-                            Agregar marca
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Footer -->
-                <div class="bg-gray-50 px-6 py-4 flex justify-end">
-                    <button onclick="cerrarModalMarcas()"
-                            class="px-6 py-2.5 rounded-lg bg-gray-200 text-gray-700 font-medium text-sm hover:bg-gray-300 transition-colors">
-                        Cerrar
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <!-- Modal de todas las imágenes de galería -->
     <div id="galeria-modal" class="fixed inset-0 z-50 hidden bg-black/80 overflow-y-auto">
@@ -1177,6 +1236,8 @@
         // Variables globales
         let productoSeleccionado = null;
         let productoIdActual = null;
+        let productoNombreActual = '';
+        let productoImagenActual = '';
         let detalleAbierto = false;
 
         // ==========================================
@@ -1239,47 +1300,275 @@
         });
 
         // ==========================================
-        // PANEL DE DETALLE
+        // MODAL DE DETALLE - Moderno con animaciones fluidas
         // ==========================================
-        function mostrarDetalle(nombre, precio, imagen, id) {
-            const detalleProducto = document.getElementById('detalleProducto');
-            const overlay = document.getElementById('detalleOverlay');
+        async function mostrarDetalle(nombre, precio, imagen, id, unidad) {
+            const modal = document.getElementById('detalleModal');
 
-            // Mostrar overlay y panel
-            overlay.classList.remove('hidden');
-            detalleProducto.classList.remove('translate-x-full');
-            document.body.classList.add('overflow-hidden');
-
-            // Actualizar contenido
+            // Actualizar contenido básico
             document.getElementById('detalleNombre').textContent = nombre;
-            document.getElementById('detallePrecio').textContent = `$${Number(precio).toLocaleString('es-CO')}`;
             document.getElementById('detalleImagen').src = imagen;
+
+            // Actualizar unidad
+            const unidadEl = document.getElementById('detalleUnidad');
+            const unidadSpan = unidadEl.querySelector('span');
+            if (unidad) {
+                unidadSpan.textContent = `Vendido por ${unidad}`;
+                unidadEl.classList.remove('hidden');
+            } else {
+                unidadEl.classList.add('hidden');
+            }
 
             // Guardar ID actual
             productoIdActual = id;
+            productoNombreActual = nombre;
+            productoImagenActual = imagen;
 
-            // Configurar botones del panel
+            // Configurar botones
             document.getElementById('btnEditarDetalle').onclick = function() {
-                abrirModalEditar(id, nombre, precio, imagen);
+                cerrarModalDetalle();
+                setTimeout(() => abrirModalEditar(id, nombre, precio, imagen), 200);
             };
             document.getElementById('btnEliminarDetalle').onclick = function() {
-                confirmarEliminar(id, nombre);
+                cerrarModalDetalle();
+                setTimeout(() => confirmarEliminar(id, nombre), 200);
             };
 
+            // Mostrar modal con animación
+            modal.classList.remove('hidden');
+            document.body.classList.add('overflow-hidden');
+            // Trigger animation
+            requestAnimationFrame(() => {
+                modal.classList.add('show');
+            });
             detalleAbierto = true;
+
+            // Cargar marcas del producto (después de mostrar el modal)
+            await cargarMarcasDetalleProducto(id, precio);
         }
 
-        function ocultarDetalle() {
-            const detalleProducto = document.getElementById('detalleProducto');
-            const overlay = document.getElementById('detalleOverlay');
+        async function cargarMarcasDetalleProducto(idProducto, precioBase) {
+            const lista = document.getElementById('detalleMarcasLista');
+            const vacio = document.getElementById('detalleMarcasVacio');
+            const precioMinEl = document.getElementById('detallePrecioMinimo');
+            const precioMaxEl = document.getElementById('detallePrecioMaximo');
+            const rangoEl = document.getElementById('detallePrecioRango');
 
-            // Ocultar panel con animación
-            detalleProducto.classList.add('translate-x-full');
-            overlay.classList.add('hidden');
-            document.body.classList.remove('overflow-hidden');
+            lista.innerHTML = '<div class="text-center py-4"><div class="w-6 h-6 mx-auto border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></div></div>';
 
+            try {
+                const response = await fetch(`/Productos/ListarMarcasProducto?idLocal=${idLocalActual}&idProducto=${idProducto}`);
+                if (response.ok) {
+                    const marcas = await response.json();
+
+                    if (marcas.length === 0) {
+                        lista.innerHTML = '';
+                        vacio.classList.remove('hidden');
+                        precioMinEl.textContent = `$${Number(precioBase).toLocaleString('es-CO')}`;
+                        rangoEl.classList.add('hidden');
+                    } else {
+                        vacio.classList.add('hidden');
+
+                        // Calcular precios
+                        const precios = marcas.map(m => m.precio);
+                        const precioMin = Math.min(...precios);
+                        const precioMax = Math.max(...precios);
+
+                        precioMinEl.textContent = `$${precioMin.toLocaleString('es-CO')}`;
+
+                        if (precioMin !== precioMax) {
+                            precioMaxEl.textContent = `$${precioMax.toLocaleString('es-CO')}`;
+                            rangoEl.classList.remove('hidden');
+                        } else {
+                            rangoEl.classList.add('hidden');
+                        }
+
+                        // Renderizar lista de presentaciones con botones inline
+                        lista.innerHTML = marcas.map((m, i) => `
+                            <div class="marca-item flex items-center justify-between p-2 bg-white rounded-lg border border-gray-100 hover:border-gray-200 transition-all duration-200 group"
+                                 style="animation-delay: ${i * 0.05}s">
+                                <div class="flex items-center gap-2 flex-1 min-w-0">
+                                    ${m.logoMarca
+                                        ? `<img src="${m.logoMarca}" class="w-7 h-7 rounded-lg object-cover border border-gray-100" />`
+                                        : `<div class="w-7 h-7 rounded-lg bg-indigo-50 flex items-center justify-center flex-shrink-0">
+                                            <i class="fas fa-tag text-indigo-400 text-[10px]"></i>
+                                           </div>`
+                                    }
+                                    <div class="min-w-0 flex-1">
+                                        <p class="font-medium text-gray-800 text-xs truncate">${m.nombreMarca}</p>
+                                        <div class="flex items-center gap-1">
+                                            ${m.nombreUnidad ? `<span class="text-[10px] text-indigo-600 bg-indigo-50 px-1 py-0.5 rounded">${m.nombreUnidad}</span>` : ''}
+                                            <span class="w-1 h-1 rounded-full ${m.disponible ? 'bg-green-500' : 'bg-red-400'}"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-1.5">
+                                    <span class="font-bold text-emerald-600 text-sm">$${Number(m.precio).toLocaleString('es-CO')}</span>
+                                    <button onclick="event.stopPropagation(); editarPresentacionInline(${m.id}, ${m.idMarca}, ${m.idUnidad || 'null'}, ${m.precio}, ${m.disponible})"
+                                            class="w-6 h-6 rounded bg-orange-50 text-orange-500 hover:bg-orange-100 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all"
+                                            title="Editar">
+                                        <i class="fas fa-pen text-[8px]"></i>
+                                    </button>
+                                    <button onclick="event.stopPropagation(); eliminarPresentacionDirecto(${m.id})"
+                                            class="w-6 h-6 rounded bg-red-50 text-red-500 hover:bg-red-100 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all"
+                                            title="Eliminar">
+                                        <i class="fas fa-trash text-[8px]"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        `).join('');
+                    }
+                }
+            } catch (error) {
+                console.error('Error cargando marcas:', error);
+                lista.innerHTML = '';
+                vacio.classList.remove('hidden');
+                precioMinEl.textContent = `$${Number(precioBase).toLocaleString('es-CO')}`;
+            }
+        }
+
+        function cerrarModalDetalle() {
+            const modal = document.getElementById('detalleModal');
+            modal.classList.remove('show');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                document.body.classList.remove('overflow-hidden');
+            }, 300);
             productoIdActual = null;
             detalleAbierto = false;
+        }
+
+        // Alias para compatibilidad con código existente
+        function ocultarDetalle() {
+            cerrarModalDetalle();
+        }
+
+        // ==========================================
+        // PRESENTACIONES - FUNCIONES UNIFICADAS
+        // ==========================================
+
+        // Toggle del formulario de nueva presentación
+        function toggleFormPresentacion() {
+            const form = document.getElementById('formNuevaPresentacion');
+            const btn = document.getElementById('btnToggleFormPresentacion');
+
+            if (form.classList.contains('hidden')) {
+                form.classList.remove('hidden');
+                btn.innerHTML = '<i class="fas fa-times text-[8px]"></i> Cancelar';
+
+                // Cargar marcas y unidades si no están cargadas
+                if (todasLasMarcas.length === 0) {
+                    cargarTodasLasMarcas();
+                }
+                if (todasLasUnidades.length === 0) {
+                    cargarTodasLasUnidades();
+                }
+                actualizarSelectMarcasUnificado();
+            } else {
+                form.classList.add('hidden');
+                btn.innerHTML = '<i class="fas fa-plus text-[8px]"></i> Nueva';
+                // Limpiar formulario
+                document.getElementById('nueva-marca-select').value = '';
+                document.getElementById('nueva-unidad-select').value = '';
+                document.getElementById('nueva-marca-precio').value = '';
+            }
+        }
+
+        // Actualizar selects de marca y unidad en el modal unificado
+        function actualizarSelectMarcasUnificado() {
+            const selectMarca = document.getElementById('nueva-marca-select');
+            const selectUnidad = document.getElementById('nueva-unidad-select');
+
+            // Marcas
+            selectMarca.innerHTML = '<option value="">Seleccionar</option>';
+            todasLasMarcas.forEach(m => {
+                selectMarca.innerHTML += `<option value="${m.id}">${m.nombre}</option>`;
+            });
+
+            // Unidades
+            selectUnidad.innerHTML = '<option value="">Sin medida</option>';
+            todasLasUnidades.forEach(u => {
+                selectUnidad.innerHTML += `<option value="${u.id}">${u.nombre}</option>`;
+            });
+        }
+
+        // Agregar presentación directamente desde el modal unificado
+        async function agregarPresentacionDirecto() {
+            const idProducto = productoIdActual;
+            const idMarca = document.getElementById('nueva-marca-select').value;
+            const idUnidad = document.getElementById('nueva-unidad-select').value;
+            const precio = document.getElementById('nueva-marca-precio').value;
+
+            if (!idMarca) {
+                mostrarNotificacion('Selecciona una marca', 'error');
+                return;
+            }
+            if (!precio || precio <= 0) {
+                mostrarNotificacion('Ingresa un precio válido', 'error');
+                return;
+            }
+
+            try {
+                const formData = new URLSearchParams();
+                formData.append('idLocal', idLocalActual);
+                formData.append('idProducto', idProducto);
+                formData.append('idMarca', idMarca);
+                formData.append('precio', precio);
+                if (idUnidad) {
+                    formData.append('idUnidad', idUnidad);
+                }
+
+                const response = await fetch('/Productos/AgregarMarcaProducto', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    mostrarNotificacion('Presentación agregada', 'success');
+                    // Limpiar y ocultar formulario
+                    toggleFormPresentacion();
+                    // Recargar lista de presentaciones
+                    await cargarMarcasDetalleProducto(idProducto, 0);
+                } else {
+                    mostrarNotificacion(result.mensaje || 'Error al agregar', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarNotificacion('Error al agregar presentación', 'error');
+            }
+        }
+
+        // Eliminar presentación directamente
+        async function eliminarPresentacionDirecto(idPresentacion) {
+            if (!confirm('¿Eliminar esta presentación?')) return;
+
+            try {
+                const response = await fetch('/Productos/EliminarMarcaProducto', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: `id=${idPresentacion}`
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    mostrarNotificacion('Presentación eliminada', 'success');
+                    await cargarMarcasDetalleProducto(productoIdActual, 0);
+                } else {
+                    mostrarNotificacion(result.mensaje || 'Error al eliminar', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarNotificacion('Error al eliminar presentación', 'error');
+            }
+        }
+
+        // Editar presentación inline - abre el modal de edición existente
+        function editarPresentacionInline(id, idMarca, idUnidad, precio, disponible) {
+            editarPresentacionModal(id, idMarca, idUnidad, precio, disponible);
         }
 
         // ==========================================
@@ -1451,6 +1740,13 @@
         // ==========================================
         // CERRAR MODALES AL HACER CLIC FUERA
         // ==========================================
+        document.getElementById('detalleModal').addEventListener('click', function(e) {
+            // Cerrar si se hace clic en el backdrop (fondo) o en el contenedor
+            if (e.target === this || e.target.classList.contains('modal-bg') || e.target.closest('.modal-content') === null) {
+                cerrarModalDetalle();
+            }
+        });
+
         document.getElementById('editar-modal').addEventListener('click', function(e) {
             if (e.target === this) cerrarModalEditar();
         });
@@ -1474,12 +1770,12 @@
         // Tecla Escape para cerrar modales
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
+                cerrarModalDetalle();
                 cerrarModalEditar();
                 cerrarModalEliminar();
-                cerrarModalMarcas();
+                cerrarEditarPresentacion();
                 cerrarLightbox();
                 cerrarGaleriaModal();
-                ocultarDetalle();
             }
         });
 
@@ -1501,104 +1797,142 @@
             }
         }
 
+        // Variables para unidades
+        let todasLasUnidades = [];
+
         function actualizarSelectMarcas(marcasExistentes = []) {
             const select = document.getElementById('nueva-marca-select');
-            select.innerHTML = '<option value="">Seleccionar marca</option>';
-
-            const marcasExistentesIds = marcasExistentes.map(m => m.idMarca);
+            select.innerHTML = '<option value="">Seleccionar</option>';
 
             todasLasMarcas.forEach(marca => {
-                if (!marcasExistentesIds.includes(marca.id)) {
-                    select.innerHTML += `<option value="${marca.id}">${marca.nombre}</option>`;
-                }
+                select.innerHTML += `<option value="${marca.id}">${marca.nombre}</option>`;
             });
         }
 
-        async function abrirModalMarcas(idProducto, nombreProducto) {
-            const modal = document.getElementById('marcas-modal');
-            document.getElementById('marcas-producto-id').value = idProducto;
-            document.getElementById('marcas-producto-nombre').textContent = nombreProducto;
-
-            // Cargar todas las marcas si aún no se han cargado
-            if (todasLasMarcas.length === 0) {
-                await cargarTodasLasMarcas();
-            }
-
-            // Cargar marcas del producto
-            await cargarMarcasProducto(idProducto);
-
-            modal.classList.remove('hidden');
-            document.body.classList.add('overflow-hidden');
-        }
-
-        function cerrarModalMarcas() {
-            const modal = document.getElementById('marcas-modal');
-            modal.classList.add('hidden');
-            document.body.classList.remove('overflow-hidden');
-            document.getElementById('nueva-marca-precio').value = '';
-            document.getElementById('nueva-marca-select').value = '';
-        }
-
-        async function cargarMarcasProducto(idProducto) {
-            const lista = document.getElementById('marcas-lista');
-            const vacio = document.getElementById('marcas-vacio');
-
-            lista.innerHTML = '<div class="text-center py-4"><i class="fas fa-spinner fa-spin text-indigo-500"></i> Cargando...</div>';
-
+        async function cargarTodasLasUnidades() {
             try {
-                const response = await fetch(`/Productos/ListarMarcasProducto?idLocal=${idLocalActual}&idProducto=${idProducto}`);
+                const response = await fetch('/Productos/ObtenerUnidades');
                 if (response.ok) {
-                    const marcas = await response.json();
-
-                    if (marcas.length === 0) {
-                        lista.innerHTML = '';
-                        vacio.classList.remove('hidden');
-                    } else {
-                        vacio.classList.add('hidden');
-                        lista.innerHTML = marcas.map(m => `
-                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg group" data-marca-id="${m.id}">
-                                <div class="flex items-center gap-3">
-                                    ${m.logoMarca ? `<img src="${m.logoMarca}" class="w-8 h-8 rounded-full object-cover" />` : '<div class="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center"><i class="fas fa-tag text-indigo-500 text-xs"></i></div>'}
-                                    <div>
-                                        <p class="font-medium text-gray-800 text-sm">${m.nombreMarca}</p>
-                                        <p class="text-xs text-gray-500">${m.disponible ? 'Disponible' : 'No disponible'}</p>
-                                    </div>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <span class="font-bold text-green-600">$${Number(m.precio).toLocaleString('es-CO')}</span>
-                                    <button onclick="editarMarcaProducto(${m.id}, ${m.precio})"
-                                            class="w-7 h-7 rounded-full bg-orange-100 text-orange-600 hover:bg-orange-200 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                                            title="Editar precio">
-                                        <i class="fas fa-pen text-xs"></i>
-                                    </button>
-                                    <button onclick="eliminarMarcaProducto(${m.id})"
-                                            class="w-7 h-7 rounded-full bg-red-100 text-red-600 hover:bg-red-200 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                                            title="Eliminar marca">
-                                        <i class="fas fa-trash text-xs"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        `).join('');
-                    }
-
-                    // Actualizar select de marcas (excluir las que ya tiene)
-                    actualizarSelectMarcas(marcas);
+                    todasLasUnidades = await response.json();
+                    actualizarSelectUnidades();
                 }
             } catch (error) {
-                console.error('Error cargando marcas del producto:', error);
-                lista.innerHTML = '<div class="text-center py-4 text-red-500"><i class="fas fa-exclamation-circle"></i> Error al cargar marcas</div>';
+                console.error('Error cargando unidades:', error);
             }
         }
 
-        async function agregarMarcaProducto() {
-            const idProducto = document.getElementById('marcas-producto-id').value;
-            const idMarca = document.getElementById('nueva-marca-select').value;
-            const precio = document.getElementById('nueva-marca-precio').value;
+        function actualizarSelectUnidades() {
+            const select = document.getElementById('nueva-unidad-select');
+            select.innerHTML = '<option value="">Sin medida</option>';
 
-            if (!idMarca) {
-                mostrarNotificacion('Selecciona una marca', 'error');
-                return;
+            todasLasUnidades.forEach(unidad => {
+                select.innerHTML += `<option value="${unidad.id}">${unidad.nombre}</option>`;
+            });
+        }
+
+        // Variables para edición de presentación
+        let presentacionEditandoId = null;
+
+        // Abrir modal de edición de presentación
+        function editarPresentacionModal(id, idMarca, idUnidad, precio, disponible) {
+            presentacionEditandoId = id;
+
+            // Crear modal de edición inline si no existe
+            let editModal = document.getElementById('editar-presentacion-modal');
+            if (!editModal) {
+                editModal = document.createElement('div');
+                editModal.id = 'editar-presentacion-modal';
+                editModal.className = 'modal-backdrop fixed inset-0 z-[60] hidden';
+                editModal.innerHTML = `
+                    <div class="absolute inset-0 modal-bg backdrop-blur-md" style="background-color: transparent !important;"></div>
+                    <div class="flex min-h-screen items-center justify-center p-4 relative">
+                        <div class="modal-content w-full max-w-sm rounded-2xl bg-white shadow-xl overflow-hidden">
+                            <div class="bg-gradient-to-r from-orange-500 to-amber-500 px-6 py-4">
+                                <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                                    <i class="fas fa-edit"></i>
+                                    Editar Presentación
+                                </h2>
+                            </div>
+                            <div class="p-6">
+                                <input type="hidden" id="edit-presentacion-id" />
+                                <div class="space-y-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Medida</label>
+                                        <select id="edit-presentacion-unidad" class="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-200 outline-none transition-all">
+                                            <option value="">Sin medida</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Precio</label>
+                                        <div class="relative">
+                                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">$</span>
+                                            <input type="number" id="edit-presentacion-precio" min="0" step="100"
+                                                   class="w-full pl-7 pr-3 py-2 rounded-xl border border-gray-200 text-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-200 outline-none transition-all" />
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <input type="checkbox" id="edit-presentacion-disponible" class="w-4 h-4 rounded text-orange-500 focus:ring-orange-500" />
+                                        <label for="edit-presentacion-disponible" class="text-sm text-gray-700">Disponible</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bg-gray-50 px-6 py-4 flex gap-3">
+                                <button onclick="cerrarEditarPresentacion()" class="flex-1 py-2.5 rounded-xl border border-gray-200 text-gray-700 font-medium text-sm hover:bg-gray-100 transition-all">
+                                    Cancelar
+                                </button>
+                                <button onclick="guardarPresentacion()" class="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 text-white font-medium text-sm hover:shadow-lg transition-all">
+                                    Guardar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(editModal);
+
+                // Cerrar al clic fuera
+                editModal.addEventListener('click', function(e) {
+                    if (e.target === this || e.target.classList.contains('modal-bg')) {
+                        cerrarEditarPresentacion();
+                    }
+                });
             }
+
+            // Llenar select de unidades
+            const selectUnidad = document.getElementById('edit-presentacion-unidad');
+            selectUnidad.innerHTML = '<option value="">Sin medida</option>';
+            todasLasUnidades.forEach(u => {
+                selectUnidad.innerHTML += `<option value="${u.id}" ${u.id == idUnidad ? 'selected' : ''}>${u.nombre}</option>`;
+            });
+
+            // Llenar valores
+            document.getElementById('edit-presentacion-id').value = id;
+            document.getElementById('edit-presentacion-precio').value = precio;
+            document.getElementById('edit-presentacion-disponible').checked = disponible;
+
+            // Mostrar modal
+            editModal.classList.remove('hidden');
+            requestAnimationFrame(() => {
+                editModal.classList.add('show');
+            });
+        }
+
+        function cerrarEditarPresentacion() {
+            const modal = document.getElementById('editar-presentacion-modal');
+            if (modal) {
+                modal.classList.remove('show');
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                }, 300);
+            }
+            presentacionEditandoId = null;
+        }
+
+        async function guardarPresentacion() {
+            const id = document.getElementById('edit-presentacion-id').value;
+            const idUnidad = document.getElementById('edit-presentacion-unidad').value;
+            const precio = document.getElementById('edit-presentacion-precio').value;
+            const disponible = document.getElementById('edit-presentacion-disponible').checked;
+
             if (!precio || precio <= 0) {
                 mostrarNotificacion('Ingresa un precio válido', 'error');
                 return;
@@ -1606,47 +1940,13 @@
 
             try {
                 const formData = new URLSearchParams();
-                formData.append('idLocal', idLocalActual);
-                formData.append('idProducto', idProducto);
-                formData.append('idMarca', idMarca);
-                formData.append('precio', precio);
-
-                const response = await fetch('/Productos/AgregarMarcaProducto', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: formData
-                });
-
-                const result = await response.json();
-
-                if (result.success) {
-                    mostrarNotificacion('Marca agregada correctamente', 'success');
-                    document.getElementById('nueva-marca-precio').value = '';
-                    document.getElementById('nueva-marca-select').value = '';
-                    await cargarMarcasProducto(idProducto);
-                } else {
-                    mostrarNotificacion(result.mensaje || 'Error al agregar marca', 'error');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                mostrarNotificacion('Error al agregar marca', 'error');
-            }
-        }
-
-        function editarMarcaProducto(id, precioActual) {
-            const nuevoPrecio = prompt('Nuevo precio:', precioActual);
-            if (nuevoPrecio !== null && nuevoPrecio > 0) {
-                actualizarMarcaProducto(id, nuevoPrecio);
-            }
-        }
-
-        async function actualizarMarcaProducto(id, precio) {
-            try {
-                const formData = new URLSearchParams();
                 formData.append('id', id);
                 formData.append('precio', precio);
                 formData.append('stock', 0);
-                formData.append('disponible', true);
+                formData.append('disponible', disponible);
+                if (idUnidad) {
+                    formData.append('idUnidad', idUnidad);
+                }
 
                 const response = await fetch('/Productos/ActualizarMarcaProducto', {
                     method: 'POST',
@@ -1657,9 +1957,12 @@
                 const result = await response.json();
 
                 if (result.success) {
-                    mostrarNotificacion('Precio actualizado', 'success');
-                    const idProducto = document.getElementById('marcas-producto-id').value;
-                    await cargarMarcasProducto(idProducto);
+                    mostrarNotificacion('Presentación actualizada', 'success');
+                    cerrarEditarPresentacion();
+                    // Recargar presentaciones en el modal unificado
+                    if (productoIdActual) {
+                        await cargarMarcasDetalleProducto(productoIdActual, 0);
+                    }
                 } else {
                     mostrarNotificacion(result.mensaje || 'Error al actualizar', 'error');
                 }
@@ -1669,36 +1972,10 @@
             }
         }
 
-        async function eliminarMarcaProducto(id) {
-            if (!confirm('¿Eliminar esta marca del producto?')) return;
 
-            try {
-                const response = await fetch(`/Productos/EliminarMarcaProducto?id=${id}`, {
-                    method: 'DELETE'
-                });
-
-                const result = await response.json();
-
-                if (result.success) {
-                    mostrarNotificacion('Marca eliminada', 'success');
-                    const idProducto = document.getElementById('marcas-producto-id').value;
-                    await cargarMarcasProducto(idProducto);
-                } else {
-                    mostrarNotificacion(result.mensaje || 'Error al eliminar', 'error');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                mostrarNotificacion('Error al eliminar', 'error');
-            }
-        }
-
-        // Cerrar modal de marcas al hacer clic fuera
-        document.getElementById('marcas-modal').addEventListener('click', function(e) {
-            if (e.target === this) cerrarModalMarcas();
-        });
-
-        // Cargar marcas disponibles al iniciar
+        // Cargar marcas y unidades disponibles al iniciar
         cargarTodasLasMarcas();
+        cargarTodasLasUnidades();
     </script>
 
 
