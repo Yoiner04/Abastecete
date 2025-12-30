@@ -215,6 +215,111 @@ namespace Abastecete.Controllers
             }
         }
 
+        // ========================================
+        // PERMISOS DE USUARIO
+        // ========================================
+
+        private readonly ManejadorPermisos manejadorPermisos = new ManejadorPermisos();
+
+        [HttpGet]
+        [RequierePermiso("ADMIN_USUARIOS")]
+        public IActionResult ObtenerTodosPermisos()
+        {
+            try
+            {
+                var permisos = manejadorPermisos.ObtenerTodosPermisosSistema();
+                return Json(new
+                {
+                    success = true,
+                    permisos = permisos.Select(p => new
+                    {
+                        id = p.Id,
+                        codigo = p.Codigo,
+                        nombre = p.Nombre,
+                        descripcion = p.Descripcion,
+                        categoria = p.Categoria,
+                        icono = p.Icono
+                    }).ToList()
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, mensaje = $"Error: {ex.Message}" });
+            }
+        }
+
+        [HttpGet]
+        [RequierePermiso("ADMIN_USUARIOS")]
+        public IActionResult ObtenerPermisosUsuario(int idUsuario)
+        {
+            try
+            {
+                var permisos = manejadorPermisos.ObtenerPermisosUsuario(idUsuario);
+                return Json(new
+                {
+                    success = true,
+                    permisos = permisos.Select(p => new
+                    {
+                        id = p.Id,
+                        codigo = p.Codigo,
+                        nombre = p.Nombre,
+                        descripcion = p.Descripcion,
+                        categoria = p.Categoria,
+                        origen = p.Origen,
+                        estado = p.Estado
+                    }).ToList()
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, mensaje = $"Error: {ex.Message}" });
+            }
+        }
+
+        public class ActualizarPermisosRequest
+        {
+            public int IdUsuario { get; set; }
+            public List<int> IdsPermisos { get; set; } = new List<int>();
+        }
+
+        [HttpPost]
+        [RequierePermiso("ADMIN_USUARIOS")]
+        [Auditar(ModulosAuditoria.USUARIOS, TiposAccionAuditoria.UPDATE)]
+        public IActionResult ActualizarPermisosUsuario([FromBody] ActualizarPermisosRequest data)
+        {
+            try
+            {
+                // Obtener permisos actuales del usuario
+                var permisosActuales = manejadorPermisos.ObtenerPermisosUsuario(data.IdUsuario);
+                var idsActuales = permisosActuales.Where(p => p.Estado).Select(p => p.Id).ToHashSet();
+                var idsNuevos = data.IdsPermisos.ToHashSet();
+
+                // Permisos a agregar
+                var permisosAgregar = idsNuevos.Except(idsActuales);
+                foreach (var idPermiso in permisosAgregar)
+                {
+                    manejadorPermisos.AsignarPermisoUsuario(data.IdUsuario, idPermiso, "ADMIN");
+                }
+
+                // Permisos a remover
+                var permisosRemover = idsActuales.Except(idsNuevos);
+                foreach (var idPermiso in permisosRemover)
+                {
+                    manejadorPermisos.RemoverPermisoUsuario(data.IdUsuario, idPermiso);
+                }
+
+                return Json(new
+                {
+                    success = true,
+                    mensaje = $"Permisos actualizados. Agregados: {permisosAgregar.Count()}, Removidos: {permisosRemover.Count()}"
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, mensaje = $"Error: {ex.Message}" });
+            }
+        }
+
         public IActionResult Registrar()
         {
             List<TipoDocumento> tiposDocumento = TipoDocumento.ObtenerTipoDocumentos();

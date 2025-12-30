@@ -93,5 +93,62 @@ namespace Abastecete.Controllers
                 );
             }
         }
+
+        /// <summary>
+        /// Registra el evento de clic en una sugerencia del autocompletado
+        /// Tipo: SUGERENCIA_CLIC - indica interés real del usuario
+        /// </summary>
+        [HttpPost]
+        public IActionResult RegistrarClicSugerencia([FromBody] ClicSugerenciaRequest request)
+        {
+            if (request == null || request.IdLocal <= 0)
+                return BadRequest();
+
+            var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
+            var userAgent = Request.Headers["User-Agent"].ToString();
+            var referrer = Request.Headers["Referer"].ToString();
+
+            _manejadorAnaliticas.RegistrarEvento(
+                request.IdLocal,
+                TipoEventoAnalitica.SUGERENCIA_CLIC,
+                null,
+                ip,
+                userAgent,
+                referrer
+            );
+
+            return Ok();
+        }
+
+        /// <summary>
+        /// Endpoint API para autocompletado/sugerencias del buscador
+        /// Retorna JSON con locales, productos y ofertas que coinciden con la búsqueda
+        /// </summary>
+        [HttpGet]
+        public IActionResult Sugerencias(string query)
+        {
+            // Mínimo 2 caracteres para buscar
+            if (string.IsNullOrWhiteSpace(query) || query.Length < 2)
+            {
+                return Json(new
+                {
+                    locales = new List<object>(),
+                    productos = new List<object>(),
+                    ofertas = new List<object>()
+                });
+            }
+
+            var locales = _manejadorBuscador.ConsultarLocalesSugerencias(query, 5);
+            var productos = _manejadorBuscador.ConsultarProductosSugerencias(query, 5);
+            var ofertas = _manejadorBuscador.ConsultarOfertasSugerencias(query, 3);
+
+            return Json(new
+            {
+                locales,
+                productos,
+                ofertas,
+                totalResultados = locales.Count + productos.Count + ofertas.Count
+            });
+        }
     }
 }

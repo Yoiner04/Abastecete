@@ -10,7 +10,13 @@ namespace BusinessLogic.Models
         CLIC_WHATSAPP,
         BUSQUEDA_APARICION,
         CLIC_TELEFONO,
-        COMPARTIR
+        COMPARTIR,
+        SUGERENCIA_CLIC
+    }
+
+    public class ClicSugerenciaRequest
+    {
+        public int IdLocal { get; set; }
     }
 
     public class EventoAnalitica

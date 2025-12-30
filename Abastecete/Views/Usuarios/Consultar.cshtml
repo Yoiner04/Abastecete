@@ -270,7 +270,6 @@
             <thead class="bg-gray-50 border-b border-gray-200">
                 <tr>
                     <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Usuario</th>
-                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Rol</th>
                     <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Local</th>
                     <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Suscripción</th>
                     <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Estado</th>
@@ -299,12 +298,6 @@
                                     <p class="text-sm text-gray-500">@usuario.Correo</p>
                                 </div>
                             </div>
-                        </td>
-                        <td class="px-4 py-4">
-                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700">
-                                <i class="fas fa-user-tag"></i>
-                                @usuario.Rol?.Nombre
-                            </span>
                         </td>
                         <td class="px-4 py-4">
                             @if (item.TieneLocal)
@@ -378,6 +371,12 @@
                         {
                             <td class="px-4 py-4 text-center">
                                 <div class="flex items-center justify-center gap-2">
+                                    <button onclick="abrirModalPermisos(@usuario.Id, '@nombreCompleto')"
+                                            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-purple-600 hover:bg-purple-50 transition-colors"
+                                            title="Ver/Editar permisos">
+                                        <i class="fas fa-key"></i>
+                                        Permisos
+                                    </button>
                                     <button onclick="abrirModal(@usuario.Id, '@estado')"
                                             class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-blue-600 hover:bg-blue-50 transition-colors"
                                             title="Editar estado">
@@ -740,6 +739,69 @@
     </div>
 </div>
 
+<!-- Modal Permisos de Usuario -->
+<div id="modal-permisos" class="hidden fixed inset-0 z-50 overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen px-4 text-center">
+        <div class="fixed inset-0 bg-gray-900/50 transition-opacity" onclick="cerrarModalPermisos()"></div>
+
+        <div class="relative bg-white rounded-2xl shadow-xl transform transition-all sm:max-w-2xl w-full mx-4 max-h-[90vh] overflow-hidden flex flex-col">
+            <!-- Header -->
+            <div class="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-purple-600 to-purple-700 rounded-t-2xl">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
+                            <i class="fas fa-key text-white"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-white">Permisos del Usuario</h3>
+                            <p id="permisos-usuario-nombre" class="text-sm text-purple-200">-</p>
+                        </div>
+                    </div>
+                    <button onclick="cerrarModalPermisos()" class="w-8 h-8 rounded-lg hover:bg-white/20 flex items-center justify-center transition-colors">
+                        <i class="fas fa-times text-white"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Body con scroll -->
+            <div class="flex-1 overflow-y-auto px-6 py-4">
+                <input type="hidden" id="permisos-usuario-id">
+
+                <!-- Loader -->
+                <div id="permisos-loader" class="py-8 text-center">
+                    <i class="fas fa-spinner fa-spin text-2xl text-purple-500 mb-2"></i>
+                    <p class="text-gray-500">Cargando permisos...</p>
+                </div>
+
+                <!-- Contenido de permisos -->
+                <div id="permisos-contenido" class="hidden space-y-4">
+                    <!-- Se llena dinámicamente -->
+                </div>
+
+                <!-- Sin permisos -->
+                <div id="permisos-vacio" class="hidden py-8 text-center">
+                    <div class="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-ban text-gray-400 text-2xl"></i>
+                    </div>
+                    <p class="text-gray-500">Este usuario no tiene permisos asignados</p>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex gap-3">
+                <button type="button" onclick="cerrarModalPermisos()"
+                        class="flex-1 px-4 py-2.5 rounded-xl border border-gray-300 text-gray-700 font-medium hover:bg-gray-100 transition-colors">
+                    Cancelar
+                </button>
+                <button type="button" onclick="guardarPermisos()" id="btn-guardar-permisos"
+                        class="flex-1 px-4 py-2.5 rounded-xl bg-purple-600 text-white font-medium hover:bg-purple-700 transition-colors">
+                    <i class="fas fa-save mr-2"></i>Guardar Cambios
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Toast Notification -->
 <div id="toast" class="fixed bottom-4 right-4 z-50 transform translate-y-full opacity-0 transition-all duration-300">
     <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-4 flex items-center gap-3 max-w-sm">
@@ -1068,5 +1130,173 @@
             showToast('error', 'Error', 'No se pudo cambiar el plan');
         });
     });
+
+    // ========================================
+    // PERMISOS DE USUARIO
+    // ========================================
+
+    let todosLosPermisos = [];
+    let permisosUsuarioActual = [];
+
+    function abrirModalPermisos(idUsuario, nombreUsuario) {
+        document.getElementById('permisos-usuario-id').value = idUsuario;
+        document.getElementById('permisos-usuario-nombre').textContent = nombreUsuario;
+
+        // Mostrar loader
+        document.getElementById('permisos-loader').classList.remove('hidden');
+        document.getElementById('permisos-contenido').classList.add('hidden');
+        document.getElementById('permisos-vacio').classList.add('hidden');
+
+        document.getElementById('modal-permisos').classList.remove('hidden');
+
+        // Cargar permisos
+        cargarPermisosUsuario(idUsuario);
+    }
+
+    function cerrarModalPermisos() {
+        document.getElementById('modal-permisos').classList.add('hidden');
+    }
+
+    async function cargarPermisosUsuario(idUsuario) {
+        try {
+            // Cargar todos los permisos y los del usuario en paralelo
+            const [todosRes, usuarioRes] = await Promise.all([
+                fetch('/Usuarios/ObtenerTodosPermisos'),
+                fetch(`/Usuarios/ObtenerPermisosUsuario?idUsuario=${idUsuario}`)
+            ]);
+
+            const todosData = await todosRes.json();
+            const usuarioData = await usuarioRes.json();
+
+            if (todosData.success && usuarioData.success) {
+                todosLosPermisos = todosData.permisos;
+                permisosUsuarioActual = usuarioData.permisos;
+                renderizarPermisos();
+            } else {
+                document.getElementById('permisos-loader').classList.add('hidden');
+                document.getElementById('permisos-vacio').classList.remove('hidden');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            document.getElementById('permisos-loader').classList.add('hidden');
+            document.getElementById('permisos-vacio').classList.remove('hidden');
+        }
+    }
+
+    function renderizarPermisos() {
+        const contenedor = document.getElementById('permisos-contenido');
+        const idsActivos = new Set(permisosUsuarioActual.filter(p => p.estado).map(p => p.id));
+
+        // Agrupar por categoría
+        const porCategoria = {};
+        todosLosPermisos.forEach(permiso => {
+            if (!porCategoria[permiso.categoria]) {
+                porCategoria[permiso.categoria] = [];
+            }
+            porCategoria[permiso.categoria].push(permiso);
+        });
+
+        // Colores por categoría
+        const colores = {
+            'ADMIN': { bg: 'bg-red-50', border: 'border-red-200', badge: 'bg-red-100 text-red-700', icon: 'text-red-500' },
+            'NEGOCIO': { bg: 'bg-blue-50', border: 'border-blue-200', badge: 'bg-blue-100 text-blue-700', icon: 'text-blue-500' },
+            'PRODUCTOS': { bg: 'bg-green-50', border: 'border-green-200', badge: 'bg-green-100 text-green-700', icon: 'text-green-500' },
+            'OFERTAS': { bg: 'bg-yellow-50', border: 'border-yellow-200', badge: 'bg-yellow-100 text-yellow-700', icon: 'text-yellow-500' },
+            'ANALITICAS': { bg: 'bg-purple-50', border: 'border-purple-200', badge: 'bg-purple-100 text-purple-700', icon: 'text-purple-500' },
+            'MARKETING': { bg: 'bg-pink-50', border: 'border-pink-200', badge: 'bg-pink-100 text-pink-700', icon: 'text-pink-500' },
+            'COMUNICACION': { bg: 'bg-indigo-50', border: 'border-indigo-200', badge: 'bg-indigo-100 text-indigo-700', icon: 'text-indigo-500' }
+        };
+
+        let html = '';
+        for (const [categoria, permisos] of Object.entries(porCategoria)) {
+            const color = colores[categoria] || colores['NEGOCIO'];
+
+            html += `
+                <div class="rounded-xl border ${color.border} ${color.bg} overflow-hidden">
+                    <div class="px-4 py-2 border-b ${color.border} flex items-center justify-between">
+                        <span class="font-semibold text-gray-800 flex items-center gap-2">
+                            <i class="fas fa-folder ${color.icon}"></i>
+                            ${categoria}
+                        </span>
+                        <span class="text-xs ${color.badge} px-2 py-0.5 rounded-full">${permisos.length} permisos</span>
+                    </div>
+                    <div class="p-3 space-y-2">
+            `;
+
+            permisos.forEach(permiso => {
+                const activo = idsActivos.has(permiso.id);
+                const permisoUsuario = permisosUsuarioActual.find(p => p.id === permiso.id);
+                const origen = permisoUsuario?.origen || '';
+
+                html += `
+                    <label class="flex items-center justify-between p-2 rounded-lg hover:bg-white/50 cursor-pointer transition-colors">
+                        <div class="flex items-center gap-3">
+                            <input type="checkbox" id="permiso-${permiso.id}" value="${permiso.id}"
+                                   ${activo ? 'checked' : ''}
+                                   class="w-4 h-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500">
+                            <div>
+                                <p class="text-sm font-medium text-gray-900">${permiso.nombre}</p>
+                                <p class="text-xs text-gray-500">${permiso.descripcion || permiso.codigo}</p>
+                            </div>
+                        </div>
+                        ${origen ? `<span class="text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full">${origen}</span>` : ''}
+                    </label>
+                `;
+            });
+
+            html += `
+                    </div>
+                </div>
+            `;
+        }
+
+        contenedor.innerHTML = html;
+        document.getElementById('permisos-loader').classList.add('hidden');
+        contenedor.classList.remove('hidden');
+    }
+
+    async function guardarPermisos() {
+        const idUsuario = document.getElementById('permisos-usuario-id').value;
+        const checkboxes = document.querySelectorAll('#permisos-contenido input[type="checkbox"]');
+        const permisosSeleccionados = [];
+
+        checkboxes.forEach(cb => {
+            if (cb.checked) {
+                permisosSeleccionados.push(parseInt(cb.value));
+            }
+        });
+
+        const btn = document.getElementById('btn-guardar-permisos');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Guardando...';
+
+        try {
+            const response = await fetch('/Usuarios/ActualizarPermisosUsuario', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    IdUsuario: parseInt(idUsuario),
+                    IdsPermisos: permisosSeleccionados
+                })
+            });
+
+            const data = await response.json();
+
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-save mr-2"></i>Guardar Cambios';
+
+            if (data.success) {
+                cerrarModalPermisos();
+                showToast('success', 'Permisos actualizados', data.mensaje || 'Los permisos se guardaron correctamente');
+            } else {
+                showToast('error', 'Error', data.mensaje || 'No se pudieron guardar los permisos');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-save mr-2"></i>Guardar Cambios';
+            showToast('error', 'Error', 'No se pudieron guardar los permisos');
+        }
+    }
 </script>
 }

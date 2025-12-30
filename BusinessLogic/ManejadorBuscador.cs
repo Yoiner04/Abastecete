@@ -115,5 +115,142 @@ namespace BusinessLogic
             }
             return locales;
         }
+
+        #region Métodos para Sugerencias/Autocompletado
+
+        /// <summary>
+        /// Obtiene sugerencias de locales para autocompletado
+        /// </summary>
+        public List<object> ConsultarLocalesSugerencias(string busqueda, int limite = 5)
+        {
+            List<Parametro> parametros = new List<Parametro>
+            {
+                new Parametro("p_busqueda", busqueda),
+                new Parametro("p_limite", limite)
+            };
+            DataTable datos = conexion.EjecutarConsulta("buscador_locales_sugerencias", parametros);
+            var resultado = new List<object>();
+
+            if (datos == null || datos.Rows.Count == 0)
+                return resultado;
+
+            // Batch de imágenes
+            var imageIds = datos.AsEnumerable()
+                .Select(r => r["imagen"]?.ToString())
+                .Where(id => !string.IsNullOrEmpty(id))
+                .Cast<string>()
+                .ToList();
+            var imagenesBatch = _manejadorMongo.ObtenerImagenesBatch(imageIds);
+
+            foreach (DataRow row in datos.Rows)
+            {
+                string? imagenId = row["imagen"]?.ToString();
+                string? imagenUrl = null;
+                if (!string.IsNullOrEmpty(imagenId) && imagenesBatch.ContainsKey(imagenId))
+                    imagenUrl = imagenesBatch[imagenId]?.Imagen;
+
+                resultado.Add(new
+                {
+                    id = Convert.ToInt32(row["id"]),
+                    nombre = row["nombre"]?.ToString() ?? "",
+                    direccion = row["direccion"]?.ToString() ?? "",
+                    imagen = imagenUrl ?? "/images/default-local.png"
+                });
+            }
+            return resultado;
+        }
+
+        /// <summary>
+        /// Obtiene sugerencias de productos para autocompletado
+        /// </summary>
+        public List<object> ConsultarProductosSugerencias(string busqueda, int limite = 5)
+        {
+            List<Parametro> parametros = new List<Parametro>
+            {
+                new Parametro("p_busqueda", busqueda),
+                new Parametro("p_limite", limite)
+            };
+            DataTable datos = conexion.EjecutarConsulta("buscador_productos_sugerencias", parametros);
+            var resultado = new List<object>();
+
+            if (datos == null || datos.Rows.Count == 0)
+                return resultado;
+
+            // Batch de imágenes de locales
+            var imageIds = datos.AsEnumerable()
+                .Select(r => r["imagenLocal"]?.ToString())
+                .Where(id => !string.IsNullOrEmpty(id))
+                .Cast<string>()
+                .ToList();
+            var imagenesBatch = _manejadorMongo.ObtenerImagenesBatch(imageIds);
+
+            foreach (DataRow row in datos.Rows)
+            {
+                string? imagenLocalId = row["imagenLocal"]?.ToString();
+                string? imagenLocalUrl = null;
+                if (!string.IsNullOrEmpty(imagenLocalId) && imagenesBatch.ContainsKey(imagenLocalId))
+                    imagenLocalUrl = imagenesBatch[imagenLocalId]?.Imagen;
+
+                resultado.Add(new
+                {
+                    id = Convert.ToInt32(row["id"]),
+                    nombre = row["nombre"]?.ToString() ?? "",
+                    precio = row["precio"]?.ToString() ?? "0",
+                    imagen = row["imagen"]?.ToString() ?? "/images/default-product.png",
+                    idLocal = Convert.ToInt32(row["idLocal"]),
+                    nombreLocal = row["nombreLocal"]?.ToString() ?? "",
+                    imagenLocal = imagenLocalUrl ?? "/images/default-local.png"
+                });
+            }
+            return resultado;
+        }
+
+        /// <summary>
+        /// Obtiene sugerencias de ofertas flash para autocompletado
+        /// </summary>
+        public List<object> ConsultarOfertasSugerencias(string busqueda, int limite = 3)
+        {
+            List<Parametro> parametros = new List<Parametro>
+            {
+                new Parametro("p_busqueda", busqueda),
+                new Parametro("p_limite", limite)
+            };
+            DataTable datos = conexion.EjecutarConsulta("buscador_ofertas_sugerencias", parametros);
+            var resultado = new List<object>();
+
+            if (datos == null || datos.Rows.Count == 0)
+                return resultado;
+
+            // Batch de imágenes de locales
+            var imageIds = datos.AsEnumerable()
+                .Select(r => r["imagenLocal"]?.ToString())
+                .Where(id => !string.IsNullOrEmpty(id))
+                .Cast<string>()
+                .ToList();
+            var imagenesBatch = _manejadorMongo.ObtenerImagenesBatch(imageIds);
+
+            foreach (DataRow row in datos.Rows)
+            {
+                string? imagenLocalId = row["imagenLocal"]?.ToString();
+                string? imagenLocalUrl = null;
+                if (!string.IsNullOrEmpty(imagenLocalId) && imagenesBatch.ContainsKey(imagenLocalId))
+                    imagenLocalUrl = imagenesBatch[imagenLocalId]?.Imagen;
+
+                resultado.Add(new
+                {
+                    id = Convert.ToInt32(row["id"]),
+                    titulo = row["titulo"]?.ToString() ?? "",
+                    producto = row["producto"]?.ToString() ?? "",
+                    imagen = row["imagen"]?.ToString() ?? "/images/default-offer.png",
+                    tiempoExpira = Convert.ToDateTime(row["tiempoExpira"]).ToString("yyyy-MM-ddTHH:mm:ss"),
+                    idLocal = Convert.ToInt32(row["idLocal"]),
+                    nombreLocal = row["nombreLocal"]?.ToString() ?? "",
+                    imagenLocal = imagenLocalUrl ?? "/images/default-local.png"
+                });
+            }
+            return resultado;
+        }
+
+        #endregion
     }
 }

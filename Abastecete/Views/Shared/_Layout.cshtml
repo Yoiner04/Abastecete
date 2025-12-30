@@ -49,7 +49,7 @@
 
             <!-- Contenedor del menú -->
             <div id="menu-container" class="hidden lg:flex w-full flex-col lg:flex-row items-center gap-4 lg:gap-6">
-                <!-- Barra de búsqueda mejorada -->
+                <!-- Barra de búsqueda con autocompletado -->
                 <form id="search-form-md" action="@Url.Action("Index", "Buscador")" method="get" class="w-full lg:w-auto lg:flex-1 lg:max-w-md order-1">
                     <div class="relative group">
                         <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
@@ -57,12 +57,22 @@
                         </div>
                         <input type="text" id="search-input-md" name="query"
                             value="@Context.Request.Query["query"]"
+                            autocomplete="off"
                             class="w-full pl-11 pr-24 py-2.5 rounded-full border border-gray-300 bg-white text-sm text-gray-900 placeholder-gray-400 transition-all duration-200 focus:border-[#23916A] focus:ring-2 focus:ring-[#23916A]/20 focus:outline-none"
                             placeholder="¿Qué estás buscando?" />
                         <button type="submit"
                             class="absolute right-1.5 top-1/2 -translate-y-1/2 px-4 py-1.5 rounded-full bg-[#F66623] text-white text-sm font-semibold shadow-sm hover:bg-[#e55a1a] hover:shadow-md transition-all duration-200">
                             Buscar
                         </button>
+                        <!-- Dropdown de sugerencias -->
+                        <div id="search-suggestions" class="hidden absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden z-50 max-h-96 overflow-y-auto">
+                            <!-- Loader -->
+                            <div id="suggestions-loader" class="hidden p-4 text-center text-gray-500">
+                                <i class="fas fa-spinner fa-spin mr-2"></i>Buscando...
+                            </div>
+                            <!-- Contenido de sugerencias -->
+                            <div id="suggestions-content"></div>
+                        </div>
                     </div>
                 </form>
 
@@ -405,6 +415,274 @@
                 });
             }
         });
+
+        // =============================================
+        // AUTOCOMPLETADO DEL BUSCADOR
+        // =============================================
+        (function() {
+            const searchInput = document.getElementById('search-input-md');
+            const suggestionsContainer = document.getElementById('search-suggestions');
+            const suggestionsContent = document.getElementById('suggestions-content');
+            const suggestionsLoader = document.getElementById('suggestions-loader');
+            const searchForm = document.getElementById('search-form-md');
+
+            if (!searchInput || !suggestionsContainer) return;
+
+            let debounceTimer;
+            let currentQuery = '';
+            let selectedIndex = -1;
+
+            // Debounce de 300ms
+            function debounce(func, wait) {
+                return function(...args) {
+                    clearTimeout(debounceTimer);
+                    debounceTimer = setTimeout(() => func.apply(this, args), wait);
+                };
+            }
+
+            // Buscar sugerencias
+            async function fetchSugerencias(query) {
+                if (query.length < 2) {
+                    hideSugerencias();
+                    return;
+                }
+
+                currentQuery = query;
+                suggestionsLoader.classList.remove('hidden');
+                suggestionsContent.innerHTML = '';
+                suggestionsContainer.classList.remove('hidden');
+
+                try {
+                    const response = await fetch(`/Buscador/Sugerencias?query=${encodeURIComponent(query)}`);
+                    const data = await response.json();
+
+                    // Verificar que la query no haya cambiado mientras se cargaba
+                    if (query !== currentQuery) return;
+
+                    suggestionsLoader.classList.add('hidden');
+                    renderSugerencias(data, query);
+                } catch (error) {
+                    console.error('Error fetching sugerencias:', error);
+                    suggestionsLoader.classList.add('hidden');
+                    hideSugerencias();
+                }
+            }
+
+            // Renderizar sugerencias
+            function renderSugerencias(data, query) {
+                const { locales, productos, ofertas, totalResultados } = data;
+
+                if (totalResultados === 0) {
+                    suggestionsContent.innerHTML = `
+                        <div class="p-4 text-center text-gray-500">
+                            <i class="fas fa-search text-2xl mb-2 opacity-50"></i>
+                            <p class="text-sm">No se encontraron resultados para "<strong>${escapeHtml(query)}</strong>"</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                let html = '';
+
+                // Locales
+                if (locales && locales.length > 0) {
+                    html += `
+                        <div class="px-3 py-2 bg-gray-50 border-b border-gray-100">
+                            <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                <i class="fas fa-store mr-1 text-[#23916A]"></i>Locales
+                            </span>
+                        </div>
+                    `;
+                    locales.forEach(local => {
+                        html += `
+                            <a href="/Negocios/ConsultarProductos?idLocal=${local.id}"
+                               class="suggestion-item flex items-center gap-3 px-4 py-3 hover:bg-[#23916A]/5 transition-colors cursor-pointer border-b border-gray-50"
+                               data-track-local="${local.id}">
+                                <img src="${local.imagen}" alt="${escapeHtml(local.nombre)}"
+                                     class="w-10 h-10 rounded-lg object-cover bg-gray-100 flex-shrink-0"
+                                     onerror="this.src='/images/default-local.png'">
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-medium text-gray-900 truncate">${highlightMatch(local.nombre, query)}</p>
+                                    <p class="text-xs text-gray-500 truncate">${escapeHtml(local.direccion || '')}</p>
+                                </div>
+                                <i class="fas fa-chevron-right text-gray-300 text-xs"></i>
+                            </a>
+                        `;
+                    });
+                }
+
+                // Productos
+                if (productos && productos.length > 0) {
+                    html += `
+                        <div class="px-3 py-2 bg-gray-50 border-b border-gray-100">
+                            <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                <i class="fas fa-box mr-1 text-[#F66623]"></i>Productos
+                            </span>
+                        </div>
+                    `;
+                    productos.forEach(producto => {
+                        html += `
+                            <a href="/Negocios/ConsultarProductos?idLocal=${producto.idLocal}"
+                               class="suggestion-item flex items-center gap-3 px-4 py-3 hover:bg-[#F66623]/5 transition-colors cursor-pointer border-b border-gray-50"
+                               data-track-local="${producto.idLocal}">
+                                <img src="${producto.imagen || producto.imagenLocal}" alt="${escapeHtml(producto.nombre)}"
+                                     class="w-10 h-10 rounded-lg object-cover bg-gray-100 flex-shrink-0"
+                                     onerror="this.src='/images/default-product.png'">
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-medium text-gray-900 truncate">${highlightMatch(producto.nombre, query)}</p>
+                                    <p class="text-xs text-gray-500 truncate">
+                                        <span class="font-semibold text-[#23916A]">$${formatPrice(producto.precio)}</span>
+                                        <span class="mx-1">•</span>
+                                        ${escapeHtml(producto.nombreLocal)}
+                                    </p>
+                                </div>
+                                <i class="fas fa-chevron-right text-gray-300 text-xs"></i>
+                            </a>
+                        `;
+                    });
+                }
+
+                // Ofertas Flash
+                if (ofertas && ofertas.length > 0) {
+                    html += `
+                        <div class="px-3 py-2 bg-gray-50 border-b border-gray-100">
+                            <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                <i class="fas fa-bolt mr-1 text-yellow-500"></i>Ofertas Flash
+                            </span>
+                        </div>
+                    `;
+                    ofertas.forEach(oferta => {
+                        html += `
+                            <a href="/Negocios/ConsultarProductos?idLocal=${oferta.idLocal}"
+                               class="suggestion-item flex items-center gap-3 px-4 py-3 hover:bg-yellow-50 transition-colors cursor-pointer border-b border-gray-50"
+                               data-track-local="${oferta.idLocal}">
+                                <img src="${oferta.imagen || oferta.imagenLocal}" alt="${escapeHtml(oferta.titulo)}"
+                                     class="w-10 h-10 rounded-lg object-cover bg-gray-100 flex-shrink-0"
+                                     onerror="this.src='/images/default-offer.png'">
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-medium text-gray-900 truncate">${highlightMatch(oferta.titulo || oferta.producto, query)}</p>
+                                    <p class="text-xs text-gray-500 truncate">
+                                        <span class="text-yellow-600 font-medium"><i class="fas fa-clock mr-1"></i>Oferta</span>
+                                        <span class="mx-1">•</span>
+                                        ${escapeHtml(oferta.nombreLocal)}
+                                    </p>
+                                </div>
+                                <i class="fas fa-chevron-right text-gray-300 text-xs"></i>
+                            </a>
+                        `;
+                    });
+                }
+
+                // Ver todos los resultados
+                html += `
+                    <a href="/Buscador?query=${encodeURIComponent(query)}"
+                       class="suggestion-item flex items-center justify-center gap-2 px-4 py-3 bg-[#23916A]/5 hover:bg-[#23916A]/10 transition-colors cursor-pointer text-[#23916A] font-medium">
+                        <i class="fas fa-search"></i>
+                        Ver todos los resultados para "${escapeHtml(query)}"
+                    </a>
+                `;
+
+                suggestionsContent.innerHTML = html;
+                selectedIndex = -1;
+            }
+
+            // Ocultar sugerencias
+            function hideSugerencias() {
+                suggestionsContainer.classList.add('hidden');
+                selectedIndex = -1;
+            }
+
+            // Escapar HTML
+            function escapeHtml(text) {
+                if (!text) return '';
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+
+            // Resaltar coincidencias
+            function highlightMatch(text, query) {
+                if (!text || !query) return escapeHtml(text);
+                const escaped = escapeHtml(text);
+                const regex = new RegExp(`(${escapeHtml(query)})`, 'gi');
+                return escaped.replace(regex, '<mark class="bg-yellow-200 rounded px-0.5">$1</mark>');
+            }
+
+            // Formatear precio
+            function formatPrice(price) {
+                if (!price) return '0';
+                return parseInt(price).toLocaleString('es-CO');
+            }
+
+            // Event: Input con debounce
+            searchInput.addEventListener('input', debounce(function(e) {
+                fetchSugerencias(e.target.value.trim());
+            }, 300));
+
+            // Event: Focus - mostrar sugerencias si hay texto
+            searchInput.addEventListener('focus', function() {
+                if (this.value.trim().length >= 2 && suggestionsContent.innerHTML) {
+                    suggestionsContainer.classList.remove('hidden');
+                }
+            });
+
+            // Event: Click fuera - ocultar sugerencias
+            document.addEventListener('click', function(e) {
+                if (!suggestionsContainer.contains(e.target) && e.target !== searchInput) {
+                    hideSugerencias();
+                }
+            });
+
+            // Event: Teclado - navegación
+            searchInput.addEventListener('keydown', function(e) {
+                const items = suggestionsContent.querySelectorAll('.suggestion-item');
+
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    selectedIndex = Math.min(selectedIndex + 1, items.length - 1);
+                    updateSelection(items);
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    selectedIndex = Math.max(selectedIndex - 1, -1);
+                    updateSelection(items);
+                } else if (e.key === 'Enter' && selectedIndex >= 0) {
+                    e.preventDefault();
+                    items[selectedIndex].click();
+                } else if (e.key === 'Escape') {
+                    hideSugerencias();
+                }
+            });
+
+            // Actualizar selección visual
+            function updateSelection(items) {
+                items.forEach((item, index) => {
+                    if (index === selectedIndex) {
+                        item.classList.add('bg-gray-100');
+                        item.scrollIntoView({ block: 'nearest' });
+                    } else {
+                        item.classList.remove('bg-gray-100');
+                    }
+                });
+            }
+
+            // Trackear clic en sugerencia para analíticas
+            function trackSugerenciaClic(idLocal) {
+                if (!idLocal) return;
+                fetch('/Buscador/RegistrarClicSugerencia', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ idLocal: parseInt(idLocal) })
+                }).catch(err => console.error('Error tracking sugerencia:', err));
+            }
+
+            // Event: Clic en sugerencia - trackear analítica
+            suggestionsContent.addEventListener('click', function(e) {
+                const item = e.target.closest('[data-track-local]');
+                if (item) {
+                    trackSugerenciaClic(item.dataset.trackLocal);
+                }
+            });
+        })();
     </script>
     @await Html.PartialAsync("_Footer")
 

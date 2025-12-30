@@ -545,13 +545,15 @@
                                 @if (negocio?.FechaRegistro.HasValue == true)
                                 {
                                     var diasAntiguedad = (int)(DateTime.Now - negocio.FechaRegistro.Value).TotalDays;
-                                    var textoAntiguedad = diasAntiguedad < 30 ? $"{diasAntiguedad} días"
+                                    var textoAntiguedad = diasAntiguedad == 0 ? "hoy"
+                                        : diasAntiguedad == 1 ? "1 día"
+                                        : diasAntiguedad < 30 ? $"{diasAntiguedad} días"
                                         : diasAntiguedad < 365 ? $"{diasAntiguedad / 30} meses"
                                         : diasAntiguedad >= 365 && diasAntiguedad < 730 ? "1 año"
                                         : $"{diasAntiguedad / 365} años";
                                     <div class="flex items-center gap-2 text-gray-600 mt-2 pt-2 border-t border-gray-100">
                                         <i class="fas fa-calendar-check w-4 text-emerald-500"></i>
-                                        <span>En Abastecete hace <strong class="text-emerald-600">@textoAntiguedad</strong></span>
+                                        <span>En Abastecete @(diasAntiguedad == 0 ? "desde" : "hace") <strong class="text-emerald-600">@textoAntiguedad</strong></span>
                                     </div>
                                 }
                             </div>
