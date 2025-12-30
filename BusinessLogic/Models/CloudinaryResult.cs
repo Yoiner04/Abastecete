@@ -8,17 +8,17 @@ namespace BusinessLogic.Models
         /// <summary>
         /// URL pública de la imagen
         /// </summary>
-        public string Url { get; set; }
+        public string Url { get; set; } = "";
 
         /// <summary>
         /// URL segura (HTTPS) de la imagen
         /// </summary>
-        public string SecureUrl { get; set; }
+        public string SecureUrl { get; set; } = "";
 
         /// <summary>
         /// ID público para identificar y eliminar la imagen
         /// </summary>
-        public string PublicId { get; set; }
+        public string PublicId { get; set; } = "";
 
         /// <summary>
         /// Indica si la operación fue exitosa
@@ -28,7 +28,7 @@ namespace BusinessLogic.Models
         /// <summary>
         /// Mensaje de error si la operación falló
         /// </summary>
-        public string Error { get; set; }
+        public string? Error { get; set; }
 
         /// <summary>
         /// Ancho de la imagen en píxeles
@@ -43,6 +43,6 @@ namespace BusinessLogic.Models
         /// <summary>
         /// Formato de la imagen (jpg, png, webp, etc.)
         /// </summary>
-        public string Format { get; set; }
+        public string Format { get; set; } = "";
     }
 }

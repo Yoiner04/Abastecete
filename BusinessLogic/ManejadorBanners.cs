@@ -294,11 +294,11 @@ namespace BusinessLogic
             return new Banner
             {
                 Id = Convert.ToInt32(row["PK_ID_BANNER"]),
-                CloudinaryUrl = row["CLOUDINARY_URL"]?.ToString(),
-                CloudinaryPublicId = row["CLOUDINARY_PUBLIC_ID"]?.ToString(),
-                Nombre = row["NOMBRE"]?.ToString(),
-                Tipo = row["TIPO"]?.ToString(),
-                Formato = row["FORMATO"]?.ToString(),
+                CloudinaryUrl = row["CLOUDINARY_URL"]?.ToString() ?? "",
+                CloudinaryPublicId = row["CLOUDINARY_PUBLIC_ID"]?.ToString() ?? "",
+                Nombre = row["NOMBRE"]?.ToString() ?? "",
+                Tipo = row["TIPO"]?.ToString() ?? "",
+                Formato = row["FORMATO"]?.ToString() ?? "",
                 CategoriaId = row["FK_ID_CATEGORIA"] != DBNull.Value ? Convert.ToInt32(row["FK_ID_CATEGORIA"]) : null,
                 Activo = Convert.ToBoolean(row["ACTIVO"]),
                 FechaRegistro = Convert.ToDateTime(row["FECHA_REGISTRO"])

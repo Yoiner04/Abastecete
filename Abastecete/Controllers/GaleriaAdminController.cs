@@ -19,7 +19,7 @@ namespace Abastecete.Controllers
         /// <summary>
         /// Vista principal de administración de galería
         /// </summary>
-        [RequierePermiso("Administrar Galeria,ADMIN_GALERIA")]
+        [RequierePermiso("ADMIN_GALERIA")]
         public IActionResult Index()
         {
             var pendientes = _manejadorGaleria.ListarPendientes();
@@ -49,7 +49,7 @@ namespace Abastecete.Controllers
         /// Aprueba una imagen de galería
         /// </summary>
         [HttpPost]
-        [RequierePermiso("Administrar Galeria,ADMIN_GALERIA")]
+        [RequierePermiso("ADMIN_GALERIA")]
         [Auditar(ModulosAuditoria.GALERIA, TiposAccionAuditoria.UPDATE, ParametroId = "id")]
         public IActionResult Aprobar(int id)
         {
@@ -80,7 +80,7 @@ namespace Abastecete.Controllers
         /// Rechaza una imagen de galería
         /// </summary>
         [HttpPost]
-        [RequierePermiso("Administrar Galeria,ADMIN_GALERIA")]
+        [RequierePermiso("ADMIN_GALERIA")]
         [Auditar(ModulosAuditoria.GALERIA, TiposAccionAuditoria.UPDATE, ParametroId = "id", ParametroDescripcion = "motivo")]
         public IActionResult Rechazar(int id, string motivo)
         {
@@ -111,7 +111,7 @@ namespace Abastecete.Controllers
         /// Elimina una imagen de galería (y de Cloudinary)
         /// </summary>
         [HttpPost]
-        [RequierePermiso("Administrar Galeria,ADMIN_GALERIA")]
+        [RequierePermiso("ADMIN_GALERIA")]
         [Auditar(ModulosAuditoria.GALERIA, TiposAccionAuditoria.DELETE, ParametroId = "id")]
         public IActionResult Eliminar(int id)
         {

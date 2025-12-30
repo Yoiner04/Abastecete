@@ -22,7 +22,7 @@ namespace BusinessLogic
                 tipos.Add(new TipoUnidad
                 {
                     Id = Convert.ToInt32(row["ID_TIPOUNIDAD"]),
-                    Nombre = row["NOMBRE_TIPOUNIDAD"].ToString()
+                    Nombre = row["NOMBRE_TIPOUNIDAD"].ToString() ?? ""
                 });
             }
             return tipos;
@@ -45,10 +45,10 @@ namespace BusinessLogic
                 return new TipoUnidad
                 {
                     Id = Convert.ToInt32(row["ID_TIPOUNIDAD"]),
-                    Nombre = row["NOMBRE_TIPOUNIDAD"].ToString()
+                    Nombre = row["NOMBRE_TIPOUNIDAD"].ToString() ?? ""
                 };
             }
-            return null;
+            return null!;
         }
 
         /// <summary>

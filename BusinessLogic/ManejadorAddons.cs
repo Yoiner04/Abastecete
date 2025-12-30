@@ -144,10 +144,10 @@ namespace BusinessLogic
                 addons.Add(new AddonTipo()
                 {
                     Id = Convert.ToInt32(row["PK_ID_ADDON"]),
-                    Codigo = row["CODIGO"].ToString(),
-                    Nombre = row["NOMBRE"].ToString(),
+                    Codigo = row["CODIGO"].ToString() ?? "",
+                    Nombre = row["NOMBRE"].ToString() ?? "",
                     Descripcion = row["DESCRIPCION"]?.ToString() ?? "",
-                    TipoLimite = row["TIPO_LIMITE"].ToString(),
+                    TipoLimite = row["TIPO_LIMITE"].ToString() ?? "",
                     Cantidad = Convert.ToInt32(row["CANTIDAD"]),
                     Precio = Convert.ToDecimal(row["PRECIO"]),
                     Icono = row["ICONO"]?.ToString() ?? "fa-plus",
@@ -174,9 +174,9 @@ namespace BusinessLogic
                         : (DateTime?)null,
                     RefPago = row["REF_PAGO"]?.ToString() ?? "",
                     Estado = Convert.ToInt32(row["ESTADO"]) == 1,
-                    CodigoAddon = row["CODIGO"].ToString(),
-                    NombreAddon = row["NOMBRE"].ToString(),
-                    TipoLimite = row["TIPO_LIMITE"].ToString(),
+                    CodigoAddon = row["CODIGO"].ToString() ?? "",
+                    NombreAddon = row["NOMBRE"].ToString() ?? "",
+                    TipoLimite = row["TIPO_LIMITE"].ToString() ?? "",
                     CantidadAddon = Convert.ToInt32(row["CANTIDAD"]),
                     TotalAgregado = Convert.ToInt32(row["total_agregado"])
                 });

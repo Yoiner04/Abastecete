@@ -147,7 +147,7 @@ namespace BusinessLogic.Utilidades
                 string htmlBody = EmailTemplates.NotificacionContacto(emailRemitente, telefono, mensaje);
 
                 return await EnviarCorreoHtml(
-                    _emailAdmin,
+                    _emailAdmin ?? "",
                     $"Nuevo mensaje de contacto de {emailRemitente}",
                     htmlBody,
                     emailRemitente // Reply-To
@@ -167,7 +167,7 @@ namespace BusinessLogic.Utilidades
         {
             try
             {
-                return await EnviarCorreoHtml(_emailAdmin, asunto, FormatearTextoPlanoAHtml(cuerpo));
+                return await EnviarCorreoHtml(_emailAdmin ?? "", asunto, FormatearTextoPlanoAHtml(cuerpo));
             }
             catch (Exception ex)
             {
@@ -183,7 +183,7 @@ namespace BusinessLogic.Utilidades
         {
             try
             {
-                return await EnviarCorreoHtml(_emailAdmin, asunto, FormatearTextoPlanoAHtml(mensaje));
+                return await EnviarCorreoHtml(_emailAdmin ?? "", asunto, FormatearTextoPlanoAHtml(mensaje));
             }
             catch (Exception ex)
             {
@@ -211,7 +211,7 @@ namespace BusinessLogic.Utilidades
 
                     var mailMessage = new MailMessage
                     {
-                        From = new MailAddress(_emailFrom, _emailFromName),
+                        From = new MailAddress(_emailFrom ?? "", _emailFromName),
                         Subject = asunto,
                         Body = htmlBody,
                         IsBodyHtml = true,

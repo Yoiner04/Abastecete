@@ -11,15 +11,15 @@ namespace BusinessLogic.Models
         public int Id { get; set; }
         public int LocalId { get; set; }
         public int? SuscripcionId { get; set; }
-        public Membresia TipoAnterior { get; set; }
-        public Membresia TipoNuevo { get; set; }
-        public string TipoCambio { get; set; }
+        public Membresia? TipoAnterior { get; set; }
+        public Membresia? TipoNuevo { get; set; }
+        public string TipoCambio { get; set; } = "";
         public DateTime FechaCambio { get; set; }
         public DateTime FechaInicioPeriodo { get; set; }
         public DateTime FechaFinPeriodo { get; set; }
         public decimal? Monto { get; set; }
-        public string Periodo { get; set; }
-        public string Notas { get; set; }
+        public string Periodo { get; set; } = "";
+        public string? Notas { get; set; }
 
         /// <summary>
         /// Descripción legible del tipo de cambio

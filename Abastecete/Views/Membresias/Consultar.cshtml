@@ -4,7 +4,7 @@
 @{
     ViewData["Title"] = "Gestión de Membresías";
     ViewData["Description"] = "Administra los planes y precios de membresías del sistema";
-    var tienePermiso = RolPermisos.TienePermiso("Administrar Membresias,ADMIN_MEMBRESIAS", Context.Session.GetString("permisosSistema") ?? Context.Session.GetString("permisos"));
+    var tienePermiso = RolPermisos.TienePermiso("ADMIN_MEMBRESIAS", Context.Session.GetString("permisosSistema") ?? "");
 }
 
 <!-- Skeleton de carga -->

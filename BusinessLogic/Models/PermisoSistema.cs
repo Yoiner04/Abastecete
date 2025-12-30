@@ -12,27 +12,27 @@ namespace BusinessLogic.Models
         /// <summary>
         /// Código único para verificar en código (ej: "ADMIN_USUARIOS", "PRODUCTOS_BASICO")
         /// </summary>
-        public string Codigo { get; set; }
+        public string Codigo { get; set; } = "";
 
         /// <summary>
         /// Nombre para mostrar en UI
         /// </summary>
-        public string Nombre { get; set; }
+        public string Nombre { get; set; } = "";
 
         /// <summary>
         /// Descripción del permiso
         /// </summary>
-        public string Descripcion { get; set; }
+        public string Descripcion { get; set; } = "";
 
         /// <summary>
         /// Icono FontAwesome (ej: "fa-users")
         /// </summary>
-        public string Icono { get; set; }
+        public string Icono { get; set; } = "";
 
         /// <summary>
         /// Categoría del permiso (ADMIN, PRODUCTOS, OFERTAS, ANALITICAS, MARKETING, COMUNICACION, NEGOCIO)
         /// </summary>
-        public string Categoria { get; set; }
+        public string Categoria { get; set; } = "";
 
         /// <summary>
         /// Orden de visualización dentro de la categoría
@@ -49,7 +49,7 @@ namespace BusinessLogic.Models
         /// <summary>
         /// Origen del permiso: ADMIN, MEMBRESIA, PROMOCION
         /// </summary>
-        public string Origen { get; set; }
+        public string Origen { get; set; } = "";
 
         /// <summary>
         /// Fecha en que se asignó el permiso

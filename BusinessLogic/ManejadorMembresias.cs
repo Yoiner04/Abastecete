@@ -98,9 +98,9 @@ namespace BusinessLogic
                 membresias.Add(new Membresia
                 {
                     Id = Convert.ToInt32(row["PK_ID_TIPO_MEMBRESIA"]),
-                    Nombre = row["NOMBRE"].ToString(),
+                    Nombre = row["NOMBRE"].ToString() ?? "",
                     Costo = row.Table.Columns.Contains("COSTO_MES") && row["COSTO_MES"] != DBNull.Value
-                        ? float.Parse(row["COSTO_MES"].ToString())
+                        ? float.Parse(row["COSTO_MES"].ToString() ?? "0")
                         : 0,
                     Estado = row.Table.Columns.Contains("ESTADO") && row["ESTADO"] != DBNull.Value
                         ? Convert.ToInt32(row["ESTADO"])
@@ -120,13 +120,13 @@ namespace BusinessLogic
                         : 0,
                     // Costos por período
                     Costo_trimestral = row.Table.Columns.Contains("COSTO_TRIMESTRE") && row["COSTO_TRIMESTRE"] != DBNull.Value
-                        ? float.Parse(row["COSTO_TRIMESTRE"].ToString())
+                        ? float.Parse(row["COSTO_TRIMESTRE"].ToString() ?? "0")
                         : 0,
                     Costo_semestral = row.Table.Columns.Contains("COSTO_SEMESTRE") && row["COSTO_SEMESTRE"] != DBNull.Value
-                        ? float.Parse(row["COSTO_SEMESTRE"].ToString())
+                        ? float.Parse(row["COSTO_SEMESTRE"].ToString() ?? "0")
                         : 0,
                     Costo_anual = row.Table.Columns.Contains("COSTO_ANIO") && row["COSTO_ANIO"] != DBNull.Value
-                        ? float.Parse(row["COSTO_ANIO"].ToString())
+                        ? float.Parse(row["COSTO_ANIO"].ToString() ?? "0")
                         : 0
                 });
             }

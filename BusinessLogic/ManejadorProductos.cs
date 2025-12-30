@@ -118,7 +118,7 @@ namespace BusinessLogic
         {
             // Obtener el producto para recuperar el publicId de Cloudinary
             var producto = ObtenerProducto(id);
-            string publicId = producto?.CloudinaryPublicId;
+            string? publicId = producto?.CloudinaryPublicId;
 
             List<Parametro> parametros = new List<Parametro>
             {

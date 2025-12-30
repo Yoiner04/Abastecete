@@ -11,21 +11,21 @@ namespace BusinessLogic.Models
     {
         public int Id { get; set; }
         public int UsuarioId { get; set; }
-        public Usuario Usuario { get; set; }
+        public Usuario? Usuario { get; set; }
         public int Estado { get; set; }
-        public Suscripcion SuscripcionActiva { get; set; }
-        public string Nombre { get; set; }
-        public string Localizacion { get; set; }
-        public string Direccion { get; set; }
+        public Suscripcion? SuscripcionActiva { get; set; }
+        public string Nombre { get; set; } = "";
+        public string Localizacion { get; set; } = "";
+        public string Direccion { get; set; } = "";
         public long Telefono { get; set; }
         public float Puntuacion { get; set; } = 5;
         public string? LogotipoId { get; set; }
         public string? CloudinaryPublicIdLogotipo { get; set; }
         public IFormFile? logotipoArchivo { get; set; }
-        public ImagenModel imagen { get; set; }
-        public string BannerId { get; set; }
-        public ImagenModel BannerImagen { get; set; }
-        public string Descripcion { get; set; }
+        public ImagenModel? imagen { get; set; }
+        public string? BannerId { get; set; }
+        public ImagenModel? BannerImagen { get; set; }
+        public string Descripcion { get; set; } = "";
 
         // Contacto adicional
         public string? EmailContacto { get; set; }

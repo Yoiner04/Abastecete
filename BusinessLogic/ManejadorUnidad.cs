@@ -26,7 +26,7 @@ namespace BusinessLogic
                 unidades.Add(new Unidad
                 {
                     Id = Convert.ToInt32(row["ID_UNIDAD"]),
-                    Nombre = row["NOMBRE_UNIDAD"].ToString(),
+                    Nombre = row["NOMBRE_UNIDAD"].ToString() ?? "",
                     Estado = Convert.ToInt32(row["ESTADO_UNIDAD"])
                 });
             }
@@ -45,10 +45,10 @@ namespace BusinessLogic
                 unidades.Add(new Unidad
                 {
                     Id = Convert.ToInt32(row["ID_UNIDAD"]),
-                    Nombre = row["NOMBRE_UNIDAD"].ToString(),
+                    Nombre = row["NOMBRE_UNIDAD"].ToString() ?? "",
                     Estado = Convert.ToInt32(row["ESTADO_UNIDAD"]),
                     IdTipoUnidad = row["FK_ID_TIPOUNIDAD"] != DBNull.Value ? Convert.ToInt32(row["FK_ID_TIPOUNIDAD"]) : null,
-                    NombreTipoUnidad = row["NOMBRE_TIPOUNIDAD"]?.ToString()
+                    NombreTipoUnidad = row["NOMBRE_TIPOUNIDAD"]?.ToString() ?? ""
                 });
             }
             return unidades;
@@ -71,13 +71,13 @@ namespace BusinessLogic
                 return new Unidad
                 {
                     Id = Convert.ToInt32(row["ID_UNIDAD"]),
-                    Nombre = row["NOMBRE_UNIDAD"].ToString(),
+                    Nombre = row["NOMBRE_UNIDAD"].ToString() ?? "",
                     Estado = Convert.ToInt32(row["ESTADO_UNIDAD"]),
                     IdTipoUnidad = row["FK_ID_TIPOUNIDAD"] != DBNull.Value ? Convert.ToInt32(row["FK_ID_TIPOUNIDAD"]) : null,
-                    NombreTipoUnidad = row["NOMBRE_TIPOUNIDAD"]?.ToString()
+                    NombreTipoUnidad = row["NOMBRE_TIPOUNIDAD"]?.ToString() ?? ""
                 };
             }
-            return null;
+            return null!;
         }
 
         /// <summary>
@@ -96,10 +96,10 @@ namespace BusinessLogic
                 unidades.Add(new Unidad
                 {
                     Id = Convert.ToInt32(row["ID_UNIDAD"]),
-                    Nombre = row["NOMBRE_UNIDAD"].ToString(),
+                    Nombre = row["NOMBRE_UNIDAD"].ToString() ?? "",
                     Estado = Convert.ToInt32(row["ESTADO_UNIDAD"]),
                     IdTipoUnidad = row["FK_ID_TIPOUNIDAD"] != DBNull.Value ? Convert.ToInt32(row["FK_ID_TIPOUNIDAD"]) : null,
-                    NombreTipoUnidad = row["NOMBRE_TIPOUNIDAD"]?.ToString()
+                    NombreTipoUnidad = row["NOMBRE_TIPOUNIDAD"]?.ToString() ?? ""
                 });
             }
             return unidades;

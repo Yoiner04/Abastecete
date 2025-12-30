@@ -11,7 +11,7 @@ namespace BusinessLogic.Models
         public bool TieneSuscripcionActiva { get; set; }
         public int DiasRestantes { get; set; }
         public DateTime? FechaVencimiento { get; set; }
-        public string NombreMembresia { get; set; }
+        public string NombreMembresia { get; set; } = "";
 
         // Límites configurados
         public int LimiteProductos { get; set; }
@@ -70,7 +70,7 @@ namespace BusinessLogic.Models
         public bool PuedeAgregar { get; set; }
         public int ProductosActuales { get; set; }
         public int LimiteMaximo { get; set; }
-        public string Mensaje { get; set; }
+        public string Mensaje { get; set; } = "";
 
         public bool LimiteIlimitado => LimiteMaximo == 0;
         public int Disponibles => LimiteIlimitado ? int.MaxValue : Math.Max(0, LimiteMaximo - ProductosActuales);
@@ -82,7 +82,7 @@ namespace BusinessLogic.Models
     public class ValidacionOferta
     {
         public bool PuedeCrear { get; set; }
-        public string Mensaje { get; set; }
+        public string Mensaje { get; set; } = "";
         public int OfertasActivas { get; set; }
         public int LimiteSimultaneas { get; set; }
         public int OfertasUsadas { get; set; }

@@ -6,7 +6,7 @@ namespace BusinessLogic.Models
     {
         public int Id { get; set; }
         public int LocalId { get; set; }
-        public string CloudinaryUrl { get; set; }
+        public string CloudinaryUrl { get; set; } = "";
         public string? CloudinaryPublicId { get; set; }
         public EstadoGaleria Estado { get; set; }
         public DateTime FechaSubida { get; set; }

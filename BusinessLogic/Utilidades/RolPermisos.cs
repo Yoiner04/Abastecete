@@ -25,7 +25,7 @@ namespace BusinessLogic.Utilidades
             try
             {
                 string[] arregloPermisos = permisosBuscar.Split(',', StringSplitOptions.RemoveEmptyEntries);
-                Dictionary<string, bool> diccionarioPermisos = JsonConvert.DeserializeObject<Dictionary<string, bool>>(permisosJson);
+                Dictionary<string, bool>? diccionarioPermisos = JsonConvert.DeserializeObject<Dictionary<string, bool>>(permisosJson);
 
                 if (diccionarioPermisos == null)
                 {
@@ -61,7 +61,7 @@ namespace BusinessLogic.Utilidades
             try
             {
                 string[] arregloPermisos = permisosBuscar.Split(',', StringSplitOptions.RemoveEmptyEntries);
-                Dictionary<string, bool> diccionarioPermisos = JsonConvert.DeserializeObject<Dictionary<string, bool>>(permisosJson);
+                Dictionary<string, bool>? diccionarioPermisos = JsonConvert.DeserializeObject<Dictionary<string, bool>>(permisosJson);
 
                 if (diccionarioPermisos == null)
                 {
@@ -96,7 +96,7 @@ namespace BusinessLogic.Utilidades
 
             try
             {
-                Dictionary<string, bool> diccionarioPermisos = JsonConvert.DeserializeObject<Dictionary<string, bool>>(permisosJson);
+                Dictionary<string, bool>? diccionarioPermisos = JsonConvert.DeserializeObject<Dictionary<string, bool>>(permisosJson);
                 return diccionarioPermisos?
                     .Where(p => p.Value)
                     .Select(p => p.Key)
@@ -120,7 +120,7 @@ namespace BusinessLogic.Utilidades
 
             try
             {
-                Dictionary<string, bool> diccionarioPermisos = JsonConvert.DeserializeObject<Dictionary<string, bool>>(permisosJson);
+                Dictionary<string, bool>? diccionarioPermisos = JsonConvert.DeserializeObject<Dictionary<string, bool>>(permisosJson);
                 return diccionarioPermisos?.Any(p => p.Key.StartsWith("ADMIN_") && p.Value) ?? false;
             }
             catch

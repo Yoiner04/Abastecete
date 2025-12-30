@@ -93,8 +93,8 @@ namespace BusinessLogic
                 return new CloudinaryResult
                 {
                     Success = true,
-                    Url = uploadResult.Url?.ToString(),
-                    SecureUrl = uploadResult.SecureUrl?.ToString(),
+                    Url = uploadResult.Url?.ToString() ?? "",
+                    SecureUrl = uploadResult.SecureUrl?.ToString() ?? "",
                     PublicId = uploadResult.PublicId,
                     Width = uploadResult.Width,
                     Height = uploadResult.Height,
@@ -158,8 +158,8 @@ namespace BusinessLogic
                 return new CloudinaryResult
                 {
                     Success = true,
-                    Url = uploadResult.Url?.ToString(),
-                    SecureUrl = uploadResult.SecureUrl?.ToString(),
+                    Url = uploadResult.Url?.ToString() ?? "",
+                    SecureUrl = uploadResult.SecureUrl?.ToString() ?? "",
                     PublicId = uploadResult.PublicId,
                     Width = uploadResult.Width,
                     Height = uploadResult.Height,

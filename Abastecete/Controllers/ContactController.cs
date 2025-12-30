@@ -51,17 +51,16 @@ namespace Abastecete.Controllers
 
     public class ContactFormModel
     {
-        public string Email
-        { get; set; }
-        public string Phone { get; set; }
-        public string Message { get; set; }
+        public string Email { get; set; } = "";
+        public string Phone { get; set; } = "";
+        public string Message { get; set; } = "";
     }
 
     public class OpinionModel
     {
-        public string Nombre { get; set; }
-        public string Correo { get; set; }
-        public string Telefono { get; set; }
-        public string Mensaje { get; set; }
+        public string Nombre { get; set; } = "";
+        public string Correo { get; set; } = "";
+        public string Telefono { get; set; } = "";
+        public string Mensaje { get; set; } = "";
     }
 }

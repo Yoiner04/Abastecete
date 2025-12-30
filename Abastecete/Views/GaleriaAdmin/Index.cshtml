@@ -3,8 +3,8 @@
 @{
     ViewData["Title"] = "Galeria de Locales - Abastecete";
     ViewData["Description"] = "Administra y revisa las imagenes de la galeria de locales comerciales. Aprueba o rechaza fotografias subidas por los negocios afiliados.";
-    var permisos = Context.Session.GetString("permisos");
-    var puedeAdministrar = RolPermisos.TienePermiso("Administrar Galeria", permisos);
+    var permisos = Context.Session.GetString("permisosSistema") ?? "";
+    var puedeAdministrar = RolPermisos.TienePermiso("ADMIN_GALERIA", permisos);
     var totalPendientes = ViewBag.TotalPendientes ?? 0;
 }
 

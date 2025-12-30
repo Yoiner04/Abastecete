@@ -6,8 +6,8 @@
     var categorias = ViewBag.Categorias as List<BusinessLogic.Models.Categoria> ?? new List<BusinessLogic.Models.Categoria>();
     var marcas = ViewBag.Marcas as List<BusinessLogic.Models.Marca> ?? new List<BusinessLogic.Models.Marca>();
     var tiposUnidad = ViewBag.TiposUnidad as List<BusinessLogic.Models.TipoUnidad> ?? new List<BusinessLogic.Models.TipoUnidad>();
-    var permisos = Context.Session.GetString("permisos");
-    var puedeAdministrar = RolPermisos.TienePermiso("Administrar Roles", permisos);
+    var permisos = Context.Session.GetString("permisosSistema") ?? "";
+    var puedeAdministrar = RolPermisos.TienePermiso("ADMIN_PRODUCTOS", permisos);
 }
 
 <style>

@@ -28,14 +28,14 @@ namespace BusinessLogic.Models
         /// <summary>
         /// Referencia de pago (ePayco)
         /// </summary>
-        public string RefPago { get; set; }
+        public string? RefPago { get; set; }
 
         public bool Estado { get; set; }
 
         // Propiedades del addon relacionado
-        public string CodigoAddon { get; set; }
-        public string NombreAddon { get; set; }
-        public string TipoLimite { get; set; }
+        public string CodigoAddon { get; set; } = "";
+        public string NombreAddon { get; set; } = "";
+        public string TipoLimite { get; set; } = "";
         public int CantidadAddon { get; set; }
 
         /// <summary>

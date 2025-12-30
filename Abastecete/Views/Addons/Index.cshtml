@@ -1,10 +1,10 @@
-@model List<BusinessLogic.Models.Marca>
+@model List<BusinessLogic.Models.AddonTipo>
 @using BusinessLogic.Utilidades
 @{
-    ViewData["Title"] = "Gestión de Marcas";
-    ViewData["Description"] = "Administra las marcas de productos del sistema";
+    ViewData["Title"] = "Gestión de Addons";
+    ViewData["Description"] = "Administra los addons disponibles para la venta";
     var permisos = Context.Session.GetString("permisosSistema") ?? "";
-    var puedeAdministrar = RolPermisos.TienePermiso("ADMIN_MARCAS", permisos);
+    var puedeAdministrar = RolPermisos.TienePermiso("ADMIN_ADDONS", permisos);
 }
 
 <style>
@@ -15,7 +15,6 @@
 
 <!-- Skeleton de carga -->
 <div id="loading-skeleton" class="animate-pulse">
-    <!-- Header Skeleton -->
     <div class="bg-white border-b border-gray-200">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <div class="flex items-center justify-between">
@@ -30,56 +29,27 @@
             </div>
         </div>
     </div>
-
-    <!-- Content Skeleton -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <!-- Stats Cards Skeleton -->
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-            <div class="bg-white rounded-xl border border-gray-200 p-4">
-                <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 bg-gray-200 rounded-lg"></div>
-                    <div class="flex-1">
-                        <div class="h-8 w-16 bg-gray-200 rounded mb-1"></div>
-                        <div class="h-4 w-24 bg-gray-200 rounded"></div>
+        <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6">
+            @for (int i = 0; i < 4; i++)
+            {
+                <div class="bg-white rounded-xl border border-gray-200 p-4">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 bg-gray-200 rounded-lg"></div>
+                        <div class="flex-1">
+                            <div class="h-8 w-16 bg-gray-200 rounded mb-1"></div>
+                            <div class="h-4 w-24 bg-gray-200 rounded"></div>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="bg-white rounded-xl border border-gray-200 p-4">
-                <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 bg-gray-200 rounded-lg"></div>
-                    <div class="flex-1">
-                        <div class="h-8 w-16 bg-gray-200 rounded mb-1"></div>
-                        <div class="h-4 w-20 bg-gray-200 rounded"></div>
-                    </div>
-                </div>
-            </div>
-            <div class="bg-white rounded-xl border border-gray-200 p-4">
-                <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 bg-gray-200 rounded-lg"></div>
-                    <div class="flex-1">
-                        <div class="h-8 w-16 bg-gray-200 rounded mb-1"></div>
-                        <div class="h-4 w-20 bg-gray-200 rounded"></div>
-                    </div>
-                </div>
-            </div>
+            }
         </div>
-
-        <!-- Filtros Skeleton -->
-        <div class="bg-white rounded-xl border border-gray-200 p-4 mb-6">
-            <div class="flex gap-4">
-                <div class="flex-1 h-10 bg-gray-200 rounded-lg"></div>
-                <div class="w-48 h-10 bg-gray-200 rounded-lg"></div>
-            </div>
-        </div>
-
-        <!-- Tabla Skeleton -->
         <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
             <div class="p-4 space-y-3">
-                <div class="h-16 bg-gray-200 rounded"></div>
-                <div class="h-16 bg-gray-200 rounded"></div>
-                <div class="h-16 bg-gray-200 rounded"></div>
-                <div class="h-16 bg-gray-200 rounded"></div>
-                <div class="h-16 bg-gray-200 rounded"></div>
+                @for (int i = 0; i < 5; i++)
+                {
+                    <div class="h-16 bg-gray-200 rounded"></div>
+                }
             </div>
         </div>
     </div>
@@ -87,7 +57,7 @@
 
 <!-- Contenido real -->
 <div id="main-content" class="hidden">
-<!-- Header a ancho completo -->
+<!-- Header -->
 <div class="bg-white border-b border-gray-200">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -97,17 +67,17 @@
                     <i class="fas fa-arrow-left text-gray-600"></i>
                 </a>
                 <div>
-                    <h1 class="text-2xl font-bold text-gray-900">Gestión de Marcas</h1>
-                    <p class="text-sm text-gray-500 mt-1">Administra las marcas de productos del sistema</p>
+                    <h1 class="text-2xl font-bold text-gray-900">Gestión de Addons</h1>
+                    <p class="text-sm text-gray-500 mt-1">Administra los addons disponibles para la venta</p>
                 </div>
             </div>
             @if (puedeAdministrar)
             {
-                <button onclick="abrirModalMarca()"
-                    class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                <i class="fas fa-plus"></i>
-                <span>Nueva Marca</span>
-            </button>
+                <button onclick="abrirModalAddon()"
+                    class="inline-flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors">
+                    <i class="fas fa-plus"></i>
+                    <span>Nuevo Addon</span>
+                </button>
             }
         </div>
     </div>
@@ -117,14 +87,14 @@
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
 
 <!-- Stats Cards -->
-<div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+<div class="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6">
     <div class="bg-white rounded-xl border border-gray-200 p-4 flex items-center gap-4">
-        <div class="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center">
-            <i class="fas fa-trademark text-blue-600 text-xl"></i>
+        <div class="w-12 h-12 rounded-lg bg-orange-100 flex items-center justify-center">
+            <i class="fas fa-puzzle-piece text-orange-600 text-xl"></i>
         </div>
         <div>
             <p class="text-2xl font-bold text-gray-900">@Model.Count</p>
-            <p class="text-sm text-gray-500">Total Marcas</p>
+            <p class="text-sm text-gray-500">Total Addons</p>
         </div>
     </div>
     <div class="bg-white rounded-xl border border-gray-200 p-4 flex items-center gap-4">
@@ -132,114 +102,142 @@
             <i class="fas fa-check-circle text-green-600 text-xl"></i>
         </div>
         <div>
-            <p class="text-2xl font-bold text-gray-900">@Model.Count(m => m.Activo)</p>
-            <p class="text-sm text-gray-500">Activas</p>
+            <p class="text-2xl font-bold text-gray-900">@Model.Count(a => a.Estado)</p>
+            <p class="text-sm text-gray-500">Activos</p>
         </div>
     </div>
     <div class="bg-white rounded-xl border border-gray-200 p-4 flex items-center gap-4">
-        <div class="w-12 h-12 rounded-lg bg-red-100 flex items-center justify-center">
-            <i class="fas fa-times-circle text-red-600 text-xl"></i>
+        <div class="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center">
+            <i class="fas fa-box text-blue-600 text-xl"></i>
         </div>
         <div>
-            <p class="text-2xl font-bold text-gray-900">@Model.Count(m => !m.Activo)</p>
-            <p class="text-sm text-gray-500">Inactivas</p>
+            <p class="text-2xl font-bold text-gray-900">@Model.Count(a => a.TipoLimite == "PRODUCTOS")</p>
+            <p class="text-sm text-gray-500">Productos</p>
+        </div>
+    </div>
+    <div class="bg-white rounded-xl border border-gray-200 p-4 flex items-center gap-4">
+        <div class="w-12 h-12 rounded-lg bg-purple-100 flex items-center justify-center">
+            <i class="fas fa-bolt text-purple-600 text-xl"></i>
+        </div>
+        <div>
+            <p class="text-2xl font-bold text-gray-900">@Model.Count(a => a.TipoLimite == "OFERTAS_FLASH")</p>
+            <p class="text-sm text-gray-500">Ofertas Flash</p>
         </div>
     </div>
 </div>
 
-<!-- Filtro de búsqueda -->
+<!-- Filtros -->
 <div class="bg-white rounded-xl border border-gray-200 mb-6 p-4">
     <div class="flex flex-col sm:flex-row gap-4">
         <div class="flex-1 relative">
-            <input type="text" id="filtro-buscar" placeholder="Buscar marca por nombre..."
-                   class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+            <input type="text" id="filtro-buscar" placeholder="Buscar addon por nombre o código..."
+                   class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all">
             <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
         </div>
-        <select id="filtro-estado" class="px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 transition-all">
+        <select id="filtro-tipo" class="px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 transition-all">
+            <option value="">Todos los tipos</option>
+            <option value="PRODUCTOS">Productos</option>
+            <option value="OFERTAS_FLASH">Ofertas Flash</option>
+            <option value="DURACION_OFERTA">Duración Oferta</option>
+        </select>
+        <select id="filtro-estado" class="px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 transition-all">
             <option value="">Todos los estados</option>
-            <option value="1">Activas</option>
-            <option value="0">Inactivas</option>
+            <option value="1">Activos</option>
+            <option value="0">Inactivos</option>
         </select>
     </div>
 </div>
 
-<!-- Tabla de Marcas -->
+<!-- Tabla de Addons -->
 <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
     <div class="overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
                 <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Marca</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">Descripción</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Addon</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">Tipo</th>
+                    <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Cantidad</th>
+                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Precio</th>
                     <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
                     <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
                 </tr>
             </thead>
-            <tbody id="tabla-marcas" class="bg-white divide-y divide-gray-200">
-                @foreach (var marca in Model)
+            <tbody id="tabla-addons" class="bg-white divide-y divide-gray-200">
+                @foreach (var addon in Model)
                 {
-                    <tr class="hover:bg-gray-50 marca-row transition-colors" data-id="@marca.Id"
-                        data-nombre="@marca.Nombre.ToLower()"
-                        data-activo="@(marca.Activo ? "1" : "0")">
+                    var colorTipo = addon.TipoLimite switch {
+                        "PRODUCTOS" => "blue",
+                        "OFERTAS_FLASH" => "purple",
+                        "DURACION_OFERTA" => "amber",
+                        _ => "gray"
+                    };
+                    var iconoTipo = addon.TipoLimite switch {
+                        "PRODUCTOS" => "fa-box",
+                        "OFERTAS_FLASH" => "fa-bolt",
+                        "DURACION_OFERTA" => "fa-clock",
+                        _ => "fa-puzzle-piece"
+                    };
+                    <tr class="hover:bg-gray-50 addon-row transition-colors"
+                        data-id="@addon.Id"
+                        data-nombre="@addon.Nombre.ToLower()"
+                        data-codigo="@addon.Codigo.ToLower()"
+                        data-tipo="@addon.TipoLimite"
+                        data-activo="@(addon.Estado ? "1" : "0")">
                         <td class="px-6 py-4">
                             <div class="flex items-center gap-4">
-                                @if (!string.IsNullOrEmpty(marca.LogoUrl))
-                                {
-                                    <img src="@marca.LogoUrl" alt="@marca.Nombre"
-                                         class="w-12 h-12 rounded-xl object-cover border border-gray-200">
-                                }
-                                else
-                                {
-                                    <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
-                                        <span class="text-xl font-bold text-white">@marca.Nombre.Substring(0, 1).ToUpper()</span>
-                                    </div>
-                                }
+                                <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center">
+                                    <i class="@(string.IsNullOrEmpty(addon.Icono) ? "fas fa-puzzle-piece" : addon.Icono) text-xl text-white"></i>
+                                </div>
                                 <div>
-                                    <p class="font-semibold text-gray-900">@marca.Nombre</p>
-                                    @if (marca.Id == 1)
-                                    {
-                                        <span class="text-xs text-gray-400">Marca por defecto</span>
-                                    }
+                                    <p class="font-semibold text-gray-900">@addon.Nombre</p>
+                                    <p class="text-xs text-gray-400 font-mono">@addon.Codigo</p>
                                 </div>
                             </div>
                         </td>
-                        <td class="px-6 py-4 hidden sm:table-cell">
-                            <p class="text-sm text-gray-600 max-w-xs truncate">
-                                @(string.IsNullOrEmpty(marca.Descripcion) ? "-" : (marca.Descripcion.Length > 60 ? marca.Descripcion.Substring(0, 60) + "..." : marca.Descripcion))
-                            </p>
+                        <td class="px-6 py-4 hidden md:table-cell">
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-@(colorTipo)-100 text-@(colorTipo)-800">
+                                <i class="fas @iconoTipo mr-1"></i>
+                                @addon.TipoLimite.Replace("_", " ")
+                            </span>
                         </td>
                         <td class="px-6 py-4 text-center">
-                            @if (marca.Activo)
+                            <span class="text-lg font-bold text-gray-900">+@addon.Cantidad</span>
+                        </td>
+                        <td class="px-6 py-4 text-right">
+                            <span class="text-lg font-bold text-green-600">$@addon.Precio.ToString("N0")</span>
+                        </td>
+                        <td class="px-6 py-4 text-center">
+                            @if (addon.Estado)
                             {
                                 <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                    <i class="fas fa-check-circle mr-1"></i> Activa
+                                    <i class="fas fa-check-circle mr-1"></i> Activo
                                 </span>
                             }
                             else
                             {
                                 <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                    <i class="fas fa-times-circle mr-1"></i> Inactiva
+                                    <i class="fas fa-times-circle mr-1"></i> Inactivo
                                 </span>
                             }
                         </td>
                         <td class="px-6 py-4 text-center">
-                            @if (marca.Id != 1 && puedeAdministrar)
+                            @if (puedeAdministrar)
                             {
                                 <div class="flex items-center justify-center gap-1">
-                                    <button onclick="editarMarca(@marca.Id)"
+                                    <button onclick="editarAddon(@addon.Id)"
                                             class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Editar">
                                         <i class="fas fa-edit"></i>
                                     </button>
-                                    @if (marca.Activo)
+                                    @if (addon.Estado)
                                     {
-                                        <button onclick="desactivarMarca(@marca.Id, '@marca.Nombre.Replace("'", "\\'")')"
+                                        <button onclick="desactivarAddon(@addon.Id, '@addon.Nombre.Replace("'", "\\'")')"
                                                 class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Desactivar">
                                             <i class="fas fa-ban"></i>
                                         </button>
                                     }
                                     else
                                     {
-                                        <button onclick="activarMarca(@marca.Id)"
+                                        <button onclick="activarAddon(@addon.Id)"
                                                 class="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors" title="Activar">
                                             <i class="fas fa-check"></i>
                                         </button>
@@ -260,11 +258,11 @@
     @if (!Model.Any())
     {
         <div class="text-center py-12">
-            <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
-                <i class="fas fa-trademark text-2xl text-gray-400"></i>
+            <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-orange-100 flex items-center justify-center">
+                <i class="fas fa-puzzle-piece text-2xl text-orange-400"></i>
             </div>
-            <p class="text-gray-500 mb-2">No hay marcas registradas</p>
-            <p class="text-sm text-gray-400">Haz clic en "Nueva Marca" para agregar una</p>
+            <p class="text-gray-500 mb-2">No hay addons registrados</p>
+            <p class="text-sm text-gray-400">Haz clic en "Nuevo Addon" para agregar uno</p>
         </div>
     }
 
@@ -275,7 +273,7 @@
             <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div class="flex items-center gap-2">
                     <span class="text-sm text-gray-700">Mostrar</span>
-                    <select id="items-per-page" class="px-2 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+                    <select id="items-per-page" class="px-2 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500">
                         <option value="10">10</option>
                         <option value="25" selected>25</option>
                         <option value="50">50</option>
@@ -297,49 +295,84 @@
     }
 </div>
 
-<!-- Modal Crear/Editar Marca -->
-<div id="modal-marca" class="modal hidden fixed inset-0 z-50 overflow-y-auto">
+<!-- Modal Crear/Editar Addon -->
+<div id="modal-addon" class="modal hidden fixed inset-0 z-50 overflow-y-auto">
     <div class="flex items-center justify-center min-h-screen px-4 py-8">
         <div class="fixed inset-0 bg-black/50 backdrop-blur-sm" onclick="cerrarModal()"></div>
-        <div class="relative bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
+        <div class="relative bg-white rounded-2xl shadow-xl max-w-lg w-full p-6">
             <div class="flex items-center justify-between mb-6">
                 <h3 id="modal-titulo" class="text-lg font-semibold text-gray-900">
-                    <i class="fas fa-trademark text-blue-500 mr-2"></i>
-                    Nueva Marca
+                    <i class="fas fa-puzzle-piece text-orange-500 mr-2"></i>
+                    Nuevo Addon
                 </h3>
                 <button onclick="cerrarModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
                     <i class="fas fa-times text-xl"></i>
                 </button>
             </div>
 
-            <form id="form-marca" onsubmit="guardarMarca(event)">
-                <input type="hidden" id="marca-id" value="0">
+            <form id="form-addon" onsubmit="guardarAddon(event)">
+                <input type="hidden" id="addon-id" value="0">
 
                 <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Nombre de la marca *</label>
-                        <input type="text" id="marca-nombre" placeholder="Ej: Coca-Cola, Nestlé, P&G"
-                               class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                               required maxlength="100">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Código *</label>
+                            <input type="text" id="addon-codigo" placeholder="Ej: ADDON_PRODUCTOS_50"
+                                   class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all font-mono text-sm"
+                                   required maxlength="50">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Nombre *</label>
+                            <input type="text" id="addon-nombre" placeholder="Ej: +50 Productos"
+                                   class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
+                                   required maxlength="100">
+                        </div>
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
-                        <textarea id="marca-descripcion" rows="3" placeholder="Descripción breve de la marca..."
-                                  class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                        <textarea id="addon-descripcion" rows="2" placeholder="Descripción del addon..."
+                                  class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
                                   maxlength="255"></textarea>
                     </div>
 
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Logo de la marca</label>
-                        <div class="flex items-start gap-4">
-                            <div class="flex-1">
-                                <input id="marca-logo" type="file" accept="image/*"
-                                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
-                                <p class="mt-1 text-xs text-gray-500">Formatos: JPG, PNG, GIF. Se subirá a Cloudinary.</p>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Tipo de Límite *</label>
+                            <select id="addon-tipo" required
+                                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all">
+                                <option value="">Seleccionar...</option>
+                                <option value="PRODUCTOS">Productos</option>
+                                <option value="OFERTAS_FLASH">Ofertas Flash</option>
+                                <option value="DURACION_OFERTA">Duración Oferta</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Cantidad a agregar *</label>
+                            <input type="number" id="addon-cantidad" placeholder="50"
+                                   class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
+                                   required min="1" max="10000">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Precio (COP) *</label>
+                            <div class="relative">
+                                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                                <input type="number" id="addon-precio" placeholder="50000"
+                                       class="w-full pl-8 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
+                                       required min="0" step="1000">
                             </div>
-                            <img id="logo-preview" src="" alt="Vista previa"
-                                 class="hidden w-16 h-16 rounded-lg border object-cover">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Icono FontAwesome</label>
+                            <div class="relative">
+                                <input type="text" id="addon-icono" placeholder="fas fa-box"
+                                       class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all"
+                                       maxlength="50">
+                                <i id="icono-preview" class="fas fa-puzzle-piece absolute left-3 top-1/2 -translate-y-1/2 text-orange-500"></i>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -355,7 +388,7 @@
                         Cancelar
                     </button>
                     <button type="submit" id="btn-guardar"
-                            class="flex-1 px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
+                            class="flex-1 px-4 py-2.5 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors font-medium">
                         <i class="fas fa-save mr-2"></i>Guardar
                     </button>
                 </div>
@@ -402,8 +435,8 @@
     </div>
 </div>
 
-</div> <!-- Cierre del contenedor principal -->
-</div> <!-- Cierre del contenido real -->
+</div>
+</div>
 
 @section Scripts {
 <script>
@@ -418,7 +451,7 @@
     // =============== PAGINACIÓN ===============
     let currentPage = 1;
     let itemsPerPage = 25;
-    const allRows = Array.from(document.querySelectorAll('.marca-row'));
+    const allRows = Array.from(document.querySelectorAll('.addon-row'));
     let filteredRows = [...allRows];
 
     function updatePagination() {
@@ -432,7 +465,7 @@
 
         const showing = Math.min(end, totalItems);
         document.getElementById('pagination-info').textContent =
-            totalItems > 0 ? `Mostrando ${start + 1}-${showing} de ${totalItems} marcas` : 'Sin resultados';
+            totalItems > 0 ? `Mostrando ${start + 1}-${showing} de ${totalItems} addons` : 'Sin resultados';
 
         document.getElementById('btn-prev').disabled = currentPage === 1;
         document.getElementById('btn-next').disabled = currentPage === totalPages || totalPages === 0;
@@ -452,7 +485,7 @@
             const btn = document.createElement('button');
             btn.textContent = i;
             btn.className = `px-3 py-1.5 rounded-lg text-sm transition-colors ${i === currentPage
-                ? 'bg-blue-600 text-white'
+                ? 'bg-orange-600 text-white'
                 : 'border border-gray-300 text-gray-600 hover:bg-gray-100'}`;
             btn.onclick = () => { currentPage = i; updatePagination(); };
             numbersContainer.appendChild(btn);
@@ -476,117 +509,142 @@
 
     // =============== FILTROS ===============
     document.getElementById('filtro-buscar').addEventListener('input', aplicarFiltros);
+    document.getElementById('filtro-tipo').addEventListener('change', aplicarFiltros);
     document.getElementById('filtro-estado').addEventListener('change', aplicarFiltros);
 
     function aplicarFiltros() {
         const termino = document.getElementById('filtro-buscar').value.toLowerCase();
+        const tipo = document.getElementById('filtro-tipo').value;
         const estado = document.getElementById('filtro-estado').value;
 
         filteredRows = allRows.filter(row => {
             const nombre = row.dataset.nombre || '';
+            const codigo = row.dataset.codigo || '';
+            const tipoRow = row.dataset.tipo;
             const activo = row.dataset.activo;
 
-            const matchNombre = nombre.includes(termino);
+            const matchTexto = nombre.includes(termino) || codigo.includes(termino);
+            const matchTipo = !tipo || tipoRow === tipo;
             const matchEstado = !estado || activo === estado;
 
-            return matchNombre && matchEstado;
+            return matchTexto && matchTipo && matchEstado;
         });
 
         currentPage = 1;
         updatePagination();
     }
 
-    // =============== MODAL MARCA ===============
-    function abrirModalMarca() {
+    // =============== MODAL ADDON ===============
+    function abrirModalAddon() {
         limpiarFormulario();
-        document.getElementById('modal-titulo').innerHTML = '<i class="fas fa-trademark text-blue-500 mr-2"></i>Nueva Marca';
-        document.getElementById('modal-marca').classList.remove('hidden');
+        document.getElementById('modal-titulo').innerHTML = '<i class="fas fa-puzzle-piece text-orange-500 mr-2"></i>Nuevo Addon';
+        document.getElementById('modal-addon').classList.remove('hidden');
     }
 
     function cerrarModal() {
-        document.getElementById('modal-marca').classList.add('hidden');
+        document.getElementById('modal-addon').classList.add('hidden');
     }
 
     function limpiarFormulario() {
-        document.getElementById('marca-id').value = '0';
-        document.getElementById('marca-nombre').value = '';
-        document.getElementById('marca-descripcion').value = '';
-        document.getElementById('marca-logo').value = '';
-        document.getElementById('logo-preview').classList.add('hidden');
+        document.getElementById('addon-id').value = '0';
+        document.getElementById('addon-codigo').value = '';
+        document.getElementById('addon-nombre').value = '';
+        document.getElementById('addon-descripcion').value = '';
+        document.getElementById('addon-tipo').value = '';
+        document.getElementById('addon-cantidad').value = '';
+        document.getElementById('addon-precio').value = '';
+        document.getElementById('addon-icono').value = '';
+        document.getElementById('icono-preview').className = 'fas fa-puzzle-piece absolute left-3 top-1/2 -translate-y-1/2 text-orange-500';
         document.getElementById('error-mensaje').classList.add('hidden');
     }
 
-    // Preview de logo
-    document.getElementById('marca-logo').addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const preview = document.getElementById('logo-preview');
-                preview.src = e.target.result;
-                preview.classList.remove('hidden');
-            };
-            reader.readAsDataURL(file);
-        }
+    // Preview de icono
+    document.getElementById('addon-icono').addEventListener('input', function() {
+        const icono = this.value.trim() || 'fas fa-puzzle-piece';
+        document.getElementById('icono-preview').className = icono + ' absolute left-3 top-1/2 -translate-y-1/2 text-orange-500';
     });
 
-    // Editar marca
-    function editarMarca(id) {
-        fetch(`/Marcas/ObtenerMarca?id=${id}`)
+    // Editar addon
+    function editarAddon(id) {
+        fetch(`/Addons/ObtenerAddon?id=${id}`)
             .then(response => response.json())
             .then(data => {
-                document.getElementById('marca-id').value = data.id;
-                document.getElementById('marca-nombre').value = data.nombre;
-                document.getElementById('marca-descripcion').value = data.descripcion || '';
-
-                if (data.logoUrl) {
-                    const preview = document.getElementById('logo-preview');
-                    preview.src = data.logoUrl;
-                    preview.classList.remove('hidden');
-                } else {
-                    document.getElementById('logo-preview').classList.add('hidden');
+                if (!data.success) {
+                    showToast('error', 'Error', data.mensaje || 'Error al cargar el addon');
+                    return;
                 }
 
-                document.getElementById('modal-titulo').innerHTML = '<i class="fas fa-edit text-blue-500 mr-2"></i>Editar Marca';
-                document.getElementById('modal-marca').classList.remove('hidden');
+                const addon = data.addon;
+                document.getElementById('addon-id').value = addon.id;
+                document.getElementById('addon-codigo').value = addon.codigo;
+                document.getElementById('addon-nombre').value = addon.nombre;
+                document.getElementById('addon-descripcion').value = addon.descripcion || '';
+                document.getElementById('addon-tipo').value = addon.tipoLimite;
+                document.getElementById('addon-cantidad').value = addon.cantidad;
+                document.getElementById('addon-precio').value = addon.precio;
+                document.getElementById('addon-icono').value = addon.icono || '';
+
+                if (addon.icono) {
+                    document.getElementById('icono-preview').className = addon.icono + ' absolute left-3 top-1/2 -translate-y-1/2 text-orange-500';
+                }
+
+                document.getElementById('modal-titulo').innerHTML = '<i class="fas fa-edit text-orange-500 mr-2"></i>Editar Addon';
+                document.getElementById('modal-addon').classList.remove('hidden');
             })
-            .catch(() => showToast('error', 'Error', 'Error al cargar la marca'));
+            .catch(() => showToast('error', 'Error', 'Error al cargar el addon'));
     }
 
-    // Guardar marca
-    function guardarMarca(e) {
+    // Guardar addon
+    function guardarAddon(e) {
         e.preventDefault();
 
-        const id = document.getElementById('marca-id').value;
-        const nombre = document.getElementById('marca-nombre').value.trim();
-        const descripcion = document.getElementById('marca-descripcion').value.trim();
-        const logoInput = document.getElementById('marca-logo').files[0];
+        const id = parseInt(document.getElementById('addon-id').value) || 0;
+        const addon = {
+            id: id,
+            codigo: document.getElementById('addon-codigo').value.trim(),
+            nombre: document.getElementById('addon-nombre').value.trim(),
+            descripcion: document.getElementById('addon-descripcion').value.trim(),
+            tipoLimite: document.getElementById('addon-tipo').value,
+            cantidad: parseInt(document.getElementById('addon-cantidad').value) || 0,
+            precio: parseFloat(document.getElementById('addon-precio').value) || 0,
+            icono: document.getElementById('addon-icono').value.trim(),
+            estado: true
+        };
 
-        if (!nombre) {
-            mostrarError('El nombre de la marca es obligatorio');
+        if (!addon.codigo || !addon.nombre) {
+            mostrarError('Código y nombre son obligatorios');
             return;
         }
 
-        const formData = new FormData();
-        formData.append('nombre', nombre);
-        formData.append('descripcion', descripcion);
-        if (logoInput) formData.append('logo', logoInput);
+        if (!addon.tipoLimite) {
+            mostrarError('Debes seleccionar un tipo de límite');
+            return;
+        }
 
-        const url = id && id !== '0' ? `/Marcas/Editar?id=${id}` : '/Marcas/Crear';
+        if (addon.cantidad <= 0) {
+            mostrarError('La cantidad debe ser mayor a 0');
+            return;
+        }
+
+        const url = id > 0 ? '/Addons/ActualizarAddon' : '/Addons/CrearAddon';
 
         const btnGuardar = document.getElementById('btn-guardar');
         btnGuardar.disabled = true;
         btnGuardar.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Guardando...';
 
-        fetch(url, { method: 'POST', body: formData })
+        fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(addon)
+        })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
                     cerrarModal();
-                    showToast('success', 'Éxito', data.mensaje || 'Marca guardada correctamente');
+                    showToast('success', 'Éxito', data.mensaje || 'Addon guardado correctamente');
                     setTimeout(() => location.reload(), 1000);
                 } else {
-                    mostrarError(data.mensaje || 'Error al guardar la marca');
+                    mostrarError(data.mensaje || 'Error al guardar el addon');
                 }
             })
             .catch(() => mostrarError('Error de conexión al guardar'))
@@ -601,11 +659,11 @@
         document.getElementById('error-mensaje').classList.remove('hidden');
     }
 
-    // =============== DESACTIVAR/ACTIVAR MARCA ===============
-    function desactivarMarca(id, nombre) {
+    // =============== DESACTIVAR/ACTIVAR ADDON ===============
+    function desactivarAddon(id, nombre) {
         document.getElementById('confirmar-id').value = id;
         document.getElementById('confirmar-mensaje').textContent =
-            `¿Estás seguro de que deseas desactivar la marca "${nombre}"? Los productos asociados se moverán a "Sin Marca".`;
+            `¿Estás seguro de que deseas desactivar el addon "${nombre}"? Los usuarios no podrán comprarlo.`;
         document.getElementById('modal-confirmar').classList.remove('hidden');
     }
 
@@ -613,15 +671,15 @@
         document.getElementById('modal-confirmar').classList.add('hidden');
     }
 
-    document.getElementById('btn-confirmar').addEventListener('click', function() {
+    document.getElementById('btn-confirmar')?.addEventListener('click', function() {
         const id = document.getElementById('confirmar-id').value;
 
-        fetch(`/Marcas/Eliminar?id=${id}`, { method: 'DELETE' })
+        fetch(`/Addons/CambiarEstado?id=${id}&estado=false`, { method: 'POST' })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
                     cerrarModalConfirmar();
-                    showToast('success', 'Éxito', data.mensaje || 'Marca desactivada correctamente');
+                    showToast('success', 'Éxito', data.mensaje || 'Addon desactivado correctamente');
                     setTimeout(() => location.reload(), 1000);
                 } else {
                     showToast('error', 'Error', data.mensaje || 'Error al desactivar');
@@ -630,12 +688,12 @@
             .catch(() => showToast('error', 'Error', 'Error de conexión'));
     });
 
-    function activarMarca(id) {
-        fetch(`/Marcas/Activar?id=${id}`, { method: 'POST' })
+    function activarAddon(id) {
+        fetch(`/Addons/CambiarEstado?id=${id}&estado=true`, { method: 'POST' })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    showToast('success', 'Éxito', data.mensaje || 'Marca activada correctamente');
+                    showToast('success', 'Éxito', data.mensaje || 'Addon activado correctamente');
                     setTimeout(() => location.reload(), 1000);
                 } else {
                     showToast('error', 'Error', data.mensaje || 'Error al activar');

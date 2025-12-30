@@ -196,7 +196,7 @@ namespace BusinessLogic
                     FechaVencimiento = row["FechaVencimiento"] != DBNull.Value
                         ? Convert.ToDateTime(row["FechaVencimiento"])
                         : (DateTime?)null,
-                    NombreMembresia = row["NombreMembresia"]?.ToString(),
+                    NombreMembresia = row["NombreMembresia"]?.ToString() ?? "",
                     LimiteProductos = Convert.ToInt32(row["LimiteProductos"]),
                     LimiteOfertasSimultaneas = Convert.ToInt32(row["LimiteOfertasSimultaneas"]),
                     LimiteOfertasTotal = Convert.ToInt32(row["LimiteOfertasTotal"]),
@@ -214,7 +214,7 @@ namespace BusinessLogic
             {
                 TieneSuscripcionActiva = false,
                 DiasRestantes = 0,
-                NombreMembresia = null,
+                NombreMembresia = "",
                 PuedeAgregarProductos = false,
                 PuedeCrearOferta = false
             };
@@ -340,15 +340,15 @@ namespace BusinessLogic
                 FechaInicio = Convert.ToDateTime(row["FechaInicio"]),
                 FechaFin = Convert.ToDateTime(row["FechaFin"]),
                 FechaCreacion = Convert.ToDateTime(row["FechaCreacion"]),
-                Periodo = row["Periodo"]?.ToString(),
-                Notas = row["Notas"]?.ToString()
+                Periodo = row["Periodo"]?.ToString() ?? "",
+                Notas = row["Notas"]?.ToString() ?? ""
             };
 
             if (row["MontoPagado"] != DBNull.Value)
                 suscripcion.MontoPagado = Convert.ToDecimal(row["MontoPagado"]);
 
             if (row["MetodoPago"] != DBNull.Value)
-                suscripcion.MetodoPago = row["MetodoPago"]?.ToString();
+                suscripcion.MetodoPago = row["MetodoPago"]?.ToString() ?? "";
 
             // Mapear tipo de membresía
             suscripcion.TipoMembresia = new Membresia
@@ -397,15 +397,15 @@ namespace BusinessLogic
                 FechaInicio = Convert.ToDateTime(row["FechaInicio"]),
                 FechaFin = Convert.ToDateTime(row["FechaFin"]),
                 FechaCreacion = Convert.ToDateTime(row["FechaCreacion"]),
-                Periodo = row["Periodo"]?.ToString(),
-                Notas = row["Notas"]?.ToString()
+                Periodo = row["Periodo"]?.ToString() ?? "",
+                Notas = row["Notas"]?.ToString() ?? ""
             };
 
             if (row["MontoPagado"] != DBNull.Value)
                 suscripcion.MontoPagado = Convert.ToDecimal(row["MontoPagado"]);
 
             if (row["MetodoPago"] != DBNull.Value)
-                suscripcion.MetodoPago = row["MetodoPago"]?.ToString();
+                suscripcion.MetodoPago = row["MetodoPago"]?.ToString() ?? "";
 
             suscripcion.TipoMembresia = new Membresia
             {
@@ -429,7 +429,7 @@ namespace BusinessLogic
                 FechaCambio = Convert.ToDateTime(row["FechaCambio"]),
                 FechaInicioPeriodo = Convert.ToDateTime(row["FechaInicioPeriodo"]),
                 FechaFinPeriodo = Convert.ToDateTime(row["FechaFinPeriodo"]),
-                Notas = row["Notas"]?.ToString()
+                Notas = row["Notas"]?.ToString() ?? ""
             };
 
             if (row["SuscripcionId"] != DBNull.Value)
@@ -439,7 +439,7 @@ namespace BusinessLogic
                 historial.Monto = Convert.ToDecimal(row["Monto"]);
 
             if (row["Periodo"] != DBNull.Value)
-                historial.Periodo = row["Periodo"]?.ToString();
+                historial.Periodo = row["Periodo"]?.ToString() ?? "";
 
             // Tipo anterior (puede ser null)
             if (row["TipoAnteriorId"] != DBNull.Value)
@@ -447,7 +447,7 @@ namespace BusinessLogic
                 historial.TipoAnterior = new Membresia
                 {
                     Id = Convert.ToInt32(row["TipoAnteriorId"]),
-                    Nombre = row["TipoAnteriorNombre"]?.ToString()
+                    Nombre = row["TipoAnteriorNombre"]?.ToString() ?? ""
                 };
             }
 

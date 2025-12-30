@@ -240,12 +240,9 @@ namespace ConnectionProject.Controllers
             var sw = System.Diagnostics.Stopwatch.StartNew();
             ManejadorPermisos manejadorP = new ManejadorPermisos();
 
-            // Cargar permisos del nuevo sistema por membresía (UNA sola llamada a DB)
+            // Cargar permisos del sistema por membresía (UNA sola llamada a DB)
             var permisos = manejadorP.ObtenerDiccionarioPermisos(idUsuario);
             HttpContext.Session.SetString("permisosSistema", JsonConvert.SerializeObject(permisos));
-
-            // También guardar en "permisos" para compatibilidad con código legacy
-            HttpContext.Session.SetString("permisos", JsonConvert.SerializeObject(permisos));
 
             Console.WriteLine($"[PERMISOS TIMING] Permisos cargados: {sw.ElapsedMilliseconds}ms ({permisos.Count} permisos)");
         }

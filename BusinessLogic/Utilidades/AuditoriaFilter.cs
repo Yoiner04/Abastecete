@@ -78,7 +78,7 @@ namespace BusinessLogic.Utilidades
 
                 // Determinar resultado de la acción
                 string resultado = "EXITO";
-                string mensajeError = null;
+                string? mensajeError = null;
 
                 // Analizar el resultado de la acción
                 if (context.Exception != null)
@@ -204,7 +204,7 @@ namespace BusinessLogic.Utilidades
                         }
                         else if (underlyingType == typeof(string))
                         {
-                            return (T)(object)valor.ToString();
+                            return (T)(object)(valor.ToString() ?? "");
                         }
                     }
                     catch { }
@@ -214,7 +214,7 @@ namespace BusinessLogic.Utilidades
             // Buscar en propiedades de objetos complejos (ej: model.Id, model.Nombre)
             foreach (var item in context.Items)
             {
-                if (item.Key.ToString().StartsWith("Auditoria_") && item.Value != null)
+                if (item.Key?.ToString()?.StartsWith("Auditoria_") == true && item.Value != null)
                 {
                     var objValue = item.Value;
                     var prop = objValue.GetType().GetProperty(nombreParametro) ??
@@ -238,7 +238,7 @@ namespace BusinessLogic.Utilidades
                 }
             }
 
-            return default;
+            return default!;
         }
     }
 }

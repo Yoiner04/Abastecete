@@ -10,15 +10,15 @@ namespace BusinessLogic.Models
     {
         public int Id { get; set; }
         public int LocalId { get; set; }
-        public Membresia TipoMembresia { get; set; }
+        public Membresia? TipoMembresia { get; set; }
         public int Estado { get; set; }
         public DateTime FechaInicio { get; set; }
         public DateTime FechaFin { get; set; }
         public DateTime FechaCreacion { get; set; }
         public decimal? MontoPagado { get; set; }
-        public string MetodoPago { get; set; }
-        public string Periodo { get; set; }
-        public string Notas { get; set; }
+        public string MetodoPago { get; set; } = "";
+        public string Periodo { get; set; } = "";
+        public string? Notas { get; set; }
 
         /// <summary>
         /// Indica si la suscripción está activa y no ha vencido

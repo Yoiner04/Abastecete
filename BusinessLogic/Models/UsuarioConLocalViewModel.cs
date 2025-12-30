@@ -5,8 +5,8 @@ namespace BusinessLogic.Models
     /// </summary>
     public class UsuarioConLocalViewModel
     {
-        public Usuario Usuario { get; set; }
-        public Negocio Local { get; set; }
+        public Usuario? Usuario { get; set; }
+        public Negocio? Local { get; set; }
 
         // Propiedades de conveniencia
         public bool TieneLocal => Local != null;

@@ -116,7 +116,7 @@ namespace BusinessLogic
             // Si se obtuvo el public_id, eliminar de Cloudinary
             if (data != null && data.Rows.Count > 0)
             {
-                string publicId = data.Rows[0]["cloudinary_public_id"]?.ToString();
+                string? publicId = data.Rows[0]["cloudinary_public_id"]?.ToString();
                 if (!string.IsNullOrEmpty(publicId))
                 {
                     _cloudinary.EliminarImagen(publicId);
@@ -171,7 +171,7 @@ namespace BusinessLogic
             {
                 Id = Convert.ToInt32(row["PK_ID_GALERIA"]),
                 LocalId = Convert.ToInt32(row["FK_ID_LOCAL"]),
-                CloudinaryUrl = row["CLOUDINARY_URL"]?.ToString(),
+                CloudinaryUrl = row["CLOUDINARY_URL"]?.ToString() ?? "",
                 CloudinaryPublicId = row["CLOUDINARY_PUBLIC_ID"]?.ToString(),
                 Estado = (EstadoGaleria)Convert.ToInt32(row["ESTADO"]),
                 FechaSubida = row["FECHA_SUBIDA"] != DBNull.Value

@@ -180,8 +180,8 @@ namespace BusinessLogic
                     ? Convert.ToInt32(row["FK_ID_TIPO_DOCUMENTO"])
                     : 1,
                 CodigoReferido = row.Table.Columns.Contains("CODIGO_REFERIDO")
-                    ? row["CODIGO_REFERIDO"]?.ToString()
-                    : null,
+                    ? row["CODIGO_REFERIDO"]?.ToString() ?? ""
+                    : "",
                 Rol = new Rol
                 {
                     Nombre = "" // Ya no usamos roles, se usa sistema de permisos por membresía
@@ -237,7 +237,7 @@ namespace BusinessLogic
                     return 0;
                 }
             }
-            catch (Exception ex)
+            catch
             {
                 return 0;
             }
@@ -361,7 +361,7 @@ namespace BusinessLogic
                 bool resultado = conexion.EjecutarTransaccion("editar_estado_usuario", parametros);
                 return resultado;
             }
-            catch (Exception ex)
+            catch
             {
                 return false;
             }

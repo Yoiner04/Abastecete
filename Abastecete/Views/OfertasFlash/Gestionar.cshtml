@@ -4,7 +4,7 @@
 @{
     ViewData["Title"] = "Gestionar Ofertas Flash - Abastecete";
     ViewData["Description"] = "Administra y gestiona las ofertas flash de tiempo limitado. Aprueba, edita y controla las ofertas especiales de los negocios afiliados.";
-    var tienePermiso = RolPermisos.TienePermiso("Administrar Ofertas", Context.Session.GetString("permisos"));
+    var tienePermiso = RolPermisos.TienePermiso("ADMIN_OFERTAS", Context.Session.GetString("permisosSistema") ?? "");
 }
 
 <!-- Skeleton Loader -->

@@ -91,7 +91,7 @@ namespace BusinessLogic
             var imageIds = new List<string>();
             foreach (DataRow row in datos.Rows)
             {
-                string fotosId = row["FOTOS_LOCAL"]?.ToString();
+                string? fotosId = row["FOTOS_LOCAL"]?.ToString();
                 if (!string.IsNullOrEmpty(fotosId)) imageIds.Add(fotosId);
             }
 
@@ -100,13 +100,13 @@ namespace BusinessLogic
 
             foreach (DataRow row in datos.Rows)
             {
-                string fotosId = row["FOTOS_LOCAL"]?.ToString();
+                string? fotosId = row["FOTOS_LOCAL"]?.ToString();
                 locales.Add(new Negocio
                 {
                     Id = Convert.ToInt32(row["PK_ID_LOCAL"]),
-                    Nombre = row["NOMBRE_LOCAL"]?.ToString(),
-                    Descripcion = row["DESCRIPCION_LOCAL"]?.ToString(),
-                    Direccion = row["DIRECCION_LOCAL"]?.ToString(),
+                    Nombre = row["NOMBRE_LOCAL"]?.ToString() ?? "",
+                    Descripcion = row["DESCRIPCION_LOCAL"]?.ToString() ?? "",
+                    Direccion = row["DIRECCION_LOCAL"]?.ToString() ?? "",
                     Telefono = row["TELEFONO_LOCAL"] != DBNull.Value ? Convert.ToInt64(row["TELEFONO_LOCAL"]) : 0,
                     LogotipoId = fotosId,
                     imagen = !string.IsNullOrEmpty(fotosId) && imagenesBatch.ContainsKey(fotosId)

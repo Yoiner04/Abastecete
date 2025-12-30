@@ -32,7 +32,7 @@ namespace BusinessLogic
                 roles.Add(new Rol()
                 {
                     Id = Convert.ToInt32(row["PK_ID_ROL"].ToString()),
-                    Nombre = row["NOMBRE_ROL"].ToString(),
+                    Nombre = row["NOMBRE_ROL"].ToString() ?? "",
                 });
             }
             return roles;

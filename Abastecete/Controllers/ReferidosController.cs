@@ -239,9 +239,9 @@ namespace Abastecete.Controllers
 
         public class ConfiguracionReferidosRequest
         {
-            public string TipoDescuentoReferido { get; set; }
+            public string TipoDescuentoReferido { get; set; } = "";
             public decimal ValorDescuentoReferido { get; set; }
-            public string TipoDescuentoDueno { get; set; }
+            public string TipoDescuentoDueno { get; set; } = "";
             public decimal ValorDescuentoDueno { get; set; }
             public bool DescuentoActivo { get; set; }
         }

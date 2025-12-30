@@ -302,7 +302,7 @@ namespace Abastecete.Controllers
         /// <summary>
         /// Vista de administracion de productos (solo SuperAdmin)
         /// </summary>
-        [RequierePermiso("Administrar Productos,ADMIN_PRODUCTOS")]
+        [RequierePermiso("ADMIN_PRODUCTOS")]
         public IActionResult AdminProductos(string termino, int? idCategoria, int? idSubCategoria, int? idMarca)
         {
             List<Producto> productos;
@@ -328,7 +328,7 @@ namespace Abastecete.Controllers
         /// Obtiene un producto por ID (para edicion)
         /// </summary>
         [HttpGet]
-        [RequierePermiso("Administrar Productos,ADMIN_PRODUCTOS")]
+        [RequierePermiso("ADMIN_PRODUCTOS")]
         public IActionResult ObtenerProducto(int id)
         {
             try
@@ -362,7 +362,7 @@ namespace Abastecete.Controllers
         /// Crea un nuevo producto (admin)
         /// </summary>
         [HttpPost]
-        [RequierePermiso("Administrar Productos,ADMIN_PRODUCTOS")]
+        [RequierePermiso("ADMIN_PRODUCTOS")]
         [Auditar(ModulosAuditoria.PRODUCTOS, TiposAccionAuditoria.CREATE, ParametroDescripcion = "nombre")]
         public IActionResult CrearProductoAdmin(string nombre, string descripcion, string sku, int idSubCategoria, int idMarca, int? idTipoUnidad, IFormFile imagen, string marcasIds = null)
         {
@@ -452,7 +452,7 @@ namespace Abastecete.Controllers
         /// Edita un producto existente (admin)
         /// </summary>
         [HttpPost]
-        [RequierePermiso("Administrar Productos,ADMIN_PRODUCTOS")]
+        [RequierePermiso("ADMIN_PRODUCTOS")]
         [Auditar(ModulosAuditoria.PRODUCTOS, TiposAccionAuditoria.UPDATE, ParametroId = "id", ParametroDescripcion = "nombre")]
         public IActionResult EditarProductoAdmin(int id, string nombre, string descripcion, string sku, int idSubCategoria, int idMarca, int? idTipoUnidad, IFormFile imagen, string cloudinaryPublicId, string marcasIds = null)
         {
@@ -555,7 +555,7 @@ namespace Abastecete.Controllers
         /// Elimina un producto (admin)
         /// </summary>
         [HttpDelete]
-        [RequierePermiso("Administrar Productos,ADMIN_PRODUCTOS")]
+        [RequierePermiso("ADMIN_PRODUCTOS")]
         [Auditar(ModulosAuditoria.PRODUCTOS, TiposAccionAuditoria.DELETE, ParametroId = "id")]
         public IActionResult EliminarProductoAdmin(int id)
         {

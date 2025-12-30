@@ -21,7 +21,7 @@ namespace Abastecete.Controllers
             manejadorPermisos = new ManejadorPermisos();
         }
 
-        [RequierePermiso("Administrar Membresias,ADMIN_MEMBRESIAS")]
+        [RequierePermiso("ADMIN_MEMBRESIAS")]
         public IActionResult Consultar()
         {
             List<Membresia> membresias = manejadorMembresias.ConsultarMembresias("");
@@ -65,7 +65,7 @@ namespace Abastecete.Controllers
         }
 
         [HttpPost]
-        [RequierePermiso("Administrar Membresias,ADMIN_MEMBRESIAS")]
+        [RequierePermiso("ADMIN_MEMBRESIAS")]
         [Auditar(ModulosAuditoria.MEMBRESIAS, TiposAccionAuditoria.UPDATE, ParametroId = "Id", ParametroDescripcion = "Nombre")]
         public IActionResult Editar(int Id, string Nombre, float Costo, float Costo_trimestral, float Costo_semestral, float Costo_anual, int Duracion, int Cantidad, int OfertasFlashSimultaneas, int OfertasFlashTotal, int Estado)
         {
@@ -108,7 +108,7 @@ namespace Abastecete.Controllers
         /// Obtiene todos los permisos del sistema (catálogo)
         /// </summary>
         [HttpGet]
-        [RequierePermiso("Administrar Membresias,ADMIN_MEMBRESIAS")]
+        [RequierePermiso("ADMIN_MEMBRESIAS")]
         public IActionResult ObtenerPermisosDisponibles()
         {
             try
@@ -143,7 +143,7 @@ namespace Abastecete.Controllers
         /// Obtiene los permisos asignados a una membresía específica
         /// </summary>
         [HttpGet]
-        [RequierePermiso("Administrar Membresias,ADMIN_MEMBRESIAS")]
+        [RequierePermiso("ADMIN_MEMBRESIAS")]
         public IActionResult ObtenerPermisosMembresia(int id)
         {
             try
@@ -163,7 +163,7 @@ namespace Abastecete.Controllers
         /// Actualiza los permisos de una membresía
         /// </summary>
         [HttpPost]
-        [RequierePermiso("Administrar Membresias,ADMIN_MEMBRESIAS")]
+        [RequierePermiso("ADMIN_MEMBRESIAS")]
         [Auditar(ModulosAuditoria.MEMBRESIAS, TiposAccionAuditoria.UPDATE, ParametroId = "idMembresia")]
         public IActionResult ActualizarPermisosMembresia([FromBody] ActualizarPermisosRequest request)
         {
@@ -195,7 +195,7 @@ namespace Abastecete.Controllers
         /// Obtiene una membresía con todos sus permisos para edición
         /// </summary>
         [HttpGet]
-        [RequierePermiso("Administrar Membresias,ADMIN_MEMBRESIAS")]
+        [RequierePermiso("ADMIN_MEMBRESIAS")]
         public IActionResult ObtenerMembresiaConPermisos(int id)
         {
             try
@@ -237,7 +237,7 @@ namespace Abastecete.Controllers
         public class ActualizarPermisosRequest
         {
             public int IdMembresia { get; set; }
-            public List<int> IdsPermisos { get; set; }
+            public List<int> IdsPermisos { get; set; } = new();
         }
 
     }

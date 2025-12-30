@@ -19,25 +19,11 @@ namespace BusinessLogic.Utilidades
 
         public override void OnActionExecuting(ActionExecutingContext context)
         {
-            // Primero intentar con el nuevo sistema de permisos
-            var permisosSistema = context.HttpContext.Session.GetString("permisosSistema");
+            var permisosSistema = context.HttpContext.Session.GetString("permisosSistema") ?? "";
 
-            // Si existe en el nuevo sistema, verificar ahí
-            if (!string.IsNullOrEmpty(permisosSistema))
+            if (string.IsNullOrEmpty(permisosSistema) || !RolPermisos.TienePermiso(_permiso, permisosSistema))
             {
-                if (!RolPermisos.TienePermiso(_permiso, permisosSistema))
-                {
-                    context.Result = new RedirectToActionResult("Principal", "Home", null);
-                }
-            }
-            else
-            {
-                // Fallback al sistema antiguo para compatibilidad
-                var permisos = context.HttpContext.Session.GetString("permisos");
-                if (string.IsNullOrEmpty(permisos) || !RolPermisos.TienePermiso(_permiso, permisos))
-                {
-                    context.Result = new RedirectToActionResult("Principal", "Home", null);
-                }
+                context.Result = new RedirectToActionResult("Principal", "Home", null);
             }
 
             base.OnActionExecuting(context);
@@ -80,20 +66,11 @@ namespace BusinessLogic.Utilidades
 
         /// <summary>
         /// Verifica si el usuario tiene un permiso específico
-        /// Usa el nuevo sistema de permisos con fallback al antiguo
         /// </summary>
         public static bool TienePermiso(ISession session, string permiso)
         {
-            // Primero intentar con nuevo sistema
-            var permisosSistema = session.GetString("permisosSistema");
-            if (!string.IsNullOrEmpty(permisosSistema))
-            {
-                return RolPermisos.TienePermiso(permiso, permisosSistema);
-            }
-
-            // Fallback al sistema antiguo
-            var permisos = session.GetString("permisos");
-            return RolPermisos.TienePermiso(permiso, permisos);
+            var permisosSistema = session.GetString("permisosSistema") ?? "";
+            return RolPermisos.TienePermiso(permiso, permisosSistema);
         }
 
         /// <summary>
@@ -101,19 +78,8 @@ namespace BusinessLogic.Utilidades
         /// </summary>
         public static bool EsAdministrador(ISession session)
         {
-            var permisosSistema = session.GetString("permisosSistema");
-            if (!string.IsNullOrEmpty(permisosSistema))
-            {
-                return RolPermisos.EsAdministrador(permisosSistema);
-            }
-
-            // Fallback al sistema antiguo por rol
-            var rolStr = session.GetString("idRol");
-            if (int.TryParse(rolStr, out int rol))
-            {
-                return rol == 1 || rol == 8; // Admin o Director
-            }
-            return false;
+            var permisosSistema = session.GetString("permisosSistema") ?? "";
+            return RolPermisos.EsAdministrador(permisosSistema);
         }
 
         /// <summary>
@@ -122,7 +88,7 @@ namespace BusinessLogic.Utilidades
         public static List<string> ObtenerPermisos(ISession session)
         {
             var permisosSistema = session.GetString("permisosSistema");
-            return RolPermisos.ObtenerListaPermisos(permisosSistema);
+            return RolPermisos.ObtenerListaPermisos(permisosSistema ?? "");
         }
     }
 }

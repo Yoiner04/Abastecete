@@ -3,8 +3,8 @@
 @{
     ViewData["Title"] = "Gestión de Usuarios";
     ViewData["Description"] = "Administra todos los usuarios del sistema: consulta información, gestiona estados y membresías activas.";
-    var permisos = Context.Session.GetString("permisos");
-    var puedeAdministrar = RolPermisos.TienePermiso("Administrar Usuarios", permisos);
+    var permisos = Context.Session.GetString("permisosSistema") ?? "";
+    var puedeAdministrar = RolPermisos.TienePermiso("ADMIN_USUARIOS", permisos);
 
     var totalUsuarios = Model.TotalRegistros;
     var busquedaActual = ViewBag.Busqueda as string ?? "";

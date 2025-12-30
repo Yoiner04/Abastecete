@@ -17,9 +17,9 @@ namespace BusinessLogic.Models
     public class ValidacionCodigo
     {
         public bool Valido { get; set; }
-        public string Mensaje { get; set; }
+        public string Mensaje { get; set; } = "";
         public int IdDueno { get; set; }
-        public string NombreDueno { get; set; }
+        public string NombreDueno { get; set; } = "";
     }
 
     public class CalculoDescuento
@@ -27,15 +27,15 @@ namespace BusinessLogic.Models
         public decimal DescuentoReferido { get; set; }
         public decimal CreditoDisponible { get; set; }
         public bool YaUsoDescuento { get; set; }
-        public string CodigoUsado { get; set; }
-        public string TipoDescuento { get; set; }
+        public string CodigoUsado { get; set; } = "";
+        public string TipoDescuento { get; set; } = "";
         public decimal ValorConfigurado { get; set; }
         public decimal MontoFinal { get; set; }
     }
 
     public class ResumenReferidos
     {
-        public string CodigoReferido { get; set; }
+        public string CodigoReferido { get; set; } = "";
         public int TotalReferidos { get; set; }
         public int ReferidosCompraron { get; set; }
         public decimal CreditoTotalGanado { get; set; }

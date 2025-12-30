@@ -10,8 +10,8 @@ namespace BusinessLogic.Models
         public int IdLocal { get; set; }
         public int IdProducto { get; set; }
         public int IdMarca { get; set; }
-        public string NombreMarca { get; set; }
-        public string LogoMarca { get; set; }
+        public string NombreMarca { get; set; } = "";
+        public string? LogoMarca { get; set; }
         public decimal Precio { get; set; }
         public int Stock { get; set; }
         public bool Disponible { get; set; }

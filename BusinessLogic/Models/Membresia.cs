@@ -7,8 +7,8 @@ namespace BusinessLogic.Models
     public class Membresia
     {
         public int Id { get; set; }
-        public string Nombre { get; set; }
-        public string DescripcionCorta { get; set; }
+        public string Nombre { get; set; } = "";
+        public string DescripcionCorta { get; set; } = "";
         public float Costo { get; set; }
         public int Estado { get; set; }
 

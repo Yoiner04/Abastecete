@@ -3,8 +3,8 @@
 @model List<BusinessLogic.Models.Categoria>
 @{
     ViewData["Title"] = "Gestión de Banners";
-    string permisos = HttpContextAccessor.HttpContext.Session.GetString("permisos");
-    var puedeAdministrar = permisos != null && RolPermisos.TienePermiso("Administrar Banners", permisos);
+    string permisos = HttpContextAccessor.HttpContext.Session.GetString("permisosSistema") ?? "";
+    var puedeAdministrar = RolPermisos.TienePermiso("ADMIN_BANNERS", permisos);
 }
 
 <!-- Header a ancho completo -->

@@ -19,9 +19,9 @@ namespace BusinessLogic.Models
         public int IdLocal { get; set; }
         public int? IdProducto { get; set; }
         public TipoEventoAnalitica TipoEvento { get; set; }
-        public string IpVisitante { get; set; }
-        public string UserAgent { get; set; }
-        public string Referrer { get; set; }
+        public string? IpVisitante { get; set; }
+        public string? UserAgent { get; set; }
+        public string? Referrer { get; set; }
         public DateTime FechaEvento { get; set; }
     }
 
@@ -54,8 +54,8 @@ namespace BusinessLogic.Models
     public class ProductoMasVisto
     {
         public int IdProducto { get; set; }
-        public string NombreProducto { get; set; }
-        public string ImagenUrl { get; set; }
+        public string NombreProducto { get; set; } = "";
+        public string ImagenUrl { get; set; } = "";
         public int TotalVistas { get; set; }
     }
 
@@ -101,7 +101,7 @@ namespace BusinessLogic.Models
     public class DistribucionMembresia
     {
         public int IdMembresia { get; set; }
-        public string NombreMembresia { get; set; }
+        public string NombreMembresia { get; set; } = "";
         public int CantidadSuscripciones { get; set; }
         public int Activas { get; set; }
         public int Pendientes { get; set; }
@@ -111,9 +111,9 @@ namespace BusinessLogic.Models
     public class LocalMasVisitado
     {
         public int IdLocal { get; set; }
-        public string NombreLocal { get; set; }
-        public string LogoUrl { get; set; }
-        public string Direccion { get; set; }
+        public string NombreLocal { get; set; } = "";
+        public string? LogoUrl { get; set; }
+        public string Direccion { get; set; } = "";
         public int TotalVisitas { get; set; }
     }
 
@@ -130,11 +130,11 @@ namespace BusinessLogic.Models
     public class ActividadReciente
     {
         public long IdEvento { get; set; }
-        public string TipoEvento { get; set; }
+        public string TipoEvento { get; set; } = "";
         public DateTime FechaHora { get; set; }
-        public string NombreLocal { get; set; }
+        public string NombreLocal { get; set; } = "";
         public int IdLocal { get; set; }
-        public string NombreProducto { get; set; }
+        public string? NombreProducto { get; set; }
         public int? IdProducto { get; set; }
     }
 

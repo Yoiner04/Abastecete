@@ -18,15 +18,15 @@ namespace Abastecete.Controllers
         public IActionResult DashboardAdmin(string periodo = "7d")
         {
             var idUsuario = HttpContext.Session.GetInt32("idUsuario");
-            var permisos = HttpContext.Session.GetString("permisos");
+            var permisos = HttpContext.Session.GetString("permisosSistema") ?? "";
 
             if (idUsuario == null)
             {
                 return RedirectToAction("Login", "Login");
             }
 
-            // Verificar permiso
-            if (string.IsNullOrEmpty(permisos) || !RolPermisos.TienePermiso("Ver Dashboard Admin", permisos))
+            // Verificar permiso ADMIN_DASHBOARD
+            if (string.IsNullOrEmpty(permisos) || !RolPermisos.TienePermiso("ADMIN_DASHBOARD", permisos))
             {
                 TempData["mensaje"] = "No tienes permisos para acceder a esta sección.";
                 TempData["tipo"] = "error";
@@ -55,8 +55,8 @@ namespace Abastecete.Controllers
                 return Json(new { success = false, mensaje = "Sesión expirada" });
             }
 
-            var permisos = HttpContext.Session.GetString("permisos");
-            if (string.IsNullOrEmpty(permisos) || !RolPermisos.TienePermiso("Ver Dashboard Admin", permisos))
+            var permisos = HttpContext.Session.GetString("permisosSistema") ?? "";
+            if (string.IsNullOrEmpty(permisos) || !RolPermisos.TienePermiso("ADMIN_DASHBOARD", permisos))
             {
                 return Json(new { success = false, mensaje = "Sin permisos" });
             }
@@ -258,7 +258,7 @@ namespace Abastecete.Controllers
         {
             public int IdLocal { get; set; }
             public int? IdProducto { get; set; }
-            public string TipoEvento { get; set; }
+            public string TipoEvento { get; set; } = "";
         }
     }
 }

@@ -18,11 +18,11 @@ namespace Abastecete.Controllers
 
         }
 
-        [RequierePermiso("Administrar Usuarios,ADMIN_USUARIOS")]
-        public IActionResult Consultar(int pagina = 1, int registrosPorPagina = 10, string busqueda = null)
+        [RequierePermiso("ADMIN_USUARIOS")]
+        public IActionResult Consultar(int pagina = 1, int registrosPorPagina = 10, string? busqueda = null)
         {
-            ViewBag.rol = LoginController.rol;
-            ViewBag.administrar = RolPermisos.TienePermiso("Administrar Usuarios", HttpContext.Session.GetString("permisos"));
+            var permisos = HttpContext.Session.GetString("permisosSistema") ?? "";
+            ViewBag.administrar = RolPermisos.TienePermiso("ADMIN_USUARIOS", permisos);
 
             // Usar paginación para evitar traer todos los registros
             var resultado = manejadorU.ConsultarUsuariosPaginado(pagina, registrosPorPagina, busqueda);
@@ -42,19 +42,19 @@ namespace Abastecete.Controllers
         {
             public int IdLocal { get; set; }
             public int IdSuscripcion { get; set; }
-            public string Periodo { get; set; }
-            public string Notas { get; set; }
+            public string Periodo { get; set; } = "";
+            public string Notas { get; set; } = "";
         }
 
         public class CambiarMembresiaRequest
         {
             public int IdLocal { get; set; }
             public int IdTipoMembresia { get; set; }
-            public string Periodo { get; set; }
+            public string Periodo { get; set; } = "";
         }
 
         [HttpPost]
-        [RequierePermiso("Administrar Usuarios,ADMIN_USUARIOS")]
+        [RequierePermiso("ADMIN_USUARIOS")]
         [Auditar(ModulosAuditoria.USUARIOS, TiposAccionAuditoria.UPDATE)]
         public IActionResult EditarEstado([FromBody] EditarEstadoRequest data)
         {
@@ -79,7 +79,7 @@ namespace Abastecete.Controllers
         }
 
         [HttpPost]
-        [RequierePermiso("Administrar Usuarios,ADMIN_USUARIOS")]
+        [RequierePermiso("ADMIN_USUARIOS")]
         [Auditar(ModulosAuditoria.MEMBRESIAS, TiposAccionAuditoria.UPDATE)]
         public IActionResult ExtenderMembresia([FromBody] ExtenderMembresiaRequest data)
         {
@@ -116,7 +116,7 @@ namespace Abastecete.Controllers
         }
 
         [HttpGet]
-        [RequierePermiso("Administrar Usuarios,ADMIN_USUARIOS")]
+        [RequierePermiso("ADMIN_USUARIOS")]
         public IActionResult ObtenerInfoSuscripcion(int idLocal)
         {
             try
@@ -152,7 +152,7 @@ namespace Abastecete.Controllers
         }
 
         [HttpPost]
-        [RequierePermiso("Administrar Usuarios,ADMIN_USUARIOS")]
+        [RequierePermiso("ADMIN_USUARIOS")]
         [Auditar(ModulosAuditoria.MEMBRESIAS, TiposAccionAuditoria.UPDATE)]
         public IActionResult CambiarMembresia([FromBody] CambiarMembresiaRequest data)
         {
@@ -190,7 +190,7 @@ namespace Abastecete.Controllers
         }
 
         [HttpGet]
-        [RequierePermiso("Administrar Usuarios,ADMIN_USUARIOS")]
+        [RequierePermiso("ADMIN_USUARIOS")]
         public IActionResult ObtenerTiposMembresia()
         {
             try
@@ -265,9 +265,9 @@ namespace Abastecete.Controllers
 
         public class CambiarContraseniaRequest
         {
-            public string ContraseniaActual { get; set; }
-            public string NuevaContrasenia { get; set; }
-            public string ConfirmarContrasenia { get; set; }
+            public string ContraseniaActual { get; set; } = "";
+            public string NuevaContrasenia { get; set; } = "";
+            public string ConfirmarContrasenia { get; set; } = "";
         }
 
         [HttpPost]

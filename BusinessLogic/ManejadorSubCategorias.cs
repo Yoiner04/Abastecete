@@ -27,7 +27,7 @@ namespace BusinessLogic
                 {
                     Id = Convert.ToInt32(row["PK_ID_SUB_CATEGORIA"]),
                     IdCategoria = Convert.ToInt32(row["FK_ID_CATEGORIA"]),
-                    Nombre = row["NOMBRE_SUB_CATEGORIA"].ToString(),
+                    Nombre = row["NOMBRE_SUB_CATEGORIA"].ToString() ?? "",
                     Estado = Convert.ToInt32(row["ESTADO_SUB_CATEGORIA"])
                 });
             }

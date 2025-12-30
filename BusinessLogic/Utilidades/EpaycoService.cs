@@ -14,8 +14,8 @@ namespace BusinessLogic.Utilidades
 
         public EpaycoService(IConfiguration configuration)
         {
-            _privateKey = configuration["Epayco:PrivateKey"];
-            _publicKey = configuration["Epayco:PublicKey"];
+            _privateKey = configuration["Epayco:PrivateKey"] ?? "";
+            _publicKey = configuration["Epayco:PublicKey"] ?? "";
         }
 
         public async Task<string> ProcessPayment(EpaycoPaymentRequest request)
@@ -49,7 +49,7 @@ namespace BusinessLogic.Utilidades
             if (!response.IsSuccessful)
                 throw new Exception($"Error en pago: {response.Content}");
 
-            return response.Content;
+            return response.Content ?? "";
         }
     }
 }

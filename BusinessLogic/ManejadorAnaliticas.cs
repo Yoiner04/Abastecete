@@ -164,7 +164,7 @@ namespace BusinessLogic
                     {
                         IdProducto = Convert.ToInt32(row["id_producto"]),
                         NombreProducto = row["nombre_producto"]?.ToString() ?? "",
-                        ImagenUrl = row["imagen_url"]?.ToString(),
+                        ImagenUrl = row["imagen_url"]?.ToString() ?? "",
                         TotalVistas = Convert.ToInt32(row["total_vistas"])
                     });
                 }

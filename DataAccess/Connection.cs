@@ -6,7 +6,7 @@ namespace DataAccess
 {
     public class Connection
     {
-        private static string _connectionString;
+        private static string _connectionString = "";
 
         static Connection()
         {
@@ -16,7 +16,7 @@ namespace DataAccess
                 .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
                 .Build();
 
-            _connectionString = configuration.GetConnectionString("MySql");
+            _connectionString = configuration.GetConnectionString("MySql") ?? "";
         }
 
         private MySqlConnection CrearConexion()
@@ -24,7 +24,7 @@ namespace DataAccess
             return new MySqlConnection(_connectionString);
         }
 
-        public DataTable EjecutarConsulta(string procedimiento, List<Parametro> parametros = null)
+        public DataTable EjecutarConsulta(string procedimiento, List<Parametro>? parametros = null)
         {
             DataTable datos = new DataTable();
 
@@ -73,7 +73,7 @@ namespace DataAccess
             return datos;
         }
 
-        public bool EjecutarTransaccion(string procedimiento, List<Parametro> parametros = null)
+        public bool EjecutarTransaccion(string procedimiento, List<Parametro>? parametros = null)
         {
             using (var connection = CrearConexion())
             {
@@ -155,7 +155,7 @@ namespace DataAccess
 
                         if (comando.Parameters.Contains("mensaje"))
                         {
-                            string mensaje = comando.Parameters["mensaje"].Value?.ToString();
+                            string? mensaje = comando.Parameters["mensaje"].Value?.ToString();
                             Console.WriteLine("Mensaje SQL: " + mensaje);
                         }
                     }
@@ -173,7 +173,7 @@ namespace DataAccess
         /// <summary>
         /// Ejecuta un SP que retorna resultado y mensaje (para crear_usuario_persona, etc.)
         /// </summary>
-        public (bool exito, string mensaje) EjecutarTransaccionConMensaje(string procedimiento, List<Parametro> parametros = null)
+        public (bool exito, string mensaje) EjecutarTransaccionConMensaje(string procedimiento, List<Parametro>? parametros = null)
         {
             using (var connection = CrearConexion())
             {

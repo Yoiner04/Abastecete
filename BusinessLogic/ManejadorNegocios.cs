@@ -322,11 +322,11 @@ namespace BusinessLogic
                 negocios.Add(new Negocio
                 {
                     Id = Convert.ToInt32(row["PK_ID_LOCAL"]),
-                    Nombre = row["NOMBRE_LOCAL"]?.ToString(),
-                    Localizacion = row["LOCALIZACION"]?.ToString(),
+                    Nombre = row["NOMBRE_LOCAL"]?.ToString() ?? "",
+                    Localizacion = row["LOCALIZACION"]?.ToString() ?? "",
                     Telefono = Convert.ToInt64(row["TELEFONO_LOCAL"]),
                     LogotipoId = fotosId,
-                    Descripcion = row["DESCRIPCION_LOCAL"]?.ToString(),
+                    Descripcion = row["DESCRIPCION_LOCAL"]?.ToString() ?? "",
                     BannerId = bannerId,
                     imagen = null,
                     BannerImagen = null
@@ -384,8 +384,8 @@ namespace BusinessLogic
                     negocios.Add(new Negocio
                     {
                         Id = Convert.ToInt32(row["PK_ID_LOCAL"]),
-                        Nombre = row["NOMBRE_LOCAL"]?.ToString(),
-                        Direccion = row["LOCALIZACION"]?.ToString(),
+                        Nombre = row["NOMBRE_LOCAL"]?.ToString() ?? "",
+                        Direccion = row["LOCALIZACION"]?.ToString() ?? "",
                         Telefono = Convert.ToInt64(row["TELEFONO_LOCAL"]),
                         LogotipoId = fotosId,
                         BannerId = bannerId,
@@ -442,7 +442,7 @@ namespace BusinessLogic
                 negocios.Add(new Negocio
                 {
                     Id = Convert.ToInt32(row["PK_ID_LOCAL"]),
-                    Nombre = row["NOMBRE_LOCAL"]?.ToString(),
+                    Nombre = row["NOMBRE_LOCAL"]?.ToString() ?? "",
                     LogotipoId = fotosId,
                     imagen = null
                 });

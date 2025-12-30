@@ -9,20 +9,20 @@ namespace BusinessLogic.Models
     {
         public int Id { get; set; }
         public int? UsuarioId { get; set; }
-        public string NombreUsuario { get; set; }
-        public string Modulo { get; set; }
-        public string TipoAccion { get; set; }
+        public string NombreUsuario { get; set; } = "";
+        public string Modulo { get; set; } = "";
+        public string TipoAccion { get; set; } = "";
         public int? EntidadId { get; set; }
-        public string EntidadDescripcion { get; set; }
-        public string DatosAnteriores { get; set; }
-        public string DatosNuevos { get; set; }
-        public string IpCliente { get; set; }
-        public string UserAgent { get; set; }
+        public string? EntidadDescripcion { get; set; }
+        public string? DatosAnteriores { get; set; }
+        public string? DatosNuevos { get; set; }
+        public string? IpCliente { get; set; }
+        public string? UserAgent { get; set; }
         public DateTime FechaRegistro { get; set; }
-        public string Resultado { get; set; }
-        public string MensajeError { get; set; }
-        public string Controller { get; set; }
-        public string Action { get; set; }
+        public string Resultado { get; set; } = "";
+        public string? MensajeError { get; set; }
+        public string? Controller { get; set; }
+        public string? Action { get; set; }
 
         // Propiedades de presentación
         public string TipoAccionDescripcion => TipoAccion switch

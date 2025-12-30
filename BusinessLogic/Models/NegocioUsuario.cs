@@ -11,8 +11,8 @@ namespace BusinessLogic.Models
     /// </summary>
     public class NegocioUsuario
     {
-        public Usuario Usuario { get; set; }
-        public Negocio Negocio { get; set; }
+        public Usuario? Usuario { get; set; }
+        public Negocio? Negocio { get; set; }
     }
 
     /// <summary>
@@ -21,7 +21,7 @@ namespace BusinessLogic.Models
     /// </summary>
     public class NegocioPersona
     {
-        public Usuario Persona { get; set; }
-        public Negocio Negocio { get; set; }
+        public Usuario? Persona { get; set; }
+        public Negocio? Negocio { get; set; }
     }
 }

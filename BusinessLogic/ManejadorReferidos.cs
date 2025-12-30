@@ -25,9 +25,9 @@ namespace BusinessLogic
                 return new ConfiguracionReferidos
                 {
                     Id = Convert.ToInt32(row["PK_ID"]),
-                    TipoDescuentoReferido = row["TIPO_DESCUENTO_REFERIDO"].ToString(),
+                    TipoDescuentoReferido = row["TIPO_DESCUENTO_REFERIDO"].ToString() ?? "PORCENTAJE",
                     ValorDescuentoReferido = Convert.ToDecimal(row["VALOR_DESCUENTO_REFERIDO"]),
-                    TipoDescuentoDueno = row["TIPO_DESCUENTO_DUENO"].ToString(),
+                    TipoDescuentoDueno = row["TIPO_DESCUENTO_DUENO"].ToString() ?? "PORCENTAJE",
                     ValorDescuentoDueno = Convert.ToDecimal(row["VALOR_DESCUENTO_DUENO"]),
                     DescuentoActivo = Convert.ToInt32(row["DESCUENTO_ACTIVO"]) == 1,
                     FechaActualizacion = row["FECHA_ACTUALIZACION"] != DBNull.Value
@@ -84,9 +84,9 @@ namespace BusinessLogic
                 return new ValidacionCodigo
                 {
                     Valido = Convert.ToInt32(row["valido"]) == 1,
-                    Mensaje = row["mensaje"].ToString(),
+                    Mensaje = row["mensaje"].ToString() ?? "",
                     IdDueno = Convert.ToInt32(row["id_dueno"]),
-                    NombreDueno = row["nombre_dueno"]?.ToString()
+                    NombreDueno = row["nombre_dueno"]?.ToString() ?? ""
                 };
             }
 
@@ -142,8 +142,8 @@ namespace BusinessLogic
                     DescuentoReferido = Convert.ToDecimal(row["descuento_referido"]),
                     CreditoDisponible = Convert.ToDecimal(row["credito_disponible"]),
                     YaUsoDescuento = Convert.ToInt32(row["ya_uso_descuento"]) == 1,
-                    CodigoUsado = row["codigo_usado"]?.ToString(),
-                    TipoDescuento = row["tipo_descuento"]?.ToString(),
+                    CodigoUsado = row["codigo_usado"]?.ToString() ?? "",
+                    TipoDescuento = row["tipo_descuento"]?.ToString() ?? "",
                     ValorConfigurado = Convert.ToDecimal(row["valor_configurado"]),
                     MontoFinal = Convert.ToDecimal(row["monto_final"])
                 };
@@ -198,8 +198,8 @@ namespace BusinessLogic
                 {
                     Id = Convert.ToInt32(row["PK_ID_REFERENCIA"]),
                     IdUsuarioReferido = Convert.ToInt32(row["FK_ID_USUARIO_REFERIDO"]),
-                    Nombres = row["NOMBRES"]?.ToString(),
-                    Apellidos = row["APELLIDOS"]?.ToString(),
+                    Nombres = row["NOMBRES"]?.ToString() ?? "",
+                    Apellidos = row["APELLIDOS"]?.ToString() ?? "",
                     FechaRegistro = Convert.ToDateTime(row["FECHA_REGISTRO"]),
                     FechaCompra = row["FECHA_COMPRA"] != DBNull.Value
                         ? Convert.ToDateTime(row["FECHA_COMPRA"])
@@ -235,7 +235,7 @@ namespace BusinessLogic
                 DataRow row = data.Rows[0];
                 return new ResumenReferidos
                 {
-                    CodigoReferido = row["codigo_referido"]?.ToString(),
+                    CodigoReferido = row["codigo_referido"]?.ToString() ?? "",
                     TotalReferidos = Convert.ToInt32(row["total_referidos"]),
                     ReferidosCompraron = Convert.ToInt32(row["referidos_compraron"]),
                     CreditoTotalGanado = Convert.ToDecimal(row["credito_total_ganado"]),
