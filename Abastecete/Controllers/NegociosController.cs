@@ -333,10 +333,6 @@ namespace Abastecete.Controllers
             {
                 Console.WriteLine("Negocio registrado con éxito!");
 
-                // Asignar rol de proveedor (2) - mantener para compatibilidad
-                ManejadorRoles manejadorRoles = new ManejadorRoles();
-                bool rolAsignado = manejadorRoles.AsignarRol(2, usuarioId.Value);
-
                 // Actualizar datos de sesión sin cerrarla
                 // Obtener el local recién creado para tener el ID
                 var negocioCreado = _manejadorNegocios.ConsultarNegocioPorUsuario(usuarioId.Value);
@@ -354,9 +350,6 @@ namespace Abastecete.Controllers
                 // Actualizar permisos en sesión
                 var permisosSistema = _manejadorPermisos.ObtenerDiccionarioPermisos(usuarioId.Value);
                 HttpContext.Session.SetString("permisosSistema", JsonConvert.SerializeObject(permisosSistema));
-
-                // Actualizar rol en sesión
-                HttpContext.Session.SetInt32("Rol", 2); // 2 = Proveedor
 
                 // Redirigir al dashboard del local (sin cerrar sesión)
                 return RedirectToAction("Index", "Home");
