@@ -320,6 +320,83 @@ namespace Abastecete.Controllers
             }
         }
 
+        [HttpPost]
+        public async Task<IActionResult> SubirFotoPerfil(IFormFile foto)
+        {
+            var idUsuario = HttpContext.Session.GetInt32("idUsuario");
+
+            if (idUsuario == null)
+            {
+                return Json(new { success = false, mensaje = "Sesión expirada" });
+            }
+
+            if (foto == null || foto.Length == 0)
+            {
+                return Json(new { success = false, mensaje = "No se recibió ninguna imagen" });
+            }
+
+            // Validar tamaño (máx 5MB)
+            if (foto.Length > 5 * 1024 * 1024)
+            {
+                return Json(new { success = false, mensaje = "La imagen es muy grande. Máximo 5MB" });
+            }
+
+            // Validar tipo
+            var extensionesPermitidas = new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
+            var extension = Path.GetExtension(foto.FileName).ToLowerInvariant();
+            if (!extensionesPermitidas.Contains(extension))
+            {
+                return Json(new { success = false, mensaje = "Formato no permitido. Use JPG, PNG, GIF o WEBP" });
+            }
+
+            try
+            {
+                // Crear directorio si no existe
+                var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "perfiles");
+                if (!Directory.Exists(uploadsFolder))
+                {
+                    Directory.CreateDirectory(uploadsFolder);
+                }
+
+                // Generar nombre único
+                var nombreArchivo = $"perfil_{idUsuario.Value}_{DateTime.Now.Ticks}{extension}";
+                var rutaCompleta = Path.Combine(uploadsFolder, nombreArchivo);
+
+                // Guardar archivo
+                using (var stream = new FileStream(rutaCompleta, FileMode.Create))
+                {
+                    await foto.CopyToAsync(stream);
+                }
+
+                // URL relativa para guardar en BD
+                var urlRelativa = $"/uploads/perfiles/{nombreArchivo}";
+
+                // Actualizar en la base de datos
+                var resultado = manejadorU.ActualizarFotoPerfil(idUsuario.Value, urlRelativa);
+
+                if (resultado)
+                {
+                    // Actualizar sesión
+                    HttpContext.Session.SetString("userPicture", urlRelativa);
+
+                    return Json(new { success = true, url = urlRelativa, mensaje = "Foto actualizada correctamente" });
+                }
+                else
+                {
+                    // Si falla la BD, eliminar el archivo subido
+                    if (System.IO.File.Exists(rutaCompleta))
+                    {
+                        System.IO.File.Delete(rutaCompleta);
+                    }
+                    return Json(new { success = false, mensaje = "Error al guardar en la base de datos" });
+                }
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, mensaje = $"Error: {ex.Message}" });
+            }
+        }
+
         public IActionResult Registrar()
         {
             List<TipoDocumento> tiposDocumento = TipoDocumento.ObtenerTipoDocumentos();

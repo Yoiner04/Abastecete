@@ -1,5 +1,9 @@
 @using BusinessLogic.Models
 @model BusinessLogic.Models.Usuario
+@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
+@{
+    string userPicture = HttpContextAccessor.HttpContext?.Session.GetString("userPicture") ?? Model?.FotoPerfil ?? "";
+}
 
 <!-- Header con barra blanca -->
 <div class="bg-white border-b border-gray-200">
@@ -62,11 +66,40 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         @Html.ValidationSummary(true, "", new { @class = "text-red-500 text-sm md:col-span-2" })
 
-                        <!-- Avatar placeholder -->
-                        <div class="md:col-span-2 flex justify-center mb-4">
-                            <div class="w-24 h-24 rounded-full bg-gradient-to-br from-[#23916A] to-[#1a6b4f] flex items-center justify-center text-white text-3xl font-bold shadow-lg">
-                                @(Model?.Nombres?.Substring(0, 1).ToUpper())@(Model?.Apellidos?.Substring(0, 1).ToUpper())
+                        <!-- Avatar con foto de perfil -->
+                        <div class="md:col-span-2 flex flex-col items-center mb-4">
+                            <div class="relative group">
+                                @if (!string.IsNullOrEmpty(userPicture))
+                                {
+                                    <img src="@userPicture"
+                                         alt="Foto de perfil"
+                                         id="avatarPreview"
+                                         class="w-24 h-24 rounded-full object-cover shadow-lg border-4 border-white">
+                                }
+                                else
+                                {
+                                    <div id="avatarInitials" class="w-24 h-24 rounded-full bg-gradient-to-br from-[#23916A] to-[#1a6b4f] flex items-center justify-center text-white text-3xl font-bold shadow-lg border-4 border-white">
+                                        @(Model?.Nombres?.Substring(0, 1).ToUpper())@(Model?.Apellidos?.Substring(0, 1).ToUpper())
+                                    </div>
+                                    <img src=""
+                                         alt="Foto de perfil"
+                                         id="avatarPreview"
+                                         class="w-24 h-24 rounded-full object-cover shadow-lg border-4 border-white hidden">
+                                }
+                                <button type="button"
+                                        onclick="document.getElementById('inputFotoPerfil').click()"
+                                        class="absolute bottom-0 right-0 w-8 h-8 bg-[#23916A] hover:bg-[#1a6b4f] text-white rounded-full flex items-center justify-center shadow-lg transition-all duration-200 group-hover:scale-110"
+                                        title="Cambiar foto">
+                                    <i class="fas fa-camera text-sm"></i>
+                                </button>
                             </div>
+                            <input type="file"
+                                   id="inputFotoPerfil"
+                                   accept="image/*"
+                                   class="hidden"
+                                   onchange="previsualizarFoto(this)">
+                            <p class="text-xs text-gray-500 mt-2">Haz clic en el icono para cambiar tu foto</p>
+                            <input type="hidden" id="fotoPerfilUrl" name="FotoPerfil" value="@userPicture">
                         </div>
 
                         <div>
@@ -289,6 +322,68 @@
 
 @section Scripts {
     <script>
+        // Previsualizar foto de perfil
+        function previsualizarFoto(input) {
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+
+                // Validar tamaño (máx 5MB)
+                if (file.size > 5 * 1024 * 1024) {
+                    alert('La imagen es muy grande. Máximo 5MB.');
+                    input.value = '';
+                    return;
+                }
+
+                // Validar tipo
+                if (!file.type.startsWith('image/')) {
+                    alert('Por favor selecciona una imagen válida.');
+                    input.value = '';
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const preview = document.getElementById('avatarPreview');
+                    const initials = document.getElementById('avatarInitials');
+
+                    preview.src = e.target.result;
+                    preview.classList.remove('hidden');
+
+                    if (initials) {
+                        initials.classList.add('hidden');
+                    }
+
+                    // Subir la imagen
+                    subirFotoPerfil(file);
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        async function subirFotoPerfil(file) {
+            const formData = new FormData();
+            formData.append('foto', file);
+
+            try {
+                const response = await fetch('@Url.Action("SubirFotoPerfil", "Usuarios")', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    document.getElementById('fotoPerfilUrl').value = data.url;
+                    // Mostrar mensaje de éxito opcional
+                } else {
+                    alert(data.mensaje || 'Error al subir la foto');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al subir la foto');
+            }
+        }
+
         // Tabs functionality
         document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.addEventListener('click', () => {

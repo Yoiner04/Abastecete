@@ -28,6 +28,23 @@ builder.Services.AddAuthentication(options =>
     options.ClientId = builder.Configuration["Google:ClientId"] ?? "";
     options.ClientSecret = builder.Configuration["Google:ClientSecret"] ?? "";
     options.CallbackPath = "/signin-google";
+    options.SaveTokens = true;
+    // Obtener foto de perfil desde Google API
+    options.Events.OnCreatingTicket = async context =>
+    {
+        var request = new HttpRequestMessage(HttpMethod.Get, "https://www.googleapis.com/oauth2/v2/userinfo");
+        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", context.AccessToken);
+        var response = await context.Backchannel.SendAsync(request);
+        if (response.IsSuccessStatusCode)
+        {
+            var json = await response.Content.ReadAsStringAsync();
+            var user = System.Text.Json.JsonDocument.Parse(json);
+            if (user.RootElement.TryGetProperty("picture", out var picture))
+            {
+                context.Identity?.AddClaim(new System.Security.Claims.Claim("picture", picture.GetString() ?? ""));
+            }
+        }
+    };
 });
 
 builder.Services.AddScoped<IEpaycoService, EpaycoService>();

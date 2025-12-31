@@ -32,6 +32,7 @@
         bool estaLogueado = permisos != null || permisosSistema != null;
         int? idLocal = HttpContextAccessor.HttpContext.Session.GetInt32("idLocal");
         bool tieneLocal = idLocal.HasValue && idLocal.Value > 0;
+        string userPicture = HttpContextAccessor.HttpContext.Session.GetString("userPicture") ?? "";
     }
     <!-- Header Principal Modernizado -->
     <header id="header" class="fixed top-0 left-0 w-full z-40 shadow-lg transition-shadow duration-300" style="background-color: #F4F1E9;">
@@ -108,8 +109,8 @@
                         <div class="relative">
                             <button id="user-btn" title="Ver opciones de usuario"
                                 class="flex items-center gap-2 px-3 py-2 rounded-full bg-white border border-gray-200 hover:border-[#23916A] hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#23916A]">
-                                <img src="~/images/avatar.png" alt="Usuario"
-                                    class="h-8 w-8 rounded-full border-2 border-[#23916A]/20">
+                                <img src="@(string.IsNullOrEmpty(userPicture) ? "/images/avatar.png" : userPicture)" alt="Usuario"
+                                    class="h-8 w-8 rounded-full border-2 border-[#23916A]/20 object-cover">
                                 <i class="fas fa-chevron-down text-xs text-gray-500"></i>
                             </button>
                             <ul id="user-menu"

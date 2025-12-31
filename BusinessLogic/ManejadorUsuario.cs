@@ -170,6 +170,9 @@ namespace BusinessLogic
                 Id = Convert.ToInt32(row["PK_ID_USUARIO"]),
                 Nombres = row["NOMBRES"]?.ToString() ?? "",
                 Apellidos = row["APELLIDOS"]?.ToString() ?? "",
+                FotoPerfil = row.Table.Columns.Contains("FOTO_PERFIL")
+                    ? row["FOTO_PERFIL"]?.ToString() ?? ""
+                    : "",
                 Telefono = row["TELEFONO"]?.ToString() ?? "",
                 Correo = row["CORREO"]?.ToString() ?? row["NOMBRE_USUARIO"]?.ToString() ?? "",
                 Estado = row["ESTADO"] != DBNull.Value ? Convert.ToInt32(row["ESTADO"]) : 1,
@@ -207,39 +210,53 @@ namespace BusinessLogic
             return conexion.EjecutarConsulta("login_usuario_google", parametros);
         }
 
-        public int RegistrarUsuarioGoogle(string correo, string nombre)
+        public int RegistrarUsuarioGoogle(string correo, string nombre, string? fotoUrl = null)
         {
             try
             {
                 List<Parametro> parametros = new List<Parametro>()
-        {
-            new Parametro("p_full_name", nombre),
-            new Parametro("p_correo", correo),
-            new Parametro("p_fk_id_metodo_autenticacion", 2),
-            new Parametro("p_fk_id_rol", 3)
-        };
-
-                bool registroExitoso = conexion.EjecutarTransaccion("crear_usuario_google", parametros);
-
-                if (!registroExitoso)
                 {
-                    return 0;
+                    new Parametro("p_email", correo),
+                    new Parametro("p_nombre", nombre),
+                    new Parametro("p_foto_url", fotoUrl ?? "")
+                };
+
+                DataTable resultado = conexion.EjecutarConsulta("sp_registrar_usuario_google", parametros);
+
+                if (resultado != null && resultado.Rows.Count > 0)
+                {
+                    return Convert.ToInt32(resultado.Rows[0]["IdUsuario"]);
                 }
 
-                DataTable data = LoginGoogle(correo);
-
-                if (data.Rows.Count > 0)
-                {
-                    return Convert.ToInt32(data.Rows[0]["PK_ID_USUARIO"]);
-                }
-                else
-                {
-                    return 0;
-                }
-            }
-            catch
-            {
                 return 0;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[GOOGLE REGISTRO] Error: {ex.Message}");
+                return 0;
+            }
+        }
+
+        /// <summary>
+        /// Actualiza la foto de perfil de un usuario (desde Google OAuth)
+        /// </summary>
+        public bool ActualizarFotoPerfil(int idUsuario, string fotoUrl)
+        {
+            try
+            {
+                var parametros = new List<Parametro>
+                {
+                    new Parametro("p_id_usuario", idUsuario),
+                    new Parametro("p_foto_url", fotoUrl)
+                };
+
+                DataTable resultado = conexion.EjecutarConsulta("sp_actualizar_foto_perfil", parametros);
+                return resultado != null && resultado.Rows.Count > 0 && Convert.ToInt32(resultado.Rows[0]["Actualizado"]) > 0;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[FOTO PERFIL] Error: {ex.Message}");
+                return false;
             }
         }
 

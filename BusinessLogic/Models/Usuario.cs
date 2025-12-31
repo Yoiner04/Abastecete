@@ -9,6 +9,7 @@ namespace BusinessLogic.Models
         // Datos personales (antes en tabla persona)
         public string Nombres { get; set; } = "";
         public string Apellidos { get; set; } = "";
+        public string FotoPerfil { get; set; } = "";
         public string Telefono { get; set; } = "";
         public long? DocumentoIdentidad { get; set; }
         public int TipoDocumentoId { get; set; }

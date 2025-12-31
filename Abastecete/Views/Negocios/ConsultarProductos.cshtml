@@ -715,14 +715,36 @@
                         </div>
                     }
 
-                    <!-- Mini mapa -->
+                    <!-- Mini mapa - Mostrar primero si hay ubicación -->
                     @if (!string.IsNullOrEmpty(negocio?.Localizacion))
                     {
-                        <div class="mt-6 rounded-xl overflow-hidden border border-gray-200">
-                            <div id="miniMap" class="h-48 w-full"></div>
+                        <div class="mt-6">
+                            <h4 class="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                                <i class="fas fa-map-marked-alt text-green-500"></i> Ubicación en el mapa
+                            </h4>
+                            <div class="rounded-2xl overflow-hidden border border-gray-200 shadow-sm">
+                                <div id="miniMap" class="h-64 w-full bg-gray-100"></div>
+                                <div class="bg-gray-50 px-4 py-3 flex items-center justify-between">
+                                    <span class="text-sm text-gray-600">
+                                        <i class="fas fa-map-marker-alt text-red-500 mr-1"></i>
+                                        @(negocio?.Direccion ?? "Ver ubicación")
+                                    </span>
+                                    <a href="https://www.google.com/maps?q=@negocio.Localizacion"
+                                       target="_blank"
+                                       class="inline-flex items-center gap-1 text-sm font-medium text-green-600 hover:text-green-700">
+                                        <i class="fas fa-external-link-alt"></i> Abrir en Google Maps
+                                    </a>
+                                </div>
+                            </div>
                         </div>
                     }
+
                 </div>
+            </div>
+
+            <!-- Opiniones y Reseñas - Fuera del panel expandible para que siempre sea visible -->
+            <div class="bg-white rounded-2xl shadow-xl p-6 sm:p-8 border border-gray-100 mt-6">
+                @await Html.PartialAsync("_OpinionesLocal", negocio?.Id ?? 0)
             </div>
         </div>
     </header>
@@ -1246,52 +1268,95 @@
                 panel.toggleClass('expanded');
                 icon.toggleClass('rotate-180');
 
-                // Inicializar mapa si se expande por primera vez
+                // Inicializar mapa si se expande por primera vez (con delay para que el contenedor tenga dimensiones)
                 if (panel.hasClass('expanded') && !window.miniMapInitialized) {
-                    initMiniMap();
+                    setTimeout(function() {
+                        initMiniMap();
+                    }, 400);
                 }
             });
         });
 
         // --- Mini Mapa ---
-        let miniMapInitialized = false;
+        window.miniMapInitialized = false;
+
         function initMiniMap() {
             const mapElement = document.getElementById('miniMap');
-            if (!mapElement) return;
+            if (!mapElement) {
+                console.log('[MAPA] Elemento miniMap no encontrado');
+                return;
+            }
+
+            // Verificar si Google Maps está cargado
+            if (typeof google === 'undefined' || typeof google.maps === 'undefined') {
+                console.log('[MAPA] Google Maps no está cargado, reintentando en 500ms...');
+                setTimeout(initMiniMap, 500);
+                return;
+            }
 
             const localizacion = '@(negocio?.Localizacion ?? "")';
-            if (!localizacion || !localizacion.includes(',')) return;
+            console.log('[MAPA] Localizacion:', localizacion);
+
+            if (!localizacion || !localizacion.includes(',')) {
+                console.log('[MAPA] Localización inválida');
+                mapElement.innerHTML = '<div class="flex items-center justify-center h-full text-gray-500"><i class="fas fa-map-marker-alt mr-2"></i>Ubicación no disponible</div>';
+                return;
+            }
 
             const parts = localizacion.split(',');
-            const lat = parseFloat(parts[0]);
-            const lng = parseFloat(parts[1]);
+            const lat = parseFloat(parts[0].trim());
+            const lng = parseFloat(parts[1].trim());
 
-            if (isNaN(lat) || isNaN(lng)) return;
+            console.log('[MAPA] Coordenadas:', lat, lng);
+
+            if (isNaN(lat) || isNaN(lng)) {
+                console.log('[MAPA] Coordenadas inválidas');
+                mapElement.innerHTML = '<div class="flex items-center justify-center h-full text-gray-500"><i class="fas fa-map-marker-alt mr-2"></i>Coordenadas inválidas</div>';
+                return;
+            }
 
             const position = { lat, lng };
-            const map = new google.maps.Map(mapElement, {
-                center: position,
-                zoom: 15,
-                mapTypeControl: false,
-                streetViewControl: false,
-                fullscreenControl: true,
-                styles: [
-                    { featureType: "poi", elementType: "labels", stylers: [{ visibility: "off" }] }
-                ]
-            });
 
-            new google.maps.Marker({
-                position: position,
-                map: map,
-                title: '@(negocio?.Nombre ?? "")',
-                icon: {
-                    url: 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="%2316a34a"><path d="M12 0C7.31 0 3.5 3.81 3.5 8.5c0 6.38 8.5 15.5 8.5 15.5s8.5-9.12 8.5-15.5C20.5 3.81 16.69 0 12 0zm0 12c-1.93 0-3.5-1.57-3.5-3.5S10.07 5 12 5s3.5 1.57 3.5 3.5S13.93 12 12 12z"/></svg>'),
-                    scaledSize: new google.maps.Size(40, 40)
-                }
-            });
+            try {
+                const map = new google.maps.Map(mapElement, {
+                    center: position,
+                    zoom: 15,
+                    mapTypeControl: false,
+                    streetViewControl: false,
+                    fullscreenControl: true,
+                    zoomControl: true,
+                    styles: [
+                        { featureType: "poi", elementType: "labels", stylers: [{ visibility: "off" }] }
+                    ]
+                });
 
-            window.miniMapInitialized = true;
+                new google.maps.Marker({
+                    position: position,
+                    map: map,
+                    title: '@(negocio?.Nombre?.Replace("'", "\\'") ?? "")',
+                    animation: google.maps.Animation.DROP,
+                    icon: {
+                        url: 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="%2316a34a"><path d="M12 0C7.31 0 3.5 3.81 3.5 8.5c0 6.38 8.5 15.5 8.5 15.5s8.5-9.12 8.5-15.5C20.5 3.81 16.69 0 12 0zm0 12c-1.93 0-3.5-1.57-3.5-3.5S10.07 5 12 5s3.5 1.57 3.5 3.5S13.93 12 12 12z"/></svg>'),
+                        scaledSize: new google.maps.Size(40, 40)
+                    }
+                });
+
+                window.miniMapInitialized = true;
+                console.log('[MAPA] Mapa inicializado correctamente');
+            } catch (error) {
+                console.error('[MAPA] Error al inicializar:', error);
+                mapElement.innerHTML = '<div class="flex items-center justify-center h-full text-gray-500"><i class="fas fa-exclamation-triangle mr-2"></i>Error al cargar el mapa</div>';
+            }
         }
+
+        // Callback para cuando Google Maps termine de cargar
+        window.initGoogleMapsCallback = function() {
+            console.log('[MAPA] Google Maps API cargada');
+            // Si el panel ya está expandido, inicializar el mapa
+            if ($('#infoPanel').hasClass('expanded') && !window.miniMapInitialized) {
+                initMiniMap();
+            }
+        };
 
         // --- Funciones de Galería ---
         function abrirLightbox(url) {
@@ -1337,7 +1402,7 @@
     </script>
     @if (!string.IsNullOrEmpty(negocio?.Localizacion))
     {
-        <script src="https://maps.googleapis.com/maps/api/js?key=@ViewBag.GoogleMapsApiKey&libraries=places"></script>
+        <script src="https://maps.googleapis.com/maps/api/js?key=@ViewBag.GoogleMapsApiKey&libraries=places&callback=initGoogleMapsCallback" async defer></script>
     }
     </div>
     <!-- End of content-productos wrapper -->

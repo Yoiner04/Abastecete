@@ -284,8 +284,29 @@ namespace ConnectionProject.Controllers
                     claim.Value
                 }).ToList();
 
+                // DEBUG: Ver todos los claims que envía Google
+                Console.WriteLine("[GOOGLE AUTH] Claims recibidos:");
+                if (claims != null)
+                {
+                    foreach (var claim in claims)
+                    {
+                        Console.WriteLine($"  - {claim.Type}: {claim.Value}");
+                    }
+                }
+
                 string email = claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value;
                 string name = claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value;
+                // Obtener foto de perfil de Google - buscar en varios tipos de claim
+                string pictureUrl = claims.FirstOrDefault(c =>
+                    c.Type == "picture" ||
+                    c.Type == "image" ||
+                    c.Type == "urn:google:picture" ||
+                    c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/uri" ||
+                    c.Type.Contains("picture") ||
+                    c.Type.Contains("image") ||
+                    c.Type.Contains("photo"))?.Value ?? "";
+
+                Console.WriteLine($"[GOOGLE AUTH] Foto URL capturada: '{pictureUrl}'");
 
                 if (!EsCorreoValido(email))
                 {
@@ -312,7 +333,7 @@ namespace ConnectionProject.Controllers
                 // Usuario no existe, registrarlo
                 if (codigoEstado == 0 && data.Rows.Count == 0)
                 {
-                    int userId = _manejadorUsuario.RegistrarUsuarioGoogle(email, name);
+                    int userId = _manejadorUsuario.RegistrarUsuarioGoogle(email, name, pictureUrl);
                     if (userId == 0)
                     {
                         TempData["Error"] = "Hubo un problema al registrar tu cuenta con Google.";
@@ -341,6 +362,13 @@ namespace ConnectionProject.Controllers
 
                     HttpContext.Session.SetInt32("idUsuario", idUsuario);
                     HttpContext.Session.SetString("membresia", membresia);
+
+                    // Actualizar y guardar foto de perfil si existe
+                    if (!string.IsNullOrEmpty(pictureUrl))
+                    {
+                        _manejadorUsuario.ActualizarFotoPerfil(idUsuario, pictureUrl);
+                        HttpContext.Session.SetString("userPicture", pictureUrl);
+                    }
                 }
 
                 HttpContext.Session.SetString("userEmail", email);
