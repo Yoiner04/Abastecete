@@ -102,19 +102,6 @@ namespace BusinessLogic
             return _cloudinary.EliminarImagen(publicId);
         }
 
-        /// <summary>
-        /// OBSOLETO: Este método NO elimina la imagen anterior de Cloudinary.
-        /// Use SubirImagenCompleto() + EliminarImagenCloudinary() en su lugar.
-        /// </summary>
-        [Obsolete("Use SubirImagenCompleto() + EliminarImagenCloudinary() para eliminar correctamente la imagen anterior de Cloudinary")]
-        public string? updateImage(IFormFile archivo, string oldImageId)
-        {
-            if (archivo == null || archivo.Length == 0)
-                return oldImageId;
-
-            return SubirImagen(archivo);
-        }
-
         // =============================================
         // BANNERS - Usando MySQL + Cloudinary
         // =============================================

@@ -14,14 +14,4 @@ namespace BusinessLogic.Models
         public Usuario? Usuario { get; set; }
         public Negocio? Negocio { get; set; }
     }
-
-    /// <summary>
-    /// Alias para compatibilidad con código existente
-    /// TODO: Eliminar después de migrar todo el código
-    /// </summary>
-    public class NegocioPersona
-    {
-        public Usuario? Persona { get; set; }
-        public Negocio? Negocio { get; set; }
-    }
 }

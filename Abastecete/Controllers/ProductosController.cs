@@ -48,23 +48,6 @@ namespace Abastecete.Controllers
             return View();
         }
 
-        //public IActionResult ProductosNegocio()
-        //{
-        //    var personaId = HttpContext.Session.GetInt32("PersonaId").Value;
-
-        //    Negocio negocio = manejadorNegocios.ConsultarNegocio(personaId);
-        //    List<Producto> productos = manejadorProductos.ConsultarProductosLocal(negocio.Id);
-
-        //    ViewBag.productos = productos;
-
-        //    if (negocio == null)
-        //    {
-        //        return View("ErrorNegocioNoEncontrado"); // Vista de error si no tiene negocio
-        //    }
-
-        //    return View(negocio);
-        //}
-
         public IActionResult ProductosNegocio()
         {
             var usuarioId = HttpContext.Session.GetInt32("idUsuario");
@@ -103,13 +86,13 @@ namespace Abastecete.Controllers
 
             ViewBag.productos = productos;
 
-            var negocioPersona = new NegocioPersona
+            var negocioUsuario = new NegocioUsuario
             {
                 Negocio = negocio,
-                Persona = usuarios.FirstOrDefault()
+                Usuario = usuarios.FirstOrDefault()
             };
 
-            return View(negocioPersona);
+            return View(negocioUsuario);
         }
 
         public IActionResult ProductDetailLocal(int idlocal, int idProducto)

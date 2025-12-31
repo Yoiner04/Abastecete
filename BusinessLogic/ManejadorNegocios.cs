@@ -190,24 +190,6 @@ namespace BusinessLogic
             return categorias;
         }
 
-        public Negocio? ConsultarNegocio(int idUsuario)
-        {
-            List<Parametro> parametros = new List<Parametro>
-            {
-                new Parametro("p_id_usuario", idUsuario)
-            };
-
-            DataTable datos = conexion.EjecutarConsulta("consultar_negocio", parametros);
-
-            // Validar que existan datos antes de acceder
-            if (datos == null || datos.Rows.Count == 0)
-            {
-                return null;
-            }
-
-            return MapearNegocioDesdeRow(datos.Rows[0]);
-        }
-
         public Producto? ConsultarProductoNegocio(int idProducto, int IdLocal)
         {
             List<Parametro> parametros = new List<Parametro>
@@ -511,14 +493,6 @@ namespace BusinessLogic
                 negocio.SuscripcionActiva = _manejadorSuscripciones.ObtenerSuscripcionActiva(idLocal);
             }
             return negocio;
-        }
-
-        /// <summary>
-        /// DEPRECATED: Alias para compatibilidad, usar ConsultarNegocioUsuarioConSuscripcion
-        /// </summary>
-        public Negocio? ConsultarNegocioPersonaConSuscripcion(int idUsuario)
-        {
-            return ConsultarNegocioUsuarioConSuscripcion(idUsuario);
         }
 
         /// <summary>

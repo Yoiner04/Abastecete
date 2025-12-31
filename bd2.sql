@@ -704,47 +704,42 @@ DELIMITER ;
 
 -- Volcando estructura para procedimiento abastecete.buscador_productos
 DELIMITER //
-CREATE PROCEDURE `buscador_productos`(
-	IN `busqueda` VARCHAR(50)
-)
+CREATE PROCEDURE `buscador_productos`(IN busqueda VARCHAR(255))
 BEGIN
-
-	SELECT * 
-	FROM producto
-	INNER JOIN productoslocal ON productoslocal.FK_ID_PRODUCTO = producto.PK_ID_PRODUCTO
-	INNER JOIN `local` ON productoslocal.FK_ID_LOCAL = `local`.PK_ID_LOCAL
-	WHERE NOMBRE_PRODUCTO LIKE CONCAT('%', busqueda, '%');
-    
+    SELECT DISTINCT
+        p.*,
+        pm.PRECIO,
+        l.PK_ID_LOCAL,
+        l.NOMBRE_LOCAL
+    FROM producto p
+    INNER JOIN producto_marca pm ON pm.FK_ID_PRODUCTO = p.PK_ID_PRODUCTO
+    INNER JOIN `local` l ON pm.FK_ID_LOCAL = l.PK_ID_LOCAL
+    WHERE p.NOMBRE_PRODUCTO LIKE CONCAT('%', busqueda, '%')
+      AND pm.DISPONIBLE = 1;
 END//
 DELIMITER ;
 
 -- Volcando estructura para procedimiento abastecete.buscador_productos_sugerencias
 DELIMITER //
 CREATE PROCEDURE `buscador_productos_sugerencias`(
-    IN p_busqueda VARCHAR(100),
+    IN p_termino VARCHAR(100),
     IN p_limite INT
 )
 BEGIN
-    SELECT
+    SELECT DISTINCT
         p.PK_ID_PRODUCTO AS id,
         p.NOMBRE_PRODUCTO AS nombre,
-        pl.VALOR_PRODUCTS_LOCAL AS precio,
         p.IMAGEN_URL AS imagen,
         l.PK_ID_LOCAL AS idLocal,
         l.NOMBRE_LOCAL AS nombreLocal,
         l.FOTOS_LOCAL AS imagenLocal
     FROM producto p
-    INNER JOIN productoslocal pl ON pl.FK_ID_PRODUCTO = p.PK_ID_PRODUCTO
-    INNER JOIN `local` l ON pl.FK_ID_LOCAL = l.PK_ID_LOCAL
+    INNER JOIN producto_marca pm ON pm.FK_ID_PRODUCTO = p.PK_ID_PRODUCTO
+    INNER JOIN `local` l ON pm.FK_ID_LOCAL = l.PK_ID_LOCAL
     WHERE l.FK_ID_ESTADO_LOCAL = 1
-    AND p.NOMBRE_PRODUCTO LIKE CONCAT('%', p_busqueda, '%')
-    ORDER BY
-        CASE
-            WHEN p.NOMBRE_PRODUCTO LIKE CONCAT(p_busqueda, '%') THEN 1
-            WHEN p.NOMBRE_PRODUCTO LIKE CONCAT('%', p_busqueda, '%') THEN 2
-            ELSE 3
-        END,
-        p.NOMBRE_PRODUCTO ASC
+      AND pm.DISPONIBLE = 1
+      AND p.NOMBRE_PRODUCTO LIKE CONCAT('%', p_termino, '%')
+    ORDER BY CASE WHEN p.NOMBRE_PRODUCTO LIKE CONCAT(p_termino, '%') THEN 0 ELSE 1 END, p.NOMBRE_PRODUCTO
     LIMIT p_limite;
 END//
 DELIMITER ;
@@ -752,40 +747,44 @@ DELIMITER ;
 -- Volcando estructura para procedimiento abastecete.buscar_productos
 DELIMITER //
 CREATE PROCEDURE `buscar_productos`(
-    IN `p_termino` VARCHAR(100),
-    IN `p_id_categoria` INT,
-    IN `p_id_subcategoria` INT,
-    IN `p_id_marca` INT
+    IN busqueda VARCHAR(255)
 )
 BEGIN
-    SELECT
-        p.PK_ID_PRODUCTO,
-        p.FK_ID_SUB_CATEGORIA,
-        p.NOMBRE_PRODUCTO,
-        p.IMAGEN_URL,
-        p.FK_ID_MARCA,
-        p.DESCRIPCION,
-        p.SKU,
-        p.CLOUDINARY_PUBLIC_ID,
-        p.FK_ID_TIPOUNIDAD,
-        m.NOMBRE AS NOMBRE_MARCA,
-        tu.NOMBRE_TIPOUNIDAD,
-        sc.NOMBRE_SUB_CATEGORIA,
-        c.PK_ID_CATEGORIA,
-        c.NOMBRE_CATEGORIA
+    SELECT DISTINCT
+        p.*,
+        pm.PRECIO,
+        l.PK_ID_LOCAL,
+        l.NOMBRE_LOCAL
     FROM producto p
-    LEFT JOIN marca m ON p.FK_ID_MARCA = m.PK_ID_MARCA
-    LEFT JOIN tipo_unidad tu ON p.FK_ID_TIPOUNIDAD = tu.ID_TIPOUNIDAD
-    LEFT JOIN sub_categoria sc ON p.FK_ID_SUB_CATEGORIA = sc.PK_ID_SUB_CATEGORIA
-    LEFT JOIN categoria c ON sc.FK_ID_CATEGORIA = c.PK_ID_CATEGORIA
-    WHERE
-        (p_termino IS NULL OR p_termino = '' OR
-         p.NOMBRE_PRODUCTO LIKE CONCAT('%', p_termino, '%') OR
-         p.SKU LIKE CONCAT('%', p_termino, '%'))
-        AND (p_id_categoria IS NULL OR p_id_categoria = 0 OR c.PK_ID_CATEGORIA = p_id_categoria)
-        AND (p_id_subcategoria IS NULL OR p_id_subcategoria = 0 OR p.FK_ID_SUB_CATEGORIA = p_id_subcategoria)
-        AND (p_id_marca IS NULL OR p_id_marca = 0 OR p.FK_ID_MARCA = p_id_marca)
-    ORDER BY p.NOMBRE_PRODUCTO;
+    INNER JOIN producto_marca pm ON pm.FK_ID_PRODUCTO = p.PK_ID_PRODUCTO
+    INNER JOIN `local` l ON pm.FK_ID_LOCAL = l.PK_ID_LOCAL
+    WHERE p.NOMBRE_PRODUCTO LIKE CONCAT('%', busqueda, '%')
+      AND pm.DISPONIBLE = 1;
+END//
+DELIMITER ;
+
+-- Volcando estructura para procedimiento abastecete.buscar_sugerencias_productos
+DELIMITER //
+CREATE PROCEDURE `buscar_sugerencias_productos`(
+    IN p_termino VARCHAR(100),
+    IN p_limite INT
+)
+BEGIN
+    SELECT DISTINCT
+        p.PK_ID_PRODUCTO AS id,
+        p.NOMBRE_PRODUCTO AS nombre,
+        p.IMAGEN_URL AS imagen,
+        l.PK_ID_LOCAL AS idLocal,
+        l.NOMBRE_LOCAL AS nombreLocal,
+        l.FOTOS_LOCAL AS imagenLocal
+    FROM producto p
+    INNER JOIN producto_marca pm ON pm.FK_ID_PRODUCTO = p.PK_ID_PRODUCTO
+    INNER JOIN `local` l ON pm.FK_ID_LOCAL = l.PK_ID_LOCAL
+    WHERE l.FK_ID_ESTADO_LOCAL = 1
+      AND pm.DISPONIBLE = 1
+      AND p.NOMBRE_PRODUCTO LIKE CONCAT('%', p_termino, '%')
+    ORDER BY CASE WHEN p.NOMBRE_PRODUCTO LIKE CONCAT(p_termino, '%') THEN 0 ELSE 1 END, p.NOMBRE_PRODUCTO
+    LIMIT p_limite;
 END//
 DELIMITER ;
 
@@ -1763,56 +1762,84 @@ DELIMITER ;
 -- Volcando estructura para procedimiento abastecete.consultar_producto_negocio
 DELIMITER //
 CREATE PROCEDURE `consultar_producto_negocio`(
-	IN `idproducto` INT,
-	IN `idlocal` INT
+    IN idproducto INT,
+    IN idlocal INT
 )
 BEGIN
- 	SELECT producto.NOMBRE_PRODUCTO,productoslocal.VALOR_PRODUCTS_LOCAL,producto.IMAGEN_URL,unidad.NOMBRE_UNIDAD FROM producto
- 	INNER JOIN productoslocal ON productoslocal.FK_ID_PRODUCTO = producto.PK_ID_PRODUCTO
- 	INNER JOIN unidad ON productoslocal.FK_ID_UNIDAD = unidad.ID_UNIDAD
- 	WHERE productoslocal.FK_ID_PRODUCTO = idproducto AND productoslocal.FK_ID_LOCAL= idlocal;
+    SELECT
+        p.NOMBRE_PRODUCTO,
+        pm.PRECIO AS VALOR_PRODUCTS_LOCAL,
+        p.IMAGEN_URL,
+        COALESCE(u.NOMBRE_UNIDAD, 'Unidad') AS NOMBRE_UNIDAD
+    FROM producto p
+    INNER JOIN producto_marca pm ON pm.FK_ID_PRODUCTO = p.PK_ID_PRODUCTO
+    LEFT JOIN unidad u ON pm.FK_ID_UNIDAD = u.ID_UNIDAD
+    WHERE pm.FK_ID_PRODUCTO = idproducto
+      AND pm.FK_ID_LOCAL = idlocal
+    LIMIT 1;
 END//
 DELIMITER ;
 
 -- Volcando estructura para procedimiento abastecete.consultar_producto_negocio_seguro
 DELIMITER //
 CREATE PROCEDURE `consultar_producto_negocio_seguro`(
-    IN `p_id_producto` INT,
-    IN `p_id_local` INT,
-    OUT `mensaje` VARCHAR(255),
-    OUT `resultado` INT
+    IN p_id_producto INT,
+    IN p_id_local INT
 )
 BEGIN
     DECLARE producto_existe INT DEFAULT 0;
 
-    -- Verificar si existe el producto en ese local
     SELECT COUNT(*) INTO producto_existe
-    FROM productoslocal pl
-    INNER JOIN producto p ON pl.FK_ID_PRODUCTO = p.PK_ID_PRODUCTO
-    WHERE pl.FK_ID_PRODUCTO = p_id_producto
-      AND pl.FK_ID_LOCAL = p_id_local;
+    FROM producto_marca pm
+    WHERE pm.FK_ID_PRODUCTO = p_id_producto
+      AND pm.FK_ID_LOCAL = p_id_local;
 
     IF producto_existe > 0 THEN
         SELECT
             p.NOMBRE_PRODUCTO,
-            pl.VALOR_PRODUCTS_LOCAL,
+            pm.PRECIO AS VALOR_PRODUCTS_LOCAL,
             p.IMAGEN_URL,
             COALESCE(u.NOMBRE_UNIDAD, '') AS NOMBRE_UNIDAD
-        FROM productoslocal pl
-        INNER JOIN producto p ON pl.FK_ID_PRODUCTO = p.PK_ID_PRODUCTO
-        LEFT JOIN unidad u ON pl.FK_ID_UNIDAD = u.ID_UNIDAD
-        WHERE pl.FK_ID_PRODUCTO = p_id_producto
-          AND pl.FK_ID_LOCAL = p_id_local
+        FROM producto_marca pm
+        INNER JOIN producto p ON pm.FK_ID_PRODUCTO = p.PK_ID_PRODUCTO
+        LEFT JOIN unidad u ON pm.FK_ID_UNIDAD = u.ID_UNIDAD
+        WHERE pm.FK_ID_PRODUCTO = p_id_producto
+          AND pm.FK_ID_LOCAL = p_id_local
         LIMIT 1;
-        SET mensaje = 'Producto encontrado';
-        SET resultado = 1;
     ELSE
-        SET mensaje = 'Producto no encontrado en este local';
-        SET resultado = 0;
-        -- Retornar conjunto vacío
-        SELECT NULL AS NOMBRE_PRODUCTO, NULL AS VALOR_PRODUCTS_LOCAL,
-               NULL AS IMAGEN_URL, NULL AS NOMBRE_UNIDAD
-        WHERE 1 = 0;
+        SELECT '' AS NOMBRE_PRODUCTO, 0 AS VALOR_PRODUCTS_LOCAL, '' AS IMAGEN_URL, '' AS NOMBRE_UNIDAD;
+    END IF;
+END//
+DELIMITER ;
+
+-- Volcando estructura para procedimiento abastecete.consultar_producto_negocio_v2
+DELIMITER //
+CREATE PROCEDURE `consultar_producto_negocio_v2`(
+    IN p_id_producto INT,
+    IN p_id_local INT
+)
+BEGIN
+    DECLARE producto_existe INT DEFAULT 0;
+
+    SELECT COUNT(*) INTO producto_existe
+    FROM producto_marca pm
+    WHERE pm.FK_ID_PRODUCTO = p_id_producto
+      AND pm.FK_ID_LOCAL = p_id_local;
+
+    IF producto_existe > 0 THEN
+        SELECT
+            p.NOMBRE_PRODUCTO,
+            pm.PRECIO AS VALOR_PRODUCTS_LOCAL,
+            p.IMAGEN_URL,
+            COALESCE(u.NOMBRE_UNIDAD, '') AS NOMBRE_UNIDAD
+        FROM producto_marca pm
+        INNER JOIN producto p ON pm.FK_ID_PRODUCTO = p.PK_ID_PRODUCTO
+        LEFT JOIN unidad u ON pm.FK_ID_UNIDAD = u.ID_UNIDAD
+        WHERE pm.FK_ID_PRODUCTO = p_id_producto
+          AND pm.FK_ID_LOCAL = p_id_local
+        LIMIT 1;
+    ELSE
+        SELECT '' AS NOMBRE_PRODUCTO, 0 AS VALOR_PRODUCTS_LOCAL, '' AS IMAGEN_URL, '' AS NOMBRE_UNIDAD;
     END IF;
 END//
 DELIMITER ;
@@ -4068,34 +4095,29 @@ DELIMITER ;
 -- Volcando estructura para procedimiento abastecete.eliminar_unidad
 DELIMITER //
 CREATE PROCEDURE `eliminar_unidad`(
-    IN `p_id` INT,
-    OUT `mensaje` VARCHAR(255),
-    OUT `resultado` INT
+    IN p_id INT,
+    OUT mensaje VARCHAR(255),
+    OUT resultado INT
 )
 BEGIN
     DECLARE existe INT DEFAULT 0;
     DECLARE en_uso INT DEFAULT 0;
 
-    -- Verificar si existe
-    SELECT COUNT(*) INTO existe
-    FROM unidad
-    WHERE ID_UNIDAD = p_id;
+    SELECT COUNT(*) INTO existe FROM unidad WHERE ID_UNIDAD = p_id;
 
     IF existe = 0 THEN
         SET mensaje = 'Unidad no encontrada';
         SET resultado = 0;
     ELSE
-        -- Verificar si está en uso en productoslocal
-        SELECT COUNT(*) INTO en_uso
-        FROM productoslocal
-        WHERE FK_ID_UNIDAD = p_id;
+        -- Verificar si está en uso en producto_marca
+        SELECT COUNT(*) INTO en_uso FROM producto_marca WHERE FK_ID_UNIDAD = p_id;
 
         IF en_uso > 0 THEN
-            SET mensaje = CONCAT('No se puede eliminar. La unidad está siendo usada en ', en_uso, ' productos');
+            SET mensaje = 'No se puede eliminar, la unidad está en uso';
             SET resultado = 0;
         ELSE
             DELETE FROM unidad WHERE ID_UNIDAD = p_id;
-            SET mensaje = 'Unidad eliminada exitosamente';
+            SET mensaje = 'Unidad eliminada correctamente';
             SET resultado = 1;
         END IF;
     END IF;
@@ -4813,7 +4835,7 @@ CREATE TABLE IF NOT EXISTS `logs_sistema` (
   KEY `IDX_logs_tipo_accion` (`TIPO_ACCION`),
   KEY `IDX_logs_entidad` (`MODULO`,`ENTIDAD_ID`),
   CONSTRAINT `FK_logs_usuario` FOREIGN KEY (`FK_ID_USUARIO`) REFERENCES `usuario` (`PK_ID_USUARIO`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=153 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=154 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Volcando datos para la tabla abastecete.logs_sistema: ~132 rows (aproximadamente)
 INSERT INTO `logs_sistema` (`PK_ID_LOG`, `FK_ID_USUARIO`, `NOMBRE_USUARIO`, `MODULO`, `TIPO_ACCION`, `ENTIDAD_ID`, `ENTIDAD_DESCRIPCION`, `DATOS_ANTERIORES`, `DATOS_NUEVOS`, `IP_CLIENTE`, `USER_AGENT`, `FECHA_REGISTRO`, `RESULTADO`, `MENSAJE_ERROR`, `CONTROLLER`, `ACTION`) VALUES
@@ -4968,7 +4990,8 @@ INSERT INTO `logs_sistema` (`PK_ID_LOG`, `FK_ID_USUARIO`, `NOMBRE_USUARIO`, `MOD
 	(149, 2, 'johans.ramirez@udla.edu.co', 'AUTENTICACION', 'LOGIN', 2, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-31 03:09:32', 'EXITO', '', 'Login', 'Login'),
 	(150, 2, 'johans.ramirez@udla.edu.co', 'AUTENTICACION', 'LOGIN', 2, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-31 05:05:35', 'EXITO', '', 'Login', 'Login'),
 	(151, 2, 'johans.ramirez@udla.edu.co', 'AUTENTICACION', 'LOGIN', 2, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-31 05:09:52', 'EXITO', '', 'Login', 'Login'),
-	(152, 2, 'johans.ramirez@udla.edu.co', 'AUTENTICACION', 'LOGIN', 2, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-31 12:43:36', 'EXITO', '', 'Login', 'Login');
+	(152, 2, 'johans.ramirez@udla.edu.co', 'AUTENTICACION', 'LOGIN', 2, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-31 12:43:36', 'EXITO', '', 'Login', 'Login'),
+	(153, 2, 'johans.ramirez@udla.edu.co', 'AUTENTICACION', 'LOGIN', 2, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-31 12:55:42', 'EXITO', '', 'Login', 'Login');
 
 -- Volcando estructura para tabla abastecete.marca
 CREATE TABLE IF NOT EXISTS `marca` (
@@ -5231,72 +5254,59 @@ DELIMITER ;
 
 -- Volcando estructura para procedimiento abastecete.obtener_limites_membresia
 DELIMITER //
-CREATE PROCEDURE `obtener_limites_membresia`(
-    IN p_id_local INT
-)
+CREATE PROCEDURE `obtener_limites_membresia`(IN p_id_local INT)
 BEGIN
     DECLARE v_productos_actuales INT DEFAULT 0;
     DECLARE v_ofertas_activas INT DEFAULT 0;
     DECLARE v_ofertas_usadas_periodo INT DEFAULT 0;
 
-    -- Contar productos activos del local (tabla productoslocal, columna FK_ESTADO)
-    SELECT COUNT(*) INTO v_productos_actuales
-    FROM productoslocal
-    WHERE FK_ID_LOCAL = p_id_local AND FK_ESTADO = 1;
+    -- Contar productos actuales del local
+    SELECT COUNT(DISTINCT FK_ID_PRODUCTO) INTO v_productos_actuales
+    FROM producto_marca
+    WHERE FK_ID_LOCAL = p_id_local AND DISPONIBLE = 1;
 
     -- Contar ofertas flash activas
     SELECT COUNT(*) INTO v_ofertas_activas
     FROM oferta_flash
     WHERE FK_ID_LOCAL = p_id_local
       AND ESTADO_OFERTA_FLASH = 1
-      AND TIEMPO_OFERTA_FLASH > NOW();
+      AND TIEMPO_OFERTA_FLASH >= NOW();
 
-    -- Contar ofertas usadas en el período de suscripción
+    -- Contar ofertas usadas en el periodo (mes actual)
     SELECT COUNT(*) INTO v_ofertas_usadas_periodo
-    FROM oferta_flash ofl
-    INNER JOIN `local` l ON ofl.FK_ID_LOCAL = l.PK_ID_LOCAL
-    LEFT JOIN suscripcion s ON l.FK_ID_SUSCRIPCION_ACTIVA = s.PK_ID_SUSCRIPCION
-    WHERE ofl.FK_ID_LOCAL = p_id_local
-      AND ofl.FECHA_OFERTA_FLASH >= COALESCE(s.FECHA_INICIO, '1900-01-01');
+    FROM oferta_flash
+    WHERE FK_ID_LOCAL = p_id_local
+      AND MONTH(FECHA_OFERTA_FLASH) = MONTH(NOW())
+      AND YEAR(FECHA_OFERTA_FLASH) = YEAR(NOW());
 
-    -- Obtener límites y estado
     SELECT
-        -- Info de suscripción
-        CASE WHEN s.PK_ID_SUSCRIPCION IS NOT NULL AND s.ESTADO = 1 AND s.FECHA_FIN > NOW()
-             THEN 1 ELSE 0 END AS TieneSuscripcionActiva,
-        COALESCE(DATEDIFF(s.FECHA_FIN, NOW()), 0) AS DiasRestantes,
-        s.FECHA_FIN AS FechaVencimiento,
-
-        -- Info de membresía
-        COALESCE(tm.NOMBRE, 'Sin membresía') AS NombreMembresia,
-        CAST(COALESCE(tm.CANTIDAD_PRODUCTOS, '0') AS UNSIGNED) AS LimiteProductos,
-        COALESCE(tm.OFERTAS_FLASH_SIMULTANEAS, 1) AS LimiteOfertasSimultaneas,
-        COALESCE(tm.OFERTAS_FLASH_TOTAL, 0) AS LimiteOfertasTotal,
-        COALESCE(tm.DURACION_OFERTA, 24) AS DuracionOfertaHoras,
-
-        -- Uso actual
-        v_productos_actuales AS ProductosActuales,
-        v_ofertas_activas AS OfertasActivas,
-        v_ofertas_usadas_periodo AS OfertasUsadasPeriodo,
-
-        -- Puede agregar productos?
+        CASE WHEN s.PK_ID_SUSCRIPCION IS NOT NULL AND s.ESTADO = 1 THEN 1 ELSE 0 END as TieneSuscripcionActiva,
         CASE
-            WHEN s.PK_ID_SUSCRIPCION IS NULL OR s.ESTADO != 1 OR s.FECHA_FIN <= NOW() THEN 0
-            WHEN CAST(COALESCE(tm.CANTIDAD_PRODUCTOS, '0') AS UNSIGNED) = 0 THEN 1
-            WHEN v_productos_actuales < CAST(COALESCE(tm.CANTIDAD_PRODUCTOS, '0') AS UNSIGNED) THEN 1
+            WHEN s.FECHA_FIN IS NOT NULL THEN DATEDIFF(s.FECHA_FIN, NOW())
             ELSE 0
-        END AS PuedeAgregarProductos,
-
-        -- Puede crear oferta?
+        END as DiasRestantes,
+        s.FECHA_FIN as FechaVencimiento,
+        COALESCE(tm.NOMBRE, '') as NombreMembresia,
+        COALESCE(CAST(tm.CANTIDAD_PRODUCTOS AS SIGNED), 0) as LimiteProductos,
+        COALESCE(tm.OFERTAS_FLASH_SIMULTANEAS, 0) as LimiteOfertasSimultaneas,
+        COALESCE(tm.OFERTAS_FLASH_TOTAL, 0) as LimiteOfertasTotal,
+        COALESCE(tm.DURACION_OFERTA, 24) as DuracionOfertaHoras,
+        v_productos_actuales as ProductosActuales,
+        v_ofertas_activas as OfertasActivas,
+        v_ofertas_usadas_periodo as OfertasUsadasPeriodo,
         CASE
-            WHEN s.PK_ID_SUSCRIPCION IS NULL OR s.ESTADO != 1 OR s.FECHA_FIN <= NOW() THEN 0
-            WHEN v_ofertas_activas >= COALESCE(tm.OFERTAS_FLASH_SIMULTANEAS, 1) THEN 0
+            WHEN COALESCE(CAST(tm.CANTIDAD_PRODUCTOS AS SIGNED), 0) = 0 THEN 1
+            WHEN v_productos_actuales < COALESCE(CAST(tm.CANTIDAD_PRODUCTOS AS SIGNED), 0) THEN 1
+            ELSE 0
+        END as PuedeAgregarProductos,
+        CASE
+            WHEN s.PK_ID_SUSCRIPCION IS NULL OR s.ESTADO != 1 THEN 0
+            WHEN v_ofertas_activas >= COALESCE(tm.OFERTAS_FLASH_SIMULTANEAS, 0) THEN 0
             WHEN COALESCE(tm.OFERTAS_FLASH_TOTAL, 0) > 0 AND v_ofertas_usadas_periodo >= tm.OFERTAS_FLASH_TOTAL THEN 0
             ELSE 1
-        END AS PuedeCrearOferta
-
+        END as PuedeCrearOferta
     FROM `local` l
-    LEFT JOIN suscripcion s ON l.FK_ID_SUSCRIPCION_ACTIVA = s.PK_ID_SUSCRIPCION
+    LEFT JOIN suscripcion s ON l.FK_ID_SUSCRIPCION_ACTIVA = s.PK_ID_SUSCRIPCION AND s.ESTADO = 1
     LEFT JOIN tipo_membresia tm ON s.FK_ID_TIPO_MEMBRESIA = tm.PK_ID_TIPO_MEMBRESIA
     WHERE l.PK_ID_LOCAL = p_id_local;
 END//
@@ -6457,17 +6467,20 @@ CREATE TABLE IF NOT EXISTS `producto_marca` (
   `FECHA_REGISTRO` datetime DEFAULT CURRENT_TIMESTAMP,
   `FECHA_ACTUALIZACION` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`PK_ID`),
-  UNIQUE KEY `uk_producto_marca` (`FK_ID_PRODUCTO`,`FK_ID_MARCA`),
+  UNIQUE KEY `uk_producto_marca_local_unidad` (`FK_ID_LOCAL`,`FK_ID_PRODUCTO`,`FK_ID_MARCA`,`FK_ID_UNIDAD`),
   KEY `fk_pm_marca` (`FK_ID_MARCA`),
   KEY `fk_pm_local` (`FK_ID_LOCAL`),
   KEY `fk_pm_unidad` (`FK_ID_UNIDAD`),
+  KEY `fk_pm_producto` (`FK_ID_PRODUCTO`),
   CONSTRAINT `fk_pm_local` FOREIGN KEY (`FK_ID_LOCAL`) REFERENCES `local` (`PK_ID_LOCAL`) ON DELETE CASCADE,
   CONSTRAINT `fk_pm_marca` FOREIGN KEY (`FK_ID_MARCA`) REFERENCES `marca` (`PK_ID_MARCA`) ON DELETE CASCADE,
   CONSTRAINT `fk_pm_producto` FOREIGN KEY (`FK_ID_PRODUCTO`) REFERENCES `producto` (`PK_ID_PRODUCTO`) ON DELETE CASCADE,
   CONSTRAINT `fk_pm_unidad` FOREIGN KEY (`FK_ID_UNIDAD`) REFERENCES `unidad` (`ID_UNIDAD`) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Volcando datos para la tabla abastecete.producto_marca: ~25 rows (aproximadamente)
+INSERT INTO `producto_marca` (`PK_ID`, `FK_ID_PRODUCTO`, `FK_ID_MARCA`, `FK_ID_UNIDAD`, `FK_ID_LOCAL`, `PRECIO`, `STOCK`, `DISPONIBLE`, `FECHA_REGISTRO`, `FECHA_ACTUALIZACION`) VALUES
+	(1, 41, 1, 1, 1, 5000.00, 0, 1, '2025-12-31 13:03:43', '2025-12-31 13:03:43');
 
 -- Volcando estructura para tabla abastecete.producto_marcas_disponibles
 CREATE TABLE IF NOT EXISTS `producto_marcas_disponibles` (
@@ -7593,22 +7606,16 @@ CREATE PROCEDURE `sp_actualizar_precio_producto_local`(
     IN p_nuevo_precio INT
 )
 BEGIN
-    DECLARE v_pl_id INT DEFAULT 0;
-
-    SELECT PK_ID_PRODUCTS_LOCAL INTO v_pl_id
-    FROM productoslocal
+    UPDATE producto_marca
+    SET PRECIO = p_nuevo_precio,
+        FECHA_ACTUALIZACION = CURRENT_TIMESTAMP
     WHERE FK_ID_LOCAL = p_id_local
-      AND FK_ID_PRODUCTO = p_id_producto
-    LIMIT 1;
+      AND FK_ID_PRODUCTO = p_id_producto;
 
-    IF v_pl_id > 0 THEN
-        UPDATE productoslocal
-        SET VALOR_PRODUCTS_LOCAL = p_nuevo_precio
-        WHERE PK_ID_PRODUCTS_LOCAL = v_pl_id;
-
-        SELECT v_pl_id as Id, 'Precio actualizado correctamente' as Mensaje, 1 as Exito;
+    IF ROW_COUNT() > 0 THEN
+        SELECT p_id_producto as Id, 'Precio actualizado correctamente' as Mensaje, 1 as Exito;
     ELSE
-        SELECT 0 as Id, 'Producto no encontrado en este local' as Mensaje, 0 as Exito;
+        SELECT 0 as Id, 'Producto no encontrado' as Mensaje, 0 as Exito;
     END IF;
 END//
 DELIMITER ;
@@ -7700,42 +7707,43 @@ DELIMITER ;
 
 -- Volcando estructura para procedimiento abastecete.sp_consultar_productos_local_con_marcas
 DELIMITER //
-CREATE PROCEDURE `sp_consultar_productos_local_con_marcas`(
-    IN p_id_local INT
-)
+CREATE PROCEDURE `sp_consultar_productos_local_con_marcas`(IN p_id_local INT)
 BEGIN
     SELECT
         p.PK_ID_PRODUCTO as Id,
-        p.NOMBRE as Nombre,
+        p.NOMBRE_PRODUCTO as Nombre,
         p.DESCRIPCION as Descripcion,
-        p.IMAGEN as ImagenUrl,
+        p.IMAGEN_URL as ImagenUrl,
         p.CLOUDINARY_PUBLIC_ID as CloudinaryPublicId,
         p.SKU as SKU,
         p.FK_ID_SUB_CATEGORIA as IdSubCategoria,
-        sc.NOMBRE as NombreSubCategoria,
-        sc.FK_ID_CATEGORIA as Categoria,
-        c.NOMBRE as NombreCategoria,
-        u.PK_ID_UNIDAD as IdUnidad,
-        u.NOMBRE as NombreUnidad,
-        tu.PK_ID_TIPO_UNIDAD as IdTipoUnidad,
-        tu.NOMBRE as NombreTipoUnidad,
-        -- Datos de marcas del local específico
-        (SELECT MIN(pm.PRECIO) FROM producto_marca pm WHERE pm.FK_ID_LOCAL = p_id_local AND pm.FK_ID_PRODUCTO = p.PK_ID_PRODUCTO AND pm.DISPONIBLE = 1) as PrecioMinimo,
-        (SELECT MAX(pm.PRECIO) FROM producto_marca pm WHERE pm.FK_ID_LOCAL = p_id_local AND pm.FK_ID_PRODUCTO = p.PK_ID_PRODUCTO AND pm.DISPONIBLE = 1) as PrecioMaximo,
-        (SELECT COUNT(*) FROM producto_marca pm WHERE pm.FK_ID_LOCAL = p_id_local AND pm.FK_ID_PRODUCTO = p.PK_ID_PRODUCTO AND pm.DISPONIBLE = 1) as CantidadMarcas,
-        -- Para compatibilidad: mantener el precio original
-        pl.VALOR_PRODUCTS_LOCAL as Precio,
-        p.FK_ID_MARCA as IdMarca,
-        m.NOMBRE as NombreMarca
-    FROM productoslocal pl
-    INNER JOIN producto p ON pl.FK_ID_PRODUCTO = p.PK_ID_PRODUCTO
+        sc.NOMBRE_SUB_CATEGORIA as NombreSubCategoria,
+        c.PK_ID_CATEGORIA as Categoria,
+        c.NOMBRE_CATEGORIA as NombreCategoria,
+        pm.FK_ID_UNIDAD as IdUnidad,
+        u.NOMBRE_UNIDAD as NombreUnidad,
+        p.FK_ID_TIPOUNIDAD as IdTipoUnidad,
+        tu.NOMBRE_TIPOUNIDAD as NombreTipoUnidad,
+        MIN(pm.PRECIO) as PrecioMinimo,
+        MAX(pm.PRECIO) as PrecioMaximo,
+        COUNT(DISTINCT pm.PK_ID) as CantidadMarcas,
+        MIN(pm.PRECIO) as Precio,
+        pm.FK_ID_MARCA as IdMarca,
+        m.NOMBRE_MARCA as NombreMarca
+    FROM producto_marca pm
+    INNER JOIN producto p ON pm.FK_ID_PRODUCTO = p.PK_ID_PRODUCTO
     INNER JOIN sub_categoria sc ON p.FK_ID_SUB_CATEGORIA = sc.PK_ID_SUB_CATEGORIA
     INNER JOIN categoria c ON sc.FK_ID_CATEGORIA = c.PK_ID_CATEGORIA
-    LEFT JOIN unidad u ON p.FK_ID_UNIDAD = u.PK_ID_UNIDAD
-    LEFT JOIN tipo_unidad tu ON u.FK_ID_TIPO_UNIDAD = tu.PK_ID_TIPO_UNIDAD
-    LEFT JOIN marca m ON p.FK_ID_MARCA = m.PK_ID_MARCA
-    WHERE pl.FK_ID_LOCAL = p_id_local
-    ORDER BY p.NOMBRE;
+    LEFT JOIN unidad u ON pm.FK_ID_UNIDAD = u.ID_UNIDAD
+    LEFT JOIN tipo_unidad tu ON p.FK_ID_TIPOUNIDAD = tu.ID_TIPOUNIDAD
+    LEFT JOIN marca m ON pm.FK_ID_MARCA = m.PK_ID_MARCA
+    WHERE pm.FK_ID_LOCAL = p_id_local
+      AND pm.DISPONIBLE = 1
+    GROUP BY p.PK_ID_PRODUCTO, p.NOMBRE_PRODUCTO, p.DESCRIPCION, p.IMAGEN_URL,
+             p.CLOUDINARY_PUBLIC_ID, p.SKU, p.FK_ID_SUB_CATEGORIA, sc.NOMBRE_SUB_CATEGORIA,
+             c.PK_ID_CATEGORIA, c.NOMBRE_CATEGORIA, pm.FK_ID_UNIDAD, u.NOMBRE_UNIDAD,
+             p.FK_ID_TIPOUNIDAD, tu.NOMBRE_TIPOUNIDAD, pm.FK_ID_MARCA, m.NOMBRE_MARCA
+    ORDER BY p.NOMBRE_PRODUCTO;
 END//
 DELIMITER ;
 
@@ -7977,6 +7985,46 @@ BEGIN
         COALESCE((SELECT SUM(CANTIDAD) FROM resumen_analitica_diario
                   WHERE FECHA BETWEEN p_fecha_inicio AND p_fecha_fin
                   AND TIPO_EVENTO = 'BUSQUEDA_APARICION'), 0) AS TotalBusquedas;
+END//
+DELIMITER ;
+
+-- Volcando estructura para procedimiento abastecete.sp_obtener_limites_membresia
+DELIMITER //
+CREATE PROCEDURE `sp_obtener_limites_membresia`(IN p_id_local INT)
+BEGIN
+    DECLARE v_productos_actuales INT DEFAULT 0;
+    DECLARE v_ofertas_activas INT DEFAULT 0;
+    DECLARE v_ofertas_usadas_periodo INT DEFAULT 0;
+
+    SELECT COUNT(DISTINCT FK_ID_PRODUCTO) INTO v_productos_actuales
+    FROM producto_marca
+    WHERE FK_ID_LOCAL = p_id_local AND DISPONIBLE = 1;
+
+    SELECT COUNT(*) INTO v_ofertas_activas
+    FROM oferta_flash
+    WHERE FK_ID_LOCAL = p_id_local
+      AND ESTADO_OFERTA_FLASH = 1
+      AND TIEMPO_OFERTA_FLASH >= NOW();
+
+    SELECT COUNT(*) INTO v_ofertas_usadas_periodo
+    FROM oferta_flash
+    WHERE FK_ID_LOCAL = p_id_local
+      AND MONTH(FECHA_OFERTA_FLASH) = MONTH(NOW())
+      AND YEAR(FECHA_OFERTA_FLASH) = YEAR(NOW());
+
+    SELECT
+        COALESCE(tm.CANTIDAD_PRODUCTOS, 0) as LimiteProductos,
+        COALESCE(tm.OFERTAS_FLASH_SIMULTANEAS, 0) as LimiteOfertasActivas,
+        COALESCE(tm.OFERTAS_FLASH_TOTAL, 0) as LimiteOfertasMes,
+        v_productos_actuales as ProductosActuales,
+        v_ofertas_activas as OfertasActivas,
+        v_ofertas_usadas_periodo as OfertasUsadasPeriodo,
+        CASE WHEN s.PK_ID_SUSCRIPCION IS NOT NULL AND s.ESTADO = 1 THEN 1 ELSE 0 END as TieneSuscripcionActiva,
+        CASE WHEN COALESCE(tm.CANTIDAD_PRODUCTOS, 0) = 0 THEN 1 ELSE 0 END as ProductosIlimitados
+    FROM `local` l
+    LEFT JOIN suscripcion s ON l.FK_ID_SUSCRIPCION_ACTIVA = s.PK_ID_SUSCRIPCION AND s.ESTADO = 1
+    LEFT JOIN tipo_membresia tm ON s.FK_ID_TIPO_MEMBRESIA = tm.PK_ID_TIPO_MEMBRESIA
+    WHERE l.PK_ID_LOCAL = p_id_local;
 END//
 DELIMITER ;
 
