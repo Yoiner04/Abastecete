@@ -14,430 +14,234 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <style>
-        /* Animaciones */
-        @@keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        .animate-fadeIn { animation: fadeIn 0.3s ease-out forwards; }
+        .animate-slideIn { animation: slideIn 0.3s ease-out forwards; }
+        @@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @@keyframes slideIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
 
-        @@keyframes slideIn {
-            from { opacity: 0; transform: translateX(-10px); }
-            to { opacity: 1; transform: translateX(0); }
-        }
+        .spinner { border: 2px solid #f3f3f3; border-top: 2px solid #22c55e; border-radius: 50%; width: 16px; height: 16px; animation: spin 0.8s linear infinite; display: inline-block; }
+        @@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        @@keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-        }
+        .select-wrapper { position: relative; }
+        .select-wrapper::after { content: '\f078'; font-family: 'Font Awesome 6 Free'; font-weight: 900; position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); pointer-events: none; color: #9ca3af; }
+        .custom-select { appearance: none; padding-right: 2.5rem; }
+        .custom-select:disabled { background-color: #f3f4f6; cursor: not-allowed; opacity: 0.7; }
 
-        .animate-fadeIn {
-            animation: fadeIn 0.3s ease-out forwards;
-        }
-
-        .animate-slideIn {
-            animation: slideIn 0.3s ease-out forwards;
-        }
-
-        /* Select mejorado */
-        .select-wrapper {
-            position: relative;
-        }
-
-        .select-wrapper::after {
-            content: '\f078';
-            font-family: 'Font Awesome 6 Free';
-            font-weight: 900;
-            position: absolute;
-            right: 1rem;
-            top: 50%;
-            transform: translateY(-50%);
-            pointer-events: none;
-            color: #9ca3af;
-            transition: transform 0.2s ease;
-        }
-
-        .select-wrapper:focus-within::after {
-            transform: translateY(-50%) rotate(180deg);
-            color: #22c55e;
-        }
-
-        .custom-select {
-            appearance: none;
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            padding-right: 2.5rem;
-        }
-
-        .custom-select:disabled {
-            background-color: #f3f4f6;
-            cursor: not-allowed;
-            opacity: 0.7;
-        }
-
-        /* Tabla mejorada */
-        .product-row {
-            animation: slideIn 0.3s ease-out forwards;
-        }
-
-        .product-row:hover {
-            background-color: #f0fdf4;
-        }
-
-        /* Loading spinner */
-        .spinner {
-            border: 2px solid #f3f3f3;
-            border-top: 2px solid #22c55e;
-            border-radius: 50%;
-            width: 16px;
-            height: 16px;
-            animation: spin 0.8s linear infinite;
-            display: inline-block;
-        }
-
-        @@keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        /* Progress steps */
-        .step {
-            transition: all 0.3s ease;
-        }
-
-        .step.active {
-            color: #22c55e;
-        }
-
-        .step.active .step-circle {
-            background: linear-gradient(135deg, #22c55e, #16a34a);
-            color: white;
-            box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4);
-        }
-
-        .step.completed .step-circle {
-            background: #22c55e;
-            color: white;
-        }
-
-        .step-line.active {
-            background: linear-gradient(90deg, #22c55e, #86efac);
-        }
+        .product-card { transition: all 0.2s ease; }
+        .product-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .product-card.selected { border-color: #22c55e; background-color: #f0fdf4; }
     </style>
 </head>
 
-<body class="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
-    <!-- Header -->
-    <header class="bg-white shadow-sm border-b border-gray-100">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+<body class="min-h-screen bg-gray-50">
+    <!-- Header compacto -->
+    <header class="bg-white shadow-sm border-b border-gray-100 sticky top-0 z-40">
+        <div class="max-w-6xl mx-auto px-4 py-3">
             <div class="flex items-center justify-between">
-                <div class="flex items-center gap-4">
-                    <a href="/Productos/ProductosNegocio" class="flex items-center gap-2 text-gray-600 hover:text-green-600 transition-colors">
-                        <i class="fas fa-arrow-left"></i>
-                        <span class="hidden sm:inline">Volver</span>
+                <div class="flex items-center gap-3">
+                    <a href="/Productos/ProductosNegocio" class="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-green-100 hover:text-green-600 transition-colors">
+                        <i class="fas fa-arrow-left text-sm"></i>
                     </a>
-                    <div class="h-6 w-px bg-gray-200"></div>
-                    <h1 class="text-xl sm:text-2xl font-bold text-gray-900">
-                        <i class="fas fa-plus-circle text-green-500 mr-2"></i>
+                    <h1 class="text-lg font-bold text-gray-900">
+                        <i class="fas fa-plus-circle text-green-500 mr-1.5"></i>
                         Agregar Productos
                     </h1>
                 </div>
-                <div class="flex items-center gap-4">
-                    <!-- Indicador de límite -->
-                    @if (limites != null && limites.TieneSuscripcionActiva)
+                <div class="flex items-center gap-3">
+                    @if (limites != null && limites.TieneSuscripcionActiva && !limites.ProductosIlimitados)
                     {
-                        <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl @(limites.ProductosIlimitados ? "bg-green-100 text-green-700" : productosDisponibles <= 3 ? "bg-amber-100 text-amber-700" : "bg-green-100 text-green-700")">
-                            <i class="fas fa-box text-xs"></i>
-                            <span class="text-sm font-medium">
-                                @if (limites.ProductosIlimitados)
-                                {
-                                    <span>Ilimitado</span>
-                                }
-                                else
-                                {
-                                    <span>@limites.ProductosActuales/@limites.LimiteProductos productos</span>
-                                }
-                            </span>
+                        <div class="text-xs px-2 py-1 rounded-lg @(productosDisponibles <= 3 ? "bg-amber-100 text-amber-700" : "bg-green-100 text-green-700")">
+                            <i class="fas fa-box mr-1"></i>
+                            @limites.ProductosActuales/@limites.LimiteProductos
                         </div>
                     }
-                    <div class="flex items-center gap-2 text-sm text-gray-500">
-                        <i class="fas fa-shopping-cart"></i>
-                        <span id="productCount" class="font-semibold text-green-600">0</span>
-                        <span class="hidden sm:inline">en lista</span>
+                    <div class="flex items-center gap-1.5 text-sm text-gray-600">
+                        <i class="fas fa-shopping-cart text-green-500"></i>
+                        <span id="productCount" class="font-bold">0</span>
                     </div>
                 </div>
             </div>
         </div>
     </header>
 
-    <!-- Banner de límite (visible si hay pocos productos disponibles) -->
-    @if (limites != null && limites.TieneSuscripcionActiva && !limites.ProductosIlimitados && productosDisponibles <= 5)
-    {
-        <div class="bg-amber-50 border-b border-amber-200">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-2 text-amber-700">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        <span class="text-sm font-medium">
-                            @if (productosDisponibles == 0)
-                            {
-                                <span>Has alcanzado el límite de productos de tu plan.</span>
-                            }
-                            else
-                            {
-                                <span>Solo puedes agregar <strong>@productosDisponibles</strong> producto(s) más con tu plan actual.</span>
-                            }
-                        </span>
-                    </div>
-                    <a href="@Url.Action("MiMembresia", "Negocios")" class="text-sm font-semibold text-amber-700 hover:text-amber-800 flex items-center gap-1">
-                        <span>Mejorar plan</span>
-                        <i class="fas fa-arrow-right text-xs"></i>
-                    </a>
-                </div>
-            </div>
-        </div>
-    }
+    <main class="max-w-6xl mx-auto px-4 py-6">
+        <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+            <!-- Panel izquierdo: Selección de producto -->
+            <div class="lg:col-span-2 space-y-4">
+                <!-- Categoría y Subcategoría -->
+                <div class="bg-white rounded-xl border border-gray-200 p-4">
+                    <h3 class="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                        <i class="fas fa-folder text-orange-500"></i>
+                        Buscar Producto
+                    </h3>
 
-    <!-- Progress Steps -->
-    <div class="bg-white border-b border-gray-100 py-4">
-        <div class="max-w-3xl mx-auto px-4">
-            <div class="flex items-center justify-between">
-                <div class="step active flex flex-col items-center" id="step1">
-                    <div class="step-circle w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center font-semibold text-sm mb-1">1</div>
-                    <span class="text-xs font-medium">Categoría</span>
-                </div>
-                <div class="flex-1 h-1 mx-2 bg-gray-200 rounded step-line" id="line1"></div>
-                <div class="step flex flex-col items-center" id="step2">
-                    <div class="step-circle w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center font-semibold text-sm mb-1">2</div>
-                    <span class="text-xs font-medium">Subcategoría</span>
-                </div>
-                <div class="flex-1 h-1 mx-2 bg-gray-200 rounded step-line" id="line2"></div>
-                <div class="step flex flex-col items-center" id="step3">
-                    <div class="step-circle w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center font-semibold text-sm mb-1">3</div>
-                    <span class="text-xs font-medium">Producto</span>
-                </div>
-                <div class="flex-1 h-1 mx-2 bg-gray-200 rounded step-line" id="line3"></div>
-                <div class="step flex flex-col items-center" id="step4">
-                    <div class="step-circle w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center font-semibold text-sm mb-1">4</div>
-                    <span class="text-xs font-medium">Precio</span>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <!-- Formulario -->
-            <div class="animate-fadeIn">
-                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                    <div class="bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-4">
-                        <h2 class="text-xl font-bold text-white flex items-center gap-2">
-                            <i class="fas fa-edit"></i>
-                            Información del Producto
-                        </h2>
-                        <p class="text-green-100 text-sm mt-1">Complete los campos para agregar un producto</p>
-                    </div>
-
-                    <form id="productForm" class="p-6 space-y-5">
+                    <div class="space-y-3">
                         <!-- Categoría -->
-                        <div class="space-y-2">
-                            <label class="flex items-center gap-2 text-sm font-semibold text-gray-700">
-                                <i class="fas fa-folder text-orange-500"></i>
-                                Categoría <span class="text-red-500">*</span>
-                            </label>
-                            <div class="select-wrapper">
-                                <select id="category"
-                                    class="custom-select w-full px-4 py-3 rounded-xl border-2 border-gray-200 bg-white focus:border-green-500 focus:outline-none transition-all">
-                                    <option value="">Seleccione una categoría</option>
-                                    @foreach (Categoria cate in ViewBag.categorias)
-                                    {
-                                        <option data-nombre="@cate.Nombre" value="@cate.Id">@cate.Nombre</option>
-                                    }
-                                </select>
-                            </div>
+                        <div class="select-wrapper">
+                            <select id="category" class="custom-select w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:border-green-500 focus:outline-none">
+                                <option value="">Categoría</option>
+                                @foreach (Categoria cate in ViewBag.categorias)
+                                {
+                                    <option value="@cate.Id">@cate.Nombre</option>
+                                }
+                            </select>
                         </div>
 
                         <!-- Subcategoría -->
-                        <div class="space-y-2">
-                            <label class="flex items-center gap-2 text-sm font-semibold text-gray-700">
-                                <i class="fas fa-folder-open text-blue-500"></i>
-                                Subcategoría <span class="text-red-500">*</span>
-                            </label>
-                            <div class="select-wrapper">
-                                <select id="subcategory" disabled
-                                    class="custom-select w-full px-4 py-3 rounded-xl border-2 border-gray-200 bg-white focus:border-green-500 focus:outline-none transition-all">
-                                    <option value="">Primero seleccione una categoría</option>
-                                </select>
-                            </div>
-                            <div id="subcategoryLoader" class="hidden flex items-center gap-2 text-sm text-gray-500">
-                                <span class="spinner"></span> Cargando subcategorías...
-                            </div>
+                        <div class="select-wrapper">
+                            <select id="subcategory" disabled class="custom-select w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:border-green-500 focus:outline-none">
+                                <option value="">Subcategoría</option>
+                            </select>
                         </div>
+                    </div>
+                </div>
 
-                        <!-- Producto -->
-                        <div class="space-y-2">
-                            <label class="flex items-center gap-2 text-sm font-semibold text-gray-700">
-                                <i class="fas fa-box text-green-500"></i>
-                                Producto <span class="text-red-500">*</span>
-                            </label>
-                            <div class="select-wrapper">
-                                <select id="product" disabled
-                                    class="custom-select w-full px-4 py-3 rounded-xl border-2 border-gray-200 bg-white focus:border-green-500 focus:outline-none transition-all">
-                                    <option value="">Primero seleccione una subcategoría</option>
-                                </select>
-                            </div>
-                            <div id="productLoader" class="hidden flex items-center gap-2 text-sm text-gray-500">
-                                <span class="spinner"></span> Cargando productos...
-                            </div>
-                        </div>
+                <!-- Lista de productos -->
+                <div class="bg-white rounded-xl border border-gray-200 p-4">
+                    <h3 class="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                        <i class="fas fa-box text-green-500"></i>
+                        Productos Disponibles
+                    </h3>
 
-                        <!-- Unidad de medida -->
-                        <div class="space-y-2">
-                            <label class="flex items-center gap-2 text-sm font-semibold text-gray-700">
-                                <i class="fas fa-balance-scale text-purple-500"></i>
-                                Unidad de medida <span class="text-red-500">*</span>
-                            </label>
-                            <div class="select-wrapper">
-                                <select id="unit" disabled
-                                    class="custom-select w-full px-4 py-3 rounded-xl border-2 border-gray-200 bg-white focus:border-green-500 focus:outline-none transition-all">
-                                    <option value="">Primero seleccione un producto</option>
-                                </select>
-                            </div>
-                            <div id="unitLoader" class="hidden flex items-center gap-2 text-sm text-gray-500">
-                                <span class="spinner"></span> Cargando unidades...
-                            </div>
-                        </div>
-
-                        <!-- Marca -->
-                        <div class="space-y-2">
-                            <label class="flex items-center gap-2 text-sm font-semibold text-gray-700">
-                                <i class="fas fa-tag text-indigo-500"></i>
-                                Marca <span class="text-red-500">*</span>
-                            </label>
-                            <div class="select-wrapper">
-                                <select id="marca" disabled
-                                    class="custom-select w-full px-4 py-3 rounded-xl border-2 border-gray-200 bg-white focus:border-green-500 focus:outline-none transition-all">
-                                    <option value="">Primero seleccione un producto</option>
-                                </select>
-                            </div>
-                            <div id="marcaLoader" class="hidden flex items-center gap-2 text-sm text-gray-500">
-                                <span class="spinner"></span> Cargando marcas...
-                            </div>
-                        </div>
-
-                        <!-- Precio -->
-                        <div class="space-y-2">
-                            <label class="flex items-center gap-2 text-sm font-semibold text-gray-700">
-                                <i class="fas fa-dollar-sign text-yellow-500"></i>
-                                Precio <span class="text-red-500">*</span>
-                            </label>
-                            <div class="relative">
-                                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-semibold">$</span>
-                                <input type="number" id="price" placeholder="0"
-                                    class="w-full pl-8 pr-4 py-3 rounded-xl border-2 border-gray-200 bg-white focus:border-green-500 focus:outline-none transition-all text-lg font-semibold"
-                                    min="0" step="100" />
-                            </div>
-                            <p class="text-xs text-gray-500">Ingrese el precio sin puntos ni comas</p>
-                        </div>
-
-                        <!-- Botón Agregar -->
-                        <button type="button" onclick="addProduct()" id="addBtn"
-                            class="w-full py-4 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 text-white font-semibold text-lg shadow-lg shadow-green-500/30 hover:shadow-xl hover:shadow-green-500/40 hover:-translate-y-0.5 transition-all duration-300 flex items-center justify-center gap-2">
-                            <i class="fas fa-plus-circle"></i>
-                            Agregar a la lista
-                        </button>
-                    </form>
+                    <div id="productosDisponibles" class="space-y-2 max-h-[400px] overflow-y-auto">
+                        <p class="text-sm text-gray-400 text-center py-8">
+                            <i class="fas fa-arrow-up block text-2xl mb-2"></i>
+                            Selecciona categoría y subcategoría
+                        </p>
+                    </div>
+                    <div id="productLoader" class="hidden text-center py-4">
+                        <span class="spinner"></span>
+                        <span class="text-sm text-gray-500 ml-2">Cargando...</span>
+                    </div>
                 </div>
             </div>
 
-            <!-- Tabla de productos -->
-            <div class="animate-fadeIn" style="animation-delay: 0.1s;">
-                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                    <div class="bg-gradient-to-r from-orange-500 to-amber-500 px-6 py-4">
-                        <h2 class="text-xl font-bold text-white flex items-center gap-2">
-                            <i class="fas fa-shopping-cart"></i>
-                            Productos Agregados
-                            <span id="badge" class="ml-2 px-2.5 py-0.5 rounded-full bg-white/20 text-sm">0</span>
-                        </h2>
-                        <p class="text-orange-100 text-sm mt-1">Revise los productos antes de finalizar</p>
+            <!-- Panel central: Producto seleccionado + Presentaciones -->
+            <div class="lg:col-span-3 space-y-4">
+                <!-- Producto seleccionado -->
+                <div id="productoSeleccionado" class="hidden bg-white rounded-xl border border-gray-200 overflow-hidden">
+                    <div class="bg-gradient-to-r from-green-500 to-emerald-600 px-4 py-3">
+                        <h3 class="text-white font-semibold flex items-center gap-2">
+                            <i class="fas fa-check-circle"></i>
+                            <span id="nombreProductoSeleccionado">Producto</span>
+                        </h3>
                     </div>
 
-                    <div class="p-6">
-                        <!-- Estado vacío -->
-                        <div id="emptyState" class="py-12 text-center">
-                            <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gray-100 mb-4">
-                                <i class="fas fa-box-open text-3xl text-gray-400"></i>
+                    <div class="p-4">
+                        <div class="flex items-start gap-4 mb-4">
+                            <img id="imagenProductoSeleccionado" src="" class="w-20 h-20 rounded-lg object-cover border border-gray-200" />
+                            <div class="flex-1">
+                                <p id="categoriaProductoSeleccionado" class="text-xs text-gray-500 mb-1"></p>
+                                <p class="text-sm text-gray-600">Agrega las presentaciones que ofreces de este producto (marca + medida + precio)</p>
                             </div>
-                            <h3 class="text-lg font-semibold text-gray-700 mb-2">No hay productos agregados</h3>
-                            <p class="text-gray-500 text-sm">Complete el formulario para agregar productos a su negocio</p>
+                            <button onclick="deseleccionarProducto()" class="text-gray-400 hover:text-red-500 transition-colors">
+                                <i class="fas fa-times"></i>
+                            </button>
                         </div>
 
-                        <!-- Tabla -->
-                        <div id="tableContainer" class="hidden">
-                            <div class="overflow-x-auto rounded-xl border border-gray-200">
-                                <table class="min-w-full">
-                                    <thead>
-                                        <tr class="bg-gray-50 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                            <th class="px-4 py-3">Producto</th>
-                                            <th class="px-4 py-3">Marca</th>
-                                            <th class="px-4 py-3">Unidad</th>
-                                            <th class="px-4 py-3 text-right">Precio</th>
-                                            <th class="px-4 py-3 text-center">Acción</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="productTableBody" class="divide-y divide-gray-100">
-                                    </tbody>
-                                </table>
-                            </div>
-
-                            <!-- Resumen -->
-                            <div class="mt-4 p-4 bg-gray-50 rounded-xl">
-                                <div class="flex items-center justify-between text-sm">
-                                    <span class="text-gray-600">Total de productos:</span>
-                                    <span id="totalProducts" class="font-bold text-gray-900">0</span>
+                        <!-- Formulario de presentación -->
+                        <div class="bg-gray-50 rounded-lg p-3 mb-4">
+                            <div class="grid grid-cols-3 gap-3 mb-3">
+                                <!-- Marca -->
+                                <div>
+                                    <label class="text-xs font-medium text-gray-600 mb-1 block">Marca</label>
+                                    <select id="marcaSelect" class="w-full px-2 py-1.5 rounded-lg border border-gray-200 text-sm focus:border-green-500 focus:outline-none">
+                                        <option value="">Sin marca</option>
+                                    </select>
+                                </div>
+                                <!-- Unidad -->
+                                <div>
+                                    <label class="text-xs font-medium text-gray-600 mb-1 block">Medida *</label>
+                                    <select id="unidadSelect" class="w-full px-2 py-1.5 rounded-lg border border-gray-200 text-sm focus:border-green-500 focus:outline-none">
+                                        <option value="">Seleccionar</option>
+                                    </select>
+                                </div>
+                                <!-- Precio -->
+                                <div>
+                                    <label class="text-xs font-medium text-gray-600 mb-1 block">Precio *</label>
+                                    <div class="relative">
+                                        <span class="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 text-sm">$</span>
+                                        <input type="number" id="precioInput" placeholder="0" min="0" step="100"
+                                               class="w-full pl-6 pr-2 py-1.5 rounded-lg border border-gray-200 text-sm focus:border-green-500 focus:outline-none" />
+                                    </div>
                                 </div>
                             </div>
+                            <button onclick="agregarPresentacion()" class="w-full py-2 rounded-lg bg-green-500 text-white text-sm font-medium hover:bg-green-600 transition-colors flex items-center justify-center gap-2">
+                                <i class="fas fa-plus text-xs"></i>
+                                Agregar presentación
+                            </button>
                         </div>
 
-                        <!-- Botón Finalizar -->
-                        <form id="finalizarForm" method="post" class="mt-6">
-                            <input type="hidden" name="productosJson" id="productosJson">
-                            <button type="button" onclick="finalizarRegistro()" id="finalizarBtn"
-                                class="w-full py-4 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 text-white font-semibold text-lg shadow-lg shadow-orange-500/30 hover:shadow-xl hover:shadow-orange-500/40 hover:-translate-y-0.5 transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
-                                disabled>
-                                <i class="fas fa-check-circle"></i>
-                                Finalizar Registro
-                            </button>
-                        </form>
+                        <!-- Lista de presentaciones del producto actual -->
+                        <div id="presentacionesActuales" class="space-y-2">
+                            <p class="text-xs text-gray-400 text-center py-2">Agrega al menos una presentación</p>
+                        </div>
+
+                        <!-- Botón agregar producto a la lista -->
+                        <button onclick="agregarProductoALista()" id="btnAgregarProducto" disabled
+                                class="w-full mt-4 py-2.5 rounded-lg bg-gradient-to-r from-orange-500 to-amber-500 text-white font-medium hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                            <i class="fas fa-cart-plus"></i>
+                            Agregar producto a la lista
+                        </button>
                     </div>
                 </div>
 
-                <!-- Tips -->
-                <div class="mt-6 bg-blue-50 rounded-xl p-4 border border-blue-100">
-                    <h4 class="font-semibold text-blue-800 flex items-center gap-2 mb-2">
-                        <i class="fas fa-lightbulb"></i>
-                        Consejos
-                    </h4>
-                    <ul class="text-sm text-blue-700 space-y-1">
-                        <li><i class="fas fa-check text-blue-500 mr-2"></i>Puede agregar múltiples productos antes de finalizar</li>
-                        <li><i class="fas fa-check text-blue-500 mr-2"></i>Verifique los precios antes de confirmar</li>
-                        <li><i class="fas fa-check text-blue-500 mr-2"></i>Los productos se mostrarán en su tienda inmediatamente</li>
-                    </ul>
+                <!-- Estado vacío cuando no hay producto seleccionado -->
+                <div id="sinProductoSeleccionado" class="bg-white rounded-xl border border-gray-200 p-8 text-center">
+                    <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
+                        <i class="fas fa-hand-pointer text-2xl text-gray-400"></i>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Selecciona un producto</h3>
+                    <p class="text-sm text-gray-500">Elige un producto de la lista para agregar sus presentaciones</p>
+                </div>
+
+                <!-- Lista de productos agregados -->
+                <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                    <div class="bg-gradient-to-r from-indigo-500 to-purple-600 px-4 py-3 flex items-center justify-between">
+                        <h3 class="text-white font-semibold flex items-center gap-2">
+                            <i class="fas fa-shopping-cart"></i>
+                            Productos a Registrar
+                            <span id="badge" class="ml-1 px-2 py-0.5 rounded-full bg-white/20 text-xs">0</span>
+                        </h3>
+                    </div>
+
+                    <div class="p-4">
+                        <div id="listaProductosAgregados" class="space-y-3">
+                            <p id="emptyState" class="text-sm text-gray-400 text-center py-6">
+                                <i class="fas fa-box-open block text-2xl mb-2"></i>
+                                No hay productos agregados
+                            </p>
+                        </div>
+
+                        <button onclick="finalizarRegistro()" id="btnFinalizar" disabled
+                                class="w-full mt-4 py-3 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 text-white font-semibold hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                            <i class="fas fa-check-circle"></i>
+                            Finalizar Registro
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
     </main>
 
-    <!-- Toast notification -->
+    <!-- Toast -->
     <div id="toast" class="fixed bottom-4 right-4 transform translate-y-20 opacity-0 transition-all duration-300 z-50">
-        <div class="bg-gray-900 text-white px-6 py-3 rounded-xl shadow-lg flex items-center gap-3">
+        <div class="bg-gray-900 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 text-sm">
             <i id="toastIcon" class="fas fa-check-circle text-green-400"></i>
-            <span id="toastMessage">Producto agregado</span>
+            <span id="toastMessage">Mensaje</span>
         </div>
     </div>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
-        // Configuración de límites desde el servidor
+        // Estado global
+        let productoActual = null;
+        let presentacionesActuales = [];
+        let productosAgregados = [];
+        let todasLasMarcas = [];
+        let unidadesProducto = [];
+
+        // Config de límites
         const limitConfig = {
             productosDisponibles: @(limites?.ProductosIlimitados == true ? "Infinity" : productosDisponibles.ToString()),
             productosActuales: @(limites?.ProductosActuales ?? 0),
@@ -445,60 +249,15 @@
             esIlimitado: @(limites?.ProductosIlimitados == true ? "true" : "false")
         };
 
-        // Actualizar pasos visuales
-        function updateSteps(step) {
-            for (let i = 1; i <= 4; i++) {
-                const stepEl = document.getElementById(`step${i}`);
-                const lineEl = document.getElementById(`line${i}`);
-
-                if (i < step) {
-                    stepEl.classList.add('completed');
-                    stepEl.classList.remove('active');
-                    if (lineEl) lineEl.classList.add('active');
-                } else if (i === step) {
-                    stepEl.classList.add('active');
-                    stepEl.classList.remove('completed');
-                } else {
-                    stepEl.classList.remove('active', 'completed');
-                    if (lineEl) lineEl.classList.remove('active');
-                }
-            }
-        }
-
-        // Mostrar toast
+        // Toast
         function showToast(message, type = 'success') {
             const toast = document.getElementById('toast');
-            const icon = document.getElementById('toastIcon');
-            const msg = document.getElementById('toastMessage');
-
-            msg.textContent = message;
-            icon.className = type === 'success'
+            document.getElementById('toastMessage').textContent = message;
+            document.getElementById('toastIcon').className = type === 'success'
                 ? 'fas fa-check-circle text-green-400'
                 : 'fas fa-exclamation-circle text-red-400';
-
             toast.classList.remove('translate-y-20', 'opacity-0');
-
-            setTimeout(() => {
-                toast.classList.add('translate-y-20', 'opacity-0');
-            }, 3000);
-        }
-
-        // Actualizar UI de productos
-        function updateProductsUI() {
-            const count = $('#productTableBody tr').length;
-            $('#productCount').text(count);
-            $('#badge').text(count);
-            $('#totalProducts').text(count);
-
-            if (count > 0) {
-                $('#emptyState').addClass('hidden');
-                $('#tableContainer').removeClass('hidden');
-                $('#finalizarBtn').prop('disabled', false);
-            } else {
-                $('#emptyState').removeClass('hidden');
-                $('#tableContainer').addClass('hidden');
-                $('#finalizarBtn').prop('disabled', true);
-            }
+            setTimeout(() => toast.classList.add('translate-y-20', 'opacity-0'), 3000);
         }
 
         // Formatear precio
@@ -506,314 +265,301 @@
             return new Intl.NumberFormat('es-CO').format(price);
         }
 
-        $(document).ready(function () {
-            // Categoría change
-            $("#category").change(function () {
-                var idCategoria = $(this).val();
-
-                // Reset dependientes
-                $("#subcategory").empty().append('<option value="">Seleccione una subcategoría</option>').prop("disabled", true);
-                $("#product").empty().append('<option value="">Primero seleccione una subcategoría</option>').prop("disabled", true);
-                $("#unit").empty().append('<option value="">Primero seleccione un producto</option>').prop("disabled", true);
-                $("#marcaInfo").addClass('hidden');
-
-                if (idCategoria) {
-                    updateSteps(2);
-                    $("#subcategoryLoader").removeClass('hidden');
-
-                    $.ajax({
-                        url: "/SubCategorias/ObtenerSubCategorias",
-                        type: "GET",
-                        data: { idCategoria: idCategoria },
-                        dataType: "json",
-                        success: function (response) {
-                            $("#subcategory").empty().append('<option value="">Seleccione una subcategoría</option>');
-                            $.each(response, function (index, item) {
-                                $("#subcategory").append(`<option data-nombre="${item.nombre}" value="${item.id}">${item.nombre}</option>`);
-                            });
-                            $("#subcategory").prop("disabled", false);
-                        },
-                        error: function () {
-                            showToast("Error al cargar subcategorías", "error");
-                        },
-                        complete: function() {
-                            $("#subcategoryLoader").addClass('hidden');
-                        }
-                    });
-                } else {
-                    updateSteps(1);
-                }
-            });
-
-            // Subcategoría change
-            $("#subcategory").change(function () {
-                var subCategoriaId = $(this).val();
-
-                // Reset dependientes
-                $("#product").empty().append('<option value="">Seleccione un producto</option>').prop("disabled", true);
-                $("#unit").empty().append('<option value="">Primero seleccione un producto</option>').prop("disabled", true);
-                $("#marcaInfo").addClass('hidden');
-
-                if (subCategoriaId) {
-                    updateSteps(3);
-                    $("#productLoader").removeClass('hidden');
-
-                    $.ajax({
-                        url: "/Productos/obtenerProductosSubcategoria",
-                        type: "GET",
-                        data: { subCategoriaId: subCategoriaId },
-                        dataType: "json",
-                        success: function (response) {
-                            $("#product").empty().append('<option value="">Seleccione un producto</option>');
-                            $.each(response, function (index, item) {
-                                var marcaNombre = item.nombreMarca || 'Sin marca';
-                                $("#product").append(`<option data-nombre="${item.nombre}" data-marca="${marcaNombre}" value="${item.id}">${item.nombre}</option>`);
-                            });
-                            $("#product").prop("disabled", false);
-                        },
-                        error: function() {
-                            showToast("Error al cargar productos", "error");
-                        },
-                        complete: function() {
-                            $("#productLoader").addClass('hidden');
-                        }
-                    });
-                } else {
-                    updateSteps(2);
-                }
-            });
-
-            // Producto change
-            $("#product").change(function () {
-                var productoId = $(this).val();
-
-                $("#unit").empty().append('<option value="">Seleccione una unidad</option>').prop("disabled", true);
-                $("#marca").empty().append('<option value="">Seleccione una marca</option>').prop("disabled", true);
-
-                if (productoId) {
-                    updateSteps(4);
-                    $("#unitLoader").removeClass('hidden');
-                    $("#marcaLoader").removeClass('hidden');
-
-                    // Cargar unidades
-                    $.ajax({
-                        url: "/Unidad/ConsultarUnidades",
-                        type: "GET",
-                        data: { id_producto: productoId },
-                        dataType: "json",
-                        success: function (response) {
-                            $("#unit").empty().append('<option value="">Seleccione una unidad</option>');
-                            $.each(response, function (index, item) {
-                                $("#unit").append(`<option data-nombre="${item.nombre}" value="${item.id}">${item.nombre}</option>`);
-                            });
-                            $("#unit").prop("disabled", false);
-                        },
-                        error: function() {
-                            showToast("Error al cargar unidades", "error");
-                        },
-                        complete: function() {
-                            $("#unitLoader").addClass('hidden');
-                        }
-                    });
-
-                    // Cargar marcas disponibles
-                    $.ajax({
-                        url: "/Marcas/ListarMarcas",
-                        type: "GET",
-                        dataType: "json",
-                        success: function (response) {
-                            $("#marca").empty().append('<option value="">Seleccione una marca</option>');
-                            $.each(response, function (index, item) {
-                                $("#marca").append(`<option data-nombre="${item.nombre}" value="${item.id}">${item.nombre}</option>`);
-                            });
-                            $("#marca").prop("disabled", false);
-                        },
-                        error: function() {
-                            showToast("Error al cargar marcas", "error");
-                        },
-                        complete: function() {
-                            $("#marcaLoader").addClass('hidden');
-                        }
-                    });
-                } else {
-                    updateSteps(3);
-                }
-            });
-
-            // Precio focus
-            $("#price").focus(function() {
-                if ($("#unit").val()) {
-                    updateSteps(4);
-                }
-            });
-        });
-
-        // Agregar producto
-        function addProduct() {
-            // Validar límite de productos
-            const productosEnLista = $('#productTableBody tr').length;
-            const totalDespuesDeAgregar = limitConfig.productosActuales + productosEnLista + 1;
-
-            if (!limitConfig.esIlimitado && totalDespuesDeAgregar > limitConfig.limiteProductos) {
-                const disponibles = Math.max(0, limitConfig.limiteProductos - limitConfig.productosActuales - productosEnLista);
-                if (disponibles <= 0) {
-                    showToast("Has alcanzado el límite de productos de tu plan. Mejora tu membresía para agregar más.", "error");
-                } else {
-                    showToast(`Solo puedes agregar ${disponibles} producto(s) más con tu plan actual.`, "error");
-                }
-                return;
+        // Cargar marcas (solo una vez)
+        async function cargarMarcas() {
+            if (todasLasMarcas.length > 0) return;
+            try {
+                const response = await fetch('/Marcas/ListarMarcas');
+                todasLasMarcas = await response.json();
+            } catch (e) {
+                console.error('Error cargando marcas:', e);
             }
-
-            let categoryid = $("#category").val();
-            let subcategoryid = $("#subcategory").val();
-            let productid = $("#product").val();
-            let unitid = $("#unit").val();
-            let marcaid = $("#marca").val();
-            let price = $("#price").val();
-
-            let category = $("#category option:selected").data("nombre");
-            let subcategory = $("#subcategory option:selected").data("nombre");
-            let product = $("#product option:selected").data("nombre");
-            let marca = $("#marca option:selected").data("nombre") || "Sin marca";
-            let unit = $("#unit option:selected").data("nombre");
-
-            // Validaciones
-            if (!categoryid) {
-                showToast("Seleccione una categoría", "error");
-                $("#category").focus();
-                return;
-            }
-            if (!subcategoryid) {
-                showToast("Seleccione una subcategoría", "error");
-                $("#subcategory").focus();
-                return;
-            }
-            if (!productid) {
-                showToast("Seleccione un producto", "error");
-                $("#product").focus();
-                return;
-            }
-            if (!unitid) {
-                showToast("Seleccione una unidad de medida", "error");
-                $("#unit").focus();
-                return;
-            }
-            if (!marcaid) {
-                showToast("Seleccione una marca", "error");
-                $("#marca").focus();
-                return;
-            }
-            if (!price || price <= 0) {
-                showToast("Ingrese un precio válido", "error");
-                $("#price").focus();
-                return;
-            }
-
-            // Verificar duplicados (mismo producto + misma unidad + misma marca)
-            let isDuplicate = false;
-            $("#productTableBody tr").each(function() {
-                if ($(this).find("td:eq(0)").data("idproducto") == productid &&
-                    $(this).find("td:eq(1)").data("idmarca") == marcaid &&
-                    $(this).find("td:eq(2)").data("idunidad") == unitid) {
-                    isDuplicate = true;
-                    return false;
-                }
-            });
-
-            if (isDuplicate) {
-                showToast("Este producto ya fue agregado con la misma marca y unidad", "error");
-                return;
-            }
-
-            // Agregar fila
-            let row = `
-                <tr class="product-row hover:bg-green-50 transition-colors">
-                    <td class="px-4 py-3" data-idproducto="${productid}">
-                        <div class="font-medium text-gray-900">${product}</div>
-                        <div class="text-xs text-gray-500">${category} / ${subcategory}</div>
-                    </td>
-                    <td class="px-4 py-3" data-idmarca="${marcaid}">
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-700">
-                            <i class="fas fa-tag mr-1 text-[10px]"></i>${marca}
-                        </span>
-                    </td>
-                    <td class="px-4 py-3" data-idunidad="${unitid}">
-                        <span class="text-gray-700">${unit}</span>
-                    </td>
-                    <td class="px-4 py-3 text-right" data-idprecio="${price}">
-                        <span class="font-semibold text-green-600">$${formatPrice(price)}</span>
-                    </td>
-                    <td class="px-4 py-3 text-center">
-                        <button onclick="removeProduct(this)"
-                            class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-red-100 text-red-600 hover:bg-red-200 transition-colors">
-                            <i class="fas fa-trash-alt text-sm"></i>
-                        </button>
-                    </td>
-                </tr>
-            `;
-
-            $("#productTableBody").append(row);
-            updateProductsUI();
-            showToast("Producto agregado correctamente");
-
-            // Limpiar formulario parcialmente (mantener categoría y subcategoría)
-            $("#product").val("");
-            $("#unit").empty().append('<option value="">Primero seleccione un producto</option>').prop("disabled", true);
-            $("#marca").empty().append('<option value="">Primero seleccione un producto</option>').prop("disabled", true);
-            $("#price").val("");
-            updateSteps(3);
         }
 
-        // Eliminar producto
-        function removeProduct(button) {
-            $(button).closest('tr').fadeOut(200, function() {
-                $(this).remove();
-                updateProductsUI();
-                showToast("Producto eliminado");
+        // Categoría change
+        $('#category').change(function() {
+            const idCategoria = $(this).val();
+            $('#subcategory').empty().append('<option value="">Subcategoría</option>').prop('disabled', true);
+            $('#productosDisponibles').html('<p class="text-sm text-gray-400 text-center py-8"><i class="fas fa-arrow-up block text-2xl mb-2"></i>Selecciona subcategoría</p>');
+            deseleccionarProducto();
+
+            if (idCategoria) {
+                $.get('/SubCategorias/ObtenerSubCategorias', { idCategoria }, function(data) {
+                    data.forEach(item => {
+                        $('#subcategory').append(`<option value="${item.id}">${item.nombre}</option>`);
+                    });
+                    $('#subcategory').prop('disabled', false);
+                });
+            }
+        });
+
+        // Subcategoría change
+        $('#subcategory').change(function() {
+            const subCategoriaId = $(this).val();
+            deseleccionarProducto();
+
+            if (subCategoriaId) {
+                $('#productLoader').removeClass('hidden');
+                $('#productosDisponibles').html('');
+
+                $.get('/Productos/obtenerProductosSubcategoria', { subCategoriaId }, function(data) {
+                    $('#productLoader').addClass('hidden');
+
+                    if (data.length === 0) {
+                        $('#productosDisponibles').html('<p class="text-sm text-gray-400 text-center py-8">No hay productos en esta subcategoría</p>');
+                        return;
+                    }
+
+                    let html = '';
+                    data.forEach(p => {
+                        html += `
+                            <div class="product-card p-2 rounded-lg border border-gray-100 cursor-pointer flex items-center gap-3"
+                                 onclick="seleccionarProducto(${p.id}, '${p.nombre.replace(/'/g, "\\'")}', '${p.imagenUrl}', '${$('#category option:selected').text()} / ${$('#subcategory option:selected').text()}', ${p.idTipoUnidad || 0})">
+                                <img src="${p.imagenUrl || '/images/placeholder.png'}" class="w-12 h-12 rounded-lg object-cover border border-gray-100" />
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-medium text-gray-800 truncate">${p.nombre}</p>
+                                    <p class="text-xs text-gray-500">${p.nombreMarca || 'Sin marca'}</p>
+                                </div>
+                                <i class="fas fa-chevron-right text-gray-300 text-xs"></i>
+                            </div>
+                        `;
+                    });
+                    $('#productosDisponibles').html(html);
+                });
+            } else {
+                $('#productosDisponibles').html('<p class="text-sm text-gray-400 text-center py-8"><i class="fas fa-arrow-up block text-2xl mb-2"></i>Selecciona subcategoría</p>');
+            }
+        });
+
+        // Seleccionar producto
+        async function seleccionarProducto(id, nombre, imagen, categoria, idTipoUnidad) {
+            // Marcar visualmente
+            $('.product-card').removeClass('selected');
+            $(event.currentTarget).addClass('selected');
+
+            productoActual = { id, nombre, imagen, categoria, idTipoUnidad };
+            presentacionesActuales = [];
+
+            $('#nombreProductoSeleccionado').text(nombre);
+            $('#imagenProductoSeleccionado').attr('src', imagen || '/images/placeholder.png');
+            $('#categoriaProductoSeleccionado').text(categoria);
+
+            $('#productoSeleccionado').removeClass('hidden');
+            $('#sinProductoSeleccionado').addClass('hidden');
+
+            // Cargar marcas
+            await cargarMarcas();
+            $('#marcaSelect').html('<option value="">Sin marca</option>');
+            todasLasMarcas.forEach(m => {
+                $('#marcaSelect').append(`<option value="${m.id}">${m.nombre}</option>`);
             });
+
+            // Cargar unidades filtradas por tipo
+            try {
+                const response = await fetch(`/Unidad/ConsultarUnidades?id_producto=${id}`);
+                unidadesProducto = await response.json();
+
+                $('#unidadSelect').html('<option value="">Seleccionar</option>');
+                unidadesProducto.forEach(u => {
+                    $('#unidadSelect').append(`<option value="${u.id}">${u.nombre}</option>`);
+                });
+            } catch (e) {
+                console.error('Error cargando unidades:', e);
+            }
+
+            // Limpiar
+            $('#precioInput').val('');
+            actualizarPresentacionesUI();
+        }
+
+        function deseleccionarProducto() {
+            productoActual = null;
+            presentacionesActuales = [];
+            $('.product-card').removeClass('selected');
+            $('#productoSeleccionado').addClass('hidden');
+            $('#sinProductoSeleccionado').removeClass('hidden');
+        }
+
+        // Agregar presentación al producto actual
+        function agregarPresentacion() {
+            const marcaId = $('#marcaSelect').val();
+            const marcaNombre = $('#marcaSelect option:selected').text() || 'Sin marca';
+            const unidadId = $('#unidadSelect').val();
+            const unidadNombre = $('#unidadSelect option:selected').text();
+            const precio = parseInt($('#precioInput').val());
+
+            if (!unidadId) {
+                showToast('Selecciona una medida', 'error');
+                return;
+            }
+            if (!precio || precio <= 0) {
+                showToast('Ingresa un precio válido', 'error');
+                return;
+            }
+
+            // Verificar duplicados
+            const existe = presentacionesActuales.some(p =>
+                p.marcaId == (marcaId || 0) && p.unidadId == unidadId
+            );
+            if (existe) {
+                showToast('Ya existe esta combinación de marca y medida', 'error');
+                return;
+            }
+
+            presentacionesActuales.push({
+                marcaId: marcaId || 0,
+                marcaNombre: marcaId ? marcaNombre : 'Sin marca',
+                unidadId,
+                unidadNombre,
+                precio
+            });
+
+            // Limpiar inputs
+            $('#marcaSelect').val('');
+            $('#unidadSelect').val('');
+            $('#precioInput').val('');
+
+            actualizarPresentacionesUI();
+            showToast('Presentación agregada');
+        }
+
+        function eliminarPresentacion(index) {
+            presentacionesActuales.splice(index, 1);
+            actualizarPresentacionesUI();
+        }
+
+        function actualizarPresentacionesUI() {
+            const container = $('#presentacionesActuales');
+
+            if (presentacionesActuales.length === 0) {
+                container.html('<p class="text-xs text-gray-400 text-center py-2">Agrega al menos una presentación</p>');
+                $('#btnAgregarProducto').prop('disabled', true);
+                return;
+            }
+
+            let html = '';
+            presentacionesActuales.forEach((p, i) => {
+                html += `
+                    <div class="flex items-center justify-between p-2 bg-white rounded-lg border border-gray-100">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs px-2 py-0.5 rounded bg-indigo-100 text-indigo-700">${p.marcaNombre}</span>
+                            <span class="text-xs text-gray-500">${p.unidadNombre}</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-sm font-bold text-green-600">$${formatPrice(p.precio)}</span>
+                            <button onclick="eliminarPresentacion(${i})" class="w-6 h-6 rounded bg-red-50 text-red-500 hover:bg-red-100 flex items-center justify-center">
+                                <i class="fas fa-times text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+            container.html(html);
+            $('#btnAgregarProducto').prop('disabled', false);
+        }
+
+        // Agregar producto con sus presentaciones a la lista final
+        function agregarProductoALista() {
+            if (!productoActual || presentacionesActuales.length === 0) return;
+
+            // Verificar límite
+            const totalActual = productosAgregados.length;
+            if (!limitConfig.esIlimitado && (limitConfig.productosActuales + totalActual + 1) > limitConfig.limiteProductos) {
+                showToast('Has alcanzado el límite de productos de tu plan', 'error');
+                return;
+            }
+
+            productosAgregados.push({
+                ...productoActual,
+                presentaciones: [...presentacionesActuales]
+            });
+
+            actualizarListaFinalUI();
+            deseleccionarProducto();
+            showToast('Producto agregado a la lista');
+        }
+
+        function eliminarProductoDeLista(index) {
+            productosAgregados.splice(index, 1);
+            actualizarListaFinalUI();
+        }
+
+        function actualizarListaFinalUI() {
+            const container = $('#listaProductosAgregados');
+            const count = productosAgregados.length;
+
+            $('#productCount').text(count);
+            $('#badge').text(count);
+
+            if (count === 0) {
+                container.html('<p id="emptyState" class="text-sm text-gray-400 text-center py-6"><i class="fas fa-box-open block text-2xl mb-2"></i>No hay productos agregados</p>');
+                $('#btnFinalizar').prop('disabled', true);
+                return;
+            }
+
+            let html = '';
+            productosAgregados.forEach((p, i) => {
+                const presentacionesHtml = p.presentaciones.map(pr =>
+                    `<span class="text-xs bg-gray-100 px-1.5 py-0.5 rounded">${pr.marcaNombre} - ${pr.unidadNombre}: $${formatPrice(pr.precio)}</span>`
+                ).join(' ');
+
+                html += `
+                    <div class="p-3 rounded-lg border border-gray-100 bg-gray-50">
+                        <div class="flex items-start gap-3">
+                            <img src="${p.imagen || '/images/placeholder.png'}" class="w-12 h-12 rounded-lg object-cover border border-gray-200" />
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm font-medium text-gray-800">${p.nombre}</p>
+                                <p class="text-xs text-gray-500 mb-1">${p.categoria}</p>
+                                <div class="flex flex-wrap gap-1">${presentacionesHtml}</div>
+                            </div>
+                            <button onclick="eliminarProductoDeLista(${i})" class="w-7 h-7 rounded-lg bg-red-100 text-red-500 hover:bg-red-200 flex items-center justify-center">
+                                <i class="fas fa-trash text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+            container.html(html);
+            $('#btnFinalizar').prop('disabled', false);
         }
 
         // Finalizar registro
         function finalizarRegistro() {
-            let filas = $("#productTableBody tr");
-            let productos = [];
+            if (productosAgregados.length === 0) return;
 
-            filas.each(function () {
-                let celdas = $(this).find("td");
-                productos.push({
-                    producto: celdas.eq(0).data('idproducto'),
-                    marca: celdas.eq(1).data('idmarca'),
-                    medida: celdas.eq(2).data('idunidad'),
-                    valor: parseFloat(celdas.eq(3).data('idprecio'))
+            // Convertir a formato esperado por el backend
+            // Por cada producto, crear un registro por cada presentación
+            let productos = [];
+            productosAgregados.forEach(p => {
+                p.presentaciones.forEach(pr => {
+                    productos.push({
+                        producto: p.id,
+                        marca: pr.marcaId || 1,
+                        medida: pr.unidadId,
+                        valor: pr.precio
+                    });
                 });
             });
 
-            if (productos.length === 0) {
-                showToast("Agregue al menos un producto", "error");
-                return;
-            }
+            $('#btnFinalizar').prop('disabled', true).html('<span class="spinner mr-2"></span> Procesando...');
 
-            // Deshabilitar botón
-            const $btn = $("#finalizarBtn");
-            $btn.prop("disabled", true).html('<span class="spinner mr-2"></span> Procesando...');
-
-            $.ajax({
-                url: '@Url.Action("FinalizarRegistroProductos", "Productos")',
-                type: 'POST',
-                data: { productosJson: JSON.stringify(productos) },
-                success: function (response) {
-                    showToast("Productos registrados correctamente");
-                    setTimeout(() => {
-                        window.location.href = "/Productos/ProductosNegocio";
-                    }, 1000);
-                },
-                error: function () {
-                    showToast("Error al registrar los productos", "error");
-                    $btn.prop("disabled", false).html('<i class="fas fa-check-circle"></i> Finalizar Registro');
-                }
+            $.post('@Url.Action("FinalizarRegistroProductos", "Productos")', {
+                productosJson: JSON.stringify(productos)
+            })
+            .done(function() {
+                showToast('Productos registrados correctamente');
+                setTimeout(() => window.location.href = '/Productos/ProductosNegocio', 1000);
+            })
+            .fail(function() {
+                showToast('Error al registrar los productos', 'error');
+                $('#btnFinalizar').prop('disabled', false).html('<i class="fas fa-check-circle"></i> Finalizar Registro');
             });
         }
+
+        // Init
+        $(document).ready(function() {
+            cargarMarcas();
+        });
     </script>
 </body>
-
 </html>

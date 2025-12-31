@@ -250,6 +250,21 @@ namespace BusinessLogic
             return conexion.EjecutarTransaccion("agregar_productos_local", parametros);
         }
 
+        /// <summary>
+        /// Actualiza el precio base de un producto en un local específico
+        /// </summary>
+        public bool ActualizarPrecioProductoLocal(int idLocal, int idProducto, int nuevoPrecio)
+        {
+            List<Parametro> parametros = new List<Parametro>
+            {
+                new Parametro("p_id_local", idLocal),
+                new Parametro("p_id_producto", idProducto),
+                new Parametro("p_nuevo_precio", nuevoPrecio)
+            };
+
+            return conexion.EjecutarTransaccion("sp_actualizar_precio_producto_local", parametros);
+        }
+
         public bool EditarNegocio(Negocio negocio, Negocio actual)
         {
             // Usar operador ?? para simplificar: si el nuevo valor es null/vacío, usar el actual

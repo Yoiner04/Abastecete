@@ -199,16 +199,16 @@ namespace BusinessLogic
         }
 
         /// <summary>
-        /// Consulta productos de un local especifico
+        /// Consulta productos de un local especifico (incluye IdTipoUnidad para filtrar unidades)
         /// </summary>
         public List<Producto> ConsultarProductosLocal(int idlocal)
         {
             List<Parametro> parametros = new List<Parametro>
             {
-                new Parametro("localid", idlocal)
+                new Parametro("p_id_local", idlocal)
             };
 
-            DataTable datos = conexion.EjecutarConsulta("productos_local", parametros);
+            DataTable datos = conexion.EjecutarConsulta("sp_productos_local_con_tipo_unidad", parametros);
             List<Producto> productos = new List<Producto>();
 
             foreach (DataRow row in datos.Rows)
@@ -217,14 +217,17 @@ namespace BusinessLogic
                 {
                     Id = Convert.ToInt32(row["PK_ID_PRODUCTO"]),
                     Nombre = row["NOMBRE_PRODUCTO"]?.ToString() ?? "",
-                    Precio = row["PRECIOS"] + "",
+                    Precio = row["PRECIOS"]?.ToString() ?? "0",
                     Unidad = new Unidad
                     {
                         Nombre = row["UNIDADES"]?.ToString() ?? ""
                     },
                     ImagenUrl = row["IMAGEN_URL"]?.ToString() ?? "",
                     IdSubCategoria = Convert.ToInt32(row["FK_ID_SUB_CATEGORIA"]),
-                    Categoria = Convert.ToInt32(row["PK_ID_CATEGORIA"])
+                    Categoria = Convert.ToInt32(row["PK_ID_CATEGORIA"]),
+                    IdTipoUnidad = row.Table.Columns.Contains("ID_TIPO_UNIDAD") && row["ID_TIPO_UNIDAD"] != DBNull.Value
+                        ? Convert.ToInt32(row["ID_TIPO_UNIDAD"])
+                        : null
                 });
             }
             return productos;

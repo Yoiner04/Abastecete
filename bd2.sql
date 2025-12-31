@@ -105,10 +105,10 @@ CREATE PROCEDURE `actualizar_configuracion_referidos`(
     IN p_tipo_descuento_dueno VARCHAR(20),
     IN p_valor_descuento_dueno DECIMAL(10,2),
     IN p_descuento_activo INT,
+    IN p_limite_usos_codigo INT,
     IN p_usuario_id INT
 )
 BEGIN
-    -- Verificar si existe la configuración
     IF EXISTS (SELECT 1 FROM configuracion_referidos WHERE PK_ID = 1) THEN
         UPDATE configuracion_referidos
         SET
@@ -117,6 +117,7 @@ BEGIN
             TIPO_DESCUENTO_DUENO = p_tipo_descuento_dueno,
             VALOR_DESCUENTO_DUENO = p_valor_descuento_dueno,
             DESCUENTO_ACTIVO = p_descuento_activo,
+            LIMITE_USOS_CODIGO = COALESCE(p_limite_usos_codigo, 0),
             FECHA_ACTUALIZACION = NOW(),
             ACTUALIZADO_POR = p_usuario_id
         WHERE PK_ID = 1;
@@ -124,11 +125,11 @@ BEGIN
         INSERT INTO configuracion_referidos (
             TIPO_DESCUENTO_REFERIDO, VALOR_DESCUENTO_REFERIDO,
             TIPO_DESCUENTO_DUENO, VALOR_DESCUENTO_DUENO,
-            DESCUENTO_ACTIVO, FECHA_ACTUALIZACION, ACTUALIZADO_POR
+            DESCUENTO_ACTIVO, LIMITE_USOS_CODIGO, FECHA_ACTUALIZACION, ACTUALIZADO_POR
         ) VALUES (
             p_tipo_descuento_referido, p_valor_descuento_referido,
             p_tipo_descuento_dueno, p_valor_descuento_dueno,
-            p_descuento_activo, NOW(), p_usuario_id
+            p_descuento_activo, COALESCE(p_limite_usos_codigo, 0), NOW(), p_usuario_id
         );
     END IF;
 
@@ -266,69 +267,45 @@ DELIMITER ;
 -- Volcando estructura para procedimiento abastecete.agregar_productos_local
 DELIMITER //
 CREATE PROCEDURE `agregar_productos_local`(
-    IN `producto_id` INT,
-    IN `medida` INT,
-    IN `valor` INT,
-    IN `local_id` INT,
-    IN `marca_id` INT
+    IN producto_id INT,
+    IN medida INT,
+    IN valor INT,
+    IN local_id INT,
+    IN marca_id INT
 )
 BEGIN
     DECLARE v_total INT DEFAULT 0;
     DECLARE v_max INT DEFAULT 0;
-    DECLARE v_pl_id INT DEFAULT 0;
     DECLARE v_marca INT DEFAULT 1;
+    DECLARE v_existe_producto INT DEFAULT 0;
 
-    -- Si no se pasa marca, usar la marca del producto o 1 (Sin Marca)
-    SET v_marca = COALESCE(marca_id, (SELECT FK_ID_MARCA FROM producto WHERE PK_ID_PRODUCTO = producto_id), 1);
+    -- Si no se pasa marca, usar 1 (Sin Marca)
+    SET v_marca = COALESCE(NULLIF(marca_id, 0), 1);
 
-    -- Cuenta cuántos productos ya tiene este local
-    SELECT COUNT(*)
+    -- Cuenta cuántos productos DISTINTOS ya tiene este local
+    SELECT COUNT(DISTINCT FK_ID_PRODUCTO)
     INTO v_total
-    FROM productoslocal
+    FROM producto_marca
     WHERE FK_ID_LOCAL = local_id;
 
-    -- Lee el límite de productos de la membresía desde la suscripción activa
+    -- Lee el límite de productos de la membresía
     SELECT COALESCE(tm.CANTIDAD_PRODUCTOS, 0)
     INTO v_max
-    FROM local l
+    FROM `local` l
     LEFT JOIN suscripcion s ON l.FK_ID_SUSCRIPCION_ACTIVA = s.PK_ID_SUSCRIPCION AND s.ESTADO = 1
     LEFT JOIN tipo_membresia tm ON s.FK_ID_TIPO_MEMBRESIA = tm.PK_ID_TIPO_MEMBRESIA
     WHERE l.PK_ID_LOCAL = local_id;
 
-    -- Inserta sólo si no supera el límite (0 = sin límite)
-    IF v_max = 0 OR v_total < v_max THEN
-        -- Verificar si ya existe el producto con la misma marca y unidad
-        SELECT PK_ID_PRODUCTS_LOCAL INTO v_pl_id
-        FROM productoslocal
-        WHERE FK_ID_LOCAL = local_id
-          AND FK_ID_PRODUCTO = producto_id
-          AND FK_ID_UNIDAD = medida
-        LIMIT 1;
+    -- Verificar si ya existe este producto (para no contar como nuevo)
+    SELECT COUNT(*) INTO v_existe_producto
+    FROM producto_marca
+    WHERE FK_ID_LOCAL = local_id AND FK_ID_PRODUCTO = producto_id;
 
-        IF v_pl_id > 0 THEN
-            -- Ya existe, actualizar el precio y agregar/actualizar la marca
-            UPDATE productoslocal
-            SET VALOR_PRODUCTS_LOCAL = valor
-            WHERE PK_ID_PRODUCTS_LOCAL = v_pl_id;
-        ELSE
-            -- No existe, insertar nuevo
-            INSERT INTO productoslocal (
-                FK_ID_PRODUCTO,
-                FK_ID_UNIDAD,
-                VALOR_PRODUCTS_LOCAL,
-                FK_ID_LOCAL
-            ) VALUES (
-                producto_id,
-                medida,
-                valor,
-                local_id
-            );
-            SET v_pl_id = LAST_INSERT_ID();
-        END IF;
-
-        -- Agregar/actualizar la marca en producto_marca
-        INSERT INTO producto_marca (FK_ID_PRODUCTO, FK_ID_MARCA, PRECIO, DISPONIBLE)
-        VALUES (producto_id, v_marca, valor, 1)
+    -- Inserta sólo si no supera el límite (0 = sin límite) o si el producto ya existe
+    IF v_max = 0 OR v_total < v_max OR v_existe_producto > 0 THEN
+        -- Insertar o actualizar en producto_marca
+        INSERT INTO producto_marca (FK_ID_LOCAL, FK_ID_PRODUCTO, FK_ID_MARCA, FK_ID_UNIDAD, PRECIO, STOCK, DISPONIBLE)
+        VALUES (local_id, producto_id, v_marca, NULLIF(medida, 0), valor, 0, 1)
         ON DUPLICATE KEY UPDATE
             PRECIO = valor,
             DISPONIBLE = 1,
@@ -357,9 +334,13 @@ BEGIN
     DECLARE v_valor_credito DECIMAL(10,2) DEFAULT 0;
     DECLARE v_credito_a_dar DECIMAL(10,2) DEFAULT 0;
     DECLARE v_descuento_activo INT DEFAULT 0;
+    DECLARE v_codigo_nuevo VARCHAR(20);
+    DECLARE v_codigo_existe INT DEFAULT 1;
+    DECLARE v_intentos INT DEFAULT 0;
+    DECLARE v_codigo_actual VARCHAR(20);
 
     -- Obtener código usado por el referido
-    SELECT CODIGO_REFERIDO_USADO INTO v_codigo_usado
+    SELECT CODIGO_REFERIDO_USADO, CODIGO_REFERIDO INTO v_codigo_usado, v_codigo_actual
     FROM usuario
     WHERE PK_ID_USUARIO = p_id_usuario_referido;
 
@@ -404,7 +385,8 @@ BEGIN
 
         -- Actualizar crédito del dueño
         UPDATE usuario
-        SET CREDITO_REFERIDOS = CREDITO_REFERIDOS + v_credito_a_dar
+        SET CREDITO_REFERIDOS = CREDITO_REFERIDOS + v_credito_a_dar,
+            CLIENTES_REFERIDOS_TOTAL = CLIENTES_REFERIDOS_TOTAL + 1
         WHERE PK_ID_USUARIO = v_id_dueno;
 
         -- Actualizar la referencia como "compró membresía"
@@ -412,6 +394,21 @@ BEGIN
         SET MEMBRESIA_COMPRADA = 1
         WHERE FK_ID_DUENO_CODIGO = v_id_dueno
         AND FK_ID_CLIENTE_REFERIDO = p_id_usuario_referido;
+    END IF;
+
+    -- GENERAR CÓDIGO DE REFERIDO PARA EL COMPRADOR (si no tiene)
+    IF v_codigo_actual IS NULL OR v_codigo_actual = '' THEN
+        WHILE v_codigo_existe > 0 AND v_intentos < 10 DO
+            SET v_codigo_nuevo = CONCAT('REF', LPAD(FLOOR(RAND() * 1000000), 6, '0'));
+            SELECT COUNT(*) INTO v_codigo_existe FROM usuario WHERE CODIGO_REFERIDO = v_codigo_nuevo;
+            SET v_intentos = v_intentos + 1;
+        END WHILE;
+
+        IF v_codigo_existe = 0 THEN
+            UPDATE usuario
+            SET CODIGO_REFERIDO = v_codigo_nuevo
+            WHERE PK_ID_USUARIO = p_id_usuario_referido;
+        END IF;
     END IF;
 
     SELECT 'OK' AS resultado, v_credito_a_dar AS credito_dado_a_dueno;
@@ -1005,12 +1002,13 @@ CREATE TABLE IF NOT EXISTS `configuracion_referidos` (
   `FECHA_CREACION` datetime DEFAULT CURRENT_TIMESTAMP,
   `FECHA_ACTUALIZACION` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `ACTUALIZADO_POR` int DEFAULT NULL,
+  `LIMITE_USOS_CODIGO` int DEFAULT '0' COMMENT '0 = Ilimitado, >0 = Maximo de usos por codigo',
   PRIMARY KEY (`PK_ID`)
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Volcando datos para la tabla abastecete.configuracion_referidos: ~1 rows (aproximadamente)
-INSERT INTO `configuracion_referidos` (`PK_ID`, `TIPO_DESCUENTO_REFERIDO`, `VALOR_DESCUENTO_REFERIDO`, `TIPO_DESCUENTO_DUENO`, `VALOR_DESCUENTO_DUENO`, `DESCUENTO_ACTIVO`, `FECHA_CREACION`, `FECHA_ACTUALIZACION`, `ACTUALIZADO_POR`) VALUES
-	(1, 'PORCENTAJE', 10.00, 'PORCENTAJE', 10.00, 1, '2025-12-29 18:25:59', '2025-12-29 18:25:59', NULL);
+INSERT INTO `configuracion_referidos` (`PK_ID`, `TIPO_DESCUENTO_REFERIDO`, `VALOR_DESCUENTO_REFERIDO`, `TIPO_DESCUENTO_DUENO`, `VALOR_DESCUENTO_DUENO`, `DESCUENTO_ACTIVO`, `FECHA_CREACION`, `FECHA_ACTUALIZACION`, `ACTUALIZADO_POR`, `LIMITE_USOS_CODIGO`) VALUES
+	(1, 'PORCENTAJE', 10.00, 'PORCENTAJE', 10.00, 1, '2025-12-29 18:25:59', '2025-12-29 18:25:59', NULL, 0);
 
 -- Volcando estructura para procedimiento abastecete.confirmar_pago
 DELIMITER //
@@ -2823,64 +2821,62 @@ CREATE PROCEDURE `crear_usuario`(
     IN p_documento BIGINT,
     IN p_fk_tipo_documento INT,
     IN p_fk_rol INT,
-    IN p_codigo_referido_usado VARCHAR(50)
+    IN p_codigo_referido_usado VARCHAR(20),
+    OUT p_mensaje VARCHAR(255),
+    OUT p_id_usuario INT
 )
 BEGIN
-    DECLARE v_codigo_referido VARCHAR(20);
-    DECLARE v_codigo_existe INT DEFAULT 1;
-    DECLARE v_id_dueno INT DEFAULT 0;
-    DECLARE v_id_usuario INT DEFAULT 0;
-    DECLARE v_mensaje VARCHAR(255) DEFAULT '';
+    DECLARE v_id_referidor INT DEFAULT NULL;
+    DECLARE v_codigo_valido BOOLEAN DEFAULT FALSE;
+
+    SET p_mensaje = '';
+    SET p_id_usuario = 0;
 
     -- Validaciones
     IF EXISTS (SELECT 1 FROM usuario WHERE NOMBRE_USUARIO = LOWER(TRIM(p_correo))) THEN
-        SET v_mensaje = 'El correo electrónico ya está registrado.';
-        SELECT 0 AS resultado, v_mensaje AS mensaje;
+        SET p_mensaje = 'El correo electrónico ya está registrado.';
     ELSEIF p_documento IS NOT NULL AND p_documento > 0 AND EXISTS (SELECT 1 FROM usuario WHERE DOCUMENTO_IDENTIDAD = p_documento AND FK_ID_TIPO_DOCUMENTO = p_fk_tipo_documento) THEN
-        SET v_mensaje = 'El documento de identidad ya está registrado.';
-        SELECT 0 AS resultado, v_mensaje AS mensaje;
+        SET p_mensaje = 'El documento de identidad ya está registrado.';
     ELSE
-        -- Generar código de referido único
-        WHILE v_codigo_existe > 0 DO
-            SET v_codigo_referido = CONCAT('COD', LPAD(FLOOR(RAND() * 1000000), 6, '0'));
-            SELECT COUNT(*) INTO v_codigo_existe FROM usuario WHERE CODIGO_REFERIDO = v_codigo_referido;
-        END WHILE;
+        -- Validar código de referido si fue proporcionado
+        IF p_codigo_referido_usado IS NOT NULL AND TRIM(p_codigo_referido_usado) != '' THEN
+            SELECT PK_ID_USUARIO INTO v_id_referidor
+            FROM usuario
+            WHERE CODIGO_REFERIDO = UPPER(TRIM(p_codigo_referido_usado))
+            AND ESTADO = 1;
 
-        -- Insertar usuario (sin FK_ID_ROL - el sistema usa usuario_permiso)
+            IF v_id_referidor IS NOT NULL THEN
+                SET v_codigo_valido = TRUE;
+            END IF;
+        END IF;
+
+        -- Insertar usuario SIN código de referido (se genera al comprar membresía)
         INSERT INTO usuario (
             NOMBRES, APELLIDOS, TELEFONO, DOCUMENTO_IDENTIDAD, FK_ID_TIPO_DOCUMENTO,
-            CODIGO_REFERIDO, CODIGO_REFERIDO_USADO, NOMBRE_USUARIO, CONTRASENIA, ESTADO,
-            CREDITO_REFERIDOS, YA_USO_DESCUENTO_REFERIDO
+            CODIGO_REFERIDO, CODIGO_REFERIDO_USADO, NOMBRE_USUARIO, CONTRASENIA, FK_ID_ROL, ESTADO,
+            CLIENTES_REFERIDOS_TOTAL, CREDITO_REFERIDOS, YA_USO_DESCUENTO_REFERIDO
         ) VALUES (
             p_nombres, p_apellidos, p_telefono,
             CASE WHEN p_documento > 0 THEN p_documento ELSE NULL END,
             COALESCE(p_fk_tipo_documento, 1),
-            v_codigo_referido,
-            CASE WHEN p_codigo_referido_usado IS NOT NULL AND p_codigo_referido_usado != '' THEN p_codigo_referido_usado ELSE NULL END,
-            LOWER(TRIM(p_correo)), p_contrasenia, 1, 0, 0
+            NULL,  -- NO se genera código al registrarse
+            CASE WHEN v_codigo_valido THEN UPPER(TRIM(p_codigo_referido_usado)) ELSE NULL END,
+            LOWER(TRIM(p_correo)), p_contrasenia, p_fk_rol, 1,
+            0, 0.00, 0
         );
 
-        SET v_id_usuario = LAST_INSERT_ID();
+        SET p_id_usuario = LAST_INSERT_ID();
 
-        -- Registrar referencia si hay código usado
-        IF p_codigo_referido_usado IS NOT NULL AND p_codigo_referido_usado != '' THEN
-            SELECT PK_ID_USUARIO INTO v_id_dueno
-            FROM usuario WHERE CODIGO_REFERIDO = p_codigo_referido_usado AND ESTADO = 1
-            LIMIT 1;
+        -- Si el código de referido es válido, registrar la referencia
+        IF v_codigo_valido AND v_id_referidor IS NOT NULL THEN
+            INSERT INTO referencias (FK_ID_DUENO_CODIGO, FK_ID_CLIENTE_REFERIDO, MEMBRESIA_COMPRADA, FECHA_REGISTRO)
+            VALUES (v_id_referidor, p_id_usuario, FALSE, NOW())
+            ON DUPLICATE KEY UPDATE FECHA_REGISTRO = NOW();
 
-            IF v_id_dueno > 0 THEN
-                INSERT INTO referencias (FK_ID_DUENO_CODIGO, FK_ID_CLIENTE_REFERIDO, MEMBRESIA_COMPRADA)
-                VALUES (v_id_dueno, v_id_usuario, 0);
-
-                -- Incrementar contador de referidos del dueño
-                UPDATE usuario
-                SET CLIENTES_REFERIDOS_TOTAL = COALESCE(CLIENTES_REFERIDOS_TOTAL, 0) + 1
-                WHERE PK_ID_USUARIO = v_id_dueno;
-            END IF;
+            SET p_mensaje = 'Usuario creado exitosamente. Código de referido guardado.';
+        ELSE
+            SET p_mensaje = 'Usuario creado exitosamente.';
         END IF;
-
-        SET v_mensaje = 'Usuario creado exitosamente.';
-        SELECT v_id_usuario AS resultado, v_mensaje AS mensaje;
     END IF;
 END//
 DELIMITER ;
@@ -4218,7 +4214,7 @@ CREATE TABLE IF NOT EXISTS `evento_analitica` (
   KEY `fk_evento_producto` (`FK_ID_PRODUCTO`),
   CONSTRAINT `fk_evento_local` FOREIGN KEY (`FK_ID_LOCAL`) REFERENCES `local` (`PK_ID_LOCAL`) ON DELETE CASCADE,
   CONSTRAINT `fk_evento_producto` FOREIGN KEY (`FK_ID_PRODUCTO`) REFERENCES `producto` (`PK_ID_PRODUCTO`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=47 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=52 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Volcando datos para la tabla abastecete.evento_analitica: ~17 rows (aproximadamente)
 INSERT INTO `evento_analitica` (`PK_ID_EVENTO`, `FK_ID_LOCAL`, `FK_ID_PRODUCTO`, `TIPO_EVENTO`, `IP_VISITANTE`, `USER_AGENT`, `REFERRER`, `FECHA_EVENTO`) VALUES
@@ -4238,7 +4234,12 @@ INSERT INTO `evento_analitica` (`PK_ID_EVENTO`, `FK_ID_LOCAL`, `FK_ID_PRODUCTO`,
 	(43, 1, NULL, 'VISITA_LOCAL', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'http://localhost:5235/Negocios/ConsultarProductos?idLocal=1', '2025-12-30 03:51:38'),
 	(44, 1, NULL, 'VISITA_LOCAL', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'http://localhost:5235/Negocios/ConsultarProductos?idLocal=1', '2025-12-30 03:51:54'),
 	(45, 1, NULL, '', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'http://localhost:5235/Productos/ProductosNegocio', '2025-12-30 18:08:18'),
-	(46, 1, NULL, 'VISITA_LOCAL', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'http://localhost:5235/Negocios/ConsultarProductos?idLocal=1', '2025-12-30 18:08:22');
+	(46, 1, NULL, 'VISITA_LOCAL', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'http://localhost:5235/Negocios/ConsultarProductos?idLocal=1', '2025-12-30 18:08:22'),
+	(47, 1, NULL, 'BUSQUEDA_APARICION', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'http://localhost:5235/Productos/ProductosNegocio', '2025-12-31 05:06:39'),
+	(48, 1, NULL, 'VISITA_LOCAL', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'http://localhost:5235/Negocios/ConsultarProductos?idLocal=1', '2025-12-31 05:06:45'),
+	(49, 1, 387, 'VISITA_PRODUCTO', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'http://localhost:5235/Negocios/ConsultarProductos?idLocal=1', '2025-12-31 05:06:50'),
+	(50, 1, NULL, 'VISITA_PRODUCTO', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'http://localhost:5235/Productos/ProductDetailLocal?idlocal=1&idProducto=387', '2025-12-31 05:06:52'),
+	(51, 1, NULL, 'VISITA_LOCAL', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'http://localhost:5235/Negocios/ConsultarProductos?idLocal=1', '2025-12-31 05:07:00');
 
 -- Volcando estructura para evento abastecete.expirar_ofertas_flash
 DELIMITER //
@@ -4267,9 +4268,57 @@ CREATE TABLE IF NOT EXISTS `galeria_local` (
   CONSTRAINT `FK_galeria_revisor` FOREIGN KEY (`FK_ID_USUARIO_REVISOR`) REFERENCES `usuario` (`PK_ID_USUARIO`) ON DELETE SET NULL
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Volcando datos para la tabla abastecete.galeria_local: ~1 rows (aproximadamente)
+-- Volcando datos para la tabla abastecete.galeria_local: ~0 rows (aproximadamente)
 INSERT INTO `galeria_local` (`PK_ID_GALERIA`, `FK_ID_LOCAL`, `CLOUDINARY_URL`, `CLOUDINARY_PUBLIC_ID`, `ESTADO`, `FECHA_SUBIDA`, `FECHA_REVISION`, `FK_ID_USUARIO_REVISOR`, `MOTIVO_RECHAZO`) VALUES
 	(1, 28, 'https://res.cloudinary.com/dwl5ggfhd/image/upload/v1766353804/galeria/locales/xtx4pvn7tyockpdhge4x.jpg', 'galeria/locales/xtx4pvn7tyockpdhge4x', 1, '2025-12-21 21:50:05', '2025-12-21 22:31:12', 2, NULL);
+
+-- Volcando estructura para procedimiento abastecete.generar_codigo_referido
+DELIMITER //
+CREATE PROCEDURE `generar_codigo_referido`(
+    IN p_id_usuario INT,
+    OUT p_codigo VARCHAR(20),
+    OUT p_mensaje VARCHAR(255)
+)
+BEGIN
+    DECLARE v_codigo_existe INT DEFAULT 1;
+    DECLARE v_codigo_actual VARCHAR(20);
+    DECLARE v_intentos INT DEFAULT 0;
+
+    SET p_codigo = NULL;
+    SET p_mensaje = '';
+
+    -- Verificar si ya tiene código
+    SELECT CODIGO_REFERIDO INTO v_codigo_actual
+    FROM usuario
+    WHERE PK_ID_USUARIO = p_id_usuario;
+
+    IF v_codigo_actual IS NOT NULL AND v_codigo_actual != '' THEN
+        SET p_codigo = v_codigo_actual;
+        SET p_mensaje = 'El usuario ya tiene un código de referido.';
+    ELSE
+        -- Generar código único
+        WHILE v_codigo_existe > 0 AND v_intentos < 10 DO
+            SET p_codigo = CONCAT('REF', LPAD(FLOOR(RAND() * 1000000), 6, '0'));
+            SELECT COUNT(*) INTO v_codigo_existe FROM usuario WHERE CODIGO_REFERIDO = p_codigo;
+            SET v_intentos = v_intentos + 1;
+        END WHILE;
+
+        IF v_codigo_existe = 0 THEN
+            -- Asignar código al usuario
+            UPDATE usuario
+            SET CODIGO_REFERIDO = p_codigo
+            WHERE PK_ID_USUARIO = p_id_usuario;
+
+            SET p_mensaje = 'Código de referido generado exitosamente.';
+        ELSE
+            SET p_codigo = NULL;
+            SET p_mensaje = 'Error al generar código único.';
+        END IF;
+    END IF;
+
+    SELECT p_codigo AS codigo, p_mensaje AS mensaje;
+END//
+DELIMITER ;
 
 -- Volcando estructura para procedimiento abastecete.generar_token_recuperacion
 DELIMITER //
@@ -4764,7 +4813,7 @@ CREATE TABLE IF NOT EXISTS `logs_sistema` (
   KEY `IDX_logs_tipo_accion` (`TIPO_ACCION`),
   KEY `IDX_logs_entidad` (`MODULO`,`ENTIDAD_ID`),
   CONSTRAINT `FK_logs_usuario` FOREIGN KEY (`FK_ID_USUARIO`) REFERENCES `usuario` (`PK_ID_USUARIO`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=133 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=153 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Volcando datos para la tabla abastecete.logs_sistema: ~132 rows (aproximadamente)
 INSERT INTO `logs_sistema` (`PK_ID_LOG`, `FK_ID_USUARIO`, `NOMBRE_USUARIO`, `MODULO`, `TIPO_ACCION`, `ENTIDAD_ID`, `ENTIDAD_DESCRIPCION`, `DATOS_ANTERIORES`, `DATOS_NUEVOS`, `IP_CLIENTE`, `USER_AGENT`, `FECHA_REGISTRO`, `RESULTADO`, `MENSAJE_ERROR`, `CONTROLLER`, `ACTION`) VALUES
@@ -4904,7 +4953,22 @@ INSERT INTO `logs_sistema` (`PK_ID_LOG`, `FK_ID_USUARIO`, `NOMBRE_USUARIO`, `MOD
 	(134, 1, 'Usuario', 'AUTENTICACION', 'LOGOUT', 1, 'Cierre de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-30 18:48:33', 'EXITO', '', 'Login', 'Logout'),
 	(135, 1, 'admin@abastecete.com', 'AUTENTICACION', 'LOGIN', 1, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-30 18:48:35', 'EXITO', '', 'Login', 'Login'),
 	(136, 1, 'Usuario', 'AUTENTICACION', 'LOGOUT', 1, 'Cierre de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-30 18:49:51', 'EXITO', '', 'Login', 'Logout'),
-	(137, 2, 'johans.ramirez@udla.edu.co', 'AUTENTICACION', 'LOGIN', 2, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-30 18:50:19', 'EXITO', '', 'Login', 'Login');
+	(137, 2, 'johans.ramirez@udla.edu.co', 'AUTENTICACION', 'LOGIN', 2, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-30 18:50:19', 'EXITO', '', 'Login', 'Login'),
+	(138, 2, 'johans.ramirez@udla.edu.co', 'AUTENTICACION', 'LOGIN', 2, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-30 20:45:48', 'EXITO', '', 'Login', 'Login'),
+	(139, 2, 'johans.ramirez@udla.edu.co', 'AUTENTICACION', 'LOGIN', 2, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-30 20:57:14', 'EXITO', '', 'Login', 'Login'),
+	(140, 2, 'johans.ramirez@udla.edu.co', 'AUTENTICACION', 'LOGIN', 2, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-30 21:02:28', 'EXITO', '', 'Login', 'Login'),
+	(141, 2, 'Usuario', 'AUTENTICACION', 'LOGOUT', 2, 'Cierre de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-30 21:05:49', 'EXITO', '', 'Login', 'Logout'),
+	(142, 1, 'admin@abastecete.com', 'AUTENTICACION', 'LOGIN', 1, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-30 21:05:53', 'EXITO', '', 'Login', 'Login'),
+	(143, 1, 'Usuario', 'AUTENTICACION', 'LOGOUT', 1, 'Cierre de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-30 21:08:55', 'EXITO', '', 'Login', 'Logout'),
+	(144, 2, 'johans.ramirez@udla.edu.co', 'AUTENTICACION', 'LOGIN', 2, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-30 21:09:02', 'EXITO', '', 'Login', 'Login'),
+	(145, 2, 'johans.ramirez@udla.edu.co', 'AUTENTICACION', 'LOGIN', 2, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-30 21:13:07', 'EXITO', '', 'Login', 'Login'),
+	(146, 2, 'johans.ramirez@udla.edu.co', 'AUTENTICACION', 'LOGIN', 2, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-30 22:34:32', 'EXITO', '', 'Login', 'Login'),
+	(147, NULL, 'johans.ramirez@udla.edu.co', 'AUTENTICACION', 'LOGIN', NULL, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36 OPR/125.0.0.0', '2025-12-31 02:52:13', 'ERROR', 'Contrasena incorrecta', 'Login', 'Login'),
+	(148, 2, 'johans.ramirez@udla.edu.co', 'AUTENTICACION', 'LOGIN', 2, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-31 02:52:30', 'EXITO', '', 'Login', 'Login'),
+	(149, 2, 'johans.ramirez@udla.edu.co', 'AUTENTICACION', 'LOGIN', 2, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-31 03:09:32', 'EXITO', '', 'Login', 'Login'),
+	(150, 2, 'johans.ramirez@udla.edu.co', 'AUTENTICACION', 'LOGIN', 2, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-31 05:05:35', 'EXITO', '', 'Login', 'Login'),
+	(151, 2, 'johans.ramirez@udla.edu.co', 'AUTENTICACION', 'LOGIN', 2, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-31 05:09:52', 'EXITO', '', 'Login', 'Login'),
+	(152, 2, 'johans.ramirez@udla.edu.co', 'AUTENTICACION', 'LOGIN', 2, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-31 12:43:36', 'EXITO', '', 'Login', 'Login');
 
 -- Volcando estructura para tabla abastecete.marca
 CREATE TABLE IF NOT EXISTS `marca` (
@@ -5064,6 +5128,7 @@ BEGIN
         TIPO_DESCUENTO_DUENO,
         VALOR_DESCUENTO_DUENO,
         DESCUENTO_ACTIVO,
+        COALESCE(LIMITE_USOS_CODIGO, 0) AS LIMITE_USOS_CODIGO,
         FECHA_ACTUALIZACION,
         ACTUALIZADO_POR
     FROM configuracion_referidos
@@ -5287,6 +5352,7 @@ CREATE PROCEDURE `obtener_limite_productos_local`(
 BEGIN
     DECLARE limite_base INT DEFAULT 0;
     DECLARE addons_extra INT DEFAULT 0;
+    DECLARE productos_actuales INT DEFAULT 0;
 
     -- Límite base de la membresía activa
     SELECT COALESCE(CAST(tm.CANTIDAD_PRODUCTOS AS UNSIGNED), 0) INTO limite_base
@@ -5305,11 +5371,16 @@ BEGIN
         AND al.ESTADO = 1
         AND (al.FECHA_EXPIRACION IS NULL OR al.FECHA_EXPIRACION > NOW());
 
+    -- Contar productos actuales desde producto_marca
+    SELECT COUNT(DISTINCT FK_ID_PRODUCTO) INTO productos_actuales
+    FROM producto_marca
+    WHERE FK_ID_LOCAL = p_id_local;
+
     -- Si límite base es 0, es ilimitado
     IF limite_base = 0 THEN
-        SELECT 0 as limite_base, 0 as addons_extra, 0 as limite_total, 1 as es_ilimitado;
+        SELECT 0 as limite_base, 0 as addons_extra, 0 as limite_total, 1 as es_ilimitado, productos_actuales;
     ELSE
-        SELECT limite_base, addons_extra, (limite_base + addons_extra) as limite_total, 0 as es_ilimitado;
+        SELECT limite_base, addons_extra, (limite_base + addons_extra) as limite_total, 0 as es_ilimitado, productos_actuales;
     END IF;
 END//
 DELIMITER ;
@@ -5701,7 +5772,7 @@ CREATE TABLE IF NOT EXISTS `permiso` (
   PRIMARY KEY (`PK_ID_PERMISO`),
   UNIQUE KEY `CODIGO` (`CODIGO`),
   KEY `idx_permiso_sistema_estado` (`ESTADO`)
-) ENGINE=InnoDB AUTO_INCREMENT=39 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=40 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Volcando datos para la tabla abastecete.permiso: ~38 rows (aproximadamente)
 INSERT INTO `permiso` (`PK_ID_PERMISO`, `CODIGO`, `NOMBRE`, `DESCRIPCION`, `ICONO`, `CATEGORIA`, `ORDEN`, `ESTADO`) VALUES
@@ -6343,86 +6414,33 @@ INSERT INTO `producto` (`PK_ID_PRODUCTO`, `FK_ID_SUB_CATEGORIA`, `NOMBRE_PRODUCT
 	(583, 51, 'Prueba', 'https://res.cloudinary.com/dwl5ggfhd/image/upload/v1766234586/productos/ffjleq3lqniflonmphg0.png', 3, 1, 'aaaaaaaaaaaaaaaa', 'prueba-000', 'productos/ffjleq3lqniflonmphg0'),
 	(584, 31, 'Prueba', 'https://res.cloudinary.com/dwl5ggfhd/image/upload/v1766466953/productos/fz4q2ofmamjmnlaapacg.png', 3, 2, 'aaaa', 'prueba-111', 'productos/fz4q2ofmamjmnlaapacg');
 
--- Volcando estructura para tabla abastecete.productoslocal
-CREATE TABLE IF NOT EXISTS `productoslocal` (
-  `PK_ID_PRODUCTS_LOCAL` int NOT NULL AUTO_INCREMENT,
-  `FK_ID_PRODUCTO` int NOT NULL DEFAULT '0',
-  `FK_ID_UNIDAD` int NOT NULL DEFAULT '0',
-  `VALOR_PRODUCTS_LOCAL` int NOT NULL DEFAULT '0',
-  `FK_ID_LOCAL` int NOT NULL DEFAULT '0',
-  `FK_ESTADO` int NOT NULL DEFAULT '1',
-  PRIMARY KEY (`PK_ID_PRODUCTS_LOCAL`),
-  KEY `fk_local` (`FK_ID_LOCAL`),
-  KEY `fk_estado` (`FK_ESTADO`),
-  KEY `FK_ID_UNIDAD` (`FK_ID_UNIDAD`),
-  KEY `FK_ID_PRODUCTO` (`FK_ID_PRODUCTO`),
-  KEY `idx_productoslocal_producto` (`FK_ID_PRODUCTO`),
-  KEY `idx_productoslocal_local` (`FK_ID_LOCAL`),
-  CONSTRAINT `fk3` FOREIGN KEY (`FK_ID_PRODUCTO`) REFERENCES `producto` (`PK_ID_PRODUCTO`),
-  CONSTRAINT `fk4` FOREIGN KEY (`FK_ID_UNIDAD`) REFERENCES `unidad` (`ID_UNIDAD`),
-  CONSTRAINT `fk_estado` FOREIGN KEY (`FK_ESTADO`) REFERENCES `estado` (`PK_ID_ESTADO`),
-  CONSTRAINT `fk_local` FOREIGN KEY (`FK_ID_LOCAL`) REFERENCES `local` (`PK_ID_LOCAL`)
-) ENGINE=InnoDB AUTO_INCREMENT=134 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- Volcando datos para la tabla abastecete.productoslocal: ~30 rows (aproximadamente)
-INSERT INTO `productoslocal` (`PK_ID_PRODUCTS_LOCAL`, `FK_ID_PRODUCTO`, `FK_ID_UNIDAD`, `VALOR_PRODUCTS_LOCAL`, `FK_ID_LOCAL`, `FK_ESTADO`) VALUES
-	(104, 1, 6, 5000, 28, 1),
-	(105, 5, 6, 7000, 28, 1),
-	(106, 34, 6, 10000, 28, 1),
-	(107, 224, 10, 2000, 34, 1),
-	(108, 227, 10, 6000, 35, 1),
-	(109, 13, 1, 4200, 35, 1),
-	(110, 429, 2, 11000, 35, 1),
-	(111, 462, 5, 13500, 35, 1),
-	(112, 90, 2, 23000, 35, 1),
-	(113, 81, 2, 10000, 36, 1),
-	(114, 189, 4, 10000, 36, 1),
-	(115, 227, 10, 3000, 36, 1),
-	(116, 192, 4, 20000, 36, 1),
-	(117, 360, 4, 5000, 36, 1),
-	(118, 110, 2, 13000, 36, 1),
-	(119, 90, 2, 60000, 36, 1),
-	(120, 111, 2, 20000, 36, 1),
-	(121, 113, 2, 8000, 36, 1),
-	(122, 267, 10, 1000, 36, 1),
-	(123, 269, 10, 2000, 36, 1),
-	(124, 173, 2, 150000, 36, 1),
-	(125, 84, 2, 20000, 27, 1),
-	(126, 355, 4, 7000, 27, 1),
-	(127, 410, 10, 2000, 27, 1),
-	(128, 535, 5, 8000, 27, 1),
-	(129, 143, 1, 6000, 27, 1),
-	(130, 205, 1, 5000, 28, 1),
-	(131, 584, 10, 1, 28, 1),
-	(132, 387, 10, 5000, 1, 1),
-	(133, 10, 1, 2500, 1, 1);
-
 -- Volcando estructura para procedimiento abastecete.productos_local
 DELIMITER //
 CREATE PROCEDURE `productos_local`(
-	IN `localid` INT
+    IN localid INT
 )
 BEGIN
-
-	SELECT local.PK_ID_LOCAL,
-	local.NOMBRE_LOCAL,
-	producto.PK_ID_PRODUCTO,
-	producto.NOMBRE_PRODUCTO,
-	producto.IMAGEN_URL,
-	producto.FK_ID_SUB_CATEGORIA,
-	categoria.PK_ID_CATEGORIA,
-	GROUP_CONCAT(productoslocal.VALOR_PRODUCTS_LOCAL SEPARATOR ', ') AS PRECIOS,
-	GROUP_CONCAT(unidad.NOMBRE_UNIDAD SEPARATOR ', ') AS UNIDADES
- 	FROM  local
-	INNER JOIN productoslocal ON productoslocal.FK_ID_LOCAL =  local.PK_ID_LOCAL
-	INNER JOIN producto ON productoslocal.FK_ID_PRODUCTO =  producto.PK_ID_PRODUCTO
-	INNER JOIN unidad ON productoslocal.FK_ID_UNIDAD =  unidad.ID_UNIDAD
-	INNER JOIN sub_categoria ON producto.FK_ID_SUB_CATEGORIA = sub_categoria.PK_ID_SUB_CATEGORIA
-	INNER JOIN categoria ON sub_categoria.FK_ID_CATEGORIA= categoria.PK_ID_CATEGORIA
-	WHERE local.PK_ID_LOCAL = localid
-	GROUP BY local.PK_ID_LOCAL,local.NOMBRE_LOCAL,producto.PK_ID_PRODUCTO,producto.NOMBRE_PRODUCTO,producto.FK_ID_SUB_CATEGORIA
-	ORDER BY producto.NOMBRE_PRODUCTO ASC;
-
+    SELECT
+        l.PK_ID_LOCAL,
+        l.NOMBRE_LOCAL,
+        p.PK_ID_PRODUCTO,
+        p.NOMBRE_PRODUCTO,
+        p.IMAGEN_URL,
+        p.FK_ID_SUB_CATEGORIA,
+        c.PK_ID_CATEGORIA,
+        GROUP_CONCAT(DISTINCT pm.PRECIO ORDER BY pm.PRECIO SEPARATOR ', ') AS PRECIOS,
+        GROUP_CONCAT(DISTINCT COALESCE(u.NOMBRE_UNIDAD, 'Unidad') ORDER BY u.NOMBRE_UNIDAD SEPARATOR ', ') AS UNIDADES
+    FROM producto_marca pm
+    INNER JOIN `local` l ON l.PK_ID_LOCAL = localid
+    INNER JOIN producto p ON pm.FK_ID_PRODUCTO = p.PK_ID_PRODUCTO
+    INNER JOIN sub_categoria sc ON p.FK_ID_SUB_CATEGORIA = sc.PK_ID_SUB_CATEGORIA
+    INNER JOIN categoria c ON sc.FK_ID_CATEGORIA = c.PK_ID_CATEGORIA
+    LEFT JOIN unidad u ON pm.FK_ID_UNIDAD = u.ID_UNIDAD
+    WHERE pm.FK_ID_LOCAL = localid
+      AND pm.DISPONIBLE = 1
+    GROUP BY l.PK_ID_LOCAL, l.NOMBRE_LOCAL, p.PK_ID_PRODUCTO, p.NOMBRE_PRODUCTO,
+             p.IMAGEN_URL, p.FK_ID_SUB_CATEGORIA, c.PK_ID_CATEGORIA
+    ORDER BY p.NOMBRE_PRODUCTO ASC;
 END//
 DELIMITER ;
 
@@ -6447,35 +6465,9 @@ CREATE TABLE IF NOT EXISTS `producto_marca` (
   CONSTRAINT `fk_pm_marca` FOREIGN KEY (`FK_ID_MARCA`) REFERENCES `marca` (`PK_ID_MARCA`) ON DELETE CASCADE,
   CONSTRAINT `fk_pm_producto` FOREIGN KEY (`FK_ID_PRODUCTO`) REFERENCES `producto` (`PK_ID_PRODUCTO`) ON DELETE CASCADE,
   CONSTRAINT `fk_pm_unidad` FOREIGN KEY (`FK_ID_UNIDAD`) REFERENCES `unidad` (`ID_UNIDAD`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=35 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Volcando datos para la tabla abastecete.producto_marca: ~25 rows (aproximadamente)
-INSERT INTO `producto_marca` (`PK_ID`, `FK_ID_PRODUCTO`, `FK_ID_MARCA`, `FK_ID_UNIDAD`, `FK_ID_LOCAL`, `PRECIO`, `STOCK`, `DISPONIBLE`, `FECHA_REGISTRO`, `FECHA_ACTUALIZACION`) VALUES
-	(1, 1, 1, NULL, 28, 5000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
-	(2, 5, 1, NULL, 28, 7000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
-	(3, 34, 1, NULL, 28, 10000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
-	(4, 224, 1, NULL, 34, 2000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
-	(5, 227, 1, NULL, 35, 3000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
-	(6, 13, 1, NULL, 35, 4200.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
-	(7, 429, 1, NULL, 35, 11000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
-	(8, 462, 1, NULL, 35, 13500.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
-	(9, 90, 1, NULL, 35, 60000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
-	(10, 81, 1, NULL, 36, 10000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
-	(11, 189, 1, NULL, 36, 10000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
-	(12, 192, 1, NULL, 36, 20000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
-	(13, 360, 1, NULL, 36, 5000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
-	(14, 110, 1, NULL, 36, 13000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
-	(15, 111, 1, NULL, 36, 20000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
-	(16, 113, 1, NULL, 36, 8000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
-	(17, 267, 1, NULL, 36, 1000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
-	(18, 269, 1, NULL, 36, 2000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
-	(19, 173, 1, NULL, 36, 150000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
-	(20, 84, 1, NULL, 27, 20000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
-	(21, 355, 1, NULL, 27, 7000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
-	(22, 410, 1, NULL, 27, 2000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
-	(23, 535, 1, NULL, 27, 8000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
-	(24, 143, 1, NULL, 27, 6000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04'),
-	(25, 205, 1, NULL, 28, 5000.00, 0, 1, '2025-12-23 02:16:41', '2025-12-23 02:17:04');
 
 -- Volcando estructura para tabla abastecete.producto_marcas_disponibles
 CREATE TABLE IF NOT EXISTS `producto_marcas_disponibles` (
@@ -7518,7 +7510,7 @@ CREATE TABLE IF NOT EXISTS `resumen_analitica_diario` (
   UNIQUE KEY `uk_local_fecha` (`FK_ID_LOCAL`,`FECHA`),
   KEY `idx_resumen_fecha` (`FECHA`),
   CONSTRAINT `fk_resumen_local` FOREIGN KEY (`FK_ID_LOCAL`) REFERENCES `local` (`PK_ID_LOCAL`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=44 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=49 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Volcando datos para la tabla abastecete.resumen_analitica_diario: ~10 rows (aproximadamente)
 INSERT INTO `resumen_analitica_diario` (`PK_ID_RESUMEN`, `FK_ID_LOCAL`, `FECHA`, `VISITAS_LOCAL`, `VISITAS_PRODUCTOS`, `CLICS_WHATSAPP`, `CLICS_TELEFONO`, `APARICIONES_BUSQUEDA`, `COMPARTIDOS`) VALUES
@@ -7531,7 +7523,8 @@ INSERT INTO `resumen_analitica_diario` (`PK_ID_RESUMEN`, `FK_ID_LOCAL`, `FECHA`,
 	(25, 36, '2025-12-27', 0, 0, 0, 0, 1, 0),
 	(26, 27, '2025-12-27', 0, 0, 0, 0, 1, 0),
 	(27, 1, '2025-12-29', 1, 0, 0, 0, 1, 0),
-	(29, 1, '2025-12-30', 9, 2, 1, 0, 2, 0);
+	(29, 1, '2025-12-30', 9, 2, 1, 0, 2, 0),
+	(44, 1, '2025-12-31', 2, 2, 0, 0, 1, 0);
 
 -- Volcando estructura para tabla abastecete.resumen_producto_vistas
 CREATE TABLE IF NOT EXISTS `resumen_producto_vistas` (
@@ -7545,11 +7538,12 @@ CREATE TABLE IF NOT EXISTS `resumen_producto_vistas` (
   KEY `idx_producto_local` (`FK_ID_LOCAL`),
   CONSTRAINT `fk_resumen_producto` FOREIGN KEY (`FK_ID_PRODUCTO`) REFERENCES `producto` (`PK_ID_PRODUCTO`) ON DELETE CASCADE,
   CONSTRAINT `fk_resumen_producto_local` FOREIGN KEY (`FK_ID_LOCAL`) REFERENCES `local` (`PK_ID_LOCAL`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Volcando datos para la tabla abastecete.resumen_producto_vistas: ~1 rows (aproximadamente)
 INSERT INTO `resumen_producto_vistas` (`PK_ID_RESUMEN`, `FK_ID_PRODUCTO`, `FK_ID_LOCAL`, `FECHA`, `VISTAS`) VALUES
-	(1, 10, 1, '2025-12-30', 1);
+	(1, 10, 1, '2025-12-30', 1),
+	(2, 387, 1, '2025-12-31', 1);
 
 -- Volcando estructura para procedimiento abastecete.revisar_imagen_galeria
 DELIMITER //
@@ -7588,6 +7582,34 @@ BEGIN
     WHERE PK_ID = p_id;
 
     SELECT ROW_COUNT() as FilasAfectadas;
+END//
+DELIMITER ;
+
+-- Volcando estructura para procedimiento abastecete.sp_actualizar_precio_producto_local
+DELIMITER //
+CREATE PROCEDURE `sp_actualizar_precio_producto_local`(
+    IN p_id_local INT,
+    IN p_id_producto INT,
+    IN p_nuevo_precio INT
+)
+BEGIN
+    DECLARE v_pl_id INT DEFAULT 0;
+
+    SELECT PK_ID_PRODUCTS_LOCAL INTO v_pl_id
+    FROM productoslocal
+    WHERE FK_ID_LOCAL = p_id_local
+      AND FK_ID_PRODUCTO = p_id_producto
+    LIMIT 1;
+
+    IF v_pl_id > 0 THEN
+        UPDATE productoslocal
+        SET VALOR_PRODUCTS_LOCAL = p_nuevo_precio
+        WHERE PK_ID_PRODUCTS_LOCAL = v_pl_id;
+
+        SELECT v_pl_id as Id, 'Precio actualizado correctamente' as Mensaje, 1 as Exito;
+    ELSE
+        SELECT 0 as Id, 'Producto no encontrado en este local' as Mensaje, 0 as Exito;
+    END IF;
 END//
 DELIMITER ;
 
@@ -7736,6 +7758,20 @@ CREATE PROCEDURE `sp_eliminar_marca_producto`(
 BEGIN
     DELETE FROM producto_marca WHERE PK_ID = p_id;
     SELECT ROW_COUNT() as FilasAfectadas;
+END//
+DELIMITER ;
+
+-- Volcando estructura para procedimiento abastecete.sp_eliminar_producto_local
+DELIMITER //
+CREATE PROCEDURE `sp_eliminar_producto_local`(
+    IN p_id_local INT,
+    IN p_id_producto INT
+)
+BEGIN
+    DELETE FROM producto_marca
+    WHERE FK_ID_LOCAL = p_id_local AND FK_ID_PRODUCTO = p_id_producto;
+
+    SELECT ROW_COUNT() AS FilasAfectadas, 'Producto eliminado correctamente' AS Mensaje;
 END//
 DELIMITER ;
 
@@ -7968,6 +8004,33 @@ BEGIN
 END//
 DELIMITER ;
 
+-- Volcando estructura para procedimiento abastecete.sp_obtener_presentaciones_producto
+DELIMITER //
+CREATE PROCEDURE `sp_obtener_presentaciones_producto`(
+    IN p_id_local INT,
+    IN p_id_producto INT
+)
+BEGIN
+    SELECT
+        pm.PK_ID AS Id,
+        pm.FK_ID_PRODUCTO AS IdProducto,
+        pm.FK_ID_MARCA AS IdMarca,
+        m.NOMBRE_MARCA AS NombreMarca,
+        m.LOGO_MARCA AS LogoMarca,
+        pm.FK_ID_UNIDAD AS IdUnidad,
+        u.NOMBRE_UNIDAD AS NombreUnidad,
+        pm.PRECIO AS Precio,
+        pm.STOCK AS Stock,
+        pm.DISPONIBLE AS Disponible
+    FROM producto_marca pm
+    INNER JOIN marca m ON pm.FK_ID_MARCA = m.PK_ID_MARCA
+    LEFT JOIN unidad u ON pm.FK_ID_UNIDAD = u.ID_UNIDAD
+    WHERE pm.FK_ID_LOCAL = p_id_local
+      AND pm.FK_ID_PRODUCTO = p_id_producto
+    ORDER BY m.NOMBRE_MARCA, u.NOMBRE_UNIDAD;
+END//
+DELIMITER ;
+
 -- Volcando estructura para procedimiento abastecete.sp_obtener_producto_detalle_marcas
 DELIMITER //
 CREATE PROCEDURE `sp_obtener_producto_detalle_marcas`(
@@ -8031,6 +8094,37 @@ BEGIN
     WHERE FK_ID_LOCAL = p_id_local
       AND FK_ID_PRODUCTO = p_id_producto
       AND DISPONIBLE = 1;
+END//
+DELIMITER ;
+
+-- Volcando estructura para procedimiento abastecete.sp_productos_local_con_tipo_unidad
+DELIMITER //
+CREATE PROCEDURE `sp_productos_local_con_tipo_unidad`(
+    IN p_id_local INT
+)
+BEGIN
+    SELECT
+        p_id_local AS PK_ID_LOCAL,
+        l.NOMBRE_LOCAL,
+        p.PK_ID_PRODUCTO,
+        p.NOMBRE_PRODUCTO,
+        p.IMAGEN_URL,
+        p.FK_ID_SUB_CATEGORIA,
+        c.PK_ID_CATEGORIA,
+        GROUP_CONCAT(DISTINCT pm.PRECIO ORDER BY pm.PRECIO SEPARATOR ', ') AS PRECIOS,
+        GROUP_CONCAT(DISTINCT COALESCE(u.NOMBRE_UNIDAD, 'Unidad') ORDER BY u.NOMBRE_UNIDAD SEPARATOR ', ') AS UNIDADES,
+        p.FK_ID_TIPOUNIDAD AS ID_TIPO_UNIDAD
+    FROM producto_marca pm
+    INNER JOIN `local` l ON l.PK_ID_LOCAL = p_id_local
+    INNER JOIN producto p ON pm.FK_ID_PRODUCTO = p.PK_ID_PRODUCTO
+    INNER JOIN sub_categoria sc ON p.FK_ID_SUB_CATEGORIA = sc.PK_ID_SUB_CATEGORIA
+    INNER JOIN categoria c ON sc.FK_ID_CATEGORIA = c.PK_ID_CATEGORIA
+    LEFT JOIN unidad u ON pm.FK_ID_UNIDAD = u.ID_UNIDAD
+    WHERE pm.FK_ID_LOCAL = p_id_local
+      AND pm.DISPONIBLE = 1
+    GROUP BY p.PK_ID_PRODUCTO, p.NOMBRE_PRODUCTO, p.IMAGEN_URL,
+             p.FK_ID_SUB_CATEGORIA, c.PK_ID_CATEGORIA, p.FK_ID_TIPOUNIDAD, l.NOMBRE_LOCAL
+    ORDER BY p.NOMBRE_PRODUCTO ASC;
 END//
 DELIMITER ;
 
@@ -8368,7 +8462,7 @@ CREATE TABLE IF NOT EXISTS `usuario_permiso` (
   KEY `idx_usuario_permiso_estado` (`FK_ID_USUARIO`,`ESTADO`),
   CONSTRAINT `FK_usuario_permiso_permiso` FOREIGN KEY (`FK_ID_PERMISO`) REFERENCES `permiso` (`PK_ID_PERMISO`) ON DELETE CASCADE,
   CONSTRAINT `usuario_permiso_ibfk_1` FOREIGN KEY (`FK_ID_USUARIO`) REFERENCES `usuario` (`PK_ID_USUARIO`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=31 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=32 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Volcando datos para la tabla abastecete.usuario_permiso: ~21 rows (aproximadamente)
 INSERT INTO `usuario_permiso` (`PK_ID`, `FK_ID_USUARIO`, `FK_ID_PERMISO`, `FECHA_ASIGNACION`, `ORIGEN`, `ESTADO`) VALUES
@@ -8398,42 +8492,80 @@ INSERT INTO `usuario_permiso` (`PK_ID`, `FK_ID_USUARIO`, `FK_ID_PERMISO`, `FECHA
 -- Volcando estructura para procedimiento abastecete.validar_codigo_referido
 DELIMITER //
 CREATE PROCEDURE `validar_codigo_referido`(
-    IN p_codigo VARCHAR(50),
+    IN p_codigo VARCHAR(20),
     IN p_id_usuario_actual INT
 )
 BEGIN
-    DECLARE v_id_dueno INT DEFAULT 0;
-    DECLARE v_nombre_dueno VARCHAR(200);
-    DECLARE v_codigo_valido TINYINT DEFAULT 0;
-    DECLARE v_mensaje VARCHAR(200);
-    DECLARE v_descuento_activo TINYINT DEFAULT 0;
+    DECLARE v_id_dueno INT DEFAULT NULL;
+    DECLARE v_nombre_dueno VARCHAR(100) DEFAULT '';
+    DECLARE v_valido INT DEFAULT 0;
+    DECLARE v_mensaje VARCHAR(255) DEFAULT '';
+    DECLARE v_tiene_membresia_activa INT DEFAULT 0;
+    DECLARE v_usos_actuales INT DEFAULT 0;
+    DECLARE v_limite_usos INT DEFAULT 0;
 
-    -- Verificar si el sistema de descuentos está activo
-    SELECT DESCUENTO_ACTIVO INTO v_descuento_activo
-    FROM configuracion_referidos LIMIT 1;
+    -- Obtener límite de usos de la configuración
+    SELECT COALESCE(LIMITE_USOS_CODIGO, 0) INTO v_limite_usos
+    FROM configuracion_referidos
+    WHERE PK_ID = 1;
 
-    IF v_descuento_activo = 0 THEN
-        SELECT 0 AS valido, 'El sistema de referidos no está activo' AS mensaje,
-               0 AS id_dueno, NULL AS nombre_dueno;
+    -- Buscar el dueño del código
+    SELECT
+        u.PK_ID_USUARIO,
+        CONCAT(u.NOMBRES, ' ', u.APELLIDOS)
+    INTO v_id_dueno, v_nombre_dueno
+    FROM usuario u
+    WHERE u.CODIGO_REFERIDO = UPPER(TRIM(p_codigo))
+    AND u.CODIGO_REFERIDO IS NOT NULL
+    AND u.CODIGO_REFERIDO != ''
+    AND u.ESTADO = 1;
+
+    IF v_id_dueno IS NULL THEN
+        SET v_valido = 0;
+        SET v_mensaje = 'El código de referido no existe o no es válido.';
+    ELSEIF p_id_usuario_actual IS NOT NULL AND v_id_dueno = p_id_usuario_actual THEN
+        SET v_valido = 0;
+        SET v_mensaje = 'No puedes usar tu propio código de referido.';
     ELSE
-        -- Buscar el dueño del código
-        SELECT PK_ID_USUARIO, CONCAT(NOMBRES, ' ', APELLIDOS)
-        INTO v_id_dueno, v_nombre_dueno
-        FROM usuario
-        WHERE CODIGO_REFERIDO = p_codigo AND ESTADO = 1
-        LIMIT 1;
+        -- Verificar si el dueño tiene membresía activa
+        SELECT COUNT(*) INTO v_tiene_membresia_activa
+        FROM pagos p
+        INNER JOIN historial_membresia hm ON hm.FK_ID_USUARIO = p.FK_ID_USUARIO
+        WHERE p.FK_ID_USUARIO = v_id_dueno
+        AND p.ESTADO_PAGO = 'APROBADO'
+        AND hm.FECHA_FIN >= CURDATE()
+        AND hm.ESTADO = 1;
 
-        IF v_id_dueno = 0 OR v_id_dueno IS NULL THEN
-            SELECT 0 AS valido, 'Código de referido no válido' AS mensaje,
-                   0 AS id_dueno, NULL AS nombre_dueno;
-        ELSEIF v_id_dueno = p_id_usuario_actual THEN
-            SELECT 0 AS valido, 'No puedes usar tu propio código' AS mensaje,
-                   0 AS id_dueno, NULL AS nombre_dueno;
+        IF v_tiene_membresia_activa = 0 THEN
+            SET v_valido = 0;
+            SET v_mensaje = 'El código no está disponible en este momento.';
         ELSE
-            SELECT 1 AS valido, 'Código válido' AS mensaje,
-                   v_id_dueno AS id_dueno, v_nombre_dueno AS nombre_dueno;
+            -- Verificar límite de usos (si aplica)
+            IF v_limite_usos > 0 THEN
+                SELECT COUNT(*) INTO v_usos_actuales
+                FROM referencias
+                WHERE FK_ID_DUENO_CODIGO = v_id_dueno;
+
+                IF v_usos_actuales >= v_limite_usos THEN
+                    SET v_valido = 0;
+                    SET v_mensaje = 'Este código ha alcanzado el límite de usos.';
+                ELSE
+                    SET v_valido = 1;
+                    SET v_mensaje = 'Código válido.';
+                END IF;
+            ELSE
+                -- Sin límite de usos
+                SET v_valido = 1;
+                SET v_mensaje = 'Código válido.';
+            END IF;
         END IF;
     END IF;
+
+    SELECT
+        v_valido AS valido,
+        v_mensaje AS mensaje,
+        COALESCE(v_id_dueno, 0) AS id_dueno,
+        COALESCE(v_nombre_dueno, '') AS nombre_dueno;
 END//
 DELIMITER ;
 
@@ -8652,36 +8784,6 @@ BEGIN
     SELECT ROW_COUNT() AS SuscripcionesVencidas;
 END//
 DELIMITER ;
-
--- Volcando estructura para disparador abastecete.asignar_categoria_local
-SET @OLDTMP_SQL_MODE=@@SQL_MODE, SQL_MODE='ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION';
-DELIMITER //
-CREATE TRIGGER `asignar_categoria_local` AFTER INSERT ON `productoslocal` FOR EACH ROW BEGIN
-	DECLARE idcategoria INT DEFAULT NULL;
-
-	-- Intentar obtener la categoría de forma segura
-	SELECT c.PK_ID_CATEGORIA
-	INTO idcategoria
-	FROM producto p
-	INNER JOIN sub_categoria sc ON p.FK_ID_SUB_CATEGORIA = sc.PK_ID_SUB_CATEGORIA
-	INNER JOIN categoria c ON sc.FK_ID_CATEGORIA = c.PK_ID_CATEGORIA
-	WHERE p.PK_ID_PRODUCTO = NEW.FK_ID_PRODUCTO
-	LIMIT 1;
-
-	-- Solo insertar si se obtuvo una categoría válida
-	IF idcategoria IS NOT NULL THEN
-		IF NOT EXISTS (
-			SELECT 1 FROM localcategoria
-			WHERE FK_ID_CATEGORIA = idcategoria
-			  AND FK_ID_LOCAL = NEW.FK_ID_LOCAL
-		) THEN
-			INSERT INTO localcategoria (FK_ID_LOCAL, FK_ID_CATEGORIA)
-			VALUES (NEW.FK_ID_LOCAL, idcategoria);
-		END IF;
-	END IF;
-END//
-DELIMITER ;
-SET SQL_MODE=@OLDTMP_SQL_MODE;
 
 /*!40103 SET TIME_ZONE=IFNULL(@OLD_TIME_ZONE, 'system') */;
 /*!40101 SET SQL_MODE=IFNULL(@OLD_SQL_MODE, '') */;

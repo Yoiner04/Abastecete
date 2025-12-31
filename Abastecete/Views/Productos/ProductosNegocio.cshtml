@@ -14,9 +14,16 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         /* Fondo que cubre toda la pantalla */
-        html, body {
-            min-height: 100vh;
-            background-color: #f9fafb !important;
+        html {
+            min-height: 100%;
+            height: 100%;
+            background-color: #f3f4f6 !important;
+        }
+        body {
+            min-height: 100%;
+            background-color: #f3f4f6 !important;
+            background-image: linear-gradient(to bottom right, #f9fafb, #e5e7eb) !important;
+            background-attachment: fixed !important;
         }
 
         /* Animaciones de entrada */
@@ -188,9 +195,6 @@
             opacity: 1;
             visibility: visible;
         }
-        .modal-backdrop .modal-bg {
-            transition: opacity 0.3s ease;
-        }
         .modal-backdrop .modal-content {
             transform: scale(0.9) translateY(20px);
             opacity: 0;
@@ -240,6 +244,8 @@
 </head>
 
 <body class="bg-gray-50">
+    <!-- Contenedor principal para blur -->
+    <div id="app-container" class="min-h-screen transition-all duration-300">
     <!-- Header mejorado con gradiente -->
     <header class="relative w-full overflow-hidden">
         <!-- Banner con gradiente overlay -->
@@ -510,7 +516,7 @@
 
                                     <!-- Overlay simplificado - clic en toda la imagen abre el modal -->
                                     <div class="producto-overlay absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent flex items-center justify-center cursor-pointer"
-                                         onclick="mostrarDetalle('@producto.Nombre.Replace("'", "\\'"))', '@producto.Precio', '@producto.ImagenUrl', @producto.Id, '@(producto.Unidad?.Nombre ?? "")')">
+                                         onclick="mostrarDetalle('@producto.Nombre.Replace("'", "\\'"))', '@producto.Precio', '@producto.ImagenUrl', @producto.Id, '@(producto.Unidad?.Nombre ?? "")', @(producto.IdTipoUnidad ?? 0))">
                                         <div class="w-10 h-10 rounded-full bg-white/95 backdrop-blur-sm flex items-center justify-center text-gray-600 hover:bg-emerald-500 hover:text-white transition-all duration-300 shadow-xl transform hover:scale-110">
                                             <i class="fas fa-eye text-base"></i>
                                         </div>
@@ -906,12 +912,9 @@
         </div>
 
         <!-- Modal de detalle de producto - Unificado con presentaciones -->
-        <div id="detalleModal" class="modal-backdrop fixed inset-0 z-50 hidden">
-            <!-- Fondo blur transparente -->
-            <div class="absolute inset-0 modal-bg backdrop-blur-md" style="background-color: transparent !important;"></div>
-
+        <div id="detalleModal" class="modal-backdrop fixed inset-0 z-50 hidden bg-black/30" onclick="cerrarModalDetalle()">
             <!-- Contenedor del modal -->
-            <div class="flex min-h-screen items-center justify-center p-4 relative">
+            <div class="flex min-h-screen items-center justify-center p-4" onclick="event.stopPropagation()">
                 <div class="modal-content w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden">
 
                     <!-- Header compacto con imagen -->
@@ -1026,23 +1029,17 @@
                             </div>
                         </div>
 
-                        <!-- Acciones del producto -->
-                        <div class="flex gap-2">
-                            <button id="btnEditarDetalle"
-                                    class="flex-1 py-2 rounded-xl bg-gray-100 text-gray-700 font-medium text-sm hover:bg-gray-200 transition-all flex items-center justify-center gap-2">
-                                <i class="fas fa-pen text-xs text-gray-500"></i>
-                                Editar producto
-                            </button>
-                            <button id="btnEliminarDetalle"
-                                    class="py-2 px-3 rounded-xl bg-red-50 text-red-600 font-medium hover:bg-red-100 transition-all flex items-center justify-center">
-                                <i class="fas fa-trash text-xs"></i>
-                            </button>
-                        </div>
+                        <!-- Botón cerrar -->
+                        <button onclick="cerrarModalDetalle()"
+                                class="w-full py-2 rounded-xl bg-gray-100 text-gray-600 font-medium text-sm hover:bg-gray-200 transition-all">
+                            Cerrar
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
     </main>
+    </div><!-- Cierre app-container -->
 
     <!-- Lightbox para galería -->
     <div id="lightbox" class="lightbox fixed inset-0 z-50 hidden bg-black/90 items-center justify-center" onclick="cerrarLightbox(event)">
@@ -1053,8 +1050,8 @@
     </div>
 
     <!-- Modal de edición de producto -->
-    <div id="editar-modal" class="fixed inset-0 z-50 hidden transition-opacity duration-300 backdrop-blur-md" style="background-color: transparent !important;">
-        <div class="flex min-h-screen items-center justify-center p-4">
+    <div id="editar-modal" class="fixed inset-0 z-50 hidden bg-black/30" onclick="cerrarModalEditar()">
+        <div class="flex min-h-screen items-center justify-center p-4" onclick="event.stopPropagation()">
             <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
                 <div class="flex items-center justify-between mb-4">
                     <h2 class="text-xl font-bold text-gray-800">Editar Producto</h2>
@@ -1117,8 +1114,8 @@
     </div>
 
     <!-- Modal de confirmación de eliminación -->
-    <div id="eliminar-modal" class="fixed inset-0 z-50 hidden transition-opacity duration-300 backdrop-blur-md" style="background-color: transparent !important;">
-        <div class="flex min-h-screen items-center justify-center p-4">
+    <div id="eliminar-modal" class="fixed inset-0 z-50 hidden bg-black/30" onclick="cerrarModalEliminar()">
+        <div class="flex min-h-screen items-center justify-center p-4" onclick="event.stopPropagation()">
             <div class="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl text-center">
                 <div class="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
                     <i class="fas fa-trash text-2xl text-red-500"></i>
@@ -1302,7 +1299,10 @@
         // ==========================================
         // MODAL DE DETALLE - Moderno con animaciones fluidas
         // ==========================================
-        async function mostrarDetalle(nombre, precio, imagen, id, unidad) {
+        let productoTipoUnidadActual = null;
+        let productoPrecioBaseActual = null;
+
+        async function mostrarDetalle(nombre, precio, imagen, id, unidad, idTipoUnidad) {
             const modal = document.getElementById('detalleModal');
 
             // Actualizar contenido básico
@@ -1319,20 +1319,12 @@
                 unidadEl.classList.add('hidden');
             }
 
-            // Guardar ID actual
+            // Guardar datos actuales
             productoIdActual = id;
             productoNombreActual = nombre;
             productoImagenActual = imagen;
-
-            // Configurar botones
-            document.getElementById('btnEditarDetalle').onclick = function() {
-                cerrarModalDetalle();
-                setTimeout(() => abrirModalEditar(id, nombre, precio, imagen), 200);
-            };
-            document.getElementById('btnEliminarDetalle').onclick = function() {
-                cerrarModalDetalle();
-                setTimeout(() => confirmarEliminar(id, nombre), 200);
-            };
+            productoTipoUnidadActual = idTipoUnidad || null;
+            productoPrecioBaseActual = precio;
 
             // Mostrar modal con animación
             modal.classList.remove('hidden');
@@ -1362,10 +1354,11 @@
                     const marcas = await response.json();
 
                     if (marcas.length === 0) {
-                        lista.innerHTML = '';
-                        vacio.classList.remove('hidden');
+                        // Mostrar precio base como presentación editable
+                        vacio.classList.add('hidden');
                         precioMinEl.textContent = `$${Number(precioBase).toLocaleString('es-CO')}`;
-                        rangoEl.classList.add('hidden');
+                        rangoEl?.classList.add('hidden');
+                        renderizarPrecioBase(precioBase);
                     } else {
                         vacio.classList.add('hidden');
 
@@ -1485,9 +1478,16 @@
                 selectMarca.innerHTML += `<option value="${m.id}">${m.nombre}</option>`;
             });
 
-            // Unidades
+            // Unidades - filtrar por tipo de unidad del producto si existe
             selectUnidad.innerHTML = '<option value="">Sin medida</option>';
-            todasLasUnidades.forEach(u => {
+            let unidadesFiltradas = todasLasUnidades;
+
+            // Si el producto tiene un tipo de unidad definido, filtrar
+            if (productoTipoUnidadActual && productoTipoUnidadActual > 0) {
+                unidadesFiltradas = todasLasUnidades.filter(u => u.idTipoUnidad === productoTipoUnidadActual);
+            }
+
+            unidadesFiltradas.forEach(u => {
                 selectUnidad.innerHTML += `<option value="${u.id}">${u.nombre}</option>`;
             });
         }
@@ -1569,6 +1569,150 @@
         // Editar presentación inline - abre el modal de edición existente
         function editarPresentacionInline(id, idMarca, idUnidad, precio, disponible) {
             editarPresentacionModal(id, idMarca, idUnidad, precio, disponible);
+        }
+
+        // ==========================================
+        // EDITAR PRECIO BASE (productos_local)
+        // ==========================================
+
+        // Renderiza el item del precio base (vista normal)
+        function renderizarPrecioBase(precio) {
+            const lista = document.getElementById('detalleMarcasLista');
+            lista.innerHTML = `
+                <div id="precio-base-item" class="flex items-center justify-between p-2 bg-white rounded-lg border border-gray-100 hover:border-gray-200 transition-all">
+                    <div class="flex items-center gap-2 flex-1 min-w-0">
+                        <div class="w-7 h-7 rounded-lg bg-emerald-50 flex items-center justify-center flex-shrink-0">
+                            <i class="fas fa-box text-emerald-500 text-[10px]"></i>
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <p class="font-medium text-gray-800 text-xs">Precio base</p>
+                            <span class="text-[10px] text-gray-500">Sin marca específica</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <span id="precio-base-valor" class="font-bold text-emerald-600 text-sm">$${Number(precio).toLocaleString('es-CO')}</span>
+                        <button type="button" id="btn-editar-precio-base"
+                                class="w-6 h-6 rounded bg-orange-50 text-orange-500 hover:bg-orange-100 flex items-center justify-center transition-all"
+                                title="Editar precio">
+                            <i class="fas fa-pen text-[8px]"></i>
+                        </button>
+                    </div>
+                </div>
+                <p class="text-[10px] text-gray-400 text-center mt-2">Agrega presentaciones con marca y medida para más opciones</p>
+            `;
+
+            // Agregar evento al botón después de renderizar
+            document.getElementById('btn-editar-precio-base').addEventListener('click', function(e) {
+                e.stopPropagation();
+                editarPrecioBase(precio);
+            });
+        }
+
+        function editarPrecioBase(precioActual) {
+            const lista = document.getElementById('detalleMarcasLista');
+            if (!lista) return;
+
+            // Reemplazar el contenido con un formulario inline
+            lista.innerHTML = `
+                <div id="precio-base-item" class="flex items-center justify-between p-2 bg-white rounded-lg border border-indigo-200 transition-all">
+                    <div class="flex items-center gap-2 flex-1 min-w-0">
+                        <div class="w-7 h-7 rounded-lg bg-emerald-50 flex items-center justify-center flex-shrink-0">
+                            <i class="fas fa-box text-emerald-500 text-[10px]"></i>
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <p class="font-medium text-gray-800 text-xs">Precio base</p>
+                            <span class="text-[10px] text-gray-500">Sin marca específica</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <div class="relative">
+                            <span class="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs">$</span>
+                            <input type="number" id="input-precio-base" value="${precioActual}" min="0" step="100"
+                                   class="w-24 pl-5 pr-2 py-1 rounded-lg border border-indigo-300 text-xs focus:border-indigo-500 outline-none text-right font-bold text-emerald-600" />
+                        </div>
+                        <button type="button" id="btn-guardar-precio"
+                                class="w-6 h-6 rounded bg-emerald-500 text-white hover:bg-emerald-600 flex items-center justify-center transition-all"
+                                title="Guardar">
+                            <i class="fas fa-check text-[8px]"></i>
+                        </button>
+                        <button type="button" id="btn-cancelar-precio"
+                                class="w-6 h-6 rounded bg-gray-200 text-gray-600 hover:bg-gray-300 flex items-center justify-center transition-all"
+                                title="Cancelar">
+                            <i class="fas fa-times text-[8px]"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            // Agregar eventos
+            document.getElementById('btn-guardar-precio').addEventListener('click', guardarPrecioBase);
+            document.getElementById('btn-cancelar-precio').addEventListener('click', function() {
+                renderizarPrecioBase(precioActual);
+            });
+
+            // Enfocar el input
+            const input = document.getElementById('input-precio-base');
+            input.focus();
+            input.select();
+
+            // Guardar con Enter
+            input.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    guardarPrecioBase();
+                } else if (e.key === 'Escape') {
+                    renderizarPrecioBase(precioActual);
+                }
+            });
+        }
+
+        async function guardarPrecioBase() {
+            const input = document.getElementById('input-precio-base');
+            const nuevoPrecio = parseInt(input.value);
+
+            if (!nuevoPrecio || nuevoPrecio <= 0) {
+                mostrarNotificacion('Ingresa un precio válido', 'error');
+                return;
+            }
+
+            try {
+                const formData = new URLSearchParams();
+                formData.append('idProducto', productoIdActual);
+                formData.append('precio', nuevoPrecio);
+
+                const response = await fetch('/Productos/ActualizarPrecioProductoLocal', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    mostrarNotificacion('Precio actualizado', 'success');
+                    productoPrecioBaseActual = nuevoPrecio;
+
+                    // Actualizar el precio en el header del modal
+                    document.getElementById('detallePrecioMinimo').textContent = `$${nuevoPrecio.toLocaleString('es-CO')}`;
+
+                    // Actualizar la tarjeta del producto en la grilla
+                    const card = document.querySelector(`[onclick*="mostrarDetalle"][onclick*="${productoIdActual}"]`);
+                    if (card) {
+                        const precioEl = card.querySelector('.text-orange-500');
+                        if (precioEl) {
+                            precioEl.textContent = `$${nuevoPrecio.toLocaleString('es-CO')}`;
+                        }
+                    }
+
+                    // Recargar la vista del precio base
+                    renderizarPrecioBase(nuevoPrecio);
+                } else {
+                    mostrarNotificacion(result.mensaje || 'Error al actualizar', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarNotificacion('Error al actualizar precio', 'error');
+            }
         }
 
         // ==========================================
@@ -1825,7 +1969,12 @@
             const select = document.getElementById('nueva-unidad-select');
             select.innerHTML = '<option value="">Sin medida</option>';
 
-            todasLasUnidades.forEach(unidad => {
+            // Filtrar unidades por el tipo de unidad del producto actual
+            const unidadesFiltradas = productoTipoUnidadActual
+                ? todasLasUnidades.filter(u => u.idTipoUnidad === productoTipoUnidadActual)
+                : todasLasUnidades;
+
+            unidadesFiltradas.forEach(unidad => {
                 select.innerHTML += `<option value="${unidad.id}">${unidad.nombre}</option>`;
             });
         }
@@ -1842,10 +1991,10 @@
             if (!editModal) {
                 editModal = document.createElement('div');
                 editModal.id = 'editar-presentacion-modal';
-                editModal.className = 'modal-backdrop fixed inset-0 z-[60] hidden';
+                editModal.className = 'fixed inset-0 z-[60] hidden bg-black/30';
+                editModal.onclick = function(e) { if (e.target === editModal) cerrarEditarPresentacionModal(); };
                 editModal.innerHTML = `
-                    <div class="absolute inset-0 modal-bg backdrop-blur-md" style="background-color: transparent !important;"></div>
-                    <div class="flex min-h-screen items-center justify-center p-4 relative">
+                    <div class="flex min-h-screen items-center justify-center p-4">
                         <div class="modal-content w-full max-w-sm rounded-2xl bg-white shadow-xl overflow-hidden">
                             <div class="bg-gradient-to-r from-orange-500 to-amber-500 px-6 py-4">
                                 <h2 class="text-lg font-bold text-white flex items-center gap-2">

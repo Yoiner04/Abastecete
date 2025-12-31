@@ -766,13 +766,47 @@ namespace Abastecete.Controllers
                 return Json(unidades.Select(u => new
                 {
                     id = u.Id,
-                    nombre = u.Nombre
+                    nombre = u.Nombre,
+                    idTipoUnidad = u.IdTipoUnidad
                 }));
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error al listar unidades: {ex.Message}");
                 return BadRequest(new { mensaje = "Error al obtener unidades" });
+            }
+        }
+
+        /// <summary>
+        /// Actualiza el precio base de un producto en el local del usuario
+        /// </summary>
+        [HttpPost]
+        public IActionResult ActualizarPrecioProductoLocal(int idProducto, int precio)
+        {
+            try
+            {
+                var usuarioId = HttpContext.Session.GetInt32("idUsuario");
+                if (usuarioId == null)
+                {
+                    return Unauthorized(new { success = false, mensaje = "Sesión expirada" });
+                }
+
+                var negocio = manejadorNegocios.ConsultarNegocioPorUsuario(usuarioId.Value);
+                if (negocio == null)
+                {
+                    return BadRequest(new { success = false, mensaje = "No se encontró tu negocio" });
+                }
+
+                var success = manejadorNegocios.ActualizarPrecioProductoLocal(negocio.Id, idProducto, precio);
+                if (success)
+                    return Json(new { success = true, mensaje = "Precio actualizado correctamente" });
+
+                return BadRequest(new { success = false, mensaje = "Error al actualizar precio" });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error al actualizar precio producto local: {ex.Message}");
+                return BadRequest(new { success = false, mensaje = "Error al actualizar precio" });
             }
         }
 
