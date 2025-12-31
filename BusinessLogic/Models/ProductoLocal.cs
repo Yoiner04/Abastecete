@@ -1,17 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace BusinessLogic.Models
 {
-    public class productoLocal
+    /// <summary>
+    /// Representa la relación entre un producto y un local con sus datos de presentación
+    /// </summary>
+    public class ProductoLocal
     {
-        public int producto { get; set; }
-        public int medida { get; set; }
-        public int valor { get; set; }
-        public int local { get; set; }
-        public int marca { get; set; }
+        public int Producto { get; set; }
+        public int Medida { get; set; }
+        public int Valor { get; set; }
+        public int Local { get; set; }
+        public int Marca { get; set; }
     }
 }

@@ -218,15 +218,15 @@ namespace BusinessLogic
             };
         }
 
-        public bool AgregarProductosLocal(productoLocal producto)
+        public bool AgregarProductosLocal(ProductoLocal producto)
         {
             List<Parametro> parametros = new List<Parametro>
             {
-                new Parametro("producto_id", producto.producto),
-                new Parametro("medida", producto.medida),
-                new Parametro("valor", producto.valor),
-                new Parametro("local_id", producto.local),
-                new Parametro("marca_id", producto.marca > 0 ? producto.marca : 1)
+                new Parametro("producto_id", producto.Producto),
+                new Parametro("medida", producto.Medida),
+                new Parametro("valor", producto.Valor),
+                new Parametro("local_id", producto.Local),
+                new Parametro("marca_id", producto.Marca > 0 ? producto.Marca : 1)
             };
 
             return conexion.EjecutarTransaccion("agregar_productos_local", parametros);

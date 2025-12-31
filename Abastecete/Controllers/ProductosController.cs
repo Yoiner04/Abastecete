@@ -200,7 +200,7 @@ namespace Abastecete.Controllers
                     return Json(new { success = false, mensaje = "No se encontró tu negocio." });
                 }
 
-                var productos = JsonConvert.DeserializeObject<List<productoLocal>>(productosJson);
+                var productos = JsonConvert.DeserializeObject<List<ProductoLocal>>(productosJson);
 
                 // Validar límites de membresía antes de agregar
                 var limites = manejadorSuscripciones.ObtenerLimitesMembresia(negocio.Id);
@@ -226,7 +226,7 @@ namespace Abastecete.Controllers
                 int productosAgregados = 0;
                 foreach (var producto in productos)
                 {
-                    producto.local = negocio.Id;
+                    producto.Local = negocio.Id;
                     bool resultado = manejadorNegocios.AgregarProductosLocal(producto);
                     if (resultado)
                     {
@@ -234,7 +234,7 @@ namespace Abastecete.Controllers
                     }
                     else
                     {
-                        Console.WriteLine($"Error al agregar el producto {producto.producto} al local {producto.local}");
+                        Console.WriteLine($"Error al agregar el producto {producto.Producto} al local {producto.Local}");
                     }
                 }
 

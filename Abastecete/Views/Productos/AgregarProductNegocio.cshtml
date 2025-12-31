@@ -533,10 +533,10 @@
             productosAgregados.forEach(p => {
                 p.presentaciones.forEach(pr => {
                     productos.push({
-                        producto: p.id,
-                        marca: pr.marcaId || 1,
-                        medida: pr.unidadId,
-                        valor: pr.precio
+                        Producto: p.id,
+                        Marca: pr.marcaId || 1,
+                        Medida: pr.unidadId,
+                        Valor: pr.precio
                     });
                 });
             });
