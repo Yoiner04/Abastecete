@@ -20,6 +20,7 @@ namespace Abastecete.Controllers
         private readonly ManejadorGaleriaLocal manejadorGaleria;
         private readonly ManejadorSuscripciones manejadorSuscripciones;
         private readonly ManejadorProductoMarca manejadorProductoMarca;
+        private readonly ManejadorOpiniones manejadorOpiniones;
         private readonly IConfiguration _configuration;
 
         public ProductosController(IConfiguration configuration)
@@ -35,6 +36,7 @@ namespace Abastecete.Controllers
             manejadorGaleria = new ManejadorGaleriaLocal();
             manejadorSuscripciones = new ManejadorSuscripciones();
             manejadorProductoMarca = new ManejadorProductoMarca();
+            manejadorOpiniones = new ManejadorOpiniones();
             _configuration = configuration;
         }
 
@@ -83,6 +85,10 @@ namespace Abastecete.Controllers
             // Obtener límites de membresía para mostrar en la UI
             var limites = manejadorSuscripciones.ObtenerLimitesMembresia(negocio.Id);
             ViewBag.LimitesMembresia = limites;
+
+            // Obtener resumen de opiniones del negocio
+            var resumenOpiniones = manejadorOpiniones.ObtenerResumenOpiniones(negocio.Id);
+            ViewBag.ResumenOpiniones = resumenOpiniones;
 
             ViewBag.productos = productos;
 

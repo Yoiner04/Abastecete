@@ -4236,7 +4236,7 @@ CREATE TABLE IF NOT EXISTS `evento_analitica` (
   KEY `fk_evento_producto` (`FK_ID_PRODUCTO`),
   CONSTRAINT `fk_evento_local` FOREIGN KEY (`FK_ID_LOCAL`) REFERENCES `local` (`PK_ID_LOCAL`) ON DELETE CASCADE,
   CONSTRAINT `fk_evento_producto` FOREIGN KEY (`FK_ID_PRODUCTO`) REFERENCES `producto` (`PK_ID_PRODUCTO`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=52 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=65 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Volcando datos para la tabla abastecete.evento_analitica: ~17 rows (aproximadamente)
 INSERT INTO `evento_analitica` (`PK_ID_EVENTO`, `FK_ID_LOCAL`, `FK_ID_PRODUCTO`, `TIPO_EVENTO`, `IP_VISITANTE`, `USER_AGENT`, `REFERRER`, `FECHA_EVENTO`) VALUES
@@ -4261,7 +4261,20 @@ INSERT INTO `evento_analitica` (`PK_ID_EVENTO`, `FK_ID_LOCAL`, `FK_ID_PRODUCTO`,
 	(48, 1, NULL, 'VISITA_LOCAL', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'http://localhost:5235/Negocios/ConsultarProductos?idLocal=1', '2025-12-31 05:06:45'),
 	(49, 1, 387, 'VISITA_PRODUCTO', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'http://localhost:5235/Negocios/ConsultarProductos?idLocal=1', '2025-12-31 05:06:50'),
 	(50, 1, NULL, 'VISITA_PRODUCTO', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'http://localhost:5235/Productos/ProductDetailLocal?idlocal=1&idProducto=387', '2025-12-31 05:06:52'),
-	(51, 1, NULL, 'VISITA_LOCAL', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'http://localhost:5235/Negocios/ConsultarProductos?idLocal=1', '2025-12-31 05:07:00');
+	(51, 1, NULL, 'VISITA_LOCAL', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'http://localhost:5235/Negocios/ConsultarProductos?idLocal=1', '2025-12-31 05:07:00'),
+	(52, 1, NULL, 'BUSQUEDA_APARICION', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'http://localhost:5235/Productos/ProductosNegocio', '2025-12-31 17:25:51'),
+	(53, 1, NULL, 'VISITA_LOCAL', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'http://localhost:5235/Negocios/ConsultarProductos?idLocal=1', '2025-12-31 17:25:58'),
+	(54, 1, 41, 'VISITA_PRODUCTO', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'http://localhost:5235/Negocios/ConsultarProductos?idLocal=1', '2025-12-31 17:26:01'),
+	(55, 1, NULL, 'VISITA_PRODUCTO', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'http://localhost:5235/Productos/ProductDetailLocal?idlocal=1&idProducto=41', '2025-12-31 17:26:02'),
+	(56, 1, NULL, 'VISITA_LOCAL', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'http://localhost:5235/Negocios/ConsultarProductos?idLocal=1', '2025-12-31 17:26:29'),
+	(57, 1, NULL, 'VISITA_LOCAL', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'http://localhost:5235/Negocios/ConsultarProductos?idLocal=1', '2025-12-31 17:27:31'),
+	(58, 1, NULL, '', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36 OPR/125.0.0.0', 'https://localhost:7076/', '2025-12-31 18:09:57'),
+	(59, 1, NULL, 'VISITA_LOCAL', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36 OPR/125.0.0.0', 'https://localhost:7076/Negocios/ConsultarProductos?idLocal=1', '2025-12-31 18:10:00'),
+	(60, 1, NULL, '', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36 OPR/125.0.0.0', 'https://localhost:7076/Home/Principal', '2025-12-31 18:20:21'),
+	(61, 1, NULL, '', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36 OPR/125.0.0.0', 'https://localhost:7076/Home/Principal', '2025-12-31 18:20:22'),
+	(62, 1, NULL, 'VISITA_LOCAL', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36 OPR/125.0.0.0', 'https://localhost:7076/Negocios/ConsultarProductos?idLocal=1', '2025-12-31 18:20:24'),
+	(63, 1, NULL, '', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36 OPR/125.0.0.0', 'https://localhost:7076/Home/Principal', '2025-12-31 18:39:30'),
+	(64, 1, NULL, 'VISITA_LOCAL', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36 OPR/125.0.0.0', 'https://localhost:7076/Negocios/ConsultarProductos?idLocal=1', '2025-12-31 18:39:33');
 
 -- Volcando estructura para evento abastecete.expirar_ofertas_flash
 DELIMITER //
@@ -4835,7 +4848,7 @@ CREATE TABLE IF NOT EXISTS `logs_sistema` (
   KEY `IDX_logs_tipo_accion` (`TIPO_ACCION`),
   KEY `IDX_logs_entidad` (`MODULO`,`ENTIDAD_ID`),
   CONSTRAINT `FK_logs_usuario` FOREIGN KEY (`FK_ID_USUARIO`) REFERENCES `usuario` (`PK_ID_USUARIO`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=154 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=160 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Volcando datos para la tabla abastecete.logs_sistema: ~132 rows (aproximadamente)
 INSERT INTO `logs_sistema` (`PK_ID_LOG`, `FK_ID_USUARIO`, `NOMBRE_USUARIO`, `MODULO`, `TIPO_ACCION`, `ENTIDAD_ID`, `ENTIDAD_DESCRIPCION`, `DATOS_ANTERIORES`, `DATOS_NUEVOS`, `IP_CLIENTE`, `USER_AGENT`, `FECHA_REGISTRO`, `RESULTADO`, `MENSAJE_ERROR`, `CONTROLLER`, `ACTION`) VALUES
@@ -4991,7 +5004,12 @@ INSERT INTO `logs_sistema` (`PK_ID_LOG`, `FK_ID_USUARIO`, `NOMBRE_USUARIO`, `MOD
 	(150, 2, 'johans.ramirez@udla.edu.co', 'AUTENTICACION', 'LOGIN', 2, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-31 05:05:35', 'EXITO', '', 'Login', 'Login'),
 	(151, 2, 'johans.ramirez@udla.edu.co', 'AUTENTICACION', 'LOGIN', 2, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-31 05:09:52', 'EXITO', '', 'Login', 'Login'),
 	(152, 2, 'johans.ramirez@udla.edu.co', 'AUTENTICACION', 'LOGIN', 2, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-31 12:43:36', 'EXITO', '', 'Login', 'Login'),
-	(153, 2, 'johans.ramirez@udla.edu.co', 'AUTENTICACION', 'LOGIN', 2, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-31 12:55:42', 'EXITO', '', 'Login', 'Login');
+	(153, 2, 'johans.ramirez@udla.edu.co', 'AUTENTICACION', 'LOGIN', 2, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-31 12:55:42', 'EXITO', '', 'Login', 'Login'),
+	(154, 2, 'johans.ramirez@udla.edu.co', 'AUTENTICACION', 'LOGIN', 2, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-31 17:25:34', 'EXITO', '', 'Login', 'Login'),
+	(155, NULL, 'kevin12@gmail.com', 'AUTENTICACION', 'LOGIN', NULL, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-31 17:34:53', 'ERROR', 'Correo no valido', 'Login', 'Login'),
+	(156, NULL, 'Usuario', 'AUTENTICACION', 'LOGOUT', 3, 'Cierre de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36 OPR/125.0.0.0', '2025-12-31 17:38:53', 'EXITO', '', 'Login', 'Logout'),
+	(158, 6, 'Usuario', 'AUTENTICACION', 'LOGOUT', 6, 'Cierre de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36 OPR/125.0.0.0', '2025-12-31 18:42:32', 'EXITO', '', 'Login', 'Logout'),
+	(159, 2, 'johans.ramirez@udla.edu.co', 'AUTENTICACION', 'LOGIN', 2, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36 OPR/125.0.0.0', '2025-12-31 18:42:42', 'EXITO', '', 'Login', 'Login');
 
 -- Volcando estructura para tabla abastecete.marca
 CREATE TABLE IF NOT EXISTS `marca` (
@@ -5732,17 +5750,25 @@ CREATE TABLE IF NOT EXISTS `opinion` (
   `PK_ID_OPINION` int NOT NULL AUTO_INCREMENT,
   `FK_ID_LOCAL` int NOT NULL,
   `FK_ID_USUARIO` int DEFAULT NULL,
+  `FK_ID_OPINION_PADRE` int DEFAULT NULL,
   `CALIFICACION` tinyint NOT NULL,
   `COMENTARIO` text,
+  `RESPUESTA_DUENO` text,
+  `FECHA_RESPUESTA` datetime DEFAULT NULL,
+  `ESTADO` tinyint NOT NULL DEFAULT '1',
   `FECHA_OPINION` datetime DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`PK_ID_OPINION`),
   KEY `FK_opinion_local` (`FK_ID_LOCAL`),
   KEY `FK_opinion_usuario` (`FK_ID_USUARIO`),
+  KEY `idx_opinion_padre` (`FK_ID_OPINION_PADRE`),
   CONSTRAINT `FK_opinion_local` FOREIGN KEY (`FK_ID_LOCAL`) REFERENCES `local` (`PK_ID_LOCAL`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `FK_opinion_padre` FOREIGN KEY (`FK_ID_OPINION_PADRE`) REFERENCES `opinion` (`PK_ID_OPINION`) ON DELETE CASCADE,
   CONSTRAINT `FK_opinion_usuario` FOREIGN KEY (`FK_ID_USUARIO`) REFERENCES `usuario` (`PK_ID_USUARIO`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Volcando datos para la tabla abastecete.opinion: ~0 rows (aproximadamente)
+INSERT INTO `opinion` (`PK_ID_OPINION`, `FK_ID_LOCAL`, `FK_ID_USUARIO`, `FK_ID_OPINION_PADRE`, `CALIFICACION`, `COMENTARIO`, `RESPUESTA_DUENO`, `FECHA_RESPUESTA`, `ESTADO`, `FECHA_OPINION`) VALUES
+	(1, 1, 6, NULL, 5, 'Buenos productos', NULL, NULL, 1, '2025-12-31 18:39:58');
 
 -- Volcando estructura para tabla abastecete.pagos
 CREATE TABLE IF NOT EXISTS `pagos` (
@@ -7523,7 +7549,7 @@ CREATE TABLE IF NOT EXISTS `resumen_analitica_diario` (
   UNIQUE KEY `uk_local_fecha` (`FK_ID_LOCAL`,`FECHA`),
   KEY `idx_resumen_fecha` (`FECHA`),
   CONSTRAINT `fk_resumen_local` FOREIGN KEY (`FK_ID_LOCAL`) REFERENCES `local` (`PK_ID_LOCAL`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=49 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=62 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Volcando datos para la tabla abastecete.resumen_analitica_diario: ~10 rows (aproximadamente)
 INSERT INTO `resumen_analitica_diario` (`PK_ID_RESUMEN`, `FK_ID_LOCAL`, `FECHA`, `VISITAS_LOCAL`, `VISITAS_PRODUCTOS`, `CLICS_WHATSAPP`, `CLICS_TELEFONO`, `APARICIONES_BUSQUEDA`, `COMPARTIDOS`) VALUES
@@ -7537,7 +7563,7 @@ INSERT INTO `resumen_analitica_diario` (`PK_ID_RESUMEN`, `FK_ID_LOCAL`, `FECHA`,
 	(26, 27, '2025-12-27', 0, 0, 0, 0, 1, 0),
 	(27, 1, '2025-12-29', 1, 0, 0, 0, 1, 0),
 	(29, 1, '2025-12-30', 9, 2, 1, 0, 2, 0),
-	(44, 1, '2025-12-31', 2, 2, 0, 0, 1, 0);
+	(44, 1, '2025-12-31', 8, 4, 0, 0, 2, 0);
 
 -- Volcando estructura para tabla abastecete.resumen_producto_vistas
 CREATE TABLE IF NOT EXISTS `resumen_producto_vistas` (
@@ -7551,12 +7577,13 @@ CREATE TABLE IF NOT EXISTS `resumen_producto_vistas` (
   KEY `idx_producto_local` (`FK_ID_LOCAL`),
   CONSTRAINT `fk_resumen_producto` FOREIGN KEY (`FK_ID_PRODUCTO`) REFERENCES `producto` (`PK_ID_PRODUCTO`) ON DELETE CASCADE,
   CONSTRAINT `fk_resumen_producto_local` FOREIGN KEY (`FK_ID_LOCAL`) REFERENCES `local` (`PK_ID_LOCAL`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Volcando datos para la tabla abastecete.resumen_producto_vistas: ~1 rows (aproximadamente)
 INSERT INTO `resumen_producto_vistas` (`PK_ID_RESUMEN`, `FK_ID_PRODUCTO`, `FK_ID_LOCAL`, `FECHA`, `VISTAS`) VALUES
 	(1, 10, 1, '2025-12-30', 1),
-	(2, 387, 1, '2025-12-31', 1);
+	(2, 387, 1, '2025-12-31', 1),
+	(3, 41, 1, '2025-12-31', 1);
 
 -- Volcando estructura para procedimiento abastecete.revisar_imagen_galeria
 DELIMITER //
@@ -7573,6 +7600,21 @@ BEGIN
         FK_ID_USUARIO_REVISOR = p_id_revisor,
         MOTIVO_RECHAZO = CASE WHEN p_estado = 2 THEN p_motivo_rechazo ELSE NULL END
     WHERE PK_ID_GALERIA = p_id_galeria;
+END//
+DELIMITER ;
+
+-- Volcando estructura para procedimiento abastecete.sp_actualizar_foto_perfil
+DELIMITER //
+CREATE PROCEDURE `sp_actualizar_foto_perfil`(
+    IN p_id_usuario INT,
+    IN p_foto_url VARCHAR(500)
+)
+BEGIN
+    UPDATE usuario
+    SET FOTO_PERFIL = p_foto_url
+    WHERE PK_ID_USUARIO = p_id_usuario;
+
+    SELECT ROW_COUNT() AS Actualizado;
 END//
 DELIMITER ;
 
@@ -7747,6 +7789,71 @@ BEGIN
 END//
 DELIMITER ;
 
+-- Volcando estructura para procedimiento abastecete.sp_contar_opiniones_local
+DELIMITER //
+CREATE PROCEDURE `sp_contar_opiniones_local`(
+    IN p_id_local INT
+)
+BEGIN
+    SELECT COUNT(*) AS Total
+    FROM opinion
+    WHERE FK_ID_LOCAL = p_id_local
+      AND ESTADO = 1
+      AND FK_ID_OPINION_PADRE IS NULL;
+END//
+DELIMITER ;
+
+-- Volcando estructura para procedimiento abastecete.sp_crear_opinion
+DELIMITER //
+CREATE PROCEDURE `sp_crear_opinion`(
+    IN p_id_local INT,
+    IN p_id_usuario INT,
+    IN p_calificacion TINYINT,
+    IN p_comentario TEXT,
+    IN p_id_opinion_padre INT
+)
+BEGIN
+    DECLARE v_ya_puntuo INT DEFAULT 0;
+    DECLARE v_id_opinion INT DEFAULT 0;
+
+    -- Si es respuesta a otro comentario, calificación debe ser 0
+    IF p_id_opinion_padre IS NOT NULL AND p_id_opinion_padre > 0 THEN
+        SET p_calificacion = 0;
+    END IF;
+
+    -- Verificar si el usuario ya puntuó este local (calificación > 0)
+    IF p_calificacion > 0 THEN
+        SELECT COUNT(*) INTO v_ya_puntuo
+        FROM opinion
+        WHERE FK_ID_LOCAL = p_id_local
+          AND FK_ID_USUARIO = p_id_usuario
+          AND CALIFICACION > 0;
+
+        IF v_ya_puntuo > 0 THEN
+            SELECT 0 AS Id, 'Ya has puntuado este local. Solo puedes agregar comentarios adicionales.' AS Mensaje, 0 AS Exito;
+        ELSE
+            -- Insertar opinión con calificación
+            INSERT INTO opinion (FK_ID_LOCAL, FK_ID_USUARIO, FK_ID_OPINION_PADRE, CALIFICACION, COMENTARIO, FECHA_OPINION, ESTADO)
+            VALUES (p_id_local, p_id_usuario, NULL, p_calificacion, p_comentario, NOW(), 1);
+
+            SET v_id_opinion = LAST_INSERT_ID();
+            SELECT v_id_opinion AS Id, 'Opinión registrada correctamente' AS Mensaje, 1 AS Exito;
+        END IF;
+    ELSE
+        -- Insertar comentario (puede ser respuesta a otro)
+        INSERT INTO opinion (FK_ID_LOCAL, FK_ID_USUARIO, FK_ID_OPINION_PADRE, CALIFICACION, COMENTARIO, FECHA_OPINION, ESTADO)
+        VALUES (p_id_local, p_id_usuario,
+                CASE WHEN p_id_opinion_padre > 0 THEN p_id_opinion_padre ELSE NULL END,
+                0, p_comentario, NOW(), 1);
+
+        SET v_id_opinion = LAST_INSERT_ID();
+        SELECT v_id_opinion AS Id,
+               CASE WHEN p_id_opinion_padre > 0 THEN 'Respuesta registrada correctamente' ELSE 'Comentario registrado correctamente' END AS Mensaje,
+               1 AS Exito;
+    END IF;
+END//
+DELIMITER ;
+
 -- Volcando estructura para procedimiento abastecete.sp_eliminar_marcas_producto
 DELIMITER //
 CREATE PROCEDURE `sp_eliminar_marcas_producto`(
@@ -7766,6 +7873,29 @@ CREATE PROCEDURE `sp_eliminar_marca_producto`(
 BEGIN
     DELETE FROM producto_marca WHERE PK_ID = p_id;
     SELECT ROW_COUNT() as FilasAfectadas;
+END//
+DELIMITER ;
+
+-- Volcando estructura para procedimiento abastecete.sp_eliminar_opinion
+DELIMITER //
+CREATE PROCEDURE `sp_eliminar_opinion`(
+    IN p_id_opinion INT,
+    IN p_id_usuario INT
+)
+BEGIN
+    DECLARE v_opinion_usuario INT DEFAULT 0;
+
+    SELECT FK_ID_USUARIO INTO v_opinion_usuario
+    FROM opinion
+    WHERE PK_ID_OPINION = p_id_opinion;
+
+    IF v_opinion_usuario = p_id_usuario THEN
+        -- CASCADE eliminará las respuestas hijas automáticamente
+        DELETE FROM opinion WHERE PK_ID_OPINION = p_id_opinion;
+        SELECT p_id_opinion AS Id, 'Opinión eliminada correctamente' AS Mensaje, 1 AS Exito;
+    ELSE
+        SELECT 0 AS Id, 'No tienes permiso para eliminar esta opinión' AS Mensaje, 0 AS Exito;
+    END IF;
 END//
 DELIMITER ;
 
@@ -8052,6 +8182,65 @@ BEGIN
 END//
 DELIMITER ;
 
+-- Volcando estructura para procedimiento abastecete.sp_obtener_mis_opiniones
+DELIMITER //
+CREATE PROCEDURE `sp_obtener_mis_opiniones`(
+    IN p_id_usuario INT
+)
+BEGIN
+    SELECT
+        o.PK_ID_OPINION AS Id,
+        o.FK_ID_LOCAL AS IdLocal,
+        l.NOMBRE_LOCAL AS NombreLocal,
+        l.FOTOS_LOCAL AS FotoLocal,
+        o.CALIFICACION AS Calificacion,
+        o.COMENTARIO AS Comentario,
+        o.FECHA_OPINION AS FechaOpinion,
+        o.RESPUESTA_DUENO AS RespuestaDueno,
+        o.FECHA_RESPUESTA AS FechaRespuesta,
+        o.FK_ID_OPINION_PADRE AS IdOpinionPadre
+    FROM opinion o
+    INNER JOIN `local` l ON o.FK_ID_LOCAL = l.PK_ID_LOCAL
+    WHERE o.FK_ID_USUARIO = p_id_usuario
+      AND o.ESTADO = 1
+    ORDER BY o.FECHA_OPINION DESC;
+END//
+DELIMITER ;
+
+-- Volcando estructura para procedimiento abastecete.sp_obtener_opiniones_local
+DELIMITER //
+CREATE PROCEDURE `sp_obtener_opiniones_local`(
+    IN p_id_local INT,
+    IN p_pagina INT,
+    IN p_cantidad INT
+)
+BEGIN
+    DECLARE v_offset INT;
+    SET v_offset = (p_pagina - 1) * p_cantidad;
+
+    SELECT
+        o.PK_ID_OPINION AS Id,
+        o.FK_ID_LOCAL AS IdLocal,
+        o.FK_ID_USUARIO AS IdUsuario,
+        CONCAT(u.NOMBRES, ' ', u.APELLIDOS) AS NombreUsuario,
+        COALESCE(u.FOTO_PERFIL, '') AS FotoUsuario,
+        o.CALIFICACION AS Calificacion,
+        o.COMENTARIO AS Comentario,
+        o.FECHA_OPINION AS FechaOpinion,
+        o.RESPUESTA_DUENO AS RespuestaDueno,
+        o.FECHA_RESPUESTA AS FechaRespuesta,
+        o.ESTADO AS Estado,
+        (SELECT COUNT(*) FROM opinion r WHERE r.FK_ID_OPINION_PADRE = o.PK_ID_OPINION AND r.ESTADO = 1) AS CantidadRespuestas
+    FROM opinion o
+    INNER JOIN usuario u ON o.FK_ID_USUARIO = u.PK_ID_USUARIO
+    WHERE o.FK_ID_LOCAL = p_id_local
+      AND o.ESTADO = 1
+      AND o.FK_ID_OPINION_PADRE IS NULL
+    ORDER BY o.FECHA_OPINION DESC
+    LIMIT p_cantidad OFFSET v_offset;
+END//
+DELIMITER ;
+
 -- Volcando estructura para procedimiento abastecete.sp_obtener_presentaciones_producto
 DELIMITER //
 CREATE PROCEDURE `sp_obtener_presentaciones_producto`(
@@ -8145,6 +8334,52 @@ BEGIN
 END//
 DELIMITER ;
 
+-- Volcando estructura para procedimiento abastecete.sp_obtener_respuestas_opinion
+DELIMITER //
+CREATE PROCEDURE `sp_obtener_respuestas_opinion`(
+    IN p_id_opinion_padre INT
+)
+BEGIN
+    SELECT
+        o.PK_ID_OPINION AS Id,
+        o.FK_ID_LOCAL AS IdLocal,
+        o.FK_ID_USUARIO AS IdUsuario,
+        o.FK_ID_OPINION_PADRE AS IdOpinionPadre,
+        CONCAT(u.NOMBRES, ' ', u.APELLIDOS) AS NombreUsuario,
+        COALESCE(u.FOTO_PERFIL, '') AS FotoUsuario,
+        o.COMENTARIO AS Comentario,
+        o.FECHA_OPINION AS FechaOpinion,
+        o.ESTADO AS Estado
+    FROM opinion o
+    INNER JOIN usuario u ON o.FK_ID_USUARIO = u.PK_ID_USUARIO
+    WHERE o.FK_ID_OPINION_PADRE = p_id_opinion_padre
+      AND o.ESTADO = 1
+    ORDER BY o.FECHA_OPINION ASC;
+END//
+DELIMITER ;
+
+-- Volcando estructura para procedimiento abastecete.sp_obtener_resumen_opiniones
+DELIMITER //
+CREATE PROCEDURE `sp_obtener_resumen_opiniones`(
+    IN p_id_local INT
+)
+BEGIN
+    SELECT
+        COALESCE(COUNT(*), 0) AS TotalOpiniones,
+        COALESCE(ROUND(AVG(CASE WHEN CALIFICACION > 0 THEN CALIFICACION END), 1), 0) AS PromedioCalificacion,
+        COALESCE(SUM(CASE WHEN CALIFICACION = 5 THEN 1 ELSE 0 END), 0) AS Estrellas5,
+        COALESCE(SUM(CASE WHEN CALIFICACION = 4 THEN 1 ELSE 0 END), 0) AS Estrellas4,
+        COALESCE(SUM(CASE WHEN CALIFICACION = 3 THEN 1 ELSE 0 END), 0) AS Estrellas3,
+        COALESCE(SUM(CASE WHEN CALIFICACION = 2 THEN 1 ELSE 0 END), 0) AS Estrellas2,
+        COALESCE(SUM(CASE WHEN CALIFICACION = 1 THEN 1 ELSE 0 END), 0) AS Estrellas1,
+        COALESCE(SUM(CASE WHEN CALIFICACION > 0 THEN 1 ELSE 0 END), 0) AS TotalConCalificacion
+    FROM opinion
+    WHERE FK_ID_LOCAL = p_id_local
+      AND ESTADO = 1
+      AND FK_ID_OPINION_PADRE IS NULL;
+END//
+DELIMITER ;
+
 -- Volcando estructura para procedimiento abastecete.sp_productos_local_con_tipo_unidad
 DELIMITER //
 CREATE PROCEDURE `sp_productos_local_con_tipo_unidad`(
@@ -8189,6 +8424,80 @@ BEGIN
     FROM producto_marca
     WHERE FK_ID_LOCAL = p_id_local
       AND FK_ID_PRODUCTO = p_id_producto;
+END//
+DELIMITER ;
+
+-- Volcando estructura para procedimiento abastecete.sp_registrar_usuario_google
+DELIMITER //
+CREATE PROCEDURE `sp_registrar_usuario_google`(
+    IN p_email VARCHAR(100),
+    IN p_nombre VARCHAR(100),
+    IN p_foto_url VARCHAR(500)
+)
+BEGIN
+    DECLARE v_nombres VARCHAR(50);
+    DECLARE v_apellidos VARCHAR(50);
+    DECLARE v_id_usuario INT;
+
+    -- Separar nombre completo en nombres y apellidos
+    SET v_nombres = SUBSTRING_INDEX(p_nombre, ' ', 1);
+    SET v_apellidos = TRIM(SUBSTRING(p_nombre, LENGTH(v_nombres) + 2));
+
+    IF v_apellidos = '' THEN
+        SET v_apellidos = v_nombres;
+    END IF;
+
+    INSERT INTO usuario (NOMBRES, APELLIDOS, FOTO_PERFIL, NOMBRE_USUARIO, CONTRASENIA, CORREO_VERIFICADO, ESTADO)
+    VALUES (v_nombres, v_apellidos, p_foto_url, p_email, '', 1, 1);
+
+    SET v_id_usuario = LAST_INSERT_ID();
+
+    SELECT v_id_usuario AS IdUsuario;
+END//
+DELIMITER ;
+
+-- Volcando estructura para procedimiento abastecete.sp_responder_opinion_dueno
+DELIMITER //
+CREATE PROCEDURE `sp_responder_opinion_dueno`(
+    IN p_id_opinion INT,
+    IN p_id_local INT,
+    IN p_respuesta TEXT
+)
+BEGIN
+    DECLARE v_opinion_local INT DEFAULT 0;
+
+    -- Verificar que la opinión pertenece al local
+    SELECT FK_ID_LOCAL INTO v_opinion_local
+    FROM opinion
+    WHERE PK_ID_OPINION = p_id_opinion;
+
+    IF v_opinion_local = p_id_local THEN
+        UPDATE opinion
+        SET RESPUESTA_DUENO = p_respuesta,
+            FECHA_RESPUESTA = NOW()
+        WHERE PK_ID_OPINION = p_id_opinion;
+
+        SELECT p_id_opinion AS Id, 'Respuesta guardada correctamente' AS Mensaje, 1 AS Exito;
+    ELSE
+        SELECT 0 AS Id, 'No tienes permiso para responder esta opinión' AS Mensaje, 0 AS Exito;
+    END IF;
+END//
+DELIMITER ;
+
+-- Volcando estructura para procedimiento abastecete.sp_verificar_puntuacion_usuario
+DELIMITER //
+CREATE PROCEDURE `sp_verificar_puntuacion_usuario`(
+    IN p_id_local INT,
+    IN p_id_usuario INT
+)
+BEGIN
+    SELECT
+        CASE WHEN COUNT(*) > 0 THEN 1 ELSE 0 END AS YaPuntuo,
+        COALESCE(MAX(CALIFICACION), 0) AS CalificacionDada
+    FROM opinion
+    WHERE FK_ID_LOCAL = p_id_local
+      AND FK_ID_USUARIO = p_id_usuario
+      AND CALIFICACION > 0;
 END//
 DELIMITER ;
 
@@ -8457,6 +8766,7 @@ CREATE TABLE IF NOT EXISTS `usuario` (
   `PK_ID_USUARIO` int NOT NULL AUTO_INCREMENT,
   `NOMBRES` varchar(40) NOT NULL DEFAULT '',
   `APELLIDOS` varchar(40) NOT NULL DEFAULT '',
+  `FOTO_PERFIL` varchar(500) DEFAULT NULL,
   `TELEFONO` varchar(40) DEFAULT NULL,
   `DOCUMENTO_IDENTIDAD` bigint DEFAULT NULL,
   `FK_ID_TIPO_DOCUMENTO` int DEFAULT '1',
@@ -8488,12 +8798,13 @@ CREATE TABLE IF NOT EXISTS `usuario` (
   KEY `idx_usuario_nombre_estado` (`NOMBRE_USUARIO`,`ESTADO`),
   CONSTRAINT `FK_usuario_tipo_autenticacion` FOREIGN KEY (`TIPO_AUTENTICACION`) REFERENCES `metodo_autenticacion` (`PK_ID_METODO_AUTENTICACION`),
   CONSTRAINT `FK_usuario_tipo_documento` FOREIGN KEY (`FK_ID_TIPO_DOCUMENTO`) REFERENCES `tipo_documento` (`PK_ID_TIPO_DOCUMENTO`) ON DELETE SET NULL ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla abastecete.usuario: ~2 rows (aproximadamente)
-INSERT INTO `usuario` (`PK_ID_USUARIO`, `NOMBRES`, `APELLIDOS`, `TELEFONO`, `DOCUMENTO_IDENTIDAD`, `FK_ID_TIPO_DOCUMENTO`, `CODIGO_REFERIDO`, `CODIGO_REFERIDO_USADO`, `NOMBRE_USUARIO`, `CONTRASENIA`, `TOKEN_RECUPERACION`, `FECHA_EXPIRACION_TOKEN`, `TIPO_AUTENTICACION`, `INTENTOS_FALLIDOS`, `FECHA_BLOQUEO`, `CORREO_VERIFICADO`, `ESTADO`, `CLIENTES_REFERIDOS_TOTAL`, `INTENTOS_RECUPERACION`, `FECHA_ULTIMO_INTENTO_RECUPERACION`, `CREDITO_REFERIDOS`, `YA_USO_DESCUENTO_REFERIDO`) VALUES
-	(1, 'Administrador', 'Sistema', '0000000000', NULL, 1, 'ADMIN001', NULL, 'admin@abastecete.com', '$2a$10$tIiBnpPxFbzj2m7BS10LB.5VawdKtiixmBdellpulhPbbWF6xvd.y', NULL, NULL, NULL, 0, NULL, 0, 1, 0, 0, NULL, 0.00, 0),
-	(2, 'Johan', 'Ramirez Murcia', '3204440787', 1006538132, 1, 'COD112824', NULL, 'johans.ramirez@udla.edu.co', '$2a$11$S4nYnU7yECs4Wdotq2QRUuPlK4VaiomX/FMHyMUMtfp92/Rs3leb.', '790395', '2025-12-29 20:03:51', NULL, 0, NULL, 0, 1, 0, 1, '2025-12-29 19:58:51', 0.00, 0);
+-- Volcando datos para la tabla abastecete.usuario: ~3 rows (aproximadamente)
+INSERT INTO `usuario` (`PK_ID_USUARIO`, `NOMBRES`, `APELLIDOS`, `FOTO_PERFIL`, `TELEFONO`, `DOCUMENTO_IDENTIDAD`, `FK_ID_TIPO_DOCUMENTO`, `CODIGO_REFERIDO`, `CODIGO_REFERIDO_USADO`, `NOMBRE_USUARIO`, `CONTRASENIA`, `TOKEN_RECUPERACION`, `FECHA_EXPIRACION_TOKEN`, `TIPO_AUTENTICACION`, `INTENTOS_FALLIDOS`, `FECHA_BLOQUEO`, `CORREO_VERIFICADO`, `ESTADO`, `CLIENTES_REFERIDOS_TOTAL`, `INTENTOS_RECUPERACION`, `FECHA_ULTIMO_INTENTO_RECUPERACION`, `CREDITO_REFERIDOS`, `YA_USO_DESCUENTO_REFERIDO`) VALUES
+	(1, 'Administrador', 'Sistema', NULL, '0000000000', NULL, 1, 'ADMIN001', NULL, 'admin@abastecete.com', '$2a$10$tIiBnpPxFbzj2m7BS10LB.5VawdKtiixmBdellpulhPbbWF6xvd.y', NULL, NULL, NULL, 0, NULL, 0, 1, 0, 0, NULL, 0.00, 0),
+	(2, 'Johan', 'Ramirez Murcia', NULL, '3204440787', 1006538132, 1, 'COD112824', NULL, 'johans.ramirez@udla.edu.co', '$2a$11$S4nYnU7yECs4Wdotq2QRUuPlK4VaiomX/FMHyMUMtfp92/Rs3leb.', '790395', '2025-12-29 20:03:51', NULL, 0, NULL, 0, 1, 0, 1, '2025-12-29 19:58:51', 0.00, 0),
+	(6, 'johan', 'ramirez', 'https://lh3.googleusercontent.com/a/ACg8ocJu2CAUmZH8McPQDKS2zfaCNvUJjilB6pk0gvtNyp0inP-KB4Ph=s96-c', NULL, NULL, 1, NULL, NULL, 'johan05182002.com@gmail.com', '', NULL, NULL, NULL, 0, NULL, 1, 1, 0, 0, NULL, 0.00, 0);
 
 -- Volcando estructura para tabla abastecete.usuario_permiso
 CREATE TABLE IF NOT EXISTS `usuario_permiso` (
