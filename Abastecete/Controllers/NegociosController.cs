@@ -107,11 +107,14 @@ namespace Abastecete.Controllers
                 neg.Galeria = _manejadorGaleria.ListarGaleria(neg.Id);
             }
 
-            // Cargar marcas para cada producto (del local actual)
+            // Cargar marcas para todos los productos en una sola consulta (evita N+1)
             var manejadorProductoMarca = new ManejadorProductoMarca();
+            var idsProductos = productos.Select(p => p.Id).ToList();
+            var marcasPorProducto = manejadorProductoMarca.ListarMarcasProductosBulk(idLocal, idsProductos);
+
             foreach (var producto in productos)
             {
-                producto.Marcas = manejadorProductoMarca.ListarMarcasProducto(idLocal, producto.Id);
+                producto.Marcas = marcasPorProducto.TryGetValue(producto.Id, out var marcas) ? marcas : new List<ProductoMarca>();
                 if (producto.Marcas.Any())
                 {
                     producto.PrecioMinimo = producto.Marcas.Min(m => m.Precio);

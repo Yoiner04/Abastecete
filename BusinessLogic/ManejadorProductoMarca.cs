@@ -105,6 +105,38 @@ namespace BusinessLogic
         }
 
         /// <summary>
+        /// Lista todas las marcas de múltiples productos en un local (optimización para evitar N+1)
+        /// </summary>
+        public Dictionary<int, List<ProductoMarca>> ListarMarcasProductosBulk(int idLocal, List<int> idsProductos)
+        {
+            var resultado = new Dictionary<int, List<ProductoMarca>>();
+
+            if (idsProductos == null || idsProductos.Count == 0)
+                return resultado;
+
+            List<Parametro> parametros = new List<Parametro>
+            {
+                new Parametro("p_id_local", idLocal),
+                new Parametro("p_ids_productos", string.Join(",", idsProductos))
+            };
+
+            DataTable datos = conexion.EjecutarConsulta("sp_listar_marcas_productos_bulk", parametros);
+
+            foreach (DataRow row in datos.Rows)
+            {
+                var marca = MapearProductoMarca(row);
+                int idProducto = marca.IdProducto;
+
+                if (!resultado.ContainsKey(idProducto))
+                    resultado[idProducto] = new List<ProductoMarca>();
+
+                resultado[idProducto].Add(marca);
+            }
+
+            return resultado;
+        }
+
+        /// <summary>
         /// Obtiene el rango de precios de un producto en un local (mínimo y máximo)
         /// </summary>
         public (decimal? minimo, decimal? maximo, int cantidad) ObtenerRangoPreciosProducto(int idLocal, int idProducto)

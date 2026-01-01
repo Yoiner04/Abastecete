@@ -67,10 +67,13 @@ namespace Abastecete.Controllers
             var usuarios = manejadorUsuario.ConsultarUsuarios(usuarioId.Value);
             List<Producto> productos = manejadorProductos.ConsultarProductosLocal(negocio.Id);
 
-            // Cargar información de marcas para cada producto
+            // Cargar información de marcas para todos los productos en una sola consulta (evita N+1)
+            var idsProductos = productos.Select(p => p.Id).ToList();
+            var marcasPorProducto = manejadorProductoMarca.ListarMarcasProductosBulk(negocio.Id, idsProductos);
+
             foreach (var producto in productos)
             {
-                producto.Marcas = manejadorProductoMarca.ListarMarcasProducto(negocio.Id, producto.Id);
+                producto.Marcas = marcasPorProducto.TryGetValue(producto.Id, out var marcas) ? marcas : new List<ProductoMarca>();
                 if (producto.Marcas.Any())
                 {
                     producto.PrecioMinimo = producto.Marcas.Min(m => m.Precio);
