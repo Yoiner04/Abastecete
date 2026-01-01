@@ -42,7 +42,7 @@ namespace BusinessLogic.Utilidades
 
             if (!usuarioId.HasValue)
             {
-                context.Result = new RedirectToActionResult("Login", "Login", null);
+                context.Result = new RedirectToActionResult("Index", "Login", null);
             }
 
             base.OnActionExecuting(context);

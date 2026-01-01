@@ -167,7 +167,7 @@ namespace Abastecete.Controllers
             var usuarioId = HttpContext.Session.GetInt32("idUsuario");
             if (usuarioId == null)
             {
-                return RedirectToAction("Login", "Login");
+                return RedirectToAction("Index", "Login");
             }
 
             var idLocal = HttpContext.Session.GetInt32("idLocal");
@@ -313,7 +313,7 @@ namespace Abastecete.Controllers
             if (idLocal == null || idLocal <= 0)
             {
                 TempData["Error"] = "Sesión inválida. Por favor inicia sesión nuevamente.";
-                return RedirectToAction("Login", "Login");
+                return RedirectToAction("Index", "Login");
             }
 
             try

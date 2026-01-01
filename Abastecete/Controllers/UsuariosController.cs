@@ -1,7 +1,6 @@
 ﻿using BusinessLogic;
 using BusinessLogic.Models;
 using BusinessLogic.Utilidades;
-using ConnectionProject.Controllers;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Abastecete.Controllers
@@ -410,14 +409,14 @@ namespace Abastecete.Controllers
 
             if (idUsuario == null)
             {
-                return RedirectToAction("Login", "Login"); // Redirigir al login si no hay usuario autenticado
+                return RedirectToAction("Index", "Login"); // Redirigir al login si no hay usuario autenticado
             }
 
             Usuario usuario = manejadorU.ObtenerUsuarios(idUsuario.Value).FirstOrDefault();
 
             //if (usuario == null)
             //{
-            //    return RedirectToAction("Login", "Login"); // Redirigir si el usuario no existe
+            //    return RedirectToAction("Index", "Login"); // Redirigir si el usuario no existe
             //}
 
             List<TipoDocumento> tiposDocumento = TipoDocumento.ObtenerTipoDocumentos();
@@ -511,7 +510,7 @@ namespace Abastecete.Controllers
             if (resultado.exito)
             {
                 TempData["SuccessMessage"] = "Registro exitoso. Ahora puedes iniciar sesión.";
-                return RedirectToAction("Login", "Login");
+                return RedirectToAction("Index", "Login");
             }
             else
             {

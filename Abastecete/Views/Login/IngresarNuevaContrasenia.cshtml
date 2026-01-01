@@ -146,7 +146,7 @@
                         </div>
                         <h3 class="text-xl font-bold text-gray-800 mb-2">¡Contraseña Actualizada!</h3>
                         <p class="text-gray-600 mb-6">@ViewData["Success"]</p>
-                        <a href="@Url.Action("Login", "Login")"
+                        <a href="@Url.Action("Index", "Login")"
                            class="btn-primary inline-flex items-center justify-center gap-2 px-8 py-3 text-white font-bold rounded-xl">
                             <i class="fas fa-sign-in-alt"></i>
                             Iniciar Sesión
@@ -235,7 +235,7 @@
 
             <!-- Volver al login -->
             <div class="mt-8 pt-6 border-t border-gray-100 text-center">
-                <a href="@Url.Action("Login", "Login")"
+                <a href="@Url.Action("Index", "Login")"
                    class="inline-flex items-center gap-2 text-gray-600 hover:text-[#23916A] font-medium transition-colors">
                     <i class="fas fa-arrow-left"></i>
                     Volver al inicio de sesión

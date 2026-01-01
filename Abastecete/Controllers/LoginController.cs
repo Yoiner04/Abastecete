@@ -13,7 +13,7 @@ using System.Security.Claims;
 using System.Text.RegularExpressions;
 using Abastecete.Models;
 
-namespace ConnectionProject.Controllers
+namespace Abastecete.Controllers
 {
     public class LoginController : Controller
     {
@@ -73,7 +73,8 @@ namespace ConnectionProject.Controllers
             });
         }
 
-        public IActionResult Login()
+        [HttpGet]
+        public IActionResult Index()
         {
             Response.Headers["Cache-Control"] = "no-cache, no-store, must-revalidate";
             Response.Headers["Pragma"] = "no-cache";
@@ -110,7 +111,7 @@ namespace ConnectionProject.Controllers
         }
 
         [HttpPost]
-        public IActionResult Login(Usuario usuario)
+        public IActionResult Index(Usuario usuario)
         {
             var swTotal = System.Diagnostics.Stopwatch.StartNew();
             var sw = System.Diagnostics.Stopwatch.StartNew();
@@ -229,7 +230,7 @@ namespace ConnectionProject.Controllers
             Response.Headers["Pragma"] = "no-cache";
             Response.Headers["Expires"] = "0";
 
-            return RedirectToAction("Login");
+            return RedirectToAction("Index");
         }
 
         /// <summary>
@@ -275,7 +276,7 @@ namespace ConnectionProject.Controllers
                 if (!result.Succeeded)
                 {
                     TempData["Error"] = "Error al autenticar con Google.";
-                    return RedirectToAction("Login");
+                    return RedirectToAction("Index");
                 }
 
                 var claims = result.Principal.Identities.FirstOrDefault()?.Claims.Select(claim => new
@@ -311,7 +312,7 @@ namespace ConnectionProject.Controllers
                 if (!EsCorreoValido(email))
                 {
                     TempData["Error"] = "El correo proporcionado no es válido.";
-                    return RedirectToAction("Login");
+                    return RedirectToAction("Index");
                 }
 
                 // Usar el manejador existente en lugar de crear uno nuevo
@@ -324,10 +325,10 @@ namespace ConnectionProject.Controllers
                 {
                     case 97:
                         TempData["Error"] = "Tu cuenta ha sido inhabilitada.";
-                        return RedirectToAction("Login");
+                        return RedirectToAction("Index");
                     case 0 when data.Rows.Count > 0:
                         TempData["Error"] = "Tu cuenta ha sido bloqueada.";
-                        return RedirectToAction("Login");
+                        return RedirectToAction("Index");
                 }
 
                 // Usuario no existe, registrarlo
@@ -337,7 +338,7 @@ namespace ConnectionProject.Controllers
                     if (userId == 0)
                     {
                         TempData["Error"] = "Hubo un problema al registrar tu cuenta con Google.";
-                        return RedirectToAction("Login");
+                        return RedirectToAction("Index");
                     }
 
                     data = _manejadorUsuario.LoginGoogle(email);
@@ -392,7 +393,7 @@ namespace ConnectionProject.Controllers
             {
                 Console.WriteLine($"Error en GoogleResponse: {ex.Message}");
                 TempData["Error"] = "Hubo un error en el inicio de sesión.";
-                return RedirectToAction("Login");
+                return RedirectToAction("Index");
             }
         }
 
@@ -507,7 +508,7 @@ namespace ConnectionProject.Controllers
 
             ViewData["Success"] = "¡Tu contraseña ha sido restablecida exitosamente!";
             TempData.Keep("Success");
-            return RedirectToAction("Login");
+            return RedirectToAction("Index");
         }
 
     }

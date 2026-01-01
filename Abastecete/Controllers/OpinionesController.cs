@@ -23,7 +23,7 @@ namespace Abastecete.Controllers
             var usuarioId = HttpContext.Session.GetInt32("idUsuario");
             if (usuarioId == null)
             {
-                return RedirectToAction("Login", "Login");
+                return RedirectToAction("Index", "Login");
             }
 
             var opiniones = _manejadorOpiniones.ObtenerMisOpiniones(usuarioId.Value);
@@ -38,7 +38,7 @@ namespace Abastecete.Controllers
             var usuarioId = HttpContext.Session.GetInt32("idUsuario");
             if (usuarioId == null)
             {
-                return RedirectToAction("Login", "Login");
+                return RedirectToAction("Index", "Login");
             }
 
             var negocio = _manejadorNegocios.ConsultarNegocioPorUsuario(usuarioId.Value);

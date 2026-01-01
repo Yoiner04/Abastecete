@@ -135,7 +135,7 @@ namespace Abastecete.Controllers
             var usuarioId = HttpContext.Session.GetInt32("idUsuario");
             if (!usuarioId.HasValue)
             {
-                return RedirectToAction("Login", "Login");
+                return RedirectToAction("Index", "Login");
             }
 
             Negocio ne = _manejadorNegocios.ConsultarNegocioPorUsuario(usuarioId.Value);
@@ -165,7 +165,7 @@ namespace Abastecete.Controllers
             var usuarioId = HttpContext.Session.GetInt32("idUsuario");
             if (!usuarioId.HasValue)
             {
-                return RedirectToAction("Login", "Login");
+                return RedirectToAction("Index", "Login");
             }
 
             Negocio actual = _manejadorNegocios.ConsultarNegocioPorUsuario(usuarioId.Value);
@@ -299,7 +299,7 @@ namespace Abastecete.Controllers
             if (!usuarioId.HasValue)
             {
                 Console.WriteLine("No se encontró idUsuario en la sesión.");
-                return RedirectToAction("Login", "Login");
+                return RedirectToAction("Index", "Login");
             }
 
             negocio.UsuarioId = usuarioId.Value;
@@ -396,7 +396,7 @@ namespace Abastecete.Controllers
             var usuarioId = HttpContext.Session.GetInt32("idUsuario");
             if (!usuarioId.HasValue)
             {
-                return RedirectToAction("Login", "Login");
+                return RedirectToAction("Index", "Login");
             }
 
             Negocio negocio = _manejadorNegocios.ConsultarNegocioPorUsuario(usuarioId.Value);
@@ -436,7 +436,7 @@ namespace Abastecete.Controllers
             var usuarioId = HttpContext.Session.GetInt32("idUsuario");
             if (!usuarioId.HasValue)
             {
-                return RedirectToAction("Login", "Login");
+                return RedirectToAction("Index", "Login");
             }
 
             Negocio negocio = _manejadorNegocios.ConsultarNegocioPorUsuario(usuarioId.Value);
@@ -508,7 +508,7 @@ namespace Abastecete.Controllers
             var usuarioId = HttpContext.Session.GetInt32("idUsuario");
             if (!usuarioId.HasValue)
             {
-                return RedirectToAction("Login", "Login");
+                return RedirectToAction("Index", "Login");
             }
 
             Negocio negocio = _manejadorNegocios.ConsultarNegocioPorUsuario(usuarioId.Value);

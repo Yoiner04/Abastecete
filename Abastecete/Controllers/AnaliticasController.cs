@@ -1,7 +1,6 @@
 using BusinessLogic;
 using BusinessLogic.Models;
 using BusinessLogic.Utilidades;
-using ConnectionProject.Controllers;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 
@@ -22,7 +21,7 @@ namespace Abastecete.Controllers
 
             if (idUsuario == null)
             {
-                return RedirectToAction("Login", "Login");
+                return RedirectToAction("Index", "Login");
             }
 
             // Verificar permiso ADMIN_DASHBOARD
@@ -115,7 +114,7 @@ namespace Abastecete.Controllers
             var idUsuario = HttpContext.Session.GetInt32("idUsuario");
             if (idUsuario == null)
             {
-                return RedirectToAction("Login", "Login");
+                return RedirectToAction("Index", "Login");
             }
 
             // Obtener el local del usuario

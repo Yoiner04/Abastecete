@@ -141,7 +141,7 @@ namespace Abastecete.Controllers
             int? idUsuario = HttpContext.Session.GetInt32("idUser");
             if (!idUsuario.HasValue)
             {
-                return RedirectToAction("Login", "Login");
+                return RedirectToAction("Index", "Login");
             }
 
             var resumen = manejadorReferidos.ObtenerResumen(idUsuario.Value);
