@@ -39,7 +39,7 @@
         <div class="max-w-6xl mx-auto px-4 py-3">
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-3">
-                    <a href="/Productos/ProductosNegocio" class="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-green-100 hover:text-green-600 transition-colors">
+                    <a href="/Productos" class="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-green-100 hover:text-green-600 transition-colors">
                         <i class="fas fa-arrow-left text-sm"></i>
                     </a>
                     <h1 class="text-lg font-bold text-gray-900">
@@ -548,7 +548,7 @@
             })
             .done(function() {
                 showToast('Productos registrados correctamente');
-                setTimeout(() => window.location.href = '/Productos/ProductosNegocio', 1000);
+                setTimeout(() => window.location.href = '/Productos', 1000);
             })
             .fail(function() {
                 showToast('Error al registrar los productos', 'error');

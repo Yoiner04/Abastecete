@@ -11,7 +11,7 @@ CREATE PROCEDURE sp_listar_marcas_productos_bulk(
 )
 BEGIN
     SELECT
-        pm.PK_ID_PRODUCTO_MARCA AS Id,
+        pm.PK_ID AS Id,
         pm.FK_ID_LOCAL AS IdLocal,
         pm.FK_ID_PRODUCTO AS IdProducto,
         pm.FK_ID_MARCA AS IdMarca,

@@ -50,7 +50,7 @@ namespace Abastecete.Controllers
             return View();
         }
 
-        public IActionResult ProductosNegocio()
+        public IActionResult Index()
         {
             var usuarioId = HttpContext.Session.GetInt32("idUsuario");
             if (usuarioId == null)
@@ -135,7 +135,7 @@ namespace Abastecete.Controllers
         }
 
         [HttpGet]
-        public IActionResult AgregarProductNegocio()
+        public IActionResult Agregar()
         {
             var usuarioId = HttpContext.Session.GetInt32("idUsuario");
             if (usuarioId == null)
@@ -164,7 +164,7 @@ namespace Abastecete.Controllers
             if (!limites.PuedeAgregarProductos)
             {
                 TempData["Error"] = $"Has alcanzado el límite de {limites.LimiteProductos} productos de tu plan '{limites.NombreMembresia}'. Mejora tu membresía para agregar más.";
-                return RedirectToAction("ProductosNegocio");
+                return RedirectToAction("Index");
             }
 
             List<Categoria> categorias = manejadorCategorias.ConsultarCategorias();
