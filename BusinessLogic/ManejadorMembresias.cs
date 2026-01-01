@@ -49,15 +49,15 @@ namespace BusinessLogic
                 {
                     Id = Convert.ToInt32(row["PK_ID_TIPO_MEMBRESIA"]),
                     Nombre = row["NOMBRE"]?.ToString() ?? "",
-                    Costo = float.Parse(row["COSTO"]?.ToString() ?? "0"),
+                    Costo = decimal.Parse(row["COSTO"]?.ToString() ?? "0"),
                     Estado = Convert.ToInt32(row["ESTADO"]),
                     Duracion = row.Table.Columns.Contains("DURACION_OFERTA") ? Convert.ToInt32(row["DURACION_OFERTA"]) : 0,
                     Cantidad = row.Table.Columns.Contains("CANTIDAD_PRODUCTOS") ? Convert.ToInt32(row["CANTIDAD_PRODUCTOS"]) : 0,
                     OfertasFlashSimultaneas = row.Table.Columns.Contains("OFERTAS_FLASH_SIMULTANEAS") ? Convert.ToInt32(row["OFERTAS_FLASH_SIMULTANEAS"]) : 1,
                     OfertasFlashTotal = row.Table.Columns.Contains("OFERTAS_FLASH_TOTAL") ? Convert.ToInt32(row["OFERTAS_FLASH_TOTAL"]) : 0,
-                    Costo_trimestral = float.Parse(row["COSTO_TRIMESTRAL"]?.ToString() ?? "0"),
-                    Costo_semestral = float.Parse(row["COSTO_SEMESTRAL"]?.ToString() ?? "0"),
-                    Costo_anual = float.Parse(row["COSTO_ANUAL"]?.ToString() ?? "0")
+                    CostoTrimestral = decimal.Parse(row["COSTO_TRIMESTRAL"]?.ToString() ?? "0"),
+                    CostoSemestral = decimal.Parse(row["COSTO_SEMESTRAL"]?.ToString() ?? "0"),
+                    CostoAnual = decimal.Parse(row["COSTO_ANUAL"]?.ToString() ?? "0")
                 });
             }
             return membresias;
@@ -76,9 +76,9 @@ namespace BusinessLogic
                 new Parametro("p_cantidad", membresia.Cantidad),
                 new Parametro("p_ofertas_flash_simultaneas", membresia.OfertasFlashSimultaneas),
                 new Parametro("p_ofertas_flash_total", membresia.OfertasFlashTotal),
-                new Parametro("p_costo_trimestral", membresia.Costo_trimestral),
-                new Parametro("p_costo_semestral", membresia.Costo_semestral),
-                new Parametro("p_costo_anual", membresia.Costo_anual)
+                new Parametro("p_costo_trimestral", membresia.CostoTrimestral),
+                new Parametro("p_costo_semestral", membresia.CostoSemestral),
+                new Parametro("p_costo_anual", membresia.CostoAnual)
             };
 
             bool resultado = conexion.EjecutarTransaccion("editar_tipo_membresia", parametros);
@@ -100,7 +100,7 @@ namespace BusinessLogic
                     Id = Convert.ToInt32(row["PK_ID_TIPO_MEMBRESIA"]),
                     Nombre = row["NOMBRE"].ToString() ?? "",
                     Costo = row.Table.Columns.Contains("COSTO_MES") && row["COSTO_MES"] != DBNull.Value
-                        ? float.Parse(row["COSTO_MES"].ToString() ?? "0")
+                        ? decimal.Parse(row["COSTO_MES"].ToString() ?? "0")
                         : 0,
                     Estado = row.Table.Columns.Contains("ESTADO") && row["ESTADO"] != DBNull.Value
                         ? Convert.ToInt32(row["ESTADO"])
@@ -119,14 +119,14 @@ namespace BusinessLogic
                         ? Convert.ToInt32(row["OFERTAS_FLASH_TOTAL"])
                         : 0,
                     // Costos por período
-                    Costo_trimestral = row.Table.Columns.Contains("COSTO_TRIMESTRE") && row["COSTO_TRIMESTRE"] != DBNull.Value
-                        ? float.Parse(row["COSTO_TRIMESTRE"].ToString() ?? "0")
+                    CostoTrimestral = row.Table.Columns.Contains("COSTO_TRIMESTRE") && row["COSTO_TRIMESTRE"] != DBNull.Value
+                        ? decimal.Parse(row["COSTO_TRIMESTRE"].ToString() ?? "0")
                         : 0,
-                    Costo_semestral = row.Table.Columns.Contains("COSTO_SEMESTRE") && row["COSTO_SEMESTRE"] != DBNull.Value
-                        ? float.Parse(row["COSTO_SEMESTRE"].ToString() ?? "0")
+                    CostoSemestral = row.Table.Columns.Contains("COSTO_SEMESTRE") && row["COSTO_SEMESTRE"] != DBNull.Value
+                        ? decimal.Parse(row["COSTO_SEMESTRE"].ToString() ?? "0")
                         : 0,
-                    Costo_anual = row.Table.Columns.Contains("COSTO_ANIO") && row["COSTO_ANIO"] != DBNull.Value
-                        ? float.Parse(row["COSTO_ANIO"].ToString() ?? "0")
+                    CostoAnual = row.Table.Columns.Contains("COSTO_ANIO") && row["COSTO_ANIO"] != DBNull.Value
+                        ? decimal.Parse(row["COSTO_ANIO"].ToString() ?? "0")
                         : 0
                 });
             }
@@ -150,15 +150,15 @@ namespace BusinessLogic
                 {
                     Id = Convert.ToInt32(row["PK_ID_TIPO_MEMBRESIA"]),
                     Nombre = row["NOMBRE"]?.ToString() ?? "",
-                    Costo = float.Parse(row["COSTO"]?.ToString() ?? "0"),
+                    Costo = decimal.Parse(row["COSTO"]?.ToString() ?? "0"),
                     Estado = Convert.ToInt32(row["ESTADO"]),
                     Duracion = Convert.ToInt32(row["DURACION_OFERTA"]),
                     Cantidad = Convert.ToInt32(row["CANTIDAD_PRODUCTOS"]),
                     OfertasFlashSimultaneas = row.Table.Columns.Contains("OFERTAS_FLASH_SIMULTANEAS") ? Convert.ToInt32(row["OFERTAS_FLASH_SIMULTANEAS"]) : 1,
                     OfertasFlashTotal = row.Table.Columns.Contains("OFERTAS_FLASH_TOTAL") ? Convert.ToInt32(row["OFERTAS_FLASH_TOTAL"]) : 0,
-                    Costo_trimestral = float.Parse(row["COSTO_TRIMESTRAL"]?.ToString() ?? "0"),
-                    Costo_semestral = float.Parse(row["COSTO_SEMESTRAL"]?.ToString() ?? "0"),
-                    Costo_anual = float.Parse(row["COSTO_ANUAL"]?.ToString() ?? "0")
+                    CostoTrimestral = decimal.Parse(row["COSTO_TRIMESTRAL"]?.ToString() ?? "0"),
+                    CostoSemestral = decimal.Parse(row["COSTO_SEMESTRAL"]?.ToString() ?? "0"),
+                    CostoAnual = decimal.Parse(row["COSTO_ANUAL"]?.ToString() ?? "0")
                 };
             }
 
@@ -193,7 +193,7 @@ namespace BusinessLogic
                 {
                     Id = Convert.ToInt32(row["PK_ID_TIPO_MEMBRESIA"]),
                     Nombre = row["NOMBRE"]?.ToString() ?? "",
-                    Costo = row["COSTO"] != DBNull.Value ? float.Parse(row["COSTO"]?.ToString() ?? "0") : 0,
+                    Costo = row["COSTO"] != DBNull.Value ? decimal.Parse(row["COSTO"]?.ToString() ?? "0") : 0,
                     Estado = row["ESTADO"] != DBNull.Value ? Convert.ToInt32(row["ESTADO"]) : 1,
                     Cantidad = row["CANTIDAD_PRODUCTOS"] != DBNull.Value ? Convert.ToInt32(row["CANTIDAD_PRODUCTOS"]) : 0,
                     OfertasFlashSimultaneas = row["OFERTAS_FLASH_SIMULTANEAS"] != DBNull.Value ? Convert.ToInt32(row["OFERTAS_FLASH_SIMULTANEAS"]) : 1,

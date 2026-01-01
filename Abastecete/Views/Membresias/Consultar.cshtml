@@ -258,13 +258,13 @@
                             <span class="font-semibold text-gray-900">$@membresia.Costo.ToString("N0")</span>
                         </td>
                         <td class="px-4 py-4 text-center">
-                            <span class="text-gray-700">$@membresia.Costo_trimestral.ToString("N0")</span>
+                            <span class="text-gray-700">$@membresia.CostoTrimestral.ToString("N0")</span>
                         </td>
                         <td class="px-4 py-4 text-center">
-                            <span class="text-gray-700">$@membresia.Costo_semestral.ToString("N0")</span>
+                            <span class="text-gray-700">$@membresia.CostoSemestral.ToString("N0")</span>
                         </td>
                         <td class="px-4 py-4 text-center">
-                            <span class="text-gray-700">$@membresia.Costo_anual.ToString("N0")</span>
+                            <span class="text-gray-700">$@membresia.CostoAnual.ToString("N0")</span>
                         </td>
                         <td class="px-4 py-4 text-center">
                             <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
@@ -728,9 +728,9 @@
                     document.getElementById("membership-id").value = m.id;
                     document.getElementById("membership-name").value = m.nombre;
                     document.getElementById("membership-cost").value = m.costo;
-                    document.getElementById("membership-cost-tri").value = m.costo_trimestral;
-                    document.getElementById("membership-cost-sem").value = m.costo_semestral;
-                    document.getElementById("membership-cost-anu").value = m.costo_anual;
+                    document.getElementById("membership-cost-tri").value = m.costoTrimestral;
+                    document.getElementById("membership-cost-sem").value = m.costoSemestral;
+                    document.getElementById("membership-cost-anu").value = m.costoAnual;
                     document.getElementById("membership-duration").value = m.duracion;
                     document.getElementById("membership-quantity").value = m.cantidad;
                     document.getElementById("membership-ofertas-sim").value = m.ofertasFlashSimultaneas || 1;
@@ -772,9 +772,9 @@
         formData.append("Id", idMembresia);
         formData.append("Nombre", document.getElementById("membership-name").value);
         formData.append("Costo", document.getElementById("membership-cost").value);
-        formData.append("Costo_trimestral", document.getElementById("membership-cost-tri").value);
-        formData.append("Costo_semestral", document.getElementById("membership-cost-sem").value);
-        formData.append("Costo_anual", document.getElementById("membership-cost-anu").value);
+        formData.append("CostoTrimestral", document.getElementById("membership-cost-tri").value);
+        formData.append("CostoSemestral", document.getElementById("membership-cost-sem").value);
+        formData.append("CostoAnual", document.getElementById("membership-cost-anu").value);
         formData.append("Duracion", document.getElementById("membership-duration").value);
         formData.append("Cantidad", document.getElementById("membership-quantity").value);
         formData.append("OfertasFlashSimultaneas", document.getElementById("membership-ofertas-sim").value);

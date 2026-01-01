@@ -195,9 +195,9 @@
                          data-plan-id="@plan.Id"
                          data-plan-nombre="@plan.Nombre"
                          data-plan-costo="@plan.Costo"
-                         data-plan-trimestral="@plan.Costo_trimestral"
-                         data-plan-semestral="@plan.Costo_semestral"
-                         data-plan-anual="@plan.Costo_anual"
+                         data-plan-trimestral="@plan.CostoTrimestral"
+                         data-plan-semestral="@plan.CostoSemestral"
+                         data-plan-anual="@plan.CostoAnual"
                          data-plan-descripcion="@plan.Descripcion"
                          onclick="seleccionarPlan(this)">
 
@@ -494,9 +494,9 @@
             id: @(Model?.FirstOrDefault()?.Id ?? 0),
             nombre: '@(Model?.FirstOrDefault()?.Nombre ?? "")',
             costo: @(Model?.FirstOrDefault()?.Costo ?? 0),
-            trimestral: @(Model?.FirstOrDefault()?.Costo_trimestral ?? 0),
-            semestral: @(Model?.FirstOrDefault()?.Costo_semestral ?? 0),
-            anual: @(Model?.FirstOrDefault()?.Costo_anual ?? 0),
+            trimestral: @(Model?.FirstOrDefault()?.CostoTrimestral ?? 0),
+            semestral: @(Model?.FirstOrDefault()?.CostoSemestral ?? 0),
+            anual: @(Model?.FirstOrDefault()?.CostoAnual ?? 0),
             descripcion: '@(Model?.FirstOrDefault()?.Descripcion?.Replace("'", "\\'").Replace("\n", " ") ?? "")'
         };
         let duracionSeleccionada = 'mensual';

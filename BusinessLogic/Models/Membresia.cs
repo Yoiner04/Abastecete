@@ -9,7 +9,7 @@ namespace BusinessLogic.Models
         public int Id { get; set; }
         public string Nombre { get; set; } = "";
         public string DescripcionCorta { get; set; } = "";
-        public float Costo { get; set; }
+        public decimal Costo { get; set; }
         public int Estado { get; set; }
 
         // Límites configurables
@@ -19,9 +19,9 @@ namespace BusinessLogic.Models
         public int OfertasFlashTotal { get; set; }  // Total por suscripción (0=ilimitado)
 
         // Costos por período
-        public float Costo_trimestral { get; set; }
-        public float Costo_semestral { get; set; }
-        public float Costo_anual { get; set; }
+        public decimal CostoTrimestral { get; set; }
+        public decimal CostoSemestral { get; set; }
+        public decimal CostoAnual { get; set; }
 
         // Permisos asociados a esta membresía
         public List<PermisoSistema> Permisos { get; set; } = new List<PermisoSistema>();

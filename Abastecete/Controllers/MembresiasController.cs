@@ -67,7 +67,7 @@ namespace Abastecete.Controllers
         [HttpPost]
         [RequierePermiso("ADMIN_MEMBRESIAS")]
         [Auditar(ModulosAuditoria.MEMBRESIAS, TiposAccionAuditoria.UPDATE, ParametroId = "Id", ParametroDescripcion = "Nombre")]
-        public IActionResult Editar(int Id, string Nombre, float Costo, float Costo_trimestral, float Costo_semestral, float Costo_anual, int Duracion, int Cantidad, int OfertasFlashSimultaneas, int OfertasFlashTotal, int Estado)
+        public IActionResult Editar(int Id, string Nombre, decimal Costo, decimal CostoTrimestral, decimal CostoSemestral, decimal CostoAnual, int Duracion, int Cantidad, int OfertasFlashSimultaneas, int OfertasFlashTotal, int Estado)
         {
             var membresia = new Membresia
             {
@@ -79,9 +79,9 @@ namespace Abastecete.Controllers
                 Duracion = Duracion,
                 OfertasFlashSimultaneas = OfertasFlashSimultaneas,
                 OfertasFlashTotal = OfertasFlashTotal,
-                Costo_trimestral = Costo_trimestral,
-                Costo_semestral = Costo_semestral,
-                Costo_anual = Costo_anual
+                CostoTrimestral = CostoTrimestral,
+                CostoSemestral = CostoSemestral,
+                CostoAnual = CostoAnual
             };
             string mensaje = manejadorMembresias.EditarMembresia(membresia);
             return Json(new { mensaje });
@@ -212,9 +212,9 @@ namespace Abastecete.Controllers
                         id = membresia.Id,
                         nombre = membresia.Nombre,
                         costo = membresia.Costo,
-                        costo_trimestral = membresia.Costo_trimestral,
-                        costo_semestral = membresia.Costo_semestral,
-                        costo_anual = membresia.Costo_anual,
+                        costoTrimestral = membresia.CostoTrimestral,
+                        costoSemestral = membresia.CostoSemestral,
+                        costoAnual = membresia.CostoAnual,
                         duracion = membresia.Duracion,
                         cantidad = membresia.Cantidad,
                         ofertasFlashSimultaneas = membresia.OfertasFlashSimultaneas,

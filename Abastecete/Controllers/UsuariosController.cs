@@ -202,9 +202,9 @@ namespace Abastecete.Controllers
                     id = m.Id,
                     nombre = m.Nombre,
                     costoMensual = m.Costo,
-                    costoTrimestral = m.Costo_trimestral,
-                    costoSemestral = m.Costo_semestral,
-                    costoAnual = m.Costo_anual
+                    costoTrimestral = m.CostoTrimestral,
+                    costoSemestral = m.CostoSemestral,
+                    costoAnual = m.CostoAnual
                 }).ToList();
 
                 return Json(new { success = true, membresias });

@@ -356,16 +356,16 @@ namespace BusinessLogic
                 Id = Convert.ToInt32(row["TipoMembresiaId"]),
                 Nombre = row["TipoMembresiaNombre"]?.ToString() ?? "",
                 Costo = row["TipoMembresiaCostoMes"] != DBNull.Value
-                    ? float.Parse(row["TipoMembresiaCostoMes"]?.ToString() ?? "0")
+                    ? decimal.Parse(row["TipoMembresiaCostoMes"]?.ToString() ?? "0")
                     : 0,
-                Costo_trimestral = row["TipoMembresiaCostoTrimestre"] != DBNull.Value
-                    ? float.Parse(row["TipoMembresiaCostoTrimestre"]?.ToString() ?? "0")
+                CostoTrimestral = row["TipoMembresiaCostoTrimestre"] != DBNull.Value
+                    ? decimal.Parse(row["TipoMembresiaCostoTrimestre"]?.ToString() ?? "0")
                     : 0,
-                Costo_semestral = row["TipoMembresiaCostoSemestre"] != DBNull.Value
-                    ? float.Parse(row["TipoMembresiaCostoSemestre"]?.ToString() ?? "0")
+                CostoSemestral = row["TipoMembresiaCostoSemestre"] != DBNull.Value
+                    ? decimal.Parse(row["TipoMembresiaCostoSemestre"]?.ToString() ?? "0")
                     : 0,
-                Costo_anual = row["TipoMembresiaCostoAnio"] != DBNull.Value
-                    ? float.Parse(row["TipoMembresiaCostoAnio"]?.ToString() ?? "0")
+                CostoAnual = row["TipoMembresiaCostoAnio"] != DBNull.Value
+                    ? decimal.Parse(row["TipoMembresiaCostoAnio"]?.ToString() ?? "0")
                     : 0,
                 Estado = row["TipoMembresiaEstado"] != DBNull.Value
                     ? Convert.ToInt32(row["TipoMembresiaEstado"])
@@ -412,7 +412,7 @@ namespace BusinessLogic
                 Id = Convert.ToInt32(row["TipoMembresiaId"]),
                 Nombre = row["TipoMembresiaNombre"]?.ToString() ?? "",
                 Costo = row["TipoMembresiaCostoMes"] != DBNull.Value
-                    ? float.Parse(row["TipoMembresiaCostoMes"]?.ToString() ?? "0")
+                    ? decimal.Parse(row["TipoMembresiaCostoMes"]?.ToString() ?? "0")
                     : 0
             };
 
