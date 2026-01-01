@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using BusinessLogic.Models;
+using BusinessLogic.Utilidades;
 using MongoDB.Driver.GridFS;
 using MongoDB.Driver;
 using MongoDB.Bson;
@@ -80,94 +81,58 @@ namespace BusinessLogic
         }
 
         /// <summary>
-        /// Helper para leer columnas de forma segura
-        /// </summary>
-        private static string? GetString(DataRow row, string columnName)
-        {
-            return row.Table.Columns.Contains(columnName) ? row[columnName]?.ToString() : null;
-        }
-
-        private static long GetLong(DataRow row, string columnName, long defaultValue = 0)
-        {
-            if (!row.Table.Columns.Contains(columnName) || row[columnName] == DBNull.Value)
-                return defaultValue;
-            return Convert.ToInt64(row[columnName]);
-        }
-
-        private static int GetInt(DataRow row, string columnName, int defaultValue = 0)
-        {
-            if (!row.Table.Columns.Contains(columnName) || row[columnName] == DBNull.Value)
-                return defaultValue;
-            return Convert.ToInt32(row[columnName]);
-        }
-
-        private static decimal? GetDecimal(DataRow row, string columnName)
-        {
-            if (!row.Table.Columns.Contains(columnName) || row[columnName] == DBNull.Value)
-                return null;
-            return Convert.ToDecimal(row[columnName]);
-        }
-
-        private static DateTime? GetDateTime(DataRow row, string columnName)
-        {
-            if (!row.Table.Columns.Contains(columnName) || row[columnName] == DBNull.Value)
-                return null;
-            return Convert.ToDateTime(row[columnName]);
-        }
-
-        /// <summary>
         /// Mapea un DataRow a un objeto Negocio
         /// </summary>
         private Negocio MapearNegocioDesdeRow(DataRow row)
         {
-            string? fotosId = GetString(row, "FOTOS_LOCAL");
-            string? bannerId = GetString(row, "BANNER_LOCAL");
-            string? cloudinaryPublicIdLogotipo = GetString(row, "CLOUDINARY_PUBLIC_ID_LOGOTIPO");
+            string fotosId = DataRowHelper.GetString(row, "FOTOS_LOCAL");
+            string bannerId = DataRowHelper.GetString(row, "BANNER_LOCAL");
+            string cloudinaryPublicIdLogotipo = DataRowHelper.GetString(row, "CLOUDINARY_PUBLIC_ID_LOGOTIPO");
 
             return new Negocio
             {
-                Id = GetInt(row, "PK_ID_LOCAL"),
-                Nombre = GetString(row, "NOMBRE_LOCAL"),
-                Localizacion = GetString(row, "LOCALIZACION"),
-                Direccion = GetString(row, "DIRECCION_LOCAL"),
-                Telefono = GetLong(row, "TELEFONO_LOCAL"),
-                LogotipoId = fotosId,
-                CloudinaryPublicIdLogotipo = cloudinaryPublicIdLogotipo,
-                Descripcion = GetString(row, "DESCRIPCION_LOCAL"),
+                Id = DataRowHelper.GetInt(row, "PK_ID_LOCAL"),
+                Nombre = DataRowHelper.GetString(row, "NOMBRE_LOCAL"),
+                Localizacion = DataRowHelper.GetString(row, "LOCALIZACION"),
+                Direccion = DataRowHelper.GetString(row, "DIRECCION_LOCAL"),
+                Telefono = DataRowHelper.GetLong(row, "TELEFONO_LOCAL"),
+                LogotipoId = !string.IsNullOrEmpty(fotosId) ? fotosId : null,
+                CloudinaryPublicIdLogotipo = !string.IsNullOrEmpty(cloudinaryPublicIdLogotipo) ? cloudinaryPublicIdLogotipo : null,
+                Descripcion = DataRowHelper.GetString(row, "DESCRIPCION_LOCAL"),
                 imagen = _manejadorMongo.ObtenerImagen(fotosId),
-                BannerId = bannerId,
+                BannerId = !string.IsNullOrEmpty(bannerId) ? bannerId : null,
                 BannerImagen = _manejadorMongo.ObtenerImagen(bannerId),
-                Estado = GetInt(row, "FK_ID_ESTADO_LOCAL"),
+                Estado = DataRowHelper.GetInt(row, "FK_ID_ESTADO_LOCAL"),
 
                 // Campos de contacto
-                EmailContacto = GetString(row, "EMAIL_CONTACTO"),
-                Whatsapp = GetString(row, "WHATSAPP"),
-                SitioWeb = GetString(row, "SITIO_WEB"),
-                Nit = GetString(row, "NIT"),
+                EmailContacto = DataRowHelper.GetString(row, "EMAIL_CONTACTO"),
+                Whatsapp = DataRowHelper.GetString(row, "WHATSAPP"),
+                SitioWeb = DataRowHelper.GetString(row, "SITIO_WEB"),
+                Nit = DataRowHelper.GetString(row, "NIT"),
 
                 // Redes sociales
-                Instagram = GetString(row, "INSTAGRAM"),
-                Facebook = GetString(row, "FACEBOOK"),
-                Tiktok = GetString(row, "TIKTOK"),
-                Youtube = GetString(row, "YOUTUBE"),
-                Twitter = GetString(row, "TWITTER"),
+                Instagram = DataRowHelper.GetString(row, "INSTAGRAM"),
+                Facebook = DataRowHelper.GetString(row, "FACEBOOK"),
+                Tiktok = DataRowHelper.GetString(row, "TIKTOK"),
+                Youtube = DataRowHelper.GetString(row, "YOUTUBE"),
+                Twitter = DataRowHelper.GetString(row, "TWITTER"),
 
                 // Horarios
-                HorarioLunes = GetString(row, "HORARIO_LUNES"),
-                HorarioMartes = GetString(row, "HORARIO_MARTES"),
-                HorarioMiercoles = GetString(row, "HORARIO_MIERCOLES"),
-                HorarioJueves = GetString(row, "HORARIO_JUEVES"),
-                HorarioViernes = GetString(row, "HORARIO_VIERNES"),
-                HorarioSabado = GetString(row, "HORARIO_SABADO"),
-                HorarioDomingo = GetString(row, "HORARIO_DOMINGO"),
+                HorarioLunes = DataRowHelper.GetString(row, "HORARIO_LUNES"),
+                HorarioMartes = DataRowHelper.GetString(row, "HORARIO_MARTES"),
+                HorarioMiercoles = DataRowHelper.GetString(row, "HORARIO_MIERCOLES"),
+                HorarioJueves = DataRowHelper.GetString(row, "HORARIO_JUEVES"),
+                HorarioViernes = DataRowHelper.GetString(row, "HORARIO_VIERNES"),
+                HorarioSabado = DataRowHelper.GetString(row, "HORARIO_SABADO"),
+                HorarioDomingo = DataRowHelper.GetString(row, "HORARIO_DOMINGO"),
 
                 // Coordenadas GPS
-                Latitud = GetDecimal(row, "LATITUD"),
-                Longitud = GetDecimal(row, "LONGITUD"),
+                Latitud = DataRowHelper.GetDecimalNullable(row, "LATITUD"),
+                Longitud = DataRowHelper.GetDecimalNullable(row, "LONGITUD"),
 
                 // Auditoría
-                FechaRegistro = GetDateTime(row, "FECHA_REGISTRO"),
-                FechaActualizacion = GetDateTime(row, "FECHA_ACTUALIZACION")
+                FechaRegistro = DataRowHelper.GetDateTimeNullable(row, "FECHA_REGISTRO"),
+                FechaActualizacion = DataRowHelper.GetDateTimeNullable(row, "FECHA_ACTUALIZACION")
             };
         }
 

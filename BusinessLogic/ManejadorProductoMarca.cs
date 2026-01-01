@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using BusinessLogic.Models;
+using BusinessLogic.Utilidades;
 
 namespace BusinessLogic
 {
@@ -223,19 +224,19 @@ namespace BusinessLogic
         {
             return new ProductoMarca
             {
-                Id = Convert.ToInt32(row["Id"]),
-                IdLocal = row.Table.Columns.Contains("IdLocal") && row["IdLocal"] != DBNull.Value ? Convert.ToInt32(row["IdLocal"]) : 0,
-                IdProducto = row.Table.Columns.Contains("IdProducto") && row["IdProducto"] != DBNull.Value ? Convert.ToInt32(row["IdProducto"]) : 0,
-                IdMarca = Convert.ToInt32(row["IdMarca"]),
-                NombreMarca = row["NombreMarca"]?.ToString() ?? "",
-                LogoMarca = row["LogoMarca"]?.ToString() ?? "",
-                IdUnidad = row.Table.Columns.Contains("IdUnidad") && row["IdUnidad"] != DBNull.Value ? Convert.ToInt32(row["IdUnidad"]) : null,
-                NombreUnidad = row.Table.Columns.Contains("NombreUnidad") ? row["NombreUnidad"]?.ToString() ?? "" : "",
-                Precio = Convert.ToDecimal(row["Precio"]),
-                Stock = row["Stock"] != DBNull.Value ? Convert.ToInt32(row["Stock"]) : 0,
-                Disponible = row["Disponible"] != DBNull.Value && Convert.ToBoolean(row["Disponible"]),
-                FechaRegistro = row.Table.Columns.Contains("FechaRegistro") && row["FechaRegistro"] != DBNull.Value ? Convert.ToDateTime(row["FechaRegistro"]) : DateTime.MinValue,
-                FechaActualizacion = row.Table.Columns.Contains("FechaActualizacion") && row["FechaActualizacion"] != DBNull.Value ? Convert.ToDateTime(row["FechaActualizacion"]) : DateTime.MinValue
+                Id = DataRowHelper.GetInt(row, "Id"),
+                IdLocal = DataRowHelper.GetInt(row, "IdLocal"),
+                IdProducto = DataRowHelper.GetInt(row, "IdProducto"),
+                IdMarca = DataRowHelper.GetInt(row, "IdMarca"),
+                NombreMarca = DataRowHelper.GetString(row, "NombreMarca"),
+                LogoMarca = DataRowHelper.GetString(row, "LogoMarca"),
+                IdUnidad = DataRowHelper.GetIntNullable(row, "IdUnidad"),
+                NombreUnidad = DataRowHelper.GetString(row, "NombreUnidad"),
+                Precio = DataRowHelper.GetDecimal(row, "Precio"),
+                Stock = DataRowHelper.GetInt(row, "Stock"),
+                Disponible = DataRowHelper.GetBool(row, "Disponible"),
+                FechaRegistro = DataRowHelper.GetDateTime(row, "FechaRegistro"),
+                FechaActualizacion = DataRowHelper.GetDateTime(row, "FechaActualizacion")
             };
         }
     }

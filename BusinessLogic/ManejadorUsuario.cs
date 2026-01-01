@@ -165,26 +165,22 @@ namespace BusinessLogic
         /// </summary>
         private Usuario MapearUsuario(DataRow row)
         {
+            string correo = DataRowHelper.GetString(row, "CORREO");
+            if (string.IsNullOrEmpty(correo))
+                correo = DataRowHelper.GetString(row, "NOMBRE_USUARIO");
+
             return new Usuario
             {
-                Id = Convert.ToInt32(row["PK_ID_USUARIO"]),
-                Nombres = row["NOMBRES"]?.ToString() ?? "",
-                Apellidos = row["APELLIDOS"]?.ToString() ?? "",
-                FotoPerfil = row.Table.Columns.Contains("FOTO_PERFIL")
-                    ? row["FOTO_PERFIL"]?.ToString() ?? ""
-                    : "",
-                Telefono = row["TELEFONO"]?.ToString() ?? "",
-                Correo = row["CORREO"]?.ToString() ?? row["NOMBRE_USUARIO"]?.ToString() ?? "",
-                Estado = row["ESTADO"] != DBNull.Value ? Convert.ToInt32(row["ESTADO"]) : 1,
-                DocumentoIdentidad = row.Table.Columns.Contains("DOCUMENTO_IDENTIDAD") && row["DOCUMENTO_IDENTIDAD"] != DBNull.Value
-                    ? Convert.ToInt64(row["DOCUMENTO_IDENTIDAD"])
-                    : null,
-                TipoDocumentoId = row.Table.Columns.Contains("FK_ID_TIPO_DOCUMENTO") && row["FK_ID_TIPO_DOCUMENTO"] != DBNull.Value
-                    ? Convert.ToInt32(row["FK_ID_TIPO_DOCUMENTO"])
-                    : 1,
-                CodigoReferido = row.Table.Columns.Contains("CODIGO_REFERIDO")
-                    ? row["CODIGO_REFERIDO"]?.ToString() ?? ""
-                    : "",
+                Id = DataRowHelper.GetInt(row, "PK_ID_USUARIO"),
+                Nombres = DataRowHelper.GetString(row, "NOMBRES"),
+                Apellidos = DataRowHelper.GetString(row, "APELLIDOS"),
+                FotoPerfil = DataRowHelper.GetString(row, "FOTO_PERFIL"),
+                Telefono = DataRowHelper.GetString(row, "TELEFONO"),
+                Correo = correo,
+                Estado = DataRowHelper.GetInt(row, "ESTADO", 1),
+                DocumentoIdentidad = DataRowHelper.GetLongNullable(row, "DOCUMENTO_IDENTIDAD"),
+                TipoDocumentoId = DataRowHelper.GetInt(row, "FK_ID_TIPO_DOCUMENTO", 1),
+                CodigoReferido = DataRowHelper.GetString(row, "CODIGO_REFERIDO"),
                 Rol = new Rol
                 {
                     Nombre = "" // Ya no usamos roles, se usa sistema de permisos por membresía
