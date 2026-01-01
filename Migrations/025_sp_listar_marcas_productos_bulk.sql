@@ -18,7 +18,7 @@ BEGIN
         m.NOMBRE AS NombreMarca,
         m.LOGO_URL AS LogoMarca,
         pm.FK_ID_UNIDAD AS IdUnidad,
-        u.NOMBRE AS NombreUnidad,
+        u.NOMBRE_UNIDAD AS NombreUnidad,
         pm.PRECIO AS Precio,
         pm.STOCK AS Stock,
         pm.DISPONIBLE AS Disponible,
@@ -26,7 +26,7 @@ BEGIN
         pm.FECHA_ACTUALIZACION AS FechaActualizacion
     FROM producto_marca pm
     INNER JOIN marca m ON pm.FK_ID_MARCA = m.PK_ID_MARCA
-    LEFT JOIN unidad u ON pm.FK_ID_UNIDAD = u.PK_ID_UNIDAD
+    LEFT JOIN unidad u ON pm.FK_ID_UNIDAD = u.ID_UNIDAD
     WHERE pm.FK_ID_LOCAL = p_id_local
       AND FIND_IN_SET(pm.FK_ID_PRODUCTO, p_ids_productos) > 0
     ORDER BY pm.FK_ID_PRODUCTO, pm.PRECIO ASC;
