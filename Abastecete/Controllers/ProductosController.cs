@@ -93,6 +93,10 @@ namespace Abastecete.Controllers
             var resumenOpiniones = manejadorOpiniones.ObtenerResumenOpiniones(negocio.Id);
             ViewBag.ResumenOpiniones = resumenOpiniones;
 
+            // Obtener lista de opiniones para mostrar en modal
+            var opiniones = manejadorOpiniones.ObtenerOpinionesLocal(negocio.Id, 1, 50);
+            ViewBag.Opiniones = opiniones;
+
             ViewBag.productos = productos;
 
             var negocioUsuario = new NegocioUsuario
