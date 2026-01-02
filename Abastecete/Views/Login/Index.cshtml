@@ -1,0 +1,199 @@
+﻿@model BusinessLogic.Models.Usuario;
+
+@{
+    Layout = null;
+    ViewData["Title"] = "Iniciar Sesión - Abastecete";
+    ViewData["Description"] = "Inicia sesión en Abastecete para acceder a tu cuenta, gestionar tu negocio y conectar con proveedores locales.";
+}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"]</title>
+    <meta name="description" content="@ViewData["Description"]" />
+
+    <!-- SEO Meta Tags -->
+    <meta name="keywords" content="iniciar sesión, login, cuenta, Abastecete, proveedores" />
+    <meta name="author" content="Abastecete" />
+    <meta name="robots" content="noindex, nofollow" />
+    <link rel="canonical" href="@Context.Request.Scheme://@Context.Request.Host/Login" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="@Context.Request.Scheme://@Context.Request.Host/Login" />
+    <meta property="og:title" content="@ViewData["Title"]" />
+    <meta property="og:description" content="@ViewData["Description"]" />
+    <meta property="og:image" content="@Context.Request.Scheme://@Context.Request.Host/images/og-image.webp" />
+    <meta property="og:site_name" content="Abastecete" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="@ViewData["Title"]" />
+    <meta name="twitter:description" content="@ViewData["Description"]" />
+
+    <link rel="icon" type="image/png" href="~/images/LOGO%20FINAL.png" />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/login.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/Abastecete.styles.css" asp-append-version="true" />
+</head>
+
+<body>
+    @{
+       var bannerSesion = ViewBag.BannerSesion as IEnumerable<dynamic> ?? new List<object>();
+    }
+    <div class="login-container">
+        <div class="login-box">
+
+            <!-- Imagen Superior -->
+            <div class="login-image text-center">
+                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Principal">
+                    <img src="~/images/LOGO FINAL.png" alt="Abastecete Login" class="img-fluid">
+                </a>
+            </div>
+
+            @if (TempData["Error"] != null)
+            {
+                <div class="alert alert-danger text-center" id="errorMessage">
+                    @TempData["Error"]
+                </div>
+            }
+
+            @using (Html.BeginForm("Index", "Login", FormMethod.Post, new { id = "loginForm", role = "form", aria_label = "Formulario de inicio de sesión" }))
+            {
+                <div class="form-group mb-3">
+                    <label for="email" id="email-label">Correo Electrónico</label>
+                    @Html.TextBoxFor(m => m.Correo, new { @class = "form-control", @type = "email", @id = "email", @placeholder = "Ingresa tu correo", aria_labelledby = "email-label", aria_required = "true", autocomplete = "email" })
+                    <span id="correoError" class="text-danger hidden text-sm" role="alert" aria_live="polite">El correo es obligatorio.</span>
+                </div>
+                <div class="form-group mb-3">
+                    <label for="password" id="password-label">Contraseña</label>
+                    @Html.PasswordFor(m => m.Contrasenia, new { @class = "form-control", @id = "password", @placeholder = "Ingresa tu contraseña", aria_labelledby = "password-label", aria_required = "true", autocomplete = "current-password" })
+                    <span id="contraseniaError" class="text-danger hidden text-sm" role="alert" aria_live="polite">La contraseña es obligatoria.</span>
+                </div>
+
+                <button type="submit" class="btn-login" aria-label="Iniciar sesión en tu cuenta">Iniciar Sesión</button>
+
+                <div class="forgot-password">
+                    <a href="/Login/RecuperarContrasenia">¿Olvidaste tu contraseña?</a>
+                </div>
+                <div class="mt-6 text-center">
+                    <p class="text-sm">o inicia sesión con</p>
+                    <div class="mt-2 flex flex-col gap-2 md:flex-row">
+                        @if (Context.Session.GetString("userEmail") != null)
+                        {
+                            <p>Bienvenido, @Context.Session.GetString("userName")</p>
+                        }
+                        else
+                        {
+                            <a asp-controller="Login" asp-action="LoginWithGoogle" class="btn btn-light" aria-label="Iniciar sesión con tu cuenta de Google">
+                                <img src="https://developers.google.com/identity/images/g-logo.png" width="20" alt="Logo de Google" />
+                                Iniciar sesión con Google
+                            </a>
+
+                        }
+                    </div>
+                </div>
+                <div class="register">
+                    <p>¿No tienes cuenta? <a asp-area="" asp-controller="Usuarios" asp-action="Registrar">Regístrate aquí</a></p>
+                </div>
+            }
+
+            <div class="back-button mb-3 text-center">
+                <a href="/" class="btn-back" aria-label="Regresar a la página principal">Regresar</a>
+            </div>
+        </div>
+        <div id="galeriaSesion" class="image-section">
+
+         </div>
+    </div>
+
+    <script>
+        function cargarBannersSesion() {
+            // Cargar banners de forma asíncrona para no bloquear el formulario de login
+            fetch("/Login/ObtenerBannersSesion")
+                .then(response => response.json())
+                .then(banners => {
+                    const galeria = document.getElementById("galeriaSesion");
+                    if (banners && banners.length > 0) {
+                        galeria.innerHTML = "";
+                        banners.forEach(banner => {
+                            if (banner.url) {
+                                galeria.innerHTML += `
+                                    <img src="${banner.url}" alt="${banner.nombre || 'Banner'}" style="width: 100%; height: auto; object-fit: cover;">
+                                `;
+                            }
+                        });
+                    }
+                })
+                .catch(error => console.error("Error cargando banners:", error));
+        }
+    </script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const form = document.getElementById("loginForm");
+            const errorMessage = document.getElementById("errorMessage");
+
+            // Evita el reenvío del formulario en la recarga
+            if (window.performance && window.performance.navigation.type === 1) {
+                window.history.replaceState({}, document.title, window.location.href);
+
+                // Ocultar mensaje de error si la página se recarga
+                if (errorMessage) {
+                    errorMessage.style.display = "none";
+                }
+            }
+
+            form.addEventListener("submit", function (event) {
+                const email = document.getElementById("email");
+                const password = document.getElementById("password");
+
+                // Limpia los errores previos
+                email.classList.remove("border-red");
+                password.classList.remove("border-red");
+                document.getElementById("correoError").classList.add("hidden");
+                document.getElementById("contraseniaError").classList.add("hidden");
+
+                let valid = true;
+
+                // Validación del correo
+                if (!email.value.trim()) {
+                    document.getElementById("correoError").classList.remove("hidden");
+                    email.classList.add("border-red");
+                    valid = false;
+                }
+
+                // Validación de la contraseña
+                if (!password.value.trim()) {
+                    document.getElementById("contraseniaError").classList.remove("hidden");
+                    password.classList.add("border-red");
+                    valid = false;
+                } 
+
+                // Si los campos no son válidos, evita el envío del formulario
+                if (!valid) {
+                    event.preventDefault();
+                }
+            });
+        });
+        cargarBannersSesion();
+    </script>
+
+    <!-- Estilo para los bordes rojos -->
+    <style>
+        .border-red {
+            border: 0.5px solid red !important;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* Color rojo para los mensajes de error */
+        .text-danger {
+            color: red !important;
+        }
+    </style>
+</body>
+</html>

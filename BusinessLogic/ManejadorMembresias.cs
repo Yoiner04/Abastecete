@@ -1,19 +1,22 @@
-﻿using BusinessLogic.Models;
+using BusinessLogic.Models;
 using DataAccess;
 using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 
 namespace BusinessLogic
 {
     public class ManejadorMembresias
     {
         private Connection conexion;
+        private ManejadorPermisos manejadorPermisos;
 
         public ManejadorMembresias()
         {
             conexion = new Connection();
+            manejadorPermisos = new ManejadorPermisos();
         }
 
         public List<Membresia> consultarTiposMembresia()
@@ -24,7 +27,7 @@ namespace BusinessLogic
             {
                 membresias.Add(new Membresia
                 {
-                    Nombre = row["Membresia"] + ""
+                    Nombre = row["Membresia"]?.ToString() ?? ""
                 });
             }
             return membresias;
@@ -45,13 +48,16 @@ namespace BusinessLogic
                 membresias.Add(new Membresia
                 {
                     Id = Convert.ToInt32(row["PK_ID_TIPO_MEMBRESIA"]),
-                    Nombre = row["NOMBRE"].ToString(),
-                    Descripcion = row["DESCRIPCION"].ToString(),
-                    Costo = float.Parse(row["COSTO"].ToString()),
+                    Nombre = row["NOMBRE"]?.ToString() ?? "",
+                    Costo = decimal.Parse(row["COSTO"]?.ToString() ?? "0"),
                     Estado = Convert.ToInt32(row["ESTADO"]),
-                    Costo_trimestral = float.Parse(row["COSTO_TRIMESTRAL"].ToString()),
-                    Costo_semestral = float.Parse(row["COSTO_SEMESTRAL"].ToString()),
-                    Costo_anual = float.Parse(row["COSTO_ANUAL"].ToString())
+                    Duracion = row.Table.Columns.Contains("DURACION_OFERTA") ? Convert.ToInt32(row["DURACION_OFERTA"]) : 0,
+                    Cantidad = row.Table.Columns.Contains("CANTIDAD_PRODUCTOS") ? Convert.ToInt32(row["CANTIDAD_PRODUCTOS"]) : 0,
+                    OfertasFlashSimultaneas = row.Table.Columns.Contains("OFERTAS_FLASH_SIMULTANEAS") ? Convert.ToInt32(row["OFERTAS_FLASH_SIMULTANEAS"]) : 1,
+                    OfertasFlashTotal = row.Table.Columns.Contains("OFERTAS_FLASH_TOTAL") ? Convert.ToInt32(row["OFERTAS_FLASH_TOTAL"]) : 0,
+                    CostoTrimestral = decimal.Parse(row["COSTO_TRIMESTRAL"]?.ToString() ?? "0"),
+                    CostoSemestral = decimal.Parse(row["COSTO_SEMESTRAL"]?.ToString() ?? "0"),
+                    CostoAnual = decimal.Parse(row["COSTO_ANUAL"]?.ToString() ?? "0")
                 });
             }
             return membresias;
@@ -64,22 +70,72 @@ namespace BusinessLogic
             {
                 new Parametro("p_id_tipo_membresia", membresia.Id),
                 new Parametro("p_nombre", membresia.Nombre),
-                new Parametro("p_descripcion", membresia.Descripcion),
                 new Parametro("p_costo", membresia.Costo),
                 new Parametro("p_estado", membresia.Estado),
                 new Parametro("p_duracion", membresia.Duracion),
                 new Parametro("p_cantidad", membresia.Cantidad),
-                new Parametro("p_costo_trimestral", membresia.Costo_trimestral),
-                new Parametro("p_costo_semestral", membresia.Costo_semestral),
-                new Parametro("p_costo_anual", membresia.Costo_anual)
+                new Parametro("p_ofertas_flash_simultaneas", membresia.OfertasFlashSimultaneas),
+                new Parametro("p_ofertas_flash_total", membresia.OfertasFlashTotal),
+                new Parametro("p_costo_trimestral", membresia.CostoTrimestral),
+                new Parametro("p_costo_semestral", membresia.CostoSemestral),
+                new Parametro("p_costo_anual", membresia.CostoAnual)
             };
 
             bool resultado = conexion.EjecutarTransaccion("editar_tipo_membresia", parametros);
             return resultado ? "Membresía actualizada correctamente" : "Error en la base de datos";
         }
 
+        /// <summary>
+        /// Obtiene todas las membresías activas (sin filtros)
+        /// </summary>
+        public List<Membresia> ObtenerTodasMembresias()
+        {
+            DataTable datos = conexion.EjecutarConsulta("obtener_todas_membresias");
+            List<Membresia> membresias = new List<Membresia>();
+
+            foreach (DataRow row in datos.Rows)
+            {
+                membresias.Add(new Membresia
+                {
+                    Id = Convert.ToInt32(row["PK_ID_TIPO_MEMBRESIA"]),
+                    Nombre = row["NOMBRE"].ToString() ?? "",
+                    Costo = row.Table.Columns.Contains("COSTO_MES") && row["COSTO_MES"] != DBNull.Value
+                        ? decimal.Parse(row["COSTO_MES"].ToString() ?? "0")
+                        : 0,
+                    Estado = row.Table.Columns.Contains("ESTADO") && row["ESTADO"] != DBNull.Value
+                        ? Convert.ToInt32(row["ESTADO"])
+                        : 1,
+                    // Campos de límites
+                    Duracion = row.Table.Columns.Contains("DURACION_OFERTA") && row["DURACION_OFERTA"] != DBNull.Value
+                        ? Convert.ToInt32(row["DURACION_OFERTA"])
+                        : 24,
+                    Cantidad = row.Table.Columns.Contains("CANTIDAD_PRODUCTOS") && row["CANTIDAD_PRODUCTOS"] != DBNull.Value
+                        ? Convert.ToInt32(row["CANTIDAD_PRODUCTOS"])
+                        : 0,
+                    OfertasFlashSimultaneas = row.Table.Columns.Contains("OFERTAS_FLASH_SIMULTANEAS") && row["OFERTAS_FLASH_SIMULTANEAS"] != DBNull.Value
+                        ? Convert.ToInt32(row["OFERTAS_FLASH_SIMULTANEAS"])
+                        : 1,
+                    OfertasFlashTotal = row.Table.Columns.Contains("OFERTAS_FLASH_TOTAL") && row["OFERTAS_FLASH_TOTAL"] != DBNull.Value
+                        ? Convert.ToInt32(row["OFERTAS_FLASH_TOTAL"])
+                        : 0,
+                    // Costos por período
+                    CostoTrimestral = row.Table.Columns.Contains("COSTO_TRIMESTRE") && row["COSTO_TRIMESTRE"] != DBNull.Value
+                        ? decimal.Parse(row["COSTO_TRIMESTRE"].ToString() ?? "0")
+                        : 0,
+                    CostoSemestral = row.Table.Columns.Contains("COSTO_SEMESTRE") && row["COSTO_SEMESTRE"] != DBNull.Value
+                        ? decimal.Parse(row["COSTO_SEMESTRE"].ToString() ?? "0")
+                        : 0,
+                    CostoAnual = row.Table.Columns.Contains("COSTO_ANIO") && row["COSTO_ANIO"] != DBNull.Value
+                        ? decimal.Parse(row["COSTO_ANIO"].ToString() ?? "0")
+                        : 0
+                });
+            }
+
+            return membresias;
+        }
+
         // Obtener una membresía por ID
-        public Membresia ObtenerMembresia(int id)
+        public Membresia? ObtenerMembresia(int id)
         {
             List<Parametro> parametros = new List<Parametro>
             {
@@ -93,19 +149,89 @@ namespace BusinessLogic
                 return new Membresia
                 {
                     Id = Convert.ToInt32(row["PK_ID_TIPO_MEMBRESIA"]),
-                    Nombre = row["NOMBRE"].ToString(),
-                    Descripcion = row["DESCRIPCION"].ToString(),
-                    Costo = float.Parse(row["COSTO"].ToString()),
+                    Nombre = row["NOMBRE"]?.ToString() ?? "",
+                    Costo = decimal.Parse(row["COSTO"]?.ToString() ?? "0"),
                     Estado = Convert.ToInt32(row["ESTADO"]),
                     Duracion = Convert.ToInt32(row["DURACION_OFERTA"]),
                     Cantidad = Convert.ToInt32(row["CANTIDAD_PRODUCTOS"]),
-                    Costo_trimestral = float.Parse(row["COSTO_TRIMESTRAL"].ToString()),
-                    Costo_semestral = float.Parse(row["COSTO_SEMESTRAL"].ToString()),
-                    Costo_anual = float.Parse(row["COSTO_ANUAL"].ToString())
+                    OfertasFlashSimultaneas = row.Table.Columns.Contains("OFERTAS_FLASH_SIMULTANEAS") ? Convert.ToInt32(row["OFERTAS_FLASH_SIMULTANEAS"]) : 1,
+                    OfertasFlashTotal = row.Table.Columns.Contains("OFERTAS_FLASH_TOTAL") ? Convert.ToInt32(row["OFERTAS_FLASH_TOTAL"]) : 0,
+                    CostoTrimestral = decimal.Parse(row["COSTO_TRIMESTRAL"]?.ToString() ?? "0"),
+                    CostoSemestral = decimal.Parse(row["COSTO_SEMESTRAL"]?.ToString() ?? "0"),
+                    CostoAnual = decimal.Parse(row["COSTO_ANUAL"]?.ToString() ?? "0")
                 };
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// Obtiene una membresía con sus permisos cargados
+        /// </summary>
+        public Membresia? ObtenerMembresiaConPermisos(int id)
+        {
+            var membresia = ObtenerMembresia(id);
+            if (membresia != null)
+            {
+                membresia.Permisos = manejadorPermisos.ObtenerPermisosMembresia(id);
+                membresia.TotalPermisos = membresia.Permisos.Count;
+            }
+            return membresia;
+        }
+
+        /// <summary>
+        /// Obtiene todas las membresías con conteo de permisos
+        /// </summary>
+        public List<Membresia> ObtenerMembresiasConConteoPermisos()
+        {
+            DataTable datos = conexion.EjecutarConsulta("obtener_membresias_con_permisos");
+            List<Membresia> membresias = new List<Membresia>();
+
+            foreach (DataRow row in datos.Rows)
+            {
+                membresias.Add(new Membresia
+                {
+                    Id = Convert.ToInt32(row["PK_ID_TIPO_MEMBRESIA"]),
+                    Nombre = row["NOMBRE"]?.ToString() ?? "",
+                    Costo = row["COSTO"] != DBNull.Value ? decimal.Parse(row["COSTO"]?.ToString() ?? "0") : 0,
+                    Estado = row["ESTADO"] != DBNull.Value ? Convert.ToInt32(row["ESTADO"]) : 1,
+                    Cantidad = row["CANTIDAD_PRODUCTOS"] != DBNull.Value ? Convert.ToInt32(row["CANTIDAD_PRODUCTOS"]) : 0,
+                    OfertasFlashSimultaneas = row["OFERTAS_FLASH_SIMULTANEAS"] != DBNull.Value ? Convert.ToInt32(row["OFERTAS_FLASH_SIMULTANEAS"]) : 1,
+                    Duracion = row["DURACION_OFERTA"] != DBNull.Value ? Convert.ToInt32(row["DURACION_OFERTA"]) : 6,
+                    TotalPermisos = row["total_permisos"] != DBNull.Value ? Convert.ToInt32(row["total_permisos"]) : 0
+                });
+            }
+
+            return membresias;
+        }
+
+        /// <summary>
+        /// Actualiza los permisos de una membresía
+        /// </summary>
+        public int ActualizarPermisosMembresia(int idTipoMembresia, List<int> idsPermisos)
+        {
+            return manejadorPermisos.ActualizarPermisosMembresia(idTipoMembresia, idsPermisos);
+        }
+
+        /// <summary>
+        /// Obtiene todas las membresías con sus permisos completos (optimizado - 1 sola consulta)
+        /// </summary>
+        public List<Membresia> ObtenerMembresiasConPermisos()
+        {
+            var membresias = ObtenerTodasMembresias();
+
+            // Obtener todos los permisos en una sola consulta (evita N+1)
+            var idsMembresias = membresias.Select(m => m.Id).ToList();
+            var permisosPorMembresia = manejadorPermisos.ObtenerPermisosMembresiaBulk(idsMembresias);
+
+            foreach (var membresia in membresias)
+            {
+                membresia.Permisos = permisosPorMembresia.TryGetValue(membresia.Id, out var permisos)
+                    ? permisos
+                    : new List<PermisoSistema>();
+                membresia.TotalPermisos = membresia.Permisos.Count;
+            }
+            return membresias;
         }
 
     }

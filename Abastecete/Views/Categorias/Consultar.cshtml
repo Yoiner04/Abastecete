@@ -1,403 +1,828 @@
-﻿@model List<BusinessLogic.Models.Categoria>
+@model List<BusinessLogic.Models.Categoria>
+@using BusinessLogic.Utilidades
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Abastecete</title>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/Abastecete.styles.css" asp-append-version="true" />
-    <link rel="icon" type="image/x-icon" href="~/css/Images/Logo A naranja.png" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
-    <link rel="stylesheet" href="~/css/styles.css" asp-append-version="true" />}
-    <link href="https://cdn.jsdelivr.net/npm/flowbite@3.1.2/dist/flowbite.min.css" rel="stylesheet" />
+@{
+    ViewData["Title"] = "Gestión de Categorías - Abastecete";
+    ViewData["Description"] = "Administra las categorías y subcategorías de productos en Abastecete. Crea, edita y organiza categorías para una mejor gestión del inventario.";
+    var permisos = Context.Session.GetString("permisosSistema") ?? "";
+    var tienePermiso = RolPermisos.TienePermiso("ADMIN_CATEGORIAS", permisos);
+}
 
-</head>
+<!-- Skeleton Loader -->
+<div id="skeleton-categorias" class="animate-pulse">
+    <!-- Header Skeleton -->
+    <div class="bg-white border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-lg bg-gray-200"></div>
+                    <div>
+                        <div class="h-8 bg-gray-200 rounded w-64 mb-2"></div>
+                        <div class="h-4 bg-gray-200 rounded w-80"></div>
+                    </div>
+                </div>
+                <div class="h-10 bg-gray-200 rounded w-40"></div>
+            </div>
+        </div>
+    </div>
 
-<body>
-    <section class="mt-12 px-6 md:px-16 lg:px-36">
-        <div class="mb-6 flex flex-col items-center justify-between space-y-4 md:flex-row md:space-y-0">
-            <h2 class="text-center text-lg font-bold text-gray-800 md:text-left">Gestión de Categorías</h2>
-            <button id="open-add-modal"
-                    class="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700">
-                + Agregar Categoría
-            </button>
+    <!-- Contenido con contenedor -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <!-- Stats Cards Skeleton -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div class="bg-white rounded-xl border border-gray-200 p-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-lg bg-gray-200"></div>
+                    <div class="flex-1">
+                        <div class="h-8 bg-gray-200 rounded w-16 mb-2"></div>
+                        <div class="h-3 bg-gray-200 rounded w-24"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-xl border border-gray-200 p-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-lg bg-gray-200"></div>
+                    <div class="flex-1">
+                        <div class="h-8 bg-gray-200 rounded w-16 mb-2"></div>
+                        <div class="h-3 bg-gray-200 rounded w-24"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-xl border border-gray-200 p-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-lg bg-gray-200"></div>
+                    <div class="flex-1">
+                        <div class="h-8 bg-gray-200 rounded w-16 mb-2"></div>
+                        <div class="h-3 bg-gray-200 rounded w-24"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-xl border border-gray-200 p-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-lg bg-gray-200"></div>
+                    <div class="flex-1">
+                        <div class="h-8 bg-gray-200 rounded w-16 mb-2"></div>
+                        <div class="h-3 bg-gray-200 rounded w-24"></div>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <div class="overflow-x-auto whitespace-nowrap">
-            <table class="w-full overflow-hidden rounded-lg bg-white shadow-md">
-                <thead class="bg-gray-200">
-                    <tr>
-                        <th class="px-4 py-3 text-center text-xs font-medium text-gray-700 uppercase md:px-6">Nombre</th>
-                        <th class="px-4 py-3 text-center text-xs font-medium text-gray-700 uppercase md:px-6">Imagen</th>
-                        <th class="px-4 py-3 text-center text-xs font-medium text-gray-700 uppercase md:px-6">Banner</th>
-                        <th class="px-4 py-3 text-center text-xs font-medium text-gray-700 uppercase md:px-6">Estado</th>
-                        <th class="px-4 py-3 text-center text-xs font-medium text-gray-700 uppercase md:px-6">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody id="category-table-body">
-                    @foreach (var categoria in Model)
-                    {
-                        <tr class="text-center hover:bg-gray-100">
-                            <td class="px-4 py-3 text-gray-700">
-                                @categoria.Nombre
-                            </td>
+        <!-- Filtros Skeleton -->
+        <div class="bg-white rounded-xl border border-gray-200 p-4 mb-6">
+            <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+                <div class="flex flex-col sm:flex-row gap-3 flex-1">
+                    <div class="h-10 bg-gray-200 rounded-lg w-full max-w-md"></div>
+                    <div class="h-10 bg-gray-200 rounded-lg w-40"></div>
+                </div>
+                <div class="h-10 bg-gray-200 rounded-lg w-24"></div>
+            </div>
+        </div>
 
-                            <td class="px-4 py-3">
-                                @if (categoria.Imagen != null)
-                                {
-                                    <img src="@categoria.Imagen.Base64" alt="@categoria.Nombre"
-                                         class="mx-auto h-14 w-14 rounded-full border object-cover md:w-16 md:h-16">
-                                }
-                                else
-                                {
-                                    <span class="text-xs text-gray-400">Sin imagen</span>
-                                }
+        <!-- Tabla Skeleton -->
+        <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead>
+                        <tr class="bg-gray-50 border-b border-gray-200">
+                            <th class="px-4 py-3"><div class="h-4 bg-gray-200 rounded w-24"></div></th>
+                            <th class="px-4 py-3"><div class="h-4 bg-gray-200 rounded w-20 mx-auto"></div></th>
+                            <th class="px-4 py-3"><div class="h-4 bg-gray-200 rounded w-20 mx-auto"></div></th>
+                            <th class="px-4 py-3"><div class="h-4 bg-gray-200 rounded w-20 mx-auto"></div></th>
+                            <th class="px-4 py-3"><div class="h-4 bg-gray-200 rounded w-24 mx-auto"></div></th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-4 py-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-lg bg-gray-200"></div>
+                                    <div class="h-5 bg-gray-200 rounded w-32"></div>
+                                </div>
                             </td>
-
-                            <td class="px-4 py-3">
-                                @if (categoria.BannerImagen != null)
-                                {
-                                    <img src="@categoria.BannerImagen.Base64" alt="Banner de @categoria.Nombre"
-                                         class="mx-auto h-20 w-32 rounded-lg border object-contain">
-                                }
-                                else
-                                {
-                                    <span class="text-xs text-gray-400">Sin banner</span>
-                                }
-                            </td>
-
-                            <td class="px-4 py-3">
-                                <span class="@(categoria.Estado == 1 ? "text-green-600" : "text-red-600")">
-                                    @(categoria.Estado == 1 ? "🟢 Activo" : "🔴 Inactivo")
-                                </span>
-                            </td>
-
-                            <td class="px-4 py-3">
+                            <td class="px-4 py-4"><div class="w-14 h-14 rounded-lg bg-gray-200 mx-auto"></div></td>
+                            <td class="px-4 py-4"><div class="w-24 h-12 rounded-lg bg-gray-200 mx-auto"></div></td>
+                            <td class="px-4 py-4"><div class="h-6 bg-gray-200 rounded-full w-16 mx-auto"></div></td>
+                            <td class="px-4 py-4">
                                 <div class="flex items-center justify-center gap-2">
-                                    <button class="text-blue-600 hover:text-blue-800" onclick="editarCategoria(@categoria.Id)">
-                                        ✏ Editar
-                                    </button>
-                                    <button class="text-blue-600 hover:text-blue-800" onclick="verSubCategorias(@categoria.Id)">
-                                        📂 Subcategorías
-                                    </button>
+                                    <div class="h-8 bg-gray-200 rounded-lg w-20"></div>
+                                    <div class="h-8 bg-gray-200 rounded-lg w-28"></div>
                                 </div>
                             </td>
                         </tr>
-                    }
-                </tbody>
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-4 py-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-lg bg-gray-200"></div>
+                                    <div class="h-5 bg-gray-200 rounded w-32"></div>
+                                </div>
+                            </td>
+                            <td class="px-4 py-4"><div class="w-14 h-14 rounded-lg bg-gray-200 mx-auto"></div></td>
+                            <td class="px-4 py-4"><div class="w-24 h-12 rounded-lg bg-gray-200 mx-auto"></div></td>
+                            <td class="px-4 py-4"><div class="h-6 bg-gray-200 rounded-full w-16 mx-auto"></div></td>
+                            <td class="px-4 py-4">
+                                <div class="flex items-center justify-center gap-2">
+                                    <div class="h-8 bg-gray-200 rounded-lg w-20"></div>
+                                    <div class="h-8 bg-gray-200 rounded-lg w-28"></div>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-4 py-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-lg bg-gray-200"></div>
+                                    <div class="h-5 bg-gray-200 rounded w-32"></div>
+                                </div>
+                            </td>
+                            <td class="px-4 py-4"><div class="w-14 h-14 rounded-lg bg-gray-200 mx-auto"></div></td>
+                            <td class="px-4 py-4"><div class="w-24 h-12 rounded-lg bg-gray-200 mx-auto"></div></td>
+                            <td class="px-4 py-4"><div class="h-6 bg-gray-200 rounded-full w-16 mx-auto"></div></td>
+                            <td class="px-4 py-4">
+                                <div class="flex items-center justify-center gap-2">
+                                    <div class="h-8 bg-gray-200 rounded-lg w-20"></div>
+                                    <div class="h-8 bg-gray-200 rounded-lg w-28"></div>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
 
-
-            </table>
+            <!-- Paginación Skeleton -->
+            <div class="px-4 py-3 border-t border-gray-200 bg-gray-50">
+                <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div class="h-4 bg-gray-200 rounded w-48"></div>
+                    <div class="flex items-center gap-2">
+                        <div class="h-9 bg-gray-200 rounded-lg w-24"></div>
+                        <div class="h-9 bg-gray-200 rounded-lg w-32"></div>
+                        <div class="h-9 bg-gray-200 rounded-lg w-24"></div>
+                    </div>
+                </div>
+            </div>
         </div>
-    </section>
-
-    <div id="category-modal" class="bg-opacity-50 fixed inset-0 z-50 flex hidden items-center justify-center bg-black">
-    <div class="mx-4 w-full max-w-md rounded-2xl bg-white p-8 shadow-2xl">
-        
-        <h2 id="modal-title" class="mb-6 text-center text-2xl font-bold text-gray-800">
-            Agregar Categoría
-        </h2>
-
-        <form action="" id="category-form" class="space-y-5">
-            <input type="hidden" id="category-id">
-
-            <div>
-                <label for="category-name" class="mb-2 block text-sm font-medium text-gray-700">
-                    Nombre de la categoría
-                </label>
-                <input type="text" id="category-name" placeholder="Ej: Bebidas, Alimentos, Aseo"
-                    class="w-full rounded-lg border border-gray-300 bg-gray-50 p-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-400"
-                    required>
-            </div>
-
-            <div>
-                <label for="category-image" class="mb-2 block text-sm font-medium text-gray-700">
-                    Imagen
-                </label>
-                <input id="category-image" type="file" accept="image/*"
-                    class="block w-full cursor-pointer rounded-lg border border-gray-300 bg-gray-50 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-400">
-            </div>
-
-
-            <div class="flex justify-center">
-                <img id="image-preview" src="" alt="Vista previa"
-                    class="hidden h-24 w-24 rounded-lg border object-cover">
-            </div>
-
-            <div>
-                <label for="banner-image" class="mb-2 block text-sm font-medium text-gray-700">
-                    Banner
-                </label>
-                <input id="banner-image" type="file" accept="image/*"
-                        class="block w-full cursor-pointer rounded-lg border border-gray-300 bg-gray-50 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-400">
-            </div>
-
-            <div class="flex justify-center">
-                <img id="banner-preview" src="" alt="Vista previa"
-                        class="hidden h-24 w-24 rounded-lg border object-cover">
-            </div>
-
-
-            <div class="flex items-center gap-2">
-                <input type="checkbox" id="status-checkbox"
-                    class="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500">
-                <label for="status-checkbox" class="text-sm font-medium text-gray-700">
-                    Activa
-                </label>
-            </div>
-
-            <button type="submit"
-                class="w-full rounded-lg bg-green-600 py-3 text-lg font-bold text-white transition hover:bg-green-700">
-                Guardar
-            </button>
-        </form>
-
-        <button id="close-category-modal" class="mt-6 w-full text-center text-sm font-semibold text-gray-500 transition hover:text-gray-700">
-            Cerrar
-        </button>
     </div>
 </div>
 
+<!-- Contenido Real -->
+<div id="content-categorias" class="hidden">
 
-
-    <div id="subcategorias-modal" class="bg-opacity-50 fixed inset-0 z-50 flex hidden items-center justify-center bg-black"
-         onclick="cerrarSubCategorias(event)">
-        <div class="mx-4 w-full max-w-md rounded-lg bg-white p-6 shadow-lg" onclick="event.stopPropagation();">
-            <h2 class="text-center text-xl font-bold text-gray-800">Subcategorías</h2>
-
-            <table id="tabla-subcategorias" class="mt-4 w-full">
-                <thead>
-                    <tr>
-                        <th>Nombre</th>
-                        <th>Estado</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody id="tabla-subcategorias-body">
-                    <!-- Aquí se llenarán dinámicamente las subcategorías -->
-                </tbody>
-            </table>
-
-            <hr class="my-4">
-
-            <h3 id="subcategoria-form-title" class="text-lg font-bold text-gray-800">Agregar Subcategoría</h3>
-            <form id="subcategoria-form">
-                <input type="hidden" id="subcategoria-id">
-                <input type="hidden" id="subcategoria-idCategoria">
-
-                <label class="block font-medium text-gray-700">Nombre</label>
-                <input type="text" id="subcategoria-nombre" placeholder="Nombre de la subcategoría"
-                       class="mb-3 w-full rounded-lg border border-gray-300 bg-gray-100 p-3 text-black" required>
-
-                <label class="block font-medium text-gray-700">Estado</label>
-                <select id="subcategoria-estado" class="mb-3 w-full rounded-lg border border-gray-300 p-2">
-                    <option value="1">Activo</option>
-                    <option value="0">Inactivo</option>
-                </select>
-
-                <button type="submit" class="w-full rounded-lg bg-green-600 py-3 font-bold text-white hover:bg-green-700">
-                    Guardar Subcategoría
+<!-- Header a ancho completo -->
+<div class="bg-white border-b border-gray-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div class="flex items-center gap-4">
+                <a href="@Url.Action("Principal", "Home")"
+                   class="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-600 hover:text-gray-800 transition-colors">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900">Gestión de Categorías</h1>
+                    <p class="text-sm text-gray-500 mt-1">Administra las categorías y subcategorías de productos</p>
+                </div>
+            </div>
+            @if (tienePermiso)
+            {
+                <button id="open-add-modal"
+                        class="inline-flex items-center px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg transition-colors">
+                    <i class="fas fa-plus mr-2"></i>
+                    Agregar Categoría
                 </button>
-            </form>
-
-            <button onclick="cerrarSubCategorias()" class="mt-3 block w-full text-center text-gray-600 hover:text-gray-800">
-                Cerrar
-            </button>
+            }
         </div>
     </div>
+</div>
 
+<!-- Contenido con contenedor -->
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
 
-    <script src="https://cdn.jsdelivr.net/npm/flowbite@3.1.2/dist/flowbite.min.js"></script>
+<!-- Stats Cards -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div class="bg-white rounded-xl border border-gray-200 p-4">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
+                <i class="fas fa-tags text-emerald-600"></i>
+            </div>
+            <div>
+                <p class="text-2xl font-bold text-gray-900">@Model.Count</p>
+                <p class="text-xs text-gray-500">Total Categorías</p>
+            </div>
+        </div>
+    </div>
+    <div class="bg-white rounded-xl border border-gray-200 p-4">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
+                <i class="fas fa-check-circle text-green-600"></i>
+            </div>
+            <div>
+                <p class="text-2xl font-bold text-gray-900">@Model.Count(c => c.Estado == 1)</p>
+                <p class="text-xs text-gray-500">Activas</p>
+            </div>
+        </div>
+    </div>
+    <div class="bg-white rounded-xl border border-gray-200 p-4">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-lg bg-red-100 flex items-center justify-center">
+                <i class="fas fa-times-circle text-red-600"></i>
+            </div>
+            <div>
+                <p class="text-2xl font-bold text-gray-900">@Model.Count(c => c.Estado != 1)</p>
+                <p class="text-xs text-gray-500">Inactivas</p>
+            </div>
+        </div>
+    </div>
+    <div class="bg-white rounded-xl border border-gray-200 p-4">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
+                <i class="fas fa-image text-blue-600"></i>
+            </div>
+            <div>
+                <p class="text-2xl font-bold text-gray-900">@Model.Count(c => c.Imagen != null)</p>
+                <p class="text-xs text-gray-500">Con Imagen</p>
+            </div>
+        </div>
+    </div>
+</div>
 
-    <script>
-        document.getElementById("open-add-modal").addEventListener("click", openModal);
-        document.getElementById("close-category-modal").addEventListener("click", closeModal);
+<!-- Filtros y búsqueda -->
+<div class="bg-white rounded-xl border border-gray-200 p-4 mb-6">
+    <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+        <div class="flex flex-col sm:flex-row gap-3 flex-1">
+            <div class="relative flex-1 max-w-md">
+                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                <input type="text" id="searchInput" placeholder="Buscar categoría..."
+                       class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+            </div>
+            <select id="filterEstado" class="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+                <option value="">Todos los estados</option>
+                <option value="1">Activas</option>
+                <option value="0">Inactivas</option>
+            </select>
+        </div>
+        <div class="flex items-center gap-2 text-sm text-gray-600">
+            <span>Mostrar:</span>
+            <select id="itemsPerPage" class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+                <option value="10">10</option>
+                <option value="25" selected>25</option>
+                <option value="50">50</option>
+            </select>
+        </div>
+    </div>
+</div>
 
-        function openModal() {
-            document.getElementById("category-id").value = "";
-            document.getElementById("category-name").value = "";
-            document.getElementById("category-image").value = "";
-            document.getElementById("banner-image").value = "";
-            document.getElementById("image-preview").classList.add("hidden");
-            document.getElementById("banner-preview").classList.add("hidden");
-            document.getElementById("status-checkbox").checked = false;
-            document.getElementById("modal-title").textContent = "Agregar Categoría";
-            document.getElementById("category-modal").classList.remove("hidden");
-        }
-
-        function closeModal() {
-            document.getElementById("category-modal").classList.add("hidden");
-        }
-
-        document.addEventListener("DOMContentLoaded", function () {
-            window.editarCategoria = function (id) {
-                fetch(`/Categorias/ObtenerCategoria?id=${id}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        document.getElementById("category-id").value = data.id;
-                        document.getElementById("category-name").value = data.nombre || "Sin nombre";
-                        document.getElementById("status-checkbox").checked = data.estado === 1;
-
-                        if (data.imagen && data.imagen.base64) {
-                            document.getElementById("image-preview").src = data.imagen.base64;
-                            document.getElementById("image-preview").classList.remove("hidden");
-                        } else {
-                            document.getElementById("image-preview").classList.add("hidden");
-                        }
-
-                        if (data.bannerImagen && data.bannerImagen.base64) {
-                            document.getElementById("banner-preview").src = data.bannerImagen.base64;
-                            document.getElementById("banner-preview").classList.remove("hidden");
-                        } else {
-                            document.getElementById("banner-preview").classList.add("hidden");
-                        }
-
-                        document.getElementById("modal-title").textContent = "Editar Categoría";
-                        document.getElementById("category-modal").classList.remove("hidden");
-                    })
-                    .catch(error => {
-                        console.error("Error al obtener la categoría:", error);
-                        alert("Error al obtener la categoría. Verifica la consola.");
-                    });
-            };
-        });
-
-        // Ajuste importante: enviar también el banner
-        document.getElementById("category-form").addEventListener("submit", function (event) {
-            event.preventDefault();
-
-            let id = document.getElementById("category-id").value;
-            let nombre = document.getElementById("category-name").value;
-            let estado = document.getElementById("status-checkbox").checked ? 1 : 0;
-            let imagenInput = document.getElementById("category-image").files[0];
-            let bannerInput = document.getElementById("banner-image").files[0];
-
-            if (!nombre.trim()) {
-                alert("El nombre de la categoría es obligatorio.");
-                return;
-            }
-
-            let formData = new FormData();
-            formData.append("Id", id || 0);
-            formData.append("Nombre", nombre);
-            formData.append("Estado", estado);
-            if (imagenInput) {
-                formData.append("Imagen", imagenInput);
-            }
-            if (bannerInput) {
-                formData.append("Banner", bannerInput);
-            }
-
-            let url = id ? "/Categorias/EditarCategoria" : "/Categorias/Crear";
-
-            fetch(url, {
-                method: "POST",
-                body: formData
-            })
-                .then(response => response.json())
-                .then(data => {
-                    alert("Se ha agregado la imagen con exito");
-                    location.reload();
-                })
-                .catch(error => console.error("Error:", error));
-        });
-
-        // Subcategorías (sin cambios mayores)
-        function verSubCategorias(idCategoria) {
-            document.getElementById("subcategoria-idCategoria").value = idCategoria;
-
-            fetch(`/SubCategorias/ObtenerSubCategorias?idCategoria=${idCategoria}`)
-                .then(res => res.json())
-                .then(subcategorias => {
-                    let tableBody = document.getElementById("tabla-subcategorias-body");
-
-                    if (!tableBody) {
-                        console.error("No se encontró el tbody con ID 'tabla-subcategorias-body'");
-                        return;
+<!-- Tabla -->
+<div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full" id="categoriasTable">
+            <thead>
+                <tr class="bg-gray-50 border-b border-gray-200">
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Nombre</th>
+                    <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Imagen</th>
+                    <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Banner</th>
+                    <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Estado</th>
+                    @if (tienePermiso)
+                    {
+                        <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Acciones</th>
                     }
-
-                    tableBody.innerHTML = "";
-
-                    subcategorias.forEach(sub => {
-                        let row = `<tr>
-                            <td>${sub.nombre}</td>
-                            <td>${sub.estado == 1 ? "🟢 Activo" : "🔴 Inactivo"}</td>
-                            <td>
-                                <button onclick="editarSubCategoria(${sub.id})">✏ Editar</button>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200" id="tableBody">
+                @foreach (var categoria in Model)
+                {
+                    <tr class="hover:bg-gray-50 transition-colors data-row"
+                        data-nombre="@categoria.Nombre.ToLower()"
+                        data-estado="@categoria.Estado">
+                        <td class="px-4 py-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white font-bold">
+                                    @categoria.Nombre.Substring(0, 1).ToUpper()
+                                </div>
+                                <div>
+                                    <p class="font-semibold text-gray-900">@categoria.Nombre</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-4 py-4 text-center">
+                            @if (categoria.Imagen != null)
+                            {
+                                <img src="@categoria.Imagen.Base64" alt="@categoria.Nombre"
+                                     class="mx-auto h-14 w-14 rounded-lg border border-gray-200 object-cover shadow-sm">
+                            }
+                            else
+                            {
+                                <div class="mx-auto w-14 h-14 rounded-lg bg-gray-100 flex items-center justify-center">
+                                    <i class="fas fa-image text-gray-400"></i>
+                                </div>
+                            }
+                        </td>
+                        <td class="px-4 py-4 text-center">
+                            @if (categoria.BannerImagen != null)
+                            {
+                                <img src="@categoria.BannerImagen.Base64" alt="Banner de @categoria.Nombre"
+                                     class="mx-auto h-12 w-24 rounded-lg border border-gray-200 object-cover shadow-sm">
+                            }
+                            else
+                            {
+                                <div class="mx-auto w-24 h-12 rounded-lg bg-gray-100 flex items-center justify-center">
+                                    <i class="fas fa-panorama text-gray-400"></i>
+                                </div>
+                            }
+                        </td>
+                        <td class="px-4 py-4 text-center">
+                            @if (categoria.Estado == 1)
+                            {
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-green-500 mr-1.5"></span>
+                                    Activa
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-red-500 mr-1.5"></span>
+                                    Inactiva
+                                </span>
+                            }
+                        </td>
+                        @if (tienePermiso)
+                        {
+                            <td class="px-4 py-4">
+                                <div class="flex items-center justify-center gap-2">
+                                    <button onclick="editarCategoria(@categoria.Id)"
+                                            class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors">
+                                        <i class="fas fa-edit mr-1.5"></i>
+                                        Editar
+                                    </button>
+                                    <button onclick="verSubCategorias(@categoria.Id)"
+                                            class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors">
+                                        <i class="fas fa-folder-open mr-1.5"></i>
+                                        Subcategorías
+                                    </button>
+                                </div>
                             </td>
-                        </tr>`;
-                        tableBody.innerHTML += row;
-                    });
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 
-                    document.getElementById("subcategorias-modal").classList.remove("hidden");
-                })
-                .catch(error => console.error("Error al cargar subcategorías:", error));
-        }
+    <!-- Empty state -->
+    <div id="emptyState" class="hidden py-12 text-center">
+        <div class="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+            <i class="fas fa-tags text-2xl text-gray-400"></i>
+        </div>
+        <h3 class="text-lg font-medium text-gray-900 mb-1">No se encontraron categorías</h3>
+        <p class="text-gray-500">Intenta con otros filtros de búsqueda</p>
+    </div>
 
-        function agregarSubCategoria() {
-            let idCategoria = document.getElementById("subcategoria-idCategoria").value;
-            document.getElementById("subcategoria-id").value = "";
-            document.getElementById("subcategoria-nombre").value = "";
-            document.getElementById("subcategoria-estado").value = "1";
-            document.getElementById("subcategoria-idCategoria").value = idCategoria;
-            document.getElementById("subcategoria-form-title").textContent = "Agregar Subcategoría";
-        }
+    <!-- Paginación -->
+    <div class="px-4 py-3 border-t border-gray-200 bg-gray-50">
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p class="text-sm text-gray-600">
+                Mostrando <span id="showingFrom" class="font-medium">1</span> a <span id="showingTo" class="font-medium">@Math.Min(25, Model.Count)</span> de <span id="totalItems" class="font-medium">@Model.Count</span> categorías
+            </p>
+            <div class="flex items-center gap-2">
+                <button id="prevPage" class="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                    <i class="fas fa-chevron-left mr-1"></i> Anterior
+                </button>
+                <div id="pageNumbers" class="flex items-center gap-1"></div>
+                <button id="nextPage" class="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed">
+                    Siguiente <i class="fas fa-chevron-right ml-1"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
-        function editarSubCategoria(id) {
-            fetch(`/SubCategorias/ObtenerSubCategorias?idCategoria=${document.getElementById("subcategoria-idCategoria").value}`)
-                .then(res => res.json())
-                .then(subcategorias => {
-                    let sub = subcategorias.find(s => s.id == id);
-                    if (!sub) {
-                        console.error("Subcategoría no encontrada");
-                        return;
-                    }
+<!-- Modal Agregar/Editar Categoría -->
+<div id="category-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 p-4 overflow-y-auto">
+    <div class="min-h-full flex items-center justify-center">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md">
+            <div class="p-6 border-b border-gray-200">
+                <div class="flex items-center justify-between">
+                    <h2 id="modal-title" class="text-xl font-bold text-gray-900">Agregar Categoría</h2>
+                    <button onclick="closeModal()" class="w-8 h-8 rounded-lg hover:bg-gray-100 flex items-center justify-center text-gray-500">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
 
-                    document.getElementById("subcategoria-id").value = sub.id;
-                    document.getElementById("subcategoria-nombre").value = sub.nombre;
-                    document.getElementById("subcategoria-estado").value = sub.estado;
-                    document.getElementById("subcategoria-idCategoria").value = sub.idCategoria;
-                    document.getElementById("subcategoria-form-title").textContent = "Editar Subcategoría";
-                })
-                .catch(error => console.error("Error al obtener la subcategoría:", error));
-        }
+            <form id="category-form" class="p-6 space-y-4">
+                <input type="hidden" id="category-id">
 
-        document.getElementById("subcategoria-form").addEventListener("submit", function (event) {
-            event.preventDefault();
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Nombre de la categoría</label>
+                    <input type="text" id="category-name" placeholder="Ej: Bebidas, Alimentos, Aseo"
+                           class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" required>
+                </div>
 
-            let id = document.getElementById("subcategoria-id").value;
-            let idCategoria = document.getElementById("subcategoria-idCategoria").value;
-            let nombre = document.getElementById("subcategoria-nombre").value;
-            let estado = document.getElementById("subcategoria-estado").value;
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Imagen</label>
+                    <input id="category-image" type="file" accept="image/*"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100">
+                    <div class="mt-2 flex justify-center">
+                        <img id="image-preview" src="" alt="Vista previa"
+                             class="hidden h-20 w-20 rounded-lg border object-cover">
+                    </div>
+                </div>
 
-            if (!nombre.trim()) {
-                alert("El nombre de la subcategoría es obligatorio.");
-                return;
-            }
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Banner</label>
+                    <input id="banner-image" type="file" accept="image/*"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100">
+                    <div class="mt-2 flex justify-center">
+                        <img id="banner-preview" src="" alt="Vista previa banner"
+                             class="hidden h-16 w-32 rounded-lg border object-cover">
+                    </div>
+                </div>
 
-            let url = id ? "/SubCategorias/EditarSubCategoria" : "/SubCategorias/CrearSubCategoria";
-            let data = new URLSearchParams({ Id: id, IdCategoria: idCategoria, Nombre: nombre, Estado: estado });
+                <div class="flex items-center gap-2">
+                    <input type="checkbox" id="status-checkbox"
+                           class="w-4 h-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500">
+                    <label for="status-checkbox" class="text-sm font-medium text-gray-700">Categoría activa</label>
+                </div>
 
-            fetch(url, {
-                method: "POST",
-                body: data,
-                headers: { "Content-Type": "application/x-www-form-urlencoded" }
-            })
-                .then(response => response.json())
-                .then(data => {
-                    alert(data.mensaje);
-                    location.reload();
-                })
-                .catch(error => console.error("Error:", error));
+                <div class="flex gap-3 pt-4">
+                    <button type="button" onclick="closeModal()"
+                            class="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium transition-colors">
+                        Cancelar
+                    </button>
+                    <button type="submit"
+                            class="flex-1 px-4 py-2.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-medium transition-colors">
+                        <i class="fas fa-save mr-2"></i>Guardar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Subcategorías -->
+<div id="subcategorias-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 p-4 overflow-y-auto">
+    <div class="min-h-full flex items-center justify-center">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg">
+            <div class="p-6 border-b border-gray-200">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-xl font-bold text-gray-900">Subcategorías</h2>
+                    <button onclick="cerrarSubCategorias()" class="w-8 h-8 rounded-lg hover:bg-gray-100 flex items-center justify-center text-gray-500">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="p-6">
+                <div class="overflow-x-auto mb-6">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="bg-gray-50 border-b">
+                                <th class="px-3 py-2 text-left font-semibold text-gray-600">Nombre</th>
+                                <th class="px-3 py-2 text-center font-semibold text-gray-600">Estado</th>
+                                <th class="px-3 py-2 text-center font-semibold text-gray-600">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-subcategorias-body" class="divide-y divide-gray-200">
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="border-t pt-4">
+                    <h3 id="subcategoria-form-title" class="text-lg font-semibold text-gray-900 mb-3">Agregar Subcategoría</h3>
+                    <form id="subcategoria-form" class="space-y-3">
+                        <input type="hidden" id="subcategoria-id">
+                        <input type="hidden" id="subcategoria-idCategoria">
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
+                            <input type="text" id="subcategoria-nombre" placeholder="Nombre de la subcategoría"
+                                   class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500" required>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Estado</label>
+                            <select id="subcategoria-estado" class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+                                <option value="1">Activo</option>
+                                <option value="0">Inactivo</option>
+                            </select>
+                        </div>
+
+                        <button type="submit"
+                                class="w-full px-4 py-2.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-medium transition-colors">
+                            <i class="fas fa-save mr-2"></i>Guardar Subcategoría
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast -->
+</div> <!-- Cierre del contenedor principal -->
+
+</div> <!-- Cierre de content-categorias -->
+
+<div id="toast" class="hidden fixed bottom-4 right-4 z-50">
+    <div class="flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg" id="toastContent">
+        <i id="toastIcon" class="fas"></i>
+        <span id="toastMessage" class="font-medium"></span>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    // Paginación
+    let currentPage = 1;
+    let itemsPerPage = 25;
+    let filteredRows = [];
+    let allRows = [];
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Mostrar contenido y ocultar skeleton
+        setTimeout(function() {
+            document.getElementById('skeleton-categorias').classList.add('hidden');
+            document.getElementById('content-categorias').classList.remove('hidden');
+        }, 300);
+
+        allRows = Array.from(document.querySelectorAll('.data-row'));
+        filteredRows = [...allRows];
+
+        document.getElementById('searchInput').addEventListener('input', applyFilters);
+        document.getElementById('filterEstado').addEventListener('change', applyFilters);
+        document.getElementById('itemsPerPage').addEventListener('change', function() {
+            itemsPerPage = parseInt(this.value);
+            currentPage = 1;
+            renderPage();
+        });
+        document.getElementById('prevPage').addEventListener('click', () => changePage(-1));
+        document.getElementById('nextPage').addEventListener('click', () => changePage(1));
+
+        const openAddBtn = document.getElementById("open-add-modal");
+        if (openAddBtn) openAddBtn.addEventListener("click", openModal);
+
+        renderPage();
+    });
+
+    function applyFilters() {
+        const search = document.getElementById('searchInput').value.toLowerCase();
+        const estado = document.getElementById('filterEstado').value;
+
+        filteredRows = allRows.filter(row => {
+            const nombre = row.dataset.nombre;
+            const rowEstado = row.dataset.estado;
+
+            const matchSearch = !search || nombre.includes(search);
+            const matchEstado = !estado || rowEstado === estado;
+
+            return matchSearch && matchEstado;
         });
 
-        function cerrarSubCategorias(event) {
-            if (!event || event.target.id === "subcategorias-modal") {
-                document.getElementById("subcategorias-modal").classList.add("hidden");
-            }
+        currentPage = 1;
+        renderPage();
+    }
+
+    function renderPage() {
+        const start = (currentPage - 1) * itemsPerPage;
+        const end = start + itemsPerPage;
+        const totalPages = Math.ceil(filteredRows.length / itemsPerPage);
+
+        allRows.forEach(row => row.style.display = 'none');
+        filteredRows.slice(start, end).forEach(row => row.style.display = '');
+
+        document.getElementById('showingFrom').textContent = filteredRows.length ? start + 1 : 0;
+        document.getElementById('showingTo').textContent = Math.min(end, filteredRows.length);
+        document.getElementById('totalItems').textContent = filteredRows.length;
+
+        document.getElementById('emptyState').classList.toggle('hidden', filteredRows.length > 0);
+        document.getElementById('tableBody').style.display = filteredRows.length ? '' : 'none';
+
+        document.getElementById('prevPage').disabled = currentPage === 1;
+        document.getElementById('nextPage').disabled = currentPage >= totalPages;
+
+        renderPageNumbers(totalPages);
+    }
+
+    function renderPageNumbers(totalPages) {
+        const container = document.getElementById('pageNumbers');
+        container.innerHTML = '';
+
+        const maxVisible = 5;
+        let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+        let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+
+        if (endPage - startPage + 1 < maxVisible) {
+            startPage = Math.max(1, endPage - maxVisible + 1);
         }
-    </script>
 
+        for (let i = startPage; i <= endPage; i++) {
+            const btn = document.createElement('button');
+            btn.textContent = i;
+            btn.className = `px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
+                i === currentPage
+                    ? 'bg-emerald-600 text-white'
+                    : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
+            }`;
+            btn.onclick = () => { currentPage = i; renderPage(); };
+            container.appendChild(btn);
+        }
+    }
 
-</body>
+    function changePage(delta) {
+        const totalPages = Math.ceil(filteredRows.length / itemsPerPage);
+        currentPage = Math.max(1, Math.min(totalPages, currentPage + delta));
+        renderPage();
+    }
+
+    // Modal Categoría
+    function openModal() {
+        document.getElementById("category-id").value = "";
+        document.getElementById("category-name").value = "";
+        document.getElementById("category-image").value = "";
+        document.getElementById("banner-image").value = "";
+        document.getElementById("image-preview").classList.add("hidden");
+        document.getElementById("banner-preview").classList.add("hidden");
+        document.getElementById("status-checkbox").checked = false;
+        document.getElementById("modal-title").textContent = "Agregar Categoría";
+        document.getElementById("category-modal").classList.remove("hidden");
+    }
+
+    function closeModal() {
+        document.getElementById("category-modal").classList.add("hidden");
+    }
+
+    document.getElementById("category-modal").addEventListener("click", function(e) {
+        if (e.target === this) closeModal();
+    });
+
+    window.editarCategoria = function(id) {
+        fetch(`/Categorias/ObtenerCategoria?id=${id}`)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("category-id").value = data.id;
+                document.getElementById("category-name").value = data.nombre || "";
+                document.getElementById("status-checkbox").checked = data.estado === 1;
+
+                if (data.imagen && data.imagen.base64) {
+                    document.getElementById("image-preview").src = data.imagen.base64;
+                    document.getElementById("image-preview").classList.remove("hidden");
+                } else {
+                    document.getElementById("image-preview").classList.add("hidden");
+                }
+
+                if (data.bannerImagen && data.bannerImagen.base64) {
+                    document.getElementById("banner-preview").src = data.bannerImagen.base64;
+                    document.getElementById("banner-preview").classList.remove("hidden");
+                } else {
+                    document.getElementById("banner-preview").classList.add("hidden");
+                }
+
+                document.getElementById("modal-title").textContent = "Editar Categoría";
+                document.getElementById("category-modal").classList.remove("hidden");
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                showToast("Error al obtener la categoría", "error");
+            });
+    };
+
+    document.getElementById("category-form").addEventListener("submit", function(event) {
+        event.preventDefault();
+
+        let id = document.getElementById("category-id").value;
+        let nombre = document.getElementById("category-name").value;
+        let estado = document.getElementById("status-checkbox").checked ? 1 : 0;
+        let imagenInput = document.getElementById("category-image").files[0];
+        let bannerInput = document.getElementById("banner-image").files[0];
+
+        if (!nombre.trim()) {
+            showToast("El nombre es obligatorio", "error");
+            return;
+        }
+
+        let formData = new FormData();
+        formData.append("Id", id || 0);
+        formData.append("Nombre", nombre);
+        formData.append("Estado", estado);
+        if (imagenInput) formData.append("Imagen", imagenInput);
+        if (bannerInput) formData.append("Banner", bannerInput);
+
+        let url = id ? "/Categorias/EditarCategoria" : "/Categorias/Crear";
+
+        fetch(url, { method: "POST", body: formData })
+            .then(response => response.json())
+            .then(data => {
+                showToast("Categoría guardada correctamente", "success");
+                setTimeout(() => location.reload(), 1500);
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                showToast("Error al guardar", "error");
+            });
+    });
+
+    // Subcategorías
+    window.verSubCategorias = function(idCategoria) {
+        document.getElementById("subcategoria-idCategoria").value = idCategoria;
+
+        fetch(`/SubCategorias/ObtenerSubCategorias?idCategoria=${idCategoria}`)
+            .then(res => res.json())
+            .then(subcategorias => {
+                let tableBody = document.getElementById("tabla-subcategorias-body");
+                tableBody.innerHTML = "";
+
+                subcategorias.forEach(sub => {
+                    let estadoBadge = sub.estado == 1
+                        ? '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Activo</span>'
+                        : '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Inactivo</span>';
+
+                    let row = `<tr class="hover:bg-gray-50">
+                        <td class="px-3 py-2 text-gray-900">${sub.nombre}</td>
+                        <td class="px-3 py-2 text-center">${estadoBadge}</td>
+                        <td class="px-3 py-2 text-center">
+                            <button onclick="editarSubCategoria(${sub.id})" class="text-emerald-600 hover:text-emerald-800 text-sm font-medium">
+                                <i class="fas fa-edit mr-1"></i>Editar
+                            </button>
+                        </td>
+                    </tr>`;
+                    tableBody.innerHTML += row;
+                });
+
+                document.getElementById("subcategorias-modal").classList.remove("hidden");
+            })
+            .catch(error => console.error("Error:", error));
+    };
+
+    function cerrarSubCategorias(event) {
+        if (!event || event.target.id === "subcategorias-modal" || !event) {
+            document.getElementById("subcategorias-modal").classList.add("hidden");
+        }
+    }
+
+    document.getElementById("subcategorias-modal").addEventListener("click", function(e) {
+        if (e.target === this) cerrarSubCategorias();
+    });
+
+    window.editarSubCategoria = function(id) {
+        fetch(`/SubCategorias/ObtenerSubCategorias?idCategoria=${document.getElementById("subcategoria-idCategoria").value}`)
+            .then(res => res.json())
+            .then(subcategorias => {
+                let sub = subcategorias.find(s => s.id == id);
+                if (!sub) return;
+
+                document.getElementById("subcategoria-id").value = sub.id;
+                document.getElementById("subcategoria-nombre").value = sub.nombre;
+                document.getElementById("subcategoria-estado").value = sub.estado;
+                document.getElementById("subcategoria-form-title").textContent = "Editar Subcategoría";
+            })
+            .catch(error => console.error("Error:", error));
+    };
+
+    document.getElementById("subcategoria-form").addEventListener("submit", function(event) {
+        event.preventDefault();
+
+        let id = document.getElementById("subcategoria-id").value;
+        let idCategoria = document.getElementById("subcategoria-idCategoria").value;
+        let nombre = document.getElementById("subcategoria-nombre").value;
+        let estado = document.getElementById("subcategoria-estado").value;
+
+        if (!nombre.trim()) {
+            showToast("El nombre es obligatorio", "error");
+            return;
+        }
+
+        let url = id ? "/SubCategorias/EditarSubCategoria" : "/SubCategorias/CrearSubCategoria";
+        let data = new URLSearchParams({ Id: id, IdCategoria: idCategoria, Nombre: nombre, Estado: estado });
+
+        fetch(url, {
+            method: "POST",
+            body: data,
+            headers: { "Content-Type": "application/x-www-form-urlencoded" }
+        })
+        .then(response => response.json())
+        .then(data => {
+            showToast(data.mensaje || "Subcategoría guardada", "success");
+            setTimeout(() => location.reload(), 1500);
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            showToast("Error al guardar", "error");
+        });
+    });
+
+    // Toast
+    function showToast(message, type = 'success') {
+        const toast = document.getElementById('toast');
+        const content = document.getElementById('toastContent');
+        const icon = document.getElementById('toastIcon');
+        const msg = document.getElementById('toastMessage');
+
+        content.className = `flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg ${
+            type === 'success' ? 'bg-green-600 text-white' : 'bg-red-600 text-white'
+        }`;
+        icon.className = `fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}`;
+        msg.textContent = message;
+
+        toast.classList.remove('hidden');
+        setTimeout(() => toast.classList.add('hidden'), 3000);
+    }
+</script>
+}

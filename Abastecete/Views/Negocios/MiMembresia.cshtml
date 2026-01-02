@@ -1,0 +1,729 @@
+@{
+    Layout = null;
+    var negocio = ViewBag.Negocio as BusinessLogic.Models.Negocio;
+    var suscripcion = ViewBag.SuscripcionActiva as BusinessLogic.Models.Suscripcion;
+    var historial = ViewBag.Historial as List<BusinessLogic.Models.HistorialMembresia> ?? new List<BusinessLogic.Models.HistorialMembresia>();
+    var membresias = ViewBag.MembresiasDisponibles as List<BusinessLogic.Models.Membresia> ?? new List<BusinessLogic.Models.Membresia>();
+    var epaycoKey = ViewBag.EpaycoPublicKey as string;
+    var resumenReferidos = ViewBag.ResumenReferidos as BusinessLogic.Models.ResumenReferidos;
+
+    var diasRestantes = suscripcion?.DiasRestantes ?? 0;
+    var proximoAVencer = suscripcion?.ProximaAVencer ?? false;
+    var estaActiva = suscripcion?.EstaActiva ?? false;
+    var creditoDisponible = resumenReferidos?.CreditoDisponible ?? 0;
+}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Membresía - @negocio?.Nombre</title>
+    <link rel="icon" type="image/x-icon" href="~/images/Logo A naranja.png" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <style>
+        @@keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @@keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        @@keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        .animate-fadeIn { animation: fadeIn 0.5s ease-out forwards; }
+        .animate-pulse-slow { animation: pulse 2s ease-in-out infinite; }
+        .animate-slideIn { animation: slideIn 0.4s ease-out forwards; }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+        }
+
+        .plan-card {
+            transition: all 0.3s ease;
+        }
+        .plan-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        .plan-card.current {
+            border: 2px solid #22c55e;
+        }
+
+        .progress-ring {
+            transform: rotate(-90deg);
+        }
+        .progress-ring__circle {
+            transition: stroke-dashoffset 0.35s;
+            transform-origin: 50% 50%;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: 1.5rem;
+            top: 2.5rem;
+            bottom: -1rem;
+            width: 2px;
+            background: #e5e7eb;
+        }
+        .timeline-item:last-child::before {
+            display: none;
+        }
+    </style>
+</head>
+
+<body class="bg-gradient-to-br from-gray-50 via-white to-emerald-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white border-b border-gray-200 sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center gap-4">
+                    <a href="@Url.Action("EditarNegocio", "Negocios")" class="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors">
+                        <i class="fas fa-arrow-left"></i>
+                        <span class="hidden sm:inline">Volver al panel</span>
+                    </a>
+                </div>
+                <h1 class="text-xl font-bold text-gray-900">Mi Membresía</h1>
+                <div class="w-24"></div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Alertas -->
+        @if (TempData["Success"] != null)
+        {
+            <div class="mb-6 p-4 rounded-xl bg-green-50 border border-green-200 flex items-start gap-3 animate-slideIn">
+                <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+                    <i class="fas fa-check-circle text-green-500"></i>
+                </div>
+                <div>
+                    <p class="text-sm font-medium text-green-800">@TempData["Success"]</p>
+                </div>
+                <button onclick="this.parentElement.remove()" class="ml-auto text-green-500 hover:text-green-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        }
+        @if (TempData["Error"] != null)
+        {
+            <div class="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 flex items-start gap-3 animate-slideIn">
+                <div class="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+                    <i class="fas fa-exclamation-circle text-red-500"></i>
+                </div>
+                <div>
+                    <p class="text-sm font-medium text-red-800">@TempData["Error"]</p>
+                </div>
+                <button onclick="this.parentElement.remove()" class="ml-auto text-red-500 hover:text-red-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        }
+
+        <!-- Banner de Referidos -->
+        <div class="mb-6 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-2xl p-4 sm:p-6 text-white animate-fadeIn">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
+                        <i class="fas fa-gift text-2xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-lg">Programa de Referidos</h3>
+                        @if (creditoDisponible > 0)
+                        {
+                            <p class="text-purple-100 text-sm">Tienes <strong class="text-white">$@creditoDisponible.ToString("N0")</strong> de credito disponible</p>
+                        }
+                        else
+                        {
+                            <p class="text-purple-100 text-sm">Comparte tu codigo y gana credito en tus renovaciones</p>
+                        }
+                    </div>
+                </div>
+                <a href="@Url.Action("MisReferidos", "Referidos")"
+                   class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-white text-purple-600 font-semibold hover:bg-purple-50 transition-colors">
+                    <i class="fas fa-users"></i>
+                    <span>Mis Referidos</span>
+                </a>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Columna izquierda - Estado actual -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- Card de suscripción actual -->
+                <div class="glass-card rounded-2xl shadow-xl overflow-hidden animate-fadeIn">
+                    @if (suscripcion != null)
+                    {
+                        <!-- Header del plan -->
+                        <div class="bg-gradient-to-r from-[#23916A] to-emerald-500 px-6 py-8 text-white">
+                            <div class="flex items-start justify-between">
+                                <div>
+                                    <p class="text-emerald-100 text-sm font-medium mb-1">Plan Actual</p>
+                                    <h2 class="text-3xl font-bold mb-2">@suscripcion.TipoMembresia?.Nombre</h2>
+                                    <div class="flex items-center gap-2">
+                                        @if (estaActiva)
+                                        {
+                                            <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-white/20 text-sm font-medium">
+                                                <span class="w-2 h-2 rounded-full bg-green-300 animate-pulse-slow"></span>
+                                                Activa
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-red-500/80 text-sm font-medium">
+                                                <i class="fas fa-exclamation-triangle text-xs"></i>
+                                                @suscripcion.EstadoDescripcion
+                                            </span>
+                                        }
+                                        <span class="text-emerald-100 text-sm">@suscripcion.Periodo</span>
+                                    </div>
+                                </div>
+
+                                <!-- Círculo de días restantes -->
+                                <div class="text-center">
+                                    <div class="relative w-24 h-24">
+                                        <svg class="progress-ring w-full h-full" viewBox="0 0 100 100">
+                                            <circle class="text-white/20" stroke="currentColor" stroke-width="8" fill="transparent" r="42" cx="50" cy="50"/>
+                                            @{
+                                                var maxDias = suscripcion.Periodo switch {
+                                                    "MENSUAL" => 30,
+                                                    "TRIMESTRAL" => 90,
+                                                    "SEMESTRAL" => 180,
+                                                    "ANUAL" => 365,
+                                                    _ => 30
+                                                };
+                                                var porcentaje = Math.Min(100, (diasRestantes * 100) / maxDias);
+                                                var circunferencia = 2 * Math.PI * 42;
+                                                var offset = circunferencia - (porcentaje / 100.0 * circunferencia);
+                                            }
+                                            <circle class="progress-ring__circle @(proximoAVencer ? "text-yellow-300" : "text-white")"
+                                                    stroke="currentColor" stroke-width="8" fill="transparent"
+                                                    r="42" cx="50" cy="50"
+                                                    stroke-dasharray="@circunferencia"
+                                                    stroke-dashoffset="@offset"
+                                                    stroke-linecap="round"/>
+                                        </svg>
+                                        <div class="absolute inset-0 flex flex-col items-center justify-center">
+                                            <span class="text-2xl font-bold">@diasRestantes</span>
+                                            <span class="text-xs text-emerald-100">días</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Detalles del plan -->
+                        <div class="p-6">
+                            @if (proximoAVencer)
+                            {
+                                <div class="mb-6 p-4 rounded-xl bg-amber-50 border border-amber-200 flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
+                                        <i class="fas fa-clock text-amber-500"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <p class="font-semibold text-amber-800">¡Tu membresía está por vencer!</p>
+                                        <p class="text-sm text-amber-600">Renueva ahora para no perder tus beneficios.</p>
+                                    </div>
+                                    <button onclick="abrirModalRenovar()"
+                                            class="px-4 py-2 rounded-lg bg-amber-500 text-white font-semibold hover:bg-amber-600 transition-colors">
+                                        Renovar
+                                    </button>
+                                </div>
+                            }
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                                <div class="p-4 rounded-xl bg-gray-50 border border-gray-100">
+                                    <p class="text-sm text-gray-500 mb-1">Fecha de inicio</p>
+                                    <p class="font-semibold text-gray-900">
+                                        <i class="fas fa-calendar-check text-green-500 mr-2"></i>
+                                        @suscripcion.FechaInicio.ToString("dd MMM yyyy")
+                                    </p>
+                                </div>
+                                <div class="p-4 rounded-xl bg-gray-50 border border-gray-100">
+                                    <p class="text-sm text-gray-500 mb-1">Fecha de vencimiento</p>
+                                    <p class="font-semibold @(proximoAVencer ? "text-amber-600" : "text-gray-900")">
+                                        <i class="fas fa-calendar-times @(proximoAVencer ? "text-amber-500" : "text-gray-400") mr-2"></i>
+                                        @suscripcion.FechaFin.ToString("dd MMM yyyy")
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Beneficios del plan -->
+                            <div class="mb-6">
+                                <h4 class="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                                    <i class="fas fa-gift text-purple-500"></i>
+                                    Beneficios de tu plan
+                                </h4>
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                    <div class="p-3 rounded-lg bg-purple-50 text-center">
+                                        <p class="text-2xl font-bold text-purple-600">
+                                            @(suscripcion.TipoMembresia?.Cantidad == 0 ? "∞" : suscripcion.TipoMembresia?.Cantidad.ToString())
+                                        </p>
+                                        <p class="text-xs text-purple-600">Productos</p>
+                                    </div>
+                                    <div class="p-3 rounded-lg bg-blue-50 text-center">
+                                        <p class="text-2xl font-bold text-blue-600">@suscripcion.TipoMembresia?.OfertasFlashSimultaneas</p>
+                                        <p class="text-xs text-blue-600">Ofertas flash activas</p>
+                                    </div>
+                                    <div class="p-3 rounded-lg bg-orange-50 text-center">
+                                        <p class="text-2xl font-bold text-orange-600">
+                                            @(suscripcion.TipoMembresia?.OfertasFlashTotal == 0 ? "∞" : suscripcion.TipoMembresia?.OfertasFlashTotal.ToString())
+                                        </p>
+                                        <p class="text-xs text-orange-600">Ofertas/mes</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Banner de Addons -->
+                            <div class="mb-6 p-4 rounded-xl bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center">
+                                            <i class="fas fa-puzzle-piece text-orange-500"></i>
+                                        </div>
+                                        <div>
+                                            <p class="font-semibold text-gray-900">¿Necesitas más?</p>
+                                            <p class="text-xs text-gray-500">Compra addons para aumentar tus límites</p>
+                                        </div>
+                                    </div>
+                                    <a href="@Url.Action("Tienda", "Addons")"
+                                       class="px-4 py-2 rounded-lg bg-orange-500 text-white font-semibold hover:bg-orange-600 transition-colors text-sm flex items-center gap-2">
+                                        <i class="fas fa-shopping-cart"></i>
+                                        Ver Addons
+                                    </a>
+                                </div>
+                            </div>
+
+                            <!-- Botones de acción -->
+                            <div class="flex flex-col sm:flex-row gap-3">
+                                <button onclick="abrirModalRenovar()"
+                                        class="flex-1 py-3 rounded-xl bg-gradient-to-r from-[#23916A] to-emerald-500 text-white font-semibold hover:shadow-lg hover:shadow-green-500/30 transition-all flex items-center justify-center gap-2">
+                                    <i class="fas fa-sync-alt"></i>
+                                    Renovar Membresía
+                                </button>
+                                <button onclick="abrirModalCambiarPlan()"
+                                        class="flex-1 py-3 rounded-xl bg-white border-2 border-gray-200 text-gray-700 font-semibold hover:border-[#23916A] hover:text-[#23916A] transition-all flex items-center justify-center gap-2">
+                                    <i class="fas fa-exchange-alt"></i>
+                                    Cambiar de Plan
+                                </button>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <!-- Sin suscripción activa -->
+                        <div class="p-8 text-center">
+                            <div class="w-20 h-20 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+                                <i class="fas fa-crown text-3xl text-gray-400"></i>
+                            </div>
+                            <h3 class="text-xl font-bold text-gray-900 mb-2">Sin membresía activa</h3>
+                            <p class="text-gray-600 mb-6">Selecciona un plan de la lista de la derecha para activar tu membresía.</p>
+                            <div class="flex items-center justify-center gap-2 text-gray-500">
+                                <i class="fas fa-arrow-right animate-pulse"></i>
+                                <span class="text-sm">Elige un plan disponible</span>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <!-- Historial de cambios -->
+                @if (historial.Any())
+                {
+                    <div class="glass-card rounded-2xl shadow-xl p-6 animate-fadeIn" style="animation-delay: 0.1s">
+                        <h3 class="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
+                            <i class="fas fa-history text-blue-500"></i>
+                            Historial de Membresías
+                        </h3>
+                        <div class="space-y-4">
+                            @foreach (var item in historial.Take(5))
+                            {
+                                var iconClass = item.TipoCambio switch {
+                                    "ALTA" => "fas fa-plus-circle text-green-500",
+                                    "UPGRADE" => "fas fa-arrow-up text-blue-500",
+                                    "DOWNGRADE" => "fas fa-arrow-down text-orange-500",
+                                    "RENOVACION" => "fas fa-sync text-purple-500",
+                                    "CANCELACION" => "fas fa-times-circle text-red-500",
+                                    "VENCIMIENTO" => "fas fa-clock text-gray-500",
+                                    _ => "fas fa-circle text-gray-400"
+                                };
+                                var bgClass = item.TipoCambio switch {
+                                    "ALTA" => "bg-green-100",
+                                    "UPGRADE" => "bg-blue-100",
+                                    "DOWNGRADE" => "bg-orange-100",
+                                    "RENOVACION" => "bg-purple-100",
+                                    "CANCELACION" => "bg-red-100",
+                                    "VENCIMIENTO" => "bg-gray-100",
+                                    _ => "bg-gray-100"
+                                };
+                                <div class="timeline-item relative pl-12 pb-4">
+                                    <div class="absolute left-0 top-0 w-12 h-12 rounded-full @bgClass flex items-center justify-center">
+                                        <i class="@iconClass"></i>
+                                    </div>
+                                    <div class="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                                        <div class="flex items-start justify-between mb-2">
+                                            <div>
+                                                <span class="font-semibold text-gray-900">@item.TipoCambio</span>
+                                                @if (item.TipoNuevo != null)
+                                                {
+                                                    <span class="text-gray-500"> - @item.TipoNuevo.Nombre</span>
+                                                }
+                                            </div>
+                                            @if (item.Monto.HasValue && item.Monto > 0)
+                                            {
+                                                <span class="font-semibold text-green-600">$@item.Monto.Value.ToString("N0")</span>
+                                            }
+                                        </div>
+                                        <p class="text-sm text-gray-500">
+                                            <i class="fas fa-calendar mr-1"></i>
+                                            @item.FechaCambio.ToString("dd MMM yyyy, HH:mm")
+                                            @if (!string.IsNullOrEmpty(item.Periodo))
+                                            {
+                                                <span class="ml-2 px-2 py-0.5 rounded bg-gray-200 text-xs">@item.Periodo</span>
+                                            }
+                                        </p>
+                                        @if (!string.IsNullOrEmpty(item.Notas))
+                                        {
+                                            <p class="text-sm text-gray-600 mt-2 italic">@item.Notas</p>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- Columna derecha - Planes disponibles -->
+            <div class="space-y-6">
+                <div class="glass-card rounded-2xl shadow-xl p-6 animate-fadeIn" style="animation-delay: 0.2s">
+                    <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                        <i class="fas fa-crown text-yellow-500"></i>
+                        Planes Disponibles
+                    </h3>
+                    <div class="space-y-4">
+                        @foreach (var plan in membresias)
+                        {
+                            var esPlanActual = suscripcion?.TipoMembresia?.Id == plan.Id;
+                            <div class="plan-card rounded-xl border-2 @(esPlanActual ? "border-green-500 bg-green-50" : "border-gray-200 bg-white") p-4 @(esPlanActual ? "current" : "")">
+                                <div class="flex items-center justify-between mb-2">
+                                    <h4 class="font-bold text-gray-900">@plan.Nombre</h4>
+                                    @if (esPlanActual)
+                                    {
+                                        <span class="px-2 py-0.5 rounded-full bg-green-500 text-white text-xs font-medium">Actual</span>
+                                    }
+                                </div>
+                                <p class="text-2xl font-bold text-[#23916A] mb-3">
+                                    @(plan.Costo == 0 ? "Gratis" : $"${plan.Costo:N0}")
+                                    @if (plan.Costo > 0)
+                                    {
+                                        <span class="text-sm font-normal text-gray-500">/mes</span>
+                                    }
+                                </p>
+                                <ul class="text-sm text-gray-600 space-y-1 mb-4">
+                                    <li class="flex items-center gap-2">
+                                        <i class="fas fa-check text-green-500 text-xs"></i>
+                                        @(plan.Cantidad == 0 ? "Productos ilimitados" : $"Hasta {plan.Cantidad} productos")
+                                    </li>
+                                    <li class="flex items-center gap-2">
+                                        <i class="fas fa-check text-green-500 text-xs"></i>
+                                        @plan.OfertasFlashSimultaneas ofertas activas
+                                    </li>
+                                </ul>
+                                @if (!esPlanActual && plan.Costo > 0)
+                                {
+                                    <button onclick="seleccionarPlan(@plan.Id, '@plan.Nombre')"
+                                            class="w-full py-2 rounded-lg bg-[#23916A] text-white text-sm font-semibold hover:bg-emerald-600 transition-colors">
+                                        Seleccionar
+                                    </button>
+                                }
+                                else if (!esPlanActual && plan.Costo == 0)
+                                {
+                                    <a href="@Url.Action("CompletarCambioPlan", "Negocios", new { tipoMembresiaId = plan.Id, periodo = "MENSUAL", monto = 0, ref_payco = "GRATIS" })"
+                                       class="block w-full py-2 rounded-lg bg-gradient-to-r from-green-500 to-emerald-500 text-white text-sm font-semibold hover:shadow-lg transition-all text-center">
+                                        <i class="fas fa-check-circle mr-1"></i>
+                                        Activar Gratis
+                                    </a>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- Info de contacto -->
+                <div class="glass-card rounded-2xl shadow-xl p-6 animate-fadeIn" style="animation-delay: 0.3s">
+                    <h4 class="font-bold text-gray-900 mb-3 flex items-center gap-2">
+                        <i class="fas fa-headset text-blue-500"></i>
+                        ¿Necesitas ayuda?
+                    </h4>
+                    <p class="text-sm text-gray-600 mb-4">Nuestro equipo está listo para asistirte con tu membresía.</p>
+                    <a href="https://wa.me/573001234567?text=Hola,%20necesito%20ayuda%20con%20mi%20membresía"
+                       target="_blank"
+                       class="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg bg-green-500 text-white font-semibold hover:bg-green-600 transition-colors">
+                        <i class="fab fa-whatsapp text-lg"></i>
+                        Contactar Soporte
+                    </a>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal Renovar Membresía -->
+    <div id="modalRenovar" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="cerrarModalRenovar()"></div>
+        <div class="relative min-h-screen flex items-center justify-center p-4">
+            <div class="glass-card rounded-2xl shadow-2xl w-full max-w-md animate-fadeIn">
+                <!-- Header -->
+                <div class="bg-gradient-to-r from-[#23916A] to-emerald-500 px-6 py-5 text-white rounded-t-2xl">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-xl font-bold">Renovar Membresía</h3>
+                            <p class="text-emerald-100 text-sm">@suscripcion?.TipoMembresia?.Nombre</p>
+                        </div>
+                        <button onclick="cerrarModalRenovar()" class="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Contenido -->
+                <div class="p-6">
+                    <div class="mb-6">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Selecciona el período</label>
+                        <select id="periodoRenovar" onchange="actualizarPrecioRenovar()" class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#23916A] focus:outline-none transition-colors">
+                            <option value="MENSUAL" data-precio="@suscripcion?.TipoMembresia?.Costo">Mensual - $@suscripcion?.TipoMembresia?.Costo.ToString("N0")</option>
+                            <option value="TRIMESTRAL" data-precio="@suscripcion?.TipoMembresia?.CostoTrimestral">Trimestral - $@suscripcion?.TipoMembresia?.CostoTrimestral.ToString("N0")</option>
+                            <option value="SEMESTRAL" data-precio="@suscripcion?.TipoMembresia?.CostoSemestral">Semestral - $@suscripcion?.TipoMembresia?.CostoSemestral.ToString("N0")</option>
+                            <option value="ANUAL" data-precio="@suscripcion?.TipoMembresia?.CostoAnual">Anual - $@suscripcion?.TipoMembresia?.CostoAnual.ToString("N0")</option>
+                        </select>
+                    </div>
+
+                    <div class="p-4 rounded-xl bg-gray-50 border border-gray-200 mb-6">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-gray-600">Subtotal</span>
+                            <span id="subtotalRenovar" class="font-semibold">$0</span>
+                        </div>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-gray-600">IVA (19%)</span>
+                            <span id="ivaRenovar" class="font-semibold">$0</span>
+                        </div>
+                        <div class="border-t border-gray-200 pt-2 mt-2">
+                            <div class="flex justify-between items-center">
+                                <span class="font-bold text-gray-900">Total</span>
+                                <span id="totalRenovar" class="text-xl font-bold text-[#23916A]">$0</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Contenedor del botón ePayco -->
+                    <div id="epaycoContainerRenovar" class="flex justify-center"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Cambiar Plan -->
+    <div id="modalCambiarPlan" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="cerrarModalCambiarPlan()"></div>
+        <div class="relative min-h-screen flex items-center justify-center p-4">
+            <div class="glass-card rounded-2xl shadow-2xl w-full max-w-md animate-fadeIn">
+                <!-- Header -->
+                <div class="bg-gradient-to-r from-purple-600 to-indigo-600 px-6 py-5 text-white rounded-t-2xl">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-xl font-bold">Cambiar de Plan</h3>
+                            <p class="text-purple-100 text-sm" id="planSeleccionadoNombre">Selecciona un plan</p>
+                        </div>
+                        <button onclick="cerrarModalCambiarPlan()" class="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Contenido -->
+                <div class="p-6">
+                    <input type="hidden" id="planSeleccionadoId" value="">
+
+                    <div class="mb-6">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Selecciona el período</label>
+                        <select id="periodoCambiar" onchange="actualizarPrecioCambiar()" class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-purple-500 focus:outline-none transition-colors">
+                            <option value="MENSUAL">Mensual</option>
+                            <option value="TRIMESTRAL">Trimestral</option>
+                            <option value="SEMESTRAL">Semestral</option>
+                            <option value="ANUAL">Anual</option>
+                        </select>
+                    </div>
+
+                    <div class="p-4 rounded-xl bg-gray-50 border border-gray-200 mb-6">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-gray-600">Subtotal</span>
+                            <span id="subtotalCambiar" class="font-semibold">$0</span>
+                        </div>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-gray-600">IVA (19%)</span>
+                            <span id="ivaCambiar" class="font-semibold">$0</span>
+                        </div>
+                        <div class="border-t border-gray-200 pt-2 mt-2">
+                            <div class="flex justify-between items-center">
+                                <span class="font-bold text-gray-900">Total</span>
+                                <span id="totalCambiar" class="text-xl font-bold text-purple-600">$0</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Contenedor del botón ePayco -->
+                    <div id="epaycoContainerCambiar" class="flex justify-center"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const epaycoKey = '@epaycoKey';
+        let preciosPlanSeleccionado = null;
+
+        // ==========================================
+        // RENOVAR MEMBRESÍA
+        // ==========================================
+        function abrirModalRenovar() {
+            document.getElementById('modalRenovar').classList.remove('hidden');
+            document.body.classList.add('overflow-hidden');
+            actualizarPrecioRenovar();
+        }
+
+        function cerrarModalRenovar() {
+            document.getElementById('modalRenovar').classList.add('hidden');
+            document.body.classList.remove('overflow-hidden');
+        }
+
+        function actualizarPrecioRenovar() {
+            const select = document.getElementById('periodoRenovar');
+            const option = select.options[select.selectedIndex];
+            const precio = parseFloat(option.dataset.precio) || 0;
+
+            const subtotal = Math.round(precio / 1.19);
+            const iva = precio - subtotal;
+
+            document.getElementById('subtotalRenovar').textContent = `$${subtotal.toLocaleString('es-CO')}`;
+            document.getElementById('ivaRenovar').textContent = `$${iva.toLocaleString('es-CO')}`;
+            document.getElementById('totalRenovar').textContent = `$${precio.toLocaleString('es-CO')}`;
+
+            crearBotonEpayco('epaycoContainerRenovar', precio, select.value, 'renovar');
+        }
+
+        // ==========================================
+        // CAMBIAR PLAN
+        // ==========================================
+        function abrirModalCambiarPlan() {
+            document.getElementById('modalCambiarPlan').classList.remove('hidden');
+            document.body.classList.add('overflow-hidden');
+        }
+
+        function cerrarModalCambiarPlan() {
+            document.getElementById('modalCambiarPlan').classList.add('hidden');
+            document.body.classList.remove('overflow-hidden');
+        }
+
+        function seleccionarPlan(planId, planNombre) {
+            document.getElementById('planSeleccionadoId').value = planId;
+            document.getElementById('planSeleccionadoNombre').textContent = planNombre;
+
+            // Obtener precios del plan via AJAX
+            fetch(`/Negocios/ObtenerPreciosMembresia?id=${planId}`)
+                .then(res => res.json())
+                .then(data => {
+                    preciosPlanSeleccionado = {
+                        MENSUAL: data.mensual,
+                        TRIMESTRAL: data.trimestral,
+                        SEMESTRAL: data.semestral,
+                        ANUAL: data.anual
+                    };
+                    abrirModalCambiarPlan();
+                    actualizarPrecioCambiar();
+                })
+                .catch(err => {
+                    console.error('Error cargando precios:', err);
+                    alert('Error al cargar los precios del plan');
+                });
+        }
+
+        function actualizarPrecioCambiar() {
+            if (!preciosPlanSeleccionado) return;
+
+            const periodo = document.getElementById('periodoCambiar').value;
+            const precio = preciosPlanSeleccionado[periodo] || 0;
+
+            const subtotal = Math.round(precio / 1.19);
+            const iva = precio - subtotal;
+
+            document.getElementById('subtotalCambiar').textContent = `$${subtotal.toLocaleString('es-CO')}`;
+            document.getElementById('ivaCambiar').textContent = `$${iva.toLocaleString('es-CO')}`;
+            document.getElementById('totalCambiar').textContent = `$${precio.toLocaleString('es-CO')}`;
+
+            const planId = document.getElementById('planSeleccionadoId').value;
+            crearBotonEpayco('epaycoContainerCambiar', precio, periodo, 'cambiar', planId);
+        }
+
+        // ==========================================
+        // EPAYCO
+        // ==========================================
+        function crearBotonEpayco(containerId, precio, periodo, tipo, planId = null) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+
+            if (precio <= 0) {
+                // Plan gratuito - mostrar botón directo sin ePayco
+                const btnGratis = document.createElement('a');
+                btnGratis.href = `@Url.Action("CompletarCambioPlan", "Negocios")?tipoMembresiaId=${planId}&periodo=MENSUAL&monto=0&ref_payco=GRATIS`;
+                btnGratis.className = 'w-full py-3 rounded-xl bg-gradient-to-r from-green-500 to-emerald-500 text-white font-semibold text-center block hover:shadow-lg transition-all';
+                btnGratis.innerHTML = '<i class="fas fa-check-circle mr-2"></i>Activar Plan Gratuito';
+                container.appendChild(btnGratis);
+                return;
+            }
+
+            const precioTotal = Math.round(precio);
+            const precioBase = Math.round(precio / 1.19);
+            const impuesto = precioTotal - precioBase;
+
+            const descripcion = tipo === 'renovar'
+                ? `Renovación Membresía - ${periodo}`
+                : `Cambio de Plan - ${periodo}`;
+
+            const responseUrl = tipo === 'renovar'
+                ? `@Url.Action("CompletarRenovacion", "Negocios", null, Context.Request.Scheme)?periodo=${periodo}&monto=${precioTotal}`
+                : `@Url.Action("CompletarCambioPlan", "Negocios", null, Context.Request.Scheme)?tipoMembresiaId=${planId}&periodo=${periodo}&monto=${precioTotal}`;
+
+            const script = document.createElement('script');
+            script.src = 'https://checkout.epayco.co/checkout.js';
+            script.classList.add('epayco-button');
+            script.setAttribute('data-epayco-key', epaycoKey);
+            script.setAttribute('data-epayco-amount', precioTotal.toString());
+            script.setAttribute('data-epayco-tax', impuesto.toString());
+            script.setAttribute('data-epayco-tax-base', precioBase.toString());
+            script.setAttribute('data-epayco-name', descripcion);
+            script.setAttribute('data-epayco-description', descripcion);
+            script.setAttribute('data-epayco-currency', 'cop');
+            script.setAttribute('data-epayco-country', 'co');
+            script.setAttribute('data-epayco-external', 'false');
+            script.setAttribute('data-epayco-button', 'https://multimedia.epayco.co/dashboard/btns/btn5.png');
+            script.setAttribute('data-epayco-response', responseUrl);
+            script.setAttribute('data-epayco-test', 'true');
+
+            container.appendChild(script);
+        }
+
+        // Cerrar modales con ESC
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                cerrarModalRenovar();
+                cerrarModalCambiarPlan();
+            }
+        });
+    </script>
+</body>
+</html>

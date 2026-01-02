@@ -4,7 +4,8 @@
   "description": "Descripción de tu proyecto",
   "main": "index.js",
   "scripts": {
-    "build:css": "tailwindcss build styles.css -o output.css"
+    "build:css": "npx tailwindcss -i ./Abastecete/wwwroot/css/site.css -o ./Abastecete/wwwroot/css/site.output.css",
+    "css:build": "npx tailwindcss -i ./Abastecete/wwwroot/css/site.css -o ./Abastecete/wwwroot/css/site.output.css"
   },
   "devDependencies": {
     "autoprefixer": "^10.4.20",

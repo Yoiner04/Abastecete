@@ -1,98 +1,602 @@
-﻿@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
 @{
+    Layout = "_Layout";
+    ViewData["Title"] = "Buscar Productos - Abastecete";
+    ViewData["Description"] = "Busca productos de proveedores locales. Filtra por categoría, precio y más.";
+
+    var query = ViewBag.Query as string ?? "";
+    var ofertas = ViewBag.Ofertas as List<BusinessLogic.Models.OfertaFlash> ?? new List<BusinessLogic.Models.OfertaFlash>();
+    var productos = ViewBag.Productos as List<BusinessLogic.Models.Producto> ?? new List<BusinessLogic.Models.Producto>();
+    var locales = ViewBag.Locales as List<BusinessLogic.Models.Negocio> ?? new List<BusinessLogic.Models.Negocio>();
+    var totalResultados = (int)(ViewBag.TotalResultados ?? 0);
 }
-<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-    <h2 class="mt-10 mb-6 border-b border-gray-300 pb-2 text-center text-2xl font-bold text-gray-800">
-        🟠 Ofertas encontradas
-    </h2>
 
-    <div id="offers-container" class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        @foreach (var oferta in ViewBag.Ofertas)
-        {
-            <a href="@Url.Action("ConsultarProductos", "Negocios", new { idLocal = oferta.IdLocal })" title="Ver Local">
-                <div class="relative flex flex-col rounded-lg bg-white p-4 shadow-md">
-                    <div class="relative h-48 w-full overflow-hidden rounded-md bg-gray-300">
-                        <img src="@oferta.ImagenProductoOfertaFlash" alt="Imagen del Producto"
-                            class="absolute inset-0 h-full w-full object-cover">
-                    </div>
+<style>
+    /* Animaciones */
+    @@keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fadeInUp {
+        animation: fadeInUp 0.4s ease-out forwards;
+        opacity: 0;
+    }
+    .delay-100 { animation-delay: 0.1s; }
+    .delay-200 { animation-delay: 0.2s; }
+    .delay-300 { animation-delay: 0.3s; }
 
-                    <div
-                        class="border-2 absolute top-4 left-4 h-20 w-20 overflow-hidden rounded-full border-white shadow-md">
-                        @if (!string.IsNullOrWhiteSpace(oferta?.ImagenLocal?.Base64))
-                        {
-                            <img src="@oferta.ImagenLocal.Base64" alt="Local" class="h-full w-full object-cover">
-                        }
-                    </div>
+    /* Cards hover */
+    .result-card {
+        transition: all 0.3s ease;
+    }
+    .result-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.12);
+    }
 
-                    <!-- Información de la oferta -->
-                    <div class="mt-4 text-center">
-                        <h3 class="text-lg font-bold text-gray-800">
-                            @oferta.Titulo <span class="text-gray-500">(@oferta.ProductoOfertaFlash)</span>
-                        </h3>
-                        <p class="text-gray-600">@oferta.Descripcion</p>
-                        <p class="text-sm font-medium text-gray-500">📍 @oferta.NombreLocal</p>
+    /* Tab activo */
+    .tab-btn.active {
+        color: #23916A;
+        border-bottom-color: #23916A;
+    }
 
-                        <!-- Temporizador -->
-                        <div class="mt-4">
-                            <span class="font-semibold text-red-500">
-                                ⏳ Expira en <span class="countdown-timer"
-                                    data-expiration="@oferta.TiempoOferta?.ToString("yyyy-MM-ddTHH:mm:ss")"></span>
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            </a>
-        }
+    /* Badge contador */
+    .tab-badge {
+        transition: all 0.2s ease;
+    }
+    .tab-btn.active .tab-badge {
+        background: #23916A;
+        color: white;
+    }
+
+    /* Timer oferta */
+    .countdown-timer {
+        font-variant-numeric: tabular-nums;
+    }
+
+    /* Skeleton animations */
+    @@keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+    }
+    .animate-pulse {
+        animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+</style>
+
+<!-- Skeleton Loader -->
+<div id="skeleton-buscador" class="animate-pulse min-h-screen bg-gray-50">
+    <!-- Header skeleton -->
+    <div class="bg-gradient-to-r from-[#23916A] to-emerald-500 shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <!-- Barra de búsqueda skeleton -->
+            <div class="max-w-2xl mx-auto">
+                <div class="h-14 bg-white/30 rounded-2xl"></div>
+            </div>
+            <!-- Info skeleton -->
+            <div class="text-center mt-4">
+                <div class="h-6 bg-white/20 rounded w-64 mx-auto"></div>
+            </div>
+        </div>
     </div>
 
-    <h2 class="mt-10 mb-6 border-b border-gray-300 pb-2 text-center text-2xl font-bold text-gray-800">
-        🛒 Productos encontrados
-    </h2>
+    <!-- Tabs skeleton -->
+    <div class="bg-white border-b shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex gap-2 py-2">
+                <div class="h-10 bg-gray-200 rounded-xl w-24"></div>
+                <div class="h-10 bg-gray-200 rounded-xl w-28"></div>
+                <div class="h-10 bg-gray-200 rounded-xl w-32"></div>
+                <div class="h-10 bg-gray-200 rounded-xl w-24"></div>
+            </div>
+        </div>
+    </div>
 
-    <div id="products-container" class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        @foreach (var producto in ViewBag.Productos)
-        {
-            <div class="relative flex flex-col rounded-lg bg-white p-4 shadow-md">
-                <!-- Imagen del producto -->
-                <div class="relative h-48 w-full overflow-hidden rounded-md bg-gray-300">
-                    <img src="@producto.ImagenUrl" alt="Imagen del Producto"
-                        class="absolute inset-0 h-full w-full object-cover">
+    <!-- Content skeleton -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <!-- Sección ofertas skeleton -->
+        <div class="mb-8">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-10 h-10 bg-gray-200 rounded-xl"></div>
+                <div>
+                    <div class="h-6 bg-gray-200 rounded w-32 mb-2"></div>
+                    <div class="h-4 bg-gray-200 rounded w-24"></div>
                 </div>
-
-                <!-- Información del producto -->
-                <div class="mt-4 text-center">
-                    <h3 class="text-lg font-bold text-gray-800">@producto.Nombre</h3>
-                    <p class="font-semibold text-green-700">$@producto.Precio</p>
+            </div>
+            <!-- Grid de ofertas skeleton -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div class="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100">
+                    <div class="h-40 bg-gray-200"></div>
+                    <div class="p-4 space-y-2">
+                        <div class="h-5 bg-gray-200 rounded w-3/4"></div>
+                        <div class="h-4 bg-gray-200 rounded w-1/2"></div>
+                        <div class="h-3 bg-gray-200 rounded w-2/3"></div>
+                    </div>
                 </div>
+                <div class="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100">
+                    <div class="h-40 bg-gray-200"></div>
+                    <div class="p-4 space-y-2">
+                        <div class="h-5 bg-gray-200 rounded w-3/4"></div>
+                        <div class="h-4 bg-gray-200 rounded w-1/2"></div>
+                        <div class="h-3 bg-gray-200 rounded w-2/3"></div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100">
+                    <div class="h-40 bg-gray-200"></div>
+                    <div class="p-4 space-y-2">
+                        <div class="h-5 bg-gray-200 rounded w-3/4"></div>
+                        <div class="h-4 bg-gray-200 rounded w-1/2"></div>
+                        <div class="h-3 bg-gray-200 rounded w-2/3"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-                <!-- Información del local (parte inferior) -->
+        <!-- Sección productos skeleton -->
+        <div class="mb-8">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-10 h-10 bg-gray-200 rounded-xl"></div>
+                <div>
+                    <div class="h-6 bg-gray-200 rounded w-28 mb-2"></div>
+                    <div class="h-4 bg-gray-200 rounded w-36"></div>
+                </div>
+            </div>
+            <!-- Grid de productos skeleton -->
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                <div class="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100">
+                    <div class="aspect-square bg-gray-200"></div>
+                    <div class="p-2.5 space-y-2">
+                        <div class="h-3 bg-gray-200 rounded"></div>
+                        <div class="h-3 bg-gray-200 rounded w-2/3"></div>
+                        <div class="h-4 bg-gray-200 rounded w-1/2"></div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100">
+                    <div class="aspect-square bg-gray-200"></div>
+                    <div class="p-2.5 space-y-2">
+                        <div class="h-3 bg-gray-200 rounded"></div>
+                        <div class="h-3 bg-gray-200 rounded w-2/3"></div>
+                        <div class="h-4 bg-gray-200 rounded w-1/2"></div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100">
+                    <div class="aspect-square bg-gray-200"></div>
+                    <div class="p-2.5 space-y-2">
+                        <div class="h-3 bg-gray-200 rounded"></div>
+                        <div class="h-3 bg-gray-200 rounded w-2/3"></div>
+                        <div class="h-4 bg-gray-200 rounded w-1/2"></div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100">
+                    <div class="aspect-square bg-gray-200"></div>
+                    <div class="p-2.5 space-y-2">
+                        <div class="h-3 bg-gray-200 rounded"></div>
+                        <div class="h-3 bg-gray-200 rounded w-2/3"></div>
+                        <div class="h-4 bg-gray-200 rounded w-1/2"></div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100">
+                    <div class="aspect-square bg-gray-200"></div>
+                    <div class="p-2.5 space-y-2">
+                        <div class="h-3 bg-gray-200 rounded"></div>
+                        <div class="h-3 bg-gray-200 rounded w-2/3"></div>
+                        <div class="h-4 bg-gray-200 rounded w-1/2"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-                <a href="@Url.Action("ConsultarProductos", "Negocios", new { idLocal = producto.IdLocal })">
-                    <div class="mt-4 flex items-center gap-3 border-t pt-3">
-                        <div class="border-2 h-14 w-14 overflow-hidden rounded-full border-white shadow-md">
-                            @if (!string.IsNullOrWhiteSpace(producto?.ImagenLocal?.Base64))
+        <!-- Sección locales skeleton -->
+        <div class="mb-8">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-10 h-10 bg-gray-200 rounded-xl"></div>
+                <div>
+                    <div class="h-6 bg-gray-200 rounded w-24 mb-2"></div>
+                    <div class="h-4 bg-gray-200 rounded w-32"></div>
+                </div>
+            </div>
+            <!-- Grid de locales skeleton -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex items-center gap-4">
+                    <div class="w-16 h-16 bg-gray-200 rounded-xl"></div>
+                    <div class="flex-1 space-y-2">
+                        <div class="h-5 bg-gray-200 rounded w-3/4"></div>
+                        <div class="h-4 bg-gray-200 rounded w-1/2"></div>
+                        <div class="h-3 bg-gray-200 rounded w-2/3"></div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex items-center gap-4">
+                    <div class="w-16 h-16 bg-gray-200 rounded-xl"></div>
+                    <div class="flex-1 space-y-2">
+                        <div class="h-5 bg-gray-200 rounded w-3/4"></div>
+                        <div class="h-4 bg-gray-200 rounded w-1/2"></div>
+                        <div class="h-3 bg-gray-200 rounded w-2/3"></div>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex items-center gap-4">
+                    <div class="w-16 h-16 bg-gray-200 rounded-xl"></div>
+                    <div class="flex-1 space-y-2">
+                        <div class="h-5 bg-gray-200 rounded w-3/4"></div>
+                        <div class="h-4 bg-gray-200 rounded w-1/2"></div>
+                        <div class="h-3 bg-gray-200 rounded w-2/3"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Real Content -->
+<div id="content-buscador" class="hidden min-h-screen bg-gray-50">
+    <!-- Header de búsqueda -->
+    <div class="bg-gradient-to-r from-[#23916A] to-emerald-500 shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <!-- Barra de búsqueda -->
+            <form action="@Url.Action("Index", "Buscador")" method="get" class="max-w-2xl mx-auto">
+                <div class="relative">
+                    <input type="text"
+                           name="query"
+                           value="@query"
+                           placeholder="Buscar productos, ofertas o locales..."
+                           class="w-full px-5 py-4 pl-12 pr-14 rounded-2xl border-0 shadow-lg text-gray-800 placeholder-gray-400 focus:ring-4 focus:ring-white/30 outline-none text-lg" />
+                    <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg"></i>
+                    <button type="submit" class="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-xl bg-[#23916A] text-white flex items-center justify-center hover:bg-emerald-600 transition-colors">
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+            </form>
+
+            <!-- Info de resultados -->
+            @if (!string.IsNullOrEmpty(query))
+            {
+                <div class="text-center mt-4 text-white/90">
+                    <span class="text-lg">
+                        @if (totalResultados > 0)
+                        {
+                            <span class="font-bold">@totalResultados</span> @(totalResultados == 1 ? "resultado" : "resultados") @:para "<span class="font-semibold">@query</span>"
+                        }
+                        else
+                        {
+                            <span>No se encontraron resultados para "<span class="font-semibold">@query</span>"</span>
+                        }
+                    </span>
+                </div>
+            }
+        </div>
+    </div>
+
+    @{
+        var bannersBuscador = ViewBag.BannersBuscador as List<BusinessLogic.Models.Banner> ?? new List<BusinessLogic.Models.Banner>();
+    }
+    @if (bannersBuscador.Any())
+    {
+        <!-- Banner del Buscador -->
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="relative overflow-hidden rounded-2xl shadow-lg">
+                @if (bannersBuscador.Count == 1)
+                {
+                    <img src="@bannersBuscador[0].CloudinaryUrl"
+                         alt="Banner promocional"
+                         class="w-full h-auto object-cover max-h-48 md:max-h-64" />
+                }
+                else
+                {
+                    <!-- Carousel de banners -->
+                    <div id="banner-carousel-buscador" class="relative">
+                        @for (int i = 0; i < bannersBuscador.Count; i++)
+                        {
+                            <div class="banner-slide-buscador @(i == 0 ? "" : "hidden") transition-opacity duration-500">
+                                <img src="@bannersBuscador[i].CloudinaryUrl"
+                                     alt="Banner promocional @(i + 1)"
+                                     class="w-full h-auto object-cover max-h-48 md:max-h-64" />
+                            </div>
+                        }
+                        <!-- Indicadores -->
+                        <div class="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2">
+                            @for (int i = 0; i < bannersBuscador.Count; i++)
                             {
-                                <img src="@producto.ImagenLocal.Base64" alt="Foto del Local" class="h-full w-full object-cover">
+                                <button onclick="goToBannerSlide(@i)"
+                                        class="banner-indicator w-2 h-2 rounded-full @(i == 0 ? "bg-white" : "bg-white/50") transition-all hover:bg-white"></button>
                             }
                         </div>
+                        <!-- Controles -->
+                        @if (bannersBuscador.Count > 1)
+                        {
+                            <button onclick="prevBannerSlide()" class="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/30 text-white flex items-center justify-center hover:bg-black/50 transition-colors">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <button onclick="nextBannerSlide()" class="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-black/30 text-white flex items-center justify-center hover:bg-black/50 transition-colors">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    }
 
-                        <div class="text-left">
-                            <p class="text-sm font-semibold text-gray-800">@producto.NombreLocal</p>
-                            <p class="text-xs text-gray-500">@producto.DireccionLocal</p>
+    @if (!string.IsNullOrEmpty(query) && totalResultados > 0)
+    {
+        <!-- Tabs de filtro -->
+        <div class="bg-white border-b shadow-sm sticky top-0 z-20">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex gap-1 overflow-x-auto py-2 scrollbar-hide">
+                    <button onclick="showTab('all')" class="tab-btn active flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-gray-600 border-b-2 border-transparent hover:bg-gray-50 transition-all whitespace-nowrap">
+                        <i class="fas fa-layer-group"></i>
+                        Todos
+                        <span class="tab-badge px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-600">@totalResultados</span>
+                    </button>
+                    @if (ofertas.Any())
+                    {
+                        <button onclick="showTab('ofertas')" class="tab-btn flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-gray-600 border-b-2 border-transparent hover:bg-gray-50 transition-all whitespace-nowrap">
+                            <i class="fas fa-bolt text-amber-500"></i>
+                            Ofertas
+                            <span class="tab-badge px-2 py-0.5 text-xs rounded-full bg-amber-100 text-amber-700">@ofertas.Count</span>
+                        </button>
+                    }
+                    @if (productos.Any())
+                    {
+                        <button onclick="showTab('productos')" class="tab-btn flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-gray-600 border-b-2 border-transparent hover:bg-gray-50 transition-all whitespace-nowrap">
+                            <i class="fas fa-box text-blue-500"></i>
+                            Productos
+                            <span class="tab-badge px-2 py-0.5 text-xs rounded-full bg-blue-100 text-blue-700">@productos.Count</span>
+                        </button>
+                    }
+                    @if (locales.Any())
+                    {
+                        <button onclick="showTab('locales')" class="tab-btn flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium text-gray-600 border-b-2 border-transparent hover:bg-gray-50 transition-all whitespace-nowrap">
+                            <i class="fas fa-store text-green-500"></i>
+                            Locales
+                            <span class="tab-badge px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-700">@locales.Count</span>
+                        </button>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <!-- Sección Ofertas -->
+            @if (ofertas.Any())
+            {
+                <section id="section-ofertas" class="tab-section mb-8 animate-fadeInUp">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center">
+                            <i class="fas fa-bolt text-white"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-xl font-bold text-gray-800">Ofertas Flash</h2>
+                            <p class="text-sm text-gray-500">@ofertas.Count ofertas activas</p>
                         </div>
                     </div>
-                </a>
 
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        @foreach (var oferta in ofertas)
+                        {
+                            <a href="@Url.Action("ConsultarProductos", "Negocios", new { idLocal = oferta.IdLocal })"
+                               class="result-card block bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100">
+                                <!-- Imagen -->
+                                <div class="relative h-40 bg-gray-100">
+                                    <img src="@oferta.ImagenProductoOfertaFlash" alt="@oferta.Titulo"
+                                         class="w-full h-full object-cover" loading="lazy" />
+                                    <!-- Badge tiempo -->
+                                    <div class="absolute top-3 right-3 px-3 py-1.5 rounded-full bg-red-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-lg">
+                                        <i class="fas fa-clock"></i>
+                                        <span class="countdown-timer" data-expiration="@oferta.TiempoOferta.ToString("yyyy-MM-ddTHH:mm:ss")"></span>
+                                    </div>
+                                    <!-- Logo local -->
+                                    <div class="absolute bottom-3 left-3 w-12 h-12 rounded-xl border-2 border-white bg-white shadow-lg overflow-hidden">
+                                        @if (!string.IsNullOrWhiteSpace(oferta?.ImagenLocal?.Base64))
+                                        {
+                                            <img src="@oferta.ImagenLocal.Base64" alt="Local" class="w-full h-full object-cover" />
+                                        }
+                                        else
+                                        {
+                                            <div class="w-full h-full flex items-center justify-center bg-gray-100">
+                                                <i class="fas fa-store text-gray-400"></i>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                                <!-- Info -->
+                                <div class="p-4">
+                                    <h3 class="font-bold text-gray-800 line-clamp-1">@oferta?.Titulo</h3>
+                                    <p class="text-sm text-gray-500 line-clamp-1 mt-0.5">@oferta?.ProductoOfertaFlash</p>
+                                    <p class="text-xs text-gray-400 mt-2 flex items-center gap-1">
+                                        <i class="fas fa-map-marker-alt"></i>
+                                        @oferta?.NombreLocal
+                                    </p>
+                                </div>
+                            </a>
+                        }
+                    </div>
+                </section>
+            }
+
+            <!-- Sección Productos -->
+            @if (productos.Any())
+            {
+                <section id="section-productos" class="tab-section mb-8 animate-fadeInUp delay-100">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center">
+                            <i class="fas fa-box text-white"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-xl font-bold text-gray-800">Productos</h2>
+                            <p class="text-sm text-gray-500">@productos.Count productos encontrados</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                        @foreach (var producto in productos)
+                        {
+                            <a href="@Url.Action("ConsultarProductos", "Negocios", new { idLocal = producto.IdLocal })"
+                               class="result-card block bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100">
+                                <!-- Imagen -->
+                                <div class="aspect-square bg-gray-50 p-2">
+                                    <img src="@producto.ImagenUrl" alt="@producto.Nombre"
+                                         class="w-full h-full object-contain" loading="lazy" />
+                                </div>
+                                <!-- Info -->
+                                <div class="p-2.5 border-t border-gray-50">
+                                    <h3 class="text-xs font-medium text-gray-800 line-clamp-2 leading-tight">@producto.Nombre</h3>
+                                    <p class="text-sm font-bold text-orange-500 mt-1">$@producto.Precio</p>
+                                    <!-- Local -->
+                                    <div class="flex items-center gap-1.5 mt-2 pt-2 border-t border-gray-100">
+                                        <div class="w-5 h-5 rounded-full overflow-hidden bg-gray-100 flex-shrink-0">
+                                            @if (!string.IsNullOrWhiteSpace(producto?.ImagenLocal?.Base64))
+                                            {
+                                                <img src="@producto.ImagenLocal.Base64" alt="Local" class="w-full h-full object-cover" />
+                                            }
+                                            else
+                                            {
+                                                <div class="w-full h-full flex items-center justify-center">
+                                                    <i class="fas fa-store text-[8px] text-gray-400"></i>
+                                                </div>
+                                            }
+                                        </div>
+                                        <span class="text-[10px] text-gray-500 truncate">@producto?.NombreLocal</span>
+                                    </div>
+                                </div>
+                            </a>
+                        }
+                    </div>
+                </section>
+            }
+
+            <!-- Sección Locales -->
+            @if (locales.Any())
+            {
+                <section id="section-locales" class="tab-section mb-8 animate-fadeInUp delay-200">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center">
+                            <i class="fas fa-store text-white"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-xl font-bold text-gray-800">Locales</h2>
+                            <p class="text-sm text-gray-500">@locales.Count locales encontrados</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        @foreach (var local in locales)
+                        {
+                            <a href="@Url.Action("ConsultarProductos", "Negocios", new { idLocal = local.Id })"
+                               class="result-card flex items-center gap-4 p-4 bg-white rounded-2xl shadow-sm border border-gray-100">
+                                <!-- Logo -->
+                                <div class="w-16 h-16 rounded-xl overflow-hidden bg-gray-100 flex-shrink-0 border border-gray-200">
+                                    @if (!string.IsNullOrWhiteSpace(local?.imagen?.Base64))
+                                    {
+                                        <img src="@local.imagen.Base64" alt="@local.Nombre" class="w-full h-full object-cover" />
+                                    }
+                                    else
+                                    {
+                                        <div class="w-full h-full flex items-center justify-center">
+                                            <i class="fas fa-store text-2xl text-gray-300"></i>
+                                        </div>
+                                    }
+                                </div>
+                                <!-- Info -->
+                                <div class="flex-1 min-w-0">
+                                    <h3 class="font-bold text-gray-800 truncate">@local?.Nombre</h3>
+                                    @if (!string.IsNullOrEmpty(local?.Descripcion))
+                                    {
+                                        <p class="text-sm text-gray-500 line-clamp-1 mt-0.5">@local.Descripcion</p>
+                                    }
+                                    <div class="flex items-center gap-3 mt-2 text-xs text-gray-400">
+                                        @if (!string.IsNullOrEmpty(local?.Direccion))
+                                        {
+                                            <span class="flex items-center gap-1">
+                                                <i class="fas fa-map-marker-alt"></i>
+                                                <span class="truncate max-w-[120px]">@local.Direccion</span>
+                                            </span>
+                                        }
+                                        @if (local?.Telefono > 0)
+                                        {
+                                            <span class="flex items-center gap-1">
+                                                <i class="fas fa-phone"></i>
+                                                @local.Telefono
+                                            </span>
+                                        }
+                                    </div>
+                                </div>
+                                <!-- Arrow -->
+                                <div class="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center flex-shrink-0">
+                                    <i class="fas fa-chevron-right text-gray-400 text-sm"></i>
+                                </div>
+                            </a>
+                        }
+                    </div>
+                </section>
+            }
+        </main>
+    }
+    else if (!string.IsNullOrEmpty(query))
+    {
+        <!-- Estado vacío -->
+        <div class="flex flex-col items-center justify-center py-20 px-4">
+            <div class="w-24 h-24 rounded-full bg-gray-100 flex items-center justify-center mb-6">
+                <i class="fas fa-search text-4xl text-gray-300"></i>
             </div>
-        }
-    </div>
-
-
+            <h3 class="text-xl font-bold text-gray-700 mb-2">No encontramos resultados</h3>
+            <p class="text-gray-500 text-center max-w-md mb-6">
+                No hay productos, ofertas ni locales que coincidan con "<span class="font-medium">@query</span>"
+            </p>
+            <div class="flex flex-col sm:flex-row gap-3">
+                <a href="@Url.Action("Index", "Home")" class="px-6 py-3 rounded-xl bg-[#23916A] text-white font-medium hover:bg-emerald-600 transition-colors flex items-center gap-2">
+                    <i class="fas fa-home"></i>
+                    Ir al inicio
+                </a>
+                <button onclick="document.querySelector('input[name=query]').focus()" class="px-6 py-3 rounded-xl border border-gray-200 text-gray-700 font-medium hover:bg-gray-50 transition-colors flex items-center gap-2">
+                    <i class="fas fa-redo"></i>
+                    Nueva búsqueda
+                </button>
+            </div>
+        </div>
+    }
+    else
+    {
+        <!-- Sin búsqueda -->
+        <div class="flex flex-col items-center justify-center py-20 px-4">
+            <div class="w-24 h-24 rounded-full bg-gradient-to-br from-[#23916A] to-emerald-500 flex items-center justify-center mb-6">
+                <i class="fas fa-search text-4xl text-white"></i>
+            </div>
+            <h3 class="text-xl font-bold text-gray-700 mb-2">¿Qué estás buscando?</h3>
+            <p class="text-gray-500 text-center max-w-md">
+                Busca productos, ofertas o locales usando la barra de búsqueda
+            </p>
+        </div>
+    }
+</div>
 </div>
 
 <script>
+    // Skeleton loader toggle
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(function() {
+            document.getElementById('skeleton-buscador').classList.add('hidden');
+            document.getElementById('content-buscador').classList.remove('hidden');
+        }, 300);
+    });
+
+    // Tabs functionality
+    function showTab(tab) {
+        // Actualizar botones
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        event.currentTarget.classList.add('active');
+
+        // Mostrar/ocultar secciones
+        const sections = document.querySelectorAll('.tab-section');
+        sections.forEach(section => {
+            if (tab === 'all') {
+                section.style.display = 'block';
+            } else if (section.id === `section-${tab}`) {
+                section.style.display = 'block';
+            } else {
+                section.style.display = 'none';
+            }
+        });
+    }
+
+    // Countdown timers
     function actualizarContadores() {
         document.querySelectorAll(".countdown-timer").forEach(timer => {
             const expirationTime = new Date(timer.dataset.expiration).getTime();
@@ -103,12 +607,55 @@
                 const hours = Math.floor(timeLeft / (1000 * 60 * 60));
                 const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
                 const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
-                timer.innerText = `${hours}h ${minutes}m ${seconds}s`;
+
+                if (hours > 0) {
+                    timer.innerText = `${hours}h ${minutes}m`;
+                } else {
+                    timer.innerText = `${minutes}m ${seconds}s`;
+                }
             } else {
                 timer.innerText = "Expirado";
+                timer.closest('.result-card')?.classList.add('opacity-50');
             }
         });
     }
+
     setInterval(actualizarContadores, 1000);
     actualizarContadores();
+
+    // Banner Carousel
+    let currentBannerSlide = 0;
+    const bannerSlides = document.querySelectorAll('.banner-slide-buscador');
+    const bannerIndicators = document.querySelectorAll('.banner-indicator');
+
+    function goToBannerSlide(index) {
+        if (bannerSlides.length === 0) return;
+
+        // Ocultar slide actual
+        bannerSlides[currentBannerSlide].classList.add('hidden');
+        bannerIndicators[currentBannerSlide]?.classList.remove('bg-white');
+        bannerIndicators[currentBannerSlide]?.classList.add('bg-white/50');
+
+        // Mostrar nuevo slide
+        currentBannerSlide = index;
+        if (currentBannerSlide >= bannerSlides.length) currentBannerSlide = 0;
+        if (currentBannerSlide < 0) currentBannerSlide = bannerSlides.length - 1;
+
+        bannerSlides[currentBannerSlide].classList.remove('hidden');
+        bannerIndicators[currentBannerSlide]?.classList.add('bg-white');
+        bannerIndicators[currentBannerSlide]?.classList.remove('bg-white/50');
+    }
+
+    function nextBannerSlide() {
+        goToBannerSlide(currentBannerSlide + 1);
+    }
+
+    function prevBannerSlide() {
+        goToBannerSlide(currentBannerSlide - 1);
+    }
+
+    // Auto-rotate banners cada 5 segundos
+    if (bannerSlides.length > 1) {
+        setInterval(nextBannerSlide, 5000);
+    }
 </script>

@@ -1,0 +1,646 @@
+@model List<BusinessLogic.Models.GaleriaLocal>
+@using BusinessLogic.Utilidades
+@{
+    ViewData["Title"] = "Galeria de Locales - Abastecete";
+    ViewData["Description"] = "Administra y revisa las imagenes de la galeria de locales comerciales. Aprueba o rechaza fotografias subidas por los negocios afiliados.";
+    var permisos = Context.Session.GetString("permisosSistema") ?? "";
+    var puedeAdministrar = RolPermisos.TienePermiso("ADMIN_GALERIA", permisos);
+    var totalPendientes = ViewBag.TotalPendientes ?? 0;
+}
+
+<style>
+    .modal { transition: opacity 0.2s ease, visibility 0.2s ease; }
+    .modal.hidden { opacity: 0; visibility: hidden; }
+    .modal:not(.hidden) { opacity: 1; visibility: visible; }
+    .imagen-galeria { transition: transform 0.2s ease; }
+    .imagen-galeria:hover { transform: scale(1.02); }
+</style>
+
+<!-- Skeleton Loader -->
+<div id="skeleton-galeria" class="animate-pulse">
+    <!-- Header Skeleton -->
+    <div class="bg-white border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-lg bg-gray-200"></div>
+                    <div>
+                        <div class="h-8 w-64 bg-gray-200 rounded mb-2"></div>
+                        <div class="h-4 w-96 bg-gray-200 rounded"></div>
+                    </div>
+                </div>
+                <div class="h-10 w-48 bg-gray-200 rounded-lg"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Content Skeleton -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <!-- Stats Cards Skeleton -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+            <div class="bg-white rounded-xl border border-gray-200 p-4 flex items-center gap-4">
+                <div class="w-12 h-12 rounded-lg bg-gray-200"></div>
+                <div class="flex-1">
+                    <div class="h-8 w-16 bg-gray-200 rounded mb-2"></div>
+                    <div class="h-4 w-24 bg-gray-200 rounded"></div>
+                </div>
+            </div>
+            <div class="bg-white rounded-xl border border-gray-200 p-4 flex items-center gap-4">
+                <div class="w-12 h-12 rounded-lg bg-gray-200"></div>
+                <div class="flex-1">
+                    <div class="h-8 w-16 bg-gray-200 rounded mb-2"></div>
+                    <div class="h-4 w-24 bg-gray-200 rounded"></div>
+                </div>
+            </div>
+            <div class="bg-white rounded-xl border border-gray-200 p-4 flex items-center gap-4">
+                <div class="w-12 h-12 rounded-lg bg-gray-200"></div>
+                <div class="flex-1">
+                    <div class="h-8 w-16 bg-gray-200 rounded mb-2"></div>
+                    <div class="h-4 w-24 bg-gray-200 rounded"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filtros Skeleton -->
+        <div class="bg-white rounded-xl border border-gray-200 mb-6 p-4">
+            <div class="flex flex-col sm:flex-row gap-4">
+                <div class="flex-1 h-11 bg-gray-200 rounded-lg"></div>
+                <div class="w-full sm:w-48 h-11 bg-gray-200 rounded-lg"></div>
+            </div>
+        </div>
+
+        <!-- Grid Skeleton -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                <div class="aspect-square bg-gray-200"></div>
+                <div class="p-4">
+                    <div class="h-5 bg-gray-200 rounded mb-2"></div>
+                    <div class="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                    <div class="h-3 bg-gray-200 rounded w-1/2 mb-3"></div>
+                    <div class="flex gap-2">
+                        <div class="flex-1 h-9 bg-gray-200 rounded-lg"></div>
+                        <div class="flex-1 h-9 bg-gray-200 rounded-lg"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                <div class="aspect-square bg-gray-200"></div>
+                <div class="p-4">
+                    <div class="h-5 bg-gray-200 rounded mb-2"></div>
+                    <div class="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                    <div class="h-3 bg-gray-200 rounded w-1/2 mb-3"></div>
+                    <div class="flex gap-2">
+                        <div class="flex-1 h-9 bg-gray-200 rounded-lg"></div>
+                        <div class="flex-1 h-9 bg-gray-200 rounded-lg"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                <div class="aspect-square bg-gray-200"></div>
+                <div class="p-4">
+                    <div class="h-5 bg-gray-200 rounded mb-2"></div>
+                    <div class="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                    <div class="h-3 bg-gray-200 rounded w-1/2 mb-3"></div>
+                    <div class="flex gap-2">
+                        <div class="flex-1 h-9 bg-gray-200 rounded-lg"></div>
+                        <div class="flex-1 h-9 bg-gray-200 rounded-lg"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                <div class="aspect-square bg-gray-200"></div>
+                <div class="p-4">
+                    <div class="h-5 bg-gray-200 rounded mb-2"></div>
+                    <div class="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                    <div class="h-3 bg-gray-200 rounded w-1/2 mb-3"></div>
+                    <div class="flex gap-2">
+                        <div class="flex-1 h-9 bg-gray-200 rounded-lg"></div>
+                        <div class="flex-1 h-9 bg-gray-200 rounded-lg"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Contenido Real -->
+<div id="content-galeria" class="hidden">
+<!-- Header -->
+<div class="bg-white border-b border-gray-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div class="flex items-center gap-4">
+                <a href="@Url.Action("Principal", "Home")"
+                   class="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors">
+                    <i class="fas fa-arrow-left text-gray-600"></i>
+                </a>
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900">Galeria de Locales</h1>
+                    <p class="text-sm text-gray-500 mt-1">Revisa y aprueba las imagenes subidas por los negocios</p>
+                </div>
+            </div>
+            @if (totalPendientes > 0)
+            {
+                <div class="inline-flex items-center gap-2 px-4 py-2 bg-amber-100 text-amber-800 rounded-lg">
+                    <i class="fas fa-clock"></i>
+                    <span class="font-medium">@totalPendientes imagenes pendientes de revision</span>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Contenido -->
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+        <div class="bg-white rounded-xl border border-gray-200 p-4 flex items-center gap-4">
+            <div class="w-12 h-12 rounded-lg bg-amber-100 flex items-center justify-center">
+                <i class="fas fa-clock text-amber-600 text-xl"></i>
+            </div>
+            <div>
+                <p class="text-2xl font-bold text-gray-900">@Model.Count(g => g.Estado == BusinessLogic.Models.EstadoGaleria.Pendiente)</p>
+                <p class="text-sm text-gray-500">Pendientes</p>
+            </div>
+        </div>
+        <div class="bg-white rounded-xl border border-gray-200 p-4 flex items-center gap-4">
+            <div class="w-12 h-12 rounded-lg bg-green-100 flex items-center justify-center">
+                <i class="fas fa-check-circle text-green-600 text-xl"></i>
+            </div>
+            <div>
+                <p class="text-2xl font-bold text-gray-900">@Model.Count(g => g.Estado == BusinessLogic.Models.EstadoGaleria.Aprobada)</p>
+                <p class="text-sm text-gray-500">Aprobadas</p>
+            </div>
+        </div>
+        <div class="bg-white rounded-xl border border-gray-200 p-4 flex items-center gap-4">
+            <div class="w-12 h-12 rounded-lg bg-red-100 flex items-center justify-center">
+                <i class="fas fa-times-circle text-red-600 text-xl"></i>
+            </div>
+            <div>
+                <p class="text-2xl font-bold text-gray-900">@Model.Count(g => g.Estado == BusinessLogic.Models.EstadoGaleria.Rechazada)</p>
+                <p class="text-sm text-gray-500">Rechazadas</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="bg-white rounded-xl border border-gray-200 mb-6 p-4">
+        <div class="flex flex-col sm:flex-row gap-4">
+            <div class="flex-1 relative">
+                <input type="text" id="filtro-buscar" placeholder="Buscar por nombre del local..."
+                       class="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#23916A] focus:border-[#23916A] transition-all">
+                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+            </div>
+            <select id="filtro-estado" class="px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#23916A] transition-all">
+                <option value="">Todos los estados</option>
+                <option value="0" selected>Pendientes</option>
+                <option value="1">Aprobadas</option>
+                <option value="2">Rechazadas</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Grid de Imagenes -->
+    @if (Model.Any())
+    {
+        <div id="galeria-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            @foreach (var imagen in Model)
+            {
+                <div class="imagen-item bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+                     data-id="@imagen.Id"
+                     data-local="@(imagen.NombreLocal?.ToLower() ?? "")"
+                     data-estado="@((int)imagen.Estado)">
+
+                    <!-- Imagen con overlay -->
+                    <div class="relative aspect-square cursor-pointer" onclick="verImagen('@imagen.CloudinaryUrl')">
+                        <img src="@imagen.CloudinaryUrl" alt="Imagen de galeria"
+                             class="w-full h-full object-cover imagen-galeria">
+
+                        <!-- Badge de estado -->
+                        <div class="absolute top-2 right-2">
+                            @if (imagen.Estado == BusinessLogic.Models.EstadoGaleria.Pendiente)
+                            {
+                                <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800 shadow-sm">
+                                    <i class="fas fa-clock"></i> Pendiente
+                                </span>
+                            }
+                            else if (imagen.Estado == BusinessLogic.Models.EstadoGaleria.Aprobada)
+                            {
+                                <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 shadow-sm">
+                                    <i class="fas fa-check"></i> Aprobada
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 shadow-sm">
+                                    <i class="fas fa-times"></i> Rechazada
+                                </span>
+                            }
+                        </div>
+
+                        <!-- Overlay con lupa -->
+                        <div class="absolute inset-0 bg-black/0 hover:bg-black/20 flex items-center justify-center opacity-0 hover:opacity-100 transition-all">
+                            <i class="fas fa-search-plus text-white text-2xl"></i>
+                        </div>
+                    </div>
+
+                    <!-- Info del local -->
+                    <div class="p-4">
+                        <div class="mb-3">
+                            <p class="font-semibold text-gray-900 truncate">@(imagen.NombreLocal ?? "Local sin nombre")</p>
+                            <p class="text-sm text-gray-500">
+                                @(imagen.PropietarioNombre ?? "") @(imagen.PropietarioApellido ?? "")
+                            </p>
+                            <p class="text-xs text-gray-400 mt-1">
+                                <i class="fas fa-calendar-alt mr-1"></i>
+                                @imagen.FechaSubida.ToString("dd/MM/yyyy HH:mm")
+                            </p>
+                        </div>
+
+                        <!-- Botones de accion -->
+                        @if (puedeAdministrar && imagen.Estado == BusinessLogic.Models.EstadoGaleria.Pendiente)
+                        {
+                            <div class="flex gap-2">
+                                <button onclick="aprobarImagen(@imagen.Id)"
+                                        class="flex-1 inline-flex items-center justify-center gap-1 px-3 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors">
+                                    <i class="fas fa-check"></i>
+                                    <span>Aprobar</span>
+                                </button>
+                                <button onclick="abrirModalRechazo(@imagen.Id)"
+                                        class="flex-1 inline-flex items-center justify-center gap-1 px-3 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 transition-colors">
+                                    <i class="fas fa-times"></i>
+                                    <span>Rechazar</span>
+                                </button>
+                            </div>
+                        }
+                        @if (puedeAdministrar && imagen.Estado != BusinessLogic.Models.EstadoGaleria.Pendiente)
+                        {
+                            <button onclick="eliminarImagen(@imagen.Id)"
+                                    class="w-full inline-flex items-center justify-center gap-1 px-3 py-2 bg-gray-600 text-white text-sm rounded-lg hover:bg-gray-700 transition-colors">
+                                <i class="fas fa-trash"></i>
+                                <span>Eliminar</span>
+                            </button>
+                        }
+
+                        @if (imagen.Estado == BusinessLogic.Models.EstadoGaleria.Rechazada && !string.IsNullOrEmpty(imagen.MotivoRechazo))
+                        {
+                            <div class="mt-2 p-2 bg-red-50 rounded-lg">
+                                <p class="text-xs text-red-700">
+                                    <i class="fas fa-info-circle mr-1"></i>
+                                    @imagen.MotivoRechazo
+                                </p>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="bg-white rounded-xl border border-gray-200 p-12 text-center">
+            <div class="w-20 h-20 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
+                <i class="fas fa-images text-3xl text-gray-400"></i>
+            </div>
+            <p class="text-gray-500 mb-2">No hay imagenes pendientes de revision</p>
+            <p class="text-sm text-gray-400">Cuando los negocios suban imagenes, apareceran aqui para su aprobacion</p>
+        </div>
+    }
+
+    <!-- Sin resultados (filtrado) -->
+    <div id="sin-resultados" class="hidden bg-white rounded-xl border border-gray-200 p-12 text-center">
+        <div class="w-20 h-20 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
+            <i class="fas fa-search text-3xl text-gray-400"></i>
+        </div>
+        <p class="text-gray-500 mb-2">No se encontraron resultados</p>
+        <p class="text-sm text-gray-400">Intenta con otros criterios de busqueda</p>
+    </div>
+
+</div>
+</div>
+<!-- Fin contenido-galeria -->
+
+<!-- Modal Ver Imagen -->
+<div id="modal-imagen" class="modal hidden fixed inset-0 z-50 overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen px-4 py-8">
+        <div class="fixed inset-0 bg-black/80" onclick="cerrarModalImagen()"></div>
+        <div class="relative max-w-4xl w-full">
+            <button onclick="cerrarModalImagen()"
+                    class="absolute -top-12 right-0 text-white hover:text-gray-300 transition-colors">
+                <i class="fas fa-times text-2xl"></i>
+            </button>
+            <img id="imagen-ampliada" src="" alt="Imagen ampliada"
+                 class="w-full h-auto rounded-xl shadow-2xl">
+        </div>
+    </div>
+</div>
+
+<!-- Modal Aprobar -->
+<div id="modal-aprobar" class="modal hidden fixed inset-0 z-50 overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen px-4 py-8">
+        <div class="fixed inset-0 bg-black/50 backdrop-blur-sm" onclick="cerrarModalAprobar()"></div>
+        <div class="relative bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-gray-900">
+                    <i class="fas fa-check-circle text-green-500 mr-2"></i>
+                    Aprobar Imagen
+                </h3>
+                <button onclick="cerrarModalAprobar()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <input type="hidden" id="aprobar-id">
+
+            <div class="mb-6">
+                <div class="flex items-center justify-center w-16 h-16 mx-auto mb-4 rounded-full bg-green-100">
+                    <i class="fas fa-image text-green-600 text-2xl"></i>
+                </div>
+                <p class="text-center text-gray-600">
+                    ¿Aprobar esta imagen? Sera visible para todos los usuarios.
+                </p>
+            </div>
+
+            <div class="flex gap-3 pt-4 border-t border-gray-200">
+                <button onclick="cerrarModalAprobar()"
+                        class="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium">
+                    Cancelar
+                </button>
+                <button onclick="confirmarAprobar()" id="btn-aprobar"
+                        class="flex-1 px-4 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium">
+                    <i class="fas fa-check mr-2"></i>Aprobar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Rechazo -->
+<div id="modal-rechazo" class="modal hidden fixed inset-0 z-50 overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen px-4 py-8">
+        <div class="fixed inset-0 bg-black/50 backdrop-blur-sm" onclick="cerrarModalRechazo()"></div>
+        <div class="relative bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-lg font-semibold text-gray-900">
+                    <i class="fas fa-times-circle text-red-500 mr-2"></i>
+                    Rechazar Imagen
+                </h3>
+                <button onclick="cerrarModalRechazo()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <input type="hidden" id="rechazo-id">
+
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Motivo del rechazo</label>
+                <select id="rechazo-motivo-select" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 mb-3">
+                    <option value="">Seleccionar motivo...</option>
+                    <option value="Imagen borrosa o de baja calidad">Imagen borrosa o de baja calidad</option>
+                    <option value="Contenido inapropiado">Contenido inapropiado</option>
+                    <option value="No corresponde al negocio">No corresponde al negocio</option>
+                    <option value="Imagen duplicada">Imagen duplicada</option>
+                    <option value="Contiene texto o marcas de agua">Contiene texto o marcas de agua</option>
+                    <option value="otro">Otro motivo...</option>
+                </select>
+                <textarea id="rechazo-motivo-texto" rows="3" placeholder="Describe el motivo del rechazo..."
+                          class="hidden w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 transition-all"></textarea>
+            </div>
+
+            <div class="flex gap-3 pt-4 border-t border-gray-200">
+                <button onclick="cerrarModalRechazo()"
+                        class="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium">
+                    Cancelar
+                </button>
+                <button onclick="confirmarRechazo()" id="btn-rechazar"
+                        class="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium">
+                    <i class="fas fa-times mr-2"></i>Rechazar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" class="fixed bottom-4 right-4 z-50 transform translate-y-full opacity-0 transition-all duration-300">
+    <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-4 flex items-center gap-3 max-w-sm">
+        <div id="toast-icon" class="w-10 h-10 rounded-full flex items-center justify-center bg-green-100 text-green-600">
+            <i class="fas fa-check"></i>
+        </div>
+        <div>
+            <p id="toast-title" class="font-medium text-gray-900">Exito</p>
+            <p id="toast-message" class="text-sm text-gray-500">Operacion completada</p>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    // =============== FILTROS ===============
+    const allItems = Array.from(document.querySelectorAll('.imagen-item'));
+
+    document.getElementById('filtro-buscar').addEventListener('input', aplicarFiltros);
+    document.getElementById('filtro-estado').addEventListener('change', aplicarFiltros);
+
+    function aplicarFiltros() {
+        const termino = document.getElementById('filtro-buscar').value.toLowerCase();
+        const estado = document.getElementById('filtro-estado').value;
+
+        let visibles = 0;
+
+        allItems.forEach(item => {
+            const local = item.dataset.local || '';
+            const itemEstado = item.dataset.estado;
+
+            const matchLocal = local.includes(termino);
+            const matchEstado = !estado || itemEstado === estado;
+
+            if (matchLocal && matchEstado) {
+                item.classList.remove('hidden');
+                visibles++;
+            } else {
+                item.classList.add('hidden');
+            }
+        });
+
+        // Mostrar mensaje de sin resultados
+        document.getElementById('sin-resultados').classList.toggle('hidden', visibles > 0);
+        document.getElementById('galeria-grid')?.classList.toggle('hidden', visibles === 0);
+    }
+
+    // Aplicar filtro inicial (pendientes)
+    aplicarFiltros();
+
+    // =============== MODAL VER IMAGEN ===============
+    function verImagen(url) {
+        document.getElementById('imagen-ampliada').src = url;
+        document.getElementById('modal-imagen').classList.remove('hidden');
+    }
+
+    function cerrarModalImagen() {
+        document.getElementById('modal-imagen').classList.add('hidden');
+    }
+
+    // =============== MODAL APROBAR ===============
+    function aprobarImagen(id) {
+        document.getElementById('aprobar-id').value = id;
+        document.getElementById('modal-aprobar').classList.remove('hidden');
+    }
+
+    function cerrarModalAprobar() {
+        document.getElementById('modal-aprobar').classList.add('hidden');
+    }
+
+    function confirmarAprobar() {
+        const id = document.getElementById('aprobar-id').value;
+        const btn = document.getElementById('btn-aprobar');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Aprobando...';
+
+        fetch('/GaleriaAdmin/Aprobar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `id=${id}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                cerrarModalAprobar();
+                showToast('success', 'Aprobada', 'Imagen aprobada correctamente');
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                showToast('error', 'Error', data.mensaje || 'No se pudo aprobar');
+            }
+        })
+        .catch(() => showToast('error', 'Error', 'Error de conexion'))
+        .finally(() => {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-check mr-2"></i>Aprobar';
+        });
+    }
+
+    // =============== MODAL RECHAZO ===============
+    function abrirModalRechazo(id) {
+        document.getElementById('rechazo-id').value = id;
+        document.getElementById('rechazo-motivo-select').value = '';
+        document.getElementById('rechazo-motivo-texto').value = '';
+        document.getElementById('rechazo-motivo-texto').classList.add('hidden');
+        document.getElementById('modal-rechazo').classList.remove('hidden');
+    }
+
+    function cerrarModalRechazo() {
+        document.getElementById('modal-rechazo').classList.add('hidden');
+    }
+
+    document.getElementById('rechazo-motivo-select').addEventListener('change', function() {
+        const textarea = document.getElementById('rechazo-motivo-texto');
+        if (this.value === 'otro') {
+            textarea.classList.remove('hidden');
+            textarea.focus();
+        } else {
+            textarea.classList.add('hidden');
+        }
+    });
+
+    function confirmarRechazo() {
+        const id = document.getElementById('rechazo-id').value;
+        const selectValue = document.getElementById('rechazo-motivo-select').value;
+        const textoValue = document.getElementById('rechazo-motivo-texto').value.trim();
+
+        let motivo = selectValue === 'otro' ? textoValue : selectValue;
+        if (!motivo) {
+            showToast('error', 'Error', 'Debes seleccionar o escribir un motivo');
+            return;
+        }
+
+        const btn = document.getElementById('btn-rechazar');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Rechazando...';
+
+        fetch('/GaleriaAdmin/Rechazar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `id=${id}&motivo=${encodeURIComponent(motivo)}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                cerrarModalRechazo();
+                showToast('success', 'Rechazada', 'Imagen rechazada');
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                showToast('error', 'Error', data.mensaje || 'No se pudo rechazar');
+            }
+        })
+        .catch(() => showToast('error', 'Error', 'Error de conexion'))
+        .finally(() => {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-times mr-2"></i>Rechazar';
+        });
+    }
+
+    // =============== ELIMINAR IMAGEN ===============
+    function eliminarImagen(id) {
+        if (!confirm('¿Eliminar esta imagen permanentemente?')) return;
+
+        fetch('/GaleriaAdmin/Eliminar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `id=${id}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast('success', 'Eliminada', 'Imagen eliminada correctamente');
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                showToast('error', 'Error', data.mensaje || 'No se pudo eliminar');
+            }
+        })
+        .catch(() => showToast('error', 'Error', 'Error de conexion'));
+    }
+
+    // =============== TOAST ===============
+    function showToast(type, title, message) {
+        const toast = document.getElementById('toast');
+        const icon = document.getElementById('toast-icon');
+        const titleEl = document.getElementById('toast-title');
+        const messageEl = document.getElementById('toast-message');
+
+        titleEl.textContent = title;
+        messageEl.textContent = message;
+
+        if (type === 'success') {
+            icon.className = 'w-10 h-10 rounded-full flex items-center justify-center bg-green-100 text-green-600';
+            icon.innerHTML = '<i class="fas fa-check"></i>';
+        } else {
+            icon.className = 'w-10 h-10 rounded-full flex items-center justify-center bg-red-100 text-red-600';
+            icon.innerHTML = '<i class="fas fa-times"></i>';
+        }
+
+        toast.classList.remove('translate-y-full', 'opacity-0');
+
+        setTimeout(() => {
+            toast.classList.add('translate-y-full', 'opacity-0');
+        }, 3000);
+    }
+
+    // Cerrar modales con Escape
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            cerrarModalImagen();
+            cerrarModalAprobar();
+            cerrarModalRechazo();
+        }
+    });
+
+    // =============== SKELETON LOADER ===============
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(function() {
+            document.getElementById('skeleton-galeria').classList.add('hidden');
+            document.getElementById('content-galeria').classList.remove('hidden');
+        }, 300);
+    });
+</script>
+}

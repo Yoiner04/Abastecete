@@ -1,7 +1,12 @@
-﻿@using BusinessLogic.Utilidades
+@using BusinessLogic.Utilidades
 @using Microsoft.AspNetCore.Http
 @inject IHttpContextAccessor HttpContextAccessor
 @model List<BusinessLogic.Models.Categoria>
+
+@{
+    ViewData["Title"] = "Abastecete - Encuentra proveedores locales";
+    ViewData["Description"] = "Descubre los mejores proveedores locales cerca de ti. Categorías, ofertas flash y negocios verificados.";
+}
 
 <!DOCTYPE html>
 <html lang="es">
@@ -9,310 +14,1242 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Abastecete</title>
+    <title>@ViewData["Title"]</title>
+    <meta name="description" content="@ViewData["Description"]" />
+
+    <!-- SEO Meta Tags -->
+    <meta name="keywords" content="proveedores locales, negocios, productos, Florencia, Caquetá, abastecimiento, comercio local" />
+    <meta name="author" content="Abastecete" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="@Context.Request.Scheme://@Context.Request.Host@Context.Request.Path" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="@Context.Request.Scheme://@Context.Request.Host@Context.Request.Path" />
+    <meta property="og:title" content="@ViewData["Title"]" />
+    <meta property="og:description" content="@ViewData["Description"]" />
+    <meta property="og:image" content="@Context.Request.Scheme://@Context.Request.Host/images/og-image.webp" />
+    <meta property="og:site_name" content="Abastecete" />
+    <meta property="og:locale" content="es_CO" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="@Context.Request.Scheme://@Context.Request.Host@Context.Request.Path" />
+    <meta name="twitter:title" content="@ViewData["Title"]" />
+    <meta name="twitter:description" content="@ViewData["Description"]" />
+    <meta name="twitter:image" content="@Context.Request.Scheme://@Context.Request.Host/images/og-image.webp" />
+
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/Abastecete.styles.css" asp-append-version="true" />
-    <link rel="icon" type="image/x-icon" href="~/css/Images/Logo A naranja.png" />
-    <link rel="stylesheet" href="styles.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link rel="icon" type="image/x-icon" href="~/images/Logo A naranja.png" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <link rel="stylesheet" href="~/css/styles.css" asp-append-version="true" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
+        * {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
         html {
             scroll-behavior: smooth;
         }
+        /* Scrollbar moderno */
+        #content-panel::-webkit-scrollbar {
+            width: 8px;
+        }
+        #content-panel::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        #content-panel::-webkit-scrollbar-thumb {
+            background: rgba(0,0,0,0.2);
+            border-radius: 4px;
+        }
+        #content-panel::-webkit-scrollbar-thumb:hover {
+            background: rgba(0,0,0,0.3);
+        }
+        /* Animaciones suaves */
+        .card-hover {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+        }
+        /* Efecto shimmer para loading */
+        .shimmer {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+        @@keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        /* Badge flotante */
+        .floating-badge {
+            animation: float 3s ease-in-out infinite;
+        }
+        @@keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+        /* Categorías con scroll horizontal en móvil */
+        .categories-scroll {
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        .categories-scroll::-webkit-scrollbar {
+            display: none;
+        }
+        /* Imagen con zoom suave */
+        .img-zoom {
+            transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .group:hover .img-zoom {
+            transform: scale(1.08);
+        }
+        /* Gradiente overlay */
+        .gradient-overlay {
+            background: linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.6) 100%);
+        }
+        /* Mapa con borde redondeado - forzar en todos los elementos internos */
+        #map, #map > div, #map iframe, #map .gm-style > div:first-child {
+            border-radius: 16px !important;
+        }
+        /* Contenedor del mapa con clip para forzar bordes */
+        .map-container {
+            border-radius: 16px;
+            overflow: hidden;
+            -webkit-mask-image: -webkit-radial-gradient(white, black);
+            mask-image: radial-gradient(white, black);
+        }
+        /* Loader de filtrado */
+        .filter-loader {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 16px 24px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 100;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            pointer-events: none;
+        }
+        .filter-loader.visible {
+            opacity: 1;
+        }
+        .filter-loader .spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f0f0f0;
+            border-top-color: #F66623;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @@keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        /* Card seleccionada */
+        .card-selected > div {
+            box-shadow: 0 0 0 2px #F66623, 0 12px 40px rgba(246,102,35,0.25) !important;
+            transform: scale(1.02);
+        }
+        /* Line clamp para títulos */
+        .line-clamp-1 {
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 1;
+        }
+        /* Animación de entrada para cards */
+        .negocio-card {
+            opacity: 0;
+            transform: translateY(15px);
+            animation: fadeInUp 0.35s ease-out forwards;
+        }
+        @@keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        /* Delay escalonado para cada card - 3 columnas */
+        .negocio-card:nth-child(1) { animation-delay: 0.03s; }
+        .negocio-card:nth-child(2) { animation-delay: 0.06s; }
+        .negocio-card:nth-child(3) { animation-delay: 0.09s; }
+        .negocio-card:nth-child(4) { animation-delay: 0.12s; }
+        .negocio-card:nth-child(5) { animation-delay: 0.15s; }
+        .negocio-card:nth-child(6) { animation-delay: 0.18s; }
+        .negocio-card:nth-child(7) { animation-delay: 0.21s; }
+        .negocio-card:nth-child(8) { animation-delay: 0.24s; }
+        .negocio-card:nth-child(9) { animation-delay: 0.27s; }
+        /* Transición suave del grid */
+        #negocios-grid {
+            transition: opacity 0.3s ease;
+        }
+        /* Contador con animación */
+        #contador-negocios {
+            transition: all 0.3s ease;
+        }
+        /* Estilos para InfoWindow de Google Maps */
+        .gm-style-iw {
+            padding: 0 !important;
+            border-radius: 16px !important;
+            overflow: hidden !important;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.2) !important;
+        }
+        .gm-style-iw-d {
+            overflow: hidden !important;
+            padding: 0 !important;
+        }
+        .gm-style-iw-c {
+            padding: 0 !important;
+            border-radius: 16px !important;
+        }
+        /* Ocultar botón de cerrar por defecto y poner uno mejor */
+        .gm-style-iw-tc {
+            display: none !important;
+        }
+        .gm-ui-hover-effect {
+            top: 8px !important;
+            right: 8px !important;
+            width: 28px !important;
+            height: 28px !important;
+            background: white !important;
+            border-radius: 50% !important;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2) !important;
+            opacity: 1 !important;
+        }
+        .gm-ui-hover-effect > span {
+            background-color: #333 !important;
+            margin: 7px !important;
+        }
     </style>
-
 </head>
 
-<body>
+<body class="bg-[#f7f7f7]">
 
-    @{
-        string permisos = HttpContextAccessor.HttpContext.Session.GetString("permisos");
-
-        var bannerInicio = ViewBag.BannerInicio as List<(BusinessLogic.Models.BannerModel,
-        BusinessLogic.Models.ImagenModel)> ?? new();
-
-        var horizontales = bannerInicio
-        .Where(b => b.Item1.Formato == "16:9")
-        .Select(b => b.Item2?.Base64 ?? "/images/default.webp")
-        .ToList();
-
-        var cuadrados = bannerInicio
-        .Where(b => b.Item1.Formato == "1:1")
-        .Select(b => b.Item2?.Base64 ?? "/images/default.webp")
-        .Take(2)
-        .ToList();
-
-        var imgIzquierda = cuadrados.ElementAtOrDefault(0) ?? "/images/lateral1.webp";
-        var imgDerecha = cuadrados.ElementAtOrDefault(1) ?? "/images/lateral2.webp";
-
-        var primeraHorizontal = horizontales.FirstOrDefault() ?? "/images/default.webp";
-    }
-
-
-    <section class="hero-section flex flex-col gap-3 p-3 sm:p-5">
-        <div class="flex w-full flex-col gap-3 sm:flex-row sm:gap-6">
-            <!-- Carrusel Principal -->
-            <div
-                class="relative h-[200px] w-full overflow-hidden rounded-lg sm:flex-grow-[2] sm:h-[250px] lg:h-[400px]">
-                <img id="carouselImage" src="@primeraHorizontal" alt="Carrusel"
-                    class="h-full w-full object-cover transition-opacity duration-500" />
-
-
-                <!-- Botón Anterior -->
-                <button id="prevBtn"
-                    class="absolute top-1/2 left-2 z-10 -translate-y-1/2 transform rounded-full bg-white px-2 py-1 text-black sm:left-3 sm:px-3 sm:py-2">
-                    <svg class="h-6 w-6 text-gray-800" xmlns="http://www.w3.org/2000/svg" fill="none"
-                        viewBox="0 0 6 10">
-                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M5 1 1 5l4 4" />
-                    </svg>
-                </button>
-
-                <!-- Botón Siguiente -->
-                <button id="nextBtn"
-                    class="absolute top-1/2 right-2 z-10 -translate-y-1/2 transform rounded-full bg-white px-2 py-1 text-black sm:right-3 sm:px-3 sm:py-2">
-                    <svg class="h-6 w-6 text-gray-800" xmlns="http://www.w3.org/2000/svg" fill="none"
-                        viewBox="0 0 6 10">
-                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="m1 9 4-4-4-4" />
-                    </svg>
-                </button>
-            </div>
-
-            <div
-                class="flex h-[200px] w-full gap-2 sm:flex-col sm:w-[200px] sm:h-[250px] lg:w-[250px] lg:h-[400px] lateral-full-mobile">
-
-                <div class="h-1/2 flex-1">
-                    <img src="@imgIzquierda" alt="Imagen lateral 1" class="h-[95%] w-full rounded-lg object-cover">
-                </div>
-                <div class="h-1/2 flex-1">
-                    <img src="@imgDerecha" alt="Imagen lateral 2" class="h-[96%] w-full rounded-lg object-cover">
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            const images = [
-        @foreach (var img in horizontales)
-                {
-                    @Html.Raw($"\"{img}\",")
-                }
-            ];
-
-            let currentIndex = 0;
-            let isTransitioning = false;
-            const carouselImage = document.getElementById("carouselImage");
-            const prevBtn = document.getElementById("prevBtn");
-            const nextBtn = document.getElementById("nextBtn");
-
-            function updateImage() {
-                if (isTransitioning || images.length === 0) return;
-
-                isTransitioning = true;
-                carouselImage.classList.add("opacity-0");
-
-                setTimeout(() => {
-                    carouselImage.src = images[currentIndex];
-                }, 250);
-
-                carouselImage.addEventListener("transitionend", () => {
-                    carouselImage.classList.remove("opacity-0");
-                    isTransitioning = false;
-                }, { once: true });
-            }
-
-            prevBtn.addEventListener("click", function () {
-                currentIndex = (currentIndex - 1 + images.length) % images.length;
-                updateImage();
-                resetInterval();
-            });
-
-            nextBtn.addEventListener("click", function () {
-                currentIndex = (currentIndex + 1) % images.length;
-                updateImage();
-                resetInterval();
-            });
-
-            let interval = setInterval(() => {
-                currentIndex = (currentIndex + 1) % images.length;
-                updateImage();
-            }, 5000);
-
-            function resetInterval() {
-                clearInterval(interval);
-                interval = setInterval(() => {
-                    currentIndex = (currentIndex + 1) % images.length;
-                    updateImage();
-                }, 5000);
-            }
-        });
-    </script>
-
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            function ajustarAlturaLaterales() {
-                if (window.innerWidth < 640) {
-                    var carrusel = document.querySelector('.relative.h-\\[200px\\].w-full');
-                    var laterales = document.querySelector('.lateral-full-mobile');
-                    if (carrusel && laterales) {
-                        laterales.style.height = carrusel.offsetHeight + "px";
-                        var hijos = laterales.querySelectorAll('div');
-                        hijos.forEach(function (hijo) {
-                            hijo.style.height = "100%";
-                        });
+    <!-- Skeleton Loader Moderno -->
+    <div id="skeleton-principal">
+        <div class="flex h-screen">
+            <div class="w-full lg:w-[58%] p-6 space-y-8 overflow-hidden">
+                <!-- Categorías skeleton -->
+                <div class="flex gap-4 overflow-hidden">
+                    @for(int i = 0; i < 8; i++)
+                    {
+                        <div class="flex-shrink-0 w-20">
+                            <div class="w-14 h-14 mx-auto rounded-xl shimmer"></div>
+                            <div class="h-3 w-16 mx-auto mt-2 rounded shimmer"></div>
+                        </div>
                     }
-                } else {
-                    var laterales = document.querySelector('.lateral-full-mobile');
-                    if (laterales) {
-                        laterales.style.height = "";
-                        var hijos = laterales.querySelectorAll('div');
-                        hijos.forEach(function (hijo) {
-                            hijo.style.height = "";
-                        });
-                    }
-                }
-            }
-
-            ajustarAlturaLaterales();
-            window.addEventListener('resize', ajustarAlturaLaterales);
-        });
-    </script>
-
-    <section class="space-y-3 p-10" id="categories-container">
-        <div class="mb-4 flex items-center justify-between">
-            <h2 class="pl-10 text-lg font-bold text-gray-800">Categorías</h2>
-            <a href="@Url.Action("Listar", "Categorias")"
-                class="flex items-center pr-10 text-sm font-medium text-gray-600 hover:text-gray-800">
-                Ver todo <span class="ml-1">&gt;</span>
-            </a>
-        </div>
-
-        <div class="mb-6 flex flex-wrap justify-center gap-4">
-            @foreach (var categoria in Model)
-            {
-                <form method="post" action="@Url.Action("Consultar", "Negocios")"
-                    class="flex w-[28%] flex-col items-center sm:w-[22%] md:w-[12%] lg:w-[12%]">
-                    <input type="hidden" name="idCategoria" value="@categoria.Id" />
-                    <button type="submit">
-                        <img src="@(categoria.Imagen?.Base64 ?? "/images/default.webp")" alt="@categoria.Nombre"
-                            class="h-full w-full object-contain">
-
-                    </button>
-                    <p class="mt-2 text-center text-xs font-medium sm:text-sm">
-                        @categoria.Nombre
-                    </p>
-                </form>
-            }
-        </div>
-
-
-    </section>
-
-    <section class="off-section p-6 lg:p-10" id="ofertas-container">
-
-        @{
-            var ofertas = (ViewBag.OfertasFlash as IEnumerable<dynamic>)?.Where(o => o.Estado == 1).Take(6);
-        }
-
-        <!-- Encabezado -->
-        <div class="mb-4 flex items-center justify-between">
-            <h2 class="pl-10 text-lg font-bold text-gray-800">Ofertas flash: Por tiempo limitado</h2>
-            @if (ofertas != null && ofertas.Any())
-            {
-                <a href="@Url.Action("ConsultarTodo", "OfertasFlash")"
-                    class="flex items-center pr-10 text-sm font-medium text-gray-600 hover:text-gray-800">
-                    Ver todo <span class="ml-1">&gt;</span>
-                </a>
-            }
-        </div>
-
-
-        @if (ofertas != null && ofertas.Any())
-        {
-
-            <div id="offers-container" class="grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-3">
-                @foreach (var oferta in ofertas)
-                {
-                    <a href="@Url.Action("ConsultarProductos", "Negocios", new { idLocal = oferta.IdLocal })" title="Ver Local">
-                        <div class="relative flex flex-col rounded-lg bg-white p-4 shadow-md">
-                            <div class="relative aspect-square overflow-hidden rounded-md bg-gray-300">
-                                <img src="@oferta.ImagenProductoOfertaFlash" alt="Imagen del Producto"
-                                    class="absolute inset-0 h-full w-full object-cover">
-                            </div>
-
-                            <div
-                                class="border-2 absolute top-4 left-4 h-28 w-28 overflow-hidden rounded-full border-white shadow-md">
-                                @if (!string.IsNullOrWhiteSpace(oferta?.ImagenLocal?.Base64))
-                                {
-                                    <img src="@oferta.ImagenLocal.Base64" alt="Local" class="h-full w-full object-cover">
-                                }
-                            </div>
-
-                            <!-- Información de la oferta -->
-                            <div class="mt-4 text-center">
-                                <h3 class="text-lg font-bold text-gray-800">
-                                    @oferta.Titulo <span class="text-gray-500">(@oferta.ProductoOfertaFlash)</span>
-                                </h3>
-                                <p class="text-gray-600">@oferta.Descripcion</p>
-                                <p class="text-sm font-medium text-gray-500">📍 @oferta.NombreLocal</p>
-
-                                <!-- Temporizador -->
-                                <div class="mt-4">
-                                    <span class="font-semibold text-red-500">
-                                        ⏳ Expira en <span class="countdown-timer"
-                                            data-expiration="@oferta.TiempoOferta?.ToString("yyyy-MM-ddTHH:mm:ss")"></span>
-                                    </span>
-                                </div>
+                </div>
+                <!-- Cards skeleton -->
+                <div class="grid grid-cols-2 lg:grid-cols-3 gap-4">
+                    @for(int i = 0; i < 6; i++)
+                    {
+                        <div class="bg-white rounded-2xl overflow-hidden shadow-sm">
+                            <div class="aspect-square shimmer"></div>
+                            <div class="p-3 space-y-2">
+                                <div class="h-4 w-3/4 rounded shimmer"></div>
+                                <div class="h-3 w-1/2 rounded shimmer"></div>
                             </div>
                         </div>
-                    </a>
+                    }
+                </div>
+            </div>
+            <div class="hidden lg:block lg:w-[42%] shimmer"></div>
+        </div>
+    </div>
+
+    <!-- Contenido Principal -->
+    <div id="content-principal" class="hidden">
+        @{
+            string? permisos = HttpContextAccessor.HttpContext?.Session.GetString("permisos");
+            var bannerInicio = ViewBag.BannerInicio as IEnumerable<dynamic> ?? new List<object>();
+            var horizontales = bannerInicio.Where(b => (string)b.Formato == "16:9").Select(b => (string)b.Url ?? "/images/default.webp").ToList();
+            var cuadrados = bannerInicio.Where(b => (string)b.Formato == "1:1").Select(b => (string)b.Url ?? "/images/default.webp").Take(2).ToList();
+            var imgIzquierda = cuadrados.ElementAtOrDefault(0) ?? "/images/lateral1.webp";
+            var imgDerecha = cuadrados.ElementAtOrDefault(1) ?? "/images/lateral2.webp";
+            var primeraHorizontal = horizontales.FirstOrDefault() ?? "/images/default.webp";
+        }
+
+        <!-- Layout Principal Estilo Airbnb -->
+        <div class="flex min-h-screen">
+
+            <!-- Panel Izquierdo: Contenido (58%) -->
+            <div id="content-panel" class="w-full lg:w-[58%] overflow-y-auto bg-[#f7f7f7]">
+
+                <!-- Barra de Categorías Sticky -->
+                <div class="sticky top-0 z-20 bg-white border-b border-gray-100">
+                    <div class="max-w-5xl mx-auto px-4 py-3">
+                        <div class="flex items-center gap-6 overflow-x-auto categories-scroll">
+                            @foreach (var categoria in Model)
+                            {
+                                <form method="post" action="@Url.Action("Consultar", "Negocios")" class="flex-shrink-0">
+                                    <input type="hidden" name="idCategoria" value="@categoria.Id" />
+                                    <button type="submit" class="group flex flex-col items-center gap-1 px-1 py-2 border-b-2 border-transparent hover:border-gray-900 transition-all">
+                                        <div class="w-6 h-6 flex items-center justify-center opacity-60 group-hover:opacity-100 transition-opacity">
+                                            <img src="@(categoria.Imagen?.Base64 ?? "/images/default.webp")" alt="@categoria.Nombre" class="w-full h-full object-contain">
+                                        </div>
+                                        <span class="text-[11px] font-medium text-gray-500 group-hover:text-gray-900 whitespace-nowrap transition-colors">@categoria.Nombre</span>
+                                    </button>
+                                </form>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Header con Contador -->
+                <div class="max-w-5xl mx-auto px-4 pt-6 pb-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h1 class="text-2xl font-bold text-gray-900">
+                                <span id="contador-negocios" class="text-[#F66623]">0</span> <span id="label-negocios">negocios</span>
+                            </h1>
+                            <p class="text-sm text-gray-500 mt-1">en el área del mapa</p>
+                        </div>
+                        <button onclick="resetearFiltros()" class="flex items-center gap-2 px-4 py-2 rounded-full border border-gray-300 hover:border-gray-900 hover:shadow-md transition-all text-sm font-medium">
+                            <i class="fas fa-sliders-h"></i>
+                            Filtros
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Grid de Negocios Estilo Airbnb -->
+                <div class="max-w-5xl mx-auto px-4 pb-8">
+                    <div id="negocios-grid" class="grid grid-cols-2 lg:grid-cols-3 gap-4">
+                        <!-- Se llena dinámicamente -->
+                    </div>
+
+                    <!-- Empty State -->
+                    <div id="no-negocios-msg" class="hidden py-20 text-center">
+                        <div class="w-24 h-24 mx-auto mb-6 rounded-full bg-gray-100 flex items-center justify-center">
+                            <i class="fas fa-map-marker-alt text-4xl text-gray-300"></i>
+                        </div>
+                        <h3 class="text-xl font-semibold text-gray-900 mb-2">No hay negocios en esta área</h3>
+                        <p class="text-gray-500 max-w-sm mx-auto">Prueba moviendo el mapa o haciendo zoom para explorar otras zonas</p>
+                        <button onclick="resetearFiltros()" class="mt-6 px-6 py-3 bg-[#F66623] text-white rounded-lg font-medium hover:bg-[#e55a1a] transition-colors">
+                            Ver todos los negocios
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Separador -->
+                <div class="border-t border-gray-200"></div>
+
+                <!-- Ofertas Flash -->
+                @{
+                    var ofertas = (ViewBag.OfertasFlash as IEnumerable<dynamic>)?.Where(o => o.Estado == 1).Take(4);
                 }
-            </div>
-        }
-        else
-        {
-            <div class="mt-6 flex justify-center" id="galeriaOfertas">
+                @if (ofertas != null && ofertas.Any())
+                {
+                    <section class="max-w-5xl mx-auto px-4 py-10">
+                        <div class="flex items-center justify-between mb-6">
+                            <div>
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="px-3 py-1 bg-red-500 text-white text-xs font-bold rounded-full floating-badge">
+                                        <i class="fas fa-bolt mr-1"></i>FLASH
+                                    </span>
+                                </div>
+                                <h2 class="text-xl font-bold text-gray-900">Ofertas por tiempo limitado</h2>
+                            </div>
+                            <a href="@Url.Action("ConsultarTodo", "OfertasFlash")" class="text-sm font-semibold text-gray-900 hover:underline flex items-center gap-1">
+                                Ver todas <i class="fas fa-arrow-right text-xs"></i>
+                            </a>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            @foreach (var oferta in ofertas)
+                            {
+                                <a href="@Url.Action("ConsultarProductos", "Negocios", new { idLocal = oferta.IdLocal })" class="group block">
+                                    <div class="bg-white rounded-2xl overflow-hidden shadow-sm card-hover">
+                                        <div class="relative aspect-[16/9] overflow-hidden">
+                                            <img src="@oferta.ImagenProductoOfertaFlash" alt="Oferta" class="w-full h-full object-cover img-zoom">
+                                            <div class="absolute inset-0 gradient-overlay"></div>
+                                            <div class="absolute bottom-3 left-3 right-3">
+                                                <p class="text-white font-bold text-lg line-clamp-1">@oferta?.Titulo</p>
+                                                <p class="text-white/80 text-sm">@oferta?.NombreLocal</p>
+                                            </div>
+                                            <div class="absolute top-3 right-3 bg-red-500 text-white px-3 py-1.5 rounded-lg text-sm font-bold shadow-lg">
+                                                <i class="fas fa-clock mr-1"></i>
+                                                <span class="countdown-timer" data-expiration="@oferta?.TiempoOferta?.ToString("yyyy-MM-ddTHH:mm:ss")">--:--</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </a>
+                            }
+                        </div>
+                    </section>
+                }
+
+                <!-- Separador -->
+                <div class="border-t border-gray-200"></div>
+
+                <!-- Banner Promocional -->
+                <section class="max-w-5xl mx-auto px-4 py-10">
+                    <div class="relative rounded-3xl overflow-hidden bg-gradient-to-r from-[#23916A] to-[#1a6b4f]">
+                        <div class="absolute inset-0 opacity-10">
+                            <div class="absolute top-0 right-0 w-96 h-96 bg-white rounded-full -translate-y-1/2 translate-x-1/2"></div>
+                            <div class="absolute bottom-0 left-0 w-64 h-64 bg-white rounded-full translate-y-1/2 -translate-x-1/2"></div>
+                        </div>
+                        <div class="relative flex flex-col lg:flex-row items-center p-8 lg:p-12">
+                            <div class="flex-1 text-center lg:text-left mb-6 lg:mb-0">
+                                <span class="inline-block px-4 py-1 bg-white/20 rounded-full text-white text-sm font-medium mb-4">
+                                    <i class="fas fa-store mr-2"></i>¿Tienes un negocio?
+                                </span>
+                                <h2 class="text-3xl lg:text-4xl font-bold text-white mb-3">Únete a Abastecete</h2>
+                                <p class="text-white/80 text-lg mb-6 max-w-md">Miles de clientes están buscando proveedores como tú</p>
+                                <a href="/Login" class="inline-flex items-center gap-2 px-6 py-3 bg-[#F66623] text-white rounded-xl font-semibold hover:bg-[#e55a1a] transition-all hover:shadow-lg hover:-translate-y-0.5">
+                                    Registrar mi negocio
+                                    <i class="fas fa-arrow-right"></i>
+                                </a>
+                            </div>
+                            <div class="lg:w-80">
+                                <img src="/images/mujer.png" alt="Únete" class="max-h-64 object-contain drop-shadow-2xl">
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Mejores Proveedores -->
+                <section class="max-w-5xl mx-auto px-4 py-10">
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="text-xl font-bold text-gray-900">Proveedores destacados</h2>
+                        <a href="@Url.Action("Listar", "Categorias")" class="text-sm font-semibold text-gray-900 hover:underline flex items-center gap-1">
+                            Ver todos <i class="fas fa-arrow-right text-xs"></i>
+                        </a>
+                    </div>
+                    <div id="providers-list" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4"></div>
+                </section>
+
+                <!-- Footer espaciado -->
+                <div class="h-20 lg:hidden"></div>
 
             </div>
-        }
+            <!-- Fin Panel Izquierdo -->
 
-    </section>
+            <!-- Panel Derecho: Mapa (42%) -->
+            <div id="map-panel" class="hidden lg:block lg:w-[42%] fixed right-0 pr-4 transition-all duration-200">
+                <div class="map-container relative w-full h-full shadow-xl border border-gray-200 bg-white">
+                    <div id="map" class="w-full h-full"></div>
+
+                    <!-- Loader de filtrado -->
+                    <div id="filter-loader" class="filter-loader">
+                        <div class="spinner"></div>
+                        <span class="text-sm font-medium text-gray-700">Actualizando...</span>
+                    </div>
+
+                    <!-- Contador de negocios en el mapa -->
+                    <div class="absolute top-4 left-4 bg-white/95 backdrop-blur-sm rounded-full px-4 py-2 shadow-lg flex items-center gap-2">
+                        <div class="w-3 h-3 bg-[#F66623] rounded-full animate-pulse"></div>
+                        <span class="text-sm font-semibold text-gray-800"><span id="map-counter">0</span> <span id="map-label-negocios">negocios</span></span>
+                    </div>
+
+                    <!-- Controles del mapa -->
+                    <div class="absolute top-4 right-4 flex flex-col gap-2">
+                        <button onclick="map.setZoom(map.getZoom() + 1)" class="w-10 h-10 bg-white/95 backdrop-blur-sm rounded-xl shadow-lg flex items-center justify-center hover:bg-white hover:scale-105 transition-all">
+                            <i class="fas fa-plus text-gray-700"></i>
+                        </button>
+                        <button onclick="map.setZoom(map.getZoom() - 1)" class="w-10 h-10 bg-white/95 backdrop-blur-sm rounded-xl shadow-lg flex items-center justify-center hover:bg-white hover:scale-105 transition-all">
+                            <i class="fas fa-minus text-gray-700"></i>
+                        </button>
+                    </div>
+
+                    <!-- Botones de control -->
+                    <div class="absolute bottom-4 right-4 flex flex-col gap-2">
+                        <button onclick="centrarMapa()" class="bg-white/95 backdrop-blur-sm rounded-xl px-4 py-2.5 shadow-lg flex items-center gap-2 hover:bg-white hover:shadow-xl transition-all text-sm font-medium">
+                            <i class="fas fa-location-crosshairs text-[#F66623]"></i>
+                            Mi ubicación
+                        </button>
+                        <button onclick="verTodosNegocios()" class="bg-white/95 backdrop-blur-sm rounded-xl px-4 py-2.5 shadow-lg flex items-center gap-2 hover:bg-white hover:shadow-xl transition-all text-sm font-medium">
+                            <i class="fas fa-store text-[#23916A]"></i>
+                            Ver todos
+                        </button>
+                    </div>
+
+                    <!-- Leyenda -->
+                    <div class="absolute bottom-4 left-4 bg-white/95 backdrop-blur-sm rounded-xl px-3 py-2 shadow-lg">
+                        <div class="flex items-center gap-3 text-xs">
+                            <div class="flex items-center gap-1.5">
+                                <div class="w-4 h-4 rounded-full bg-[#F66623] border-2 border-white shadow"></div>
+                                <span class="text-gray-600">Negocio</span>
+                            </div>
+                            <div class="flex items-center gap-1.5">
+                                <div class="w-4 h-4 rounded-full bg-[#23916A] border-2 border-white shadow"></div>
+                                <span class="text-gray-600">Seleccionado</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botón Mapa Móvil -->
+            <button id="btn-ver-mapa-mobile" onclick="abrirMapaModal()"
+                class="lg:hidden fixed bottom-6 left-1/2 -translate-x-1/2 bg-gray-900 text-white rounded-full px-6 py-3 shadow-2xl z-50 flex items-center gap-2 hover:bg-gray-800 transition-all">
+                <i class="fas fa-map"></i>
+                <span class="font-medium">Mapa</span>
+            </button>
+
+        </div>
+
+        <!-- Modal Mapa Móvil -->
+        <div id="modal-mapa" class="fixed inset-0 z-[9999] hidden lg:hidden">
+            <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="cerrarMapaModal()"></div>
+            <div class="absolute inset-x-0 bottom-0 h-[85vh] bg-white rounded-t-3xl overflow-hidden shadow-2xl flex flex-col animate-slide-up">
+                <div class="flex items-center justify-between p-4 border-b">
+                    <h3 class="font-bold text-lg">Explorar en el mapa</h3>
+                    <button onclick="cerrarMapaModal()" class="w-10 h-10 rounded-full hover:bg-gray-100 flex items-center justify-center transition-colors">
+                        <i class="fas fa-times text-gray-600"></i>
+                    </button>
+                </div>
+                <div id="map-mobile" class="flex-1"></div>
+            </div>
+        </div>
+
+        <style>
+            @@keyframes slide-up {
+                from { transform: translateY(100%); }
+                to { transform: translateY(0); }
+            }
+            .animate-slide-up {
+                animation: slide-up 0.3s ease-out;
+            }
+        </style>
+
+    </div>
+
+    <!-- Scripts -->
     <script>
-        function cargarBannersOfertas() {
-            fetch("/Banners/ListarBannersOfertas")
-                .then(response => response.json())
-                .then(banners => {
-                    const galeria = document.getElementById("galeriaOfertas");
-                    galeria.innerHTML = "";
+        // Variables globales
+        let map, mapMobile;
+        let markers = [], markersMobile = [];
+        let negocios = @Html.Raw(ViewBag.NegociosJson ?? "[]");
+        let negociosFiltrados = [...negocios];
+        let negocioResaltado = null;
+        let infoWindow = null;
 
-                    banners.forEach(banner => {
-                        galeria.innerHTML += `
-                                <img src="${banner.base64}" alt="${banner.nombre}" class="h-auto w-full max-w-5xl rounded-lg shadow-md">
-                        `;
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('=== DEBUG NEGOCIOS ===');
+            console.log('Cantidad de negocios:', negocios.length);
+            console.log('Datos:', JSON.stringify(negocios, null, 2));
+
+            setTimeout(() => {
+                document.getElementById('skeleton-principal').classList.add('hidden');
+                document.getElementById('content-principal').classList.remove('hidden');
+                renderizarNegocios(negocios);
+                inicializarProveedores();
+                ajustarPosicionMapa(); // Posicionar mapa inicialmente
+            }, 400);
+
+            // Escuchar scroll para ajustar mapa antes del footer
+            window.addEventListener('scroll', ajustarPosicionMapa);
+            window.addEventListener('resize', ajustarPosicionMapa);
+        });
+
+        // Ajustar posición del mapa para que no pase del header ni del footer
+        function ajustarPosicionMapa() {
+            const mapPanel = document.getElementById('map-panel');
+            if (!mapPanel || window.innerWidth < 1024) return;
+
+            // Obtener el header
+            const header = document.querySelector('header#header, header, nav.fixed');
+            const headerHeight = header ? header.getBoundingClientRect().bottom : 90;
+
+            // Buscar el footer (bg-gray-900 es la clase del footer)
+            const footer = document.querySelector('footer.bg-gray-900, footer, .mt-10.bg-gray-900');
+
+            const viewportHeight = window.innerHeight;
+
+            // El mapa empieza después del header con margen
+            const mapTop = Math.max(headerHeight + 12, 100);
+
+            // Calcular bottom basado en si el footer es visible
+            let mapBottom = 20; // Por defecto 20px del borde inferior
+
+            if (footer) {
+                const footerRect = footer.getBoundingClientRect();
+                // Si el footer está visible en el viewport
+                if (footerRect.top < viewportHeight) {
+                    // El mapa debe terminar antes del footer
+                    mapBottom = viewportHeight - footerRect.top + 20;
+                }
+            }
+
+            // Aplicar estilos
+            mapPanel.style.top = mapTop + 'px';
+            mapPanel.style.bottom = mapBottom + 'px';
+
+            // Verificar que el mapa tenga altura mínima razonable
+            const mapHeight = viewportHeight - mapTop - mapBottom;
+            if (mapHeight < 200) {
+                mapPanel.style.opacity = '0';
+                mapPanel.style.pointerEvents = 'none';
+            } else {
+                mapPanel.style.opacity = '1';
+                mapPanel.style.pointerEvents = 'auto';
+            }
+        }
+
+        // Google Maps
+        function initMap() {
+            const center = { lat: 1.6144, lng: -75.6062 };
+
+            map = new google.maps.Map(document.getElementById('map'), {
+                center: center,
+                zoom: 13,
+                styles: getMapStyles(),
+                mapTypeControl: false,
+                streetViewControl: false,
+                fullscreenControl: false,
+                zoomControl: false
+            });
+
+            infoWindow = new google.maps.InfoWindow();
+            agregarMarcadores(map, markers);
+            map.addListener('idle', () => filtrarConDebounce(map));
+
+            if (negocios.length > 0) {
+                ajustarZoom(map);
+            }
+        }
+
+        function initMapMobile() {
+            if (mapMobile) return;
+
+            mapMobile = new google.maps.Map(document.getElementById('map-mobile'), {
+                center: map?.getCenter() || { lat: 1.6144, lng: -75.6062 },
+                zoom: map?.getZoom() || 13,
+                styles: getMapStyles(),
+                mapTypeControl: false,
+                streetViewControl: false,
+                fullscreenControl: false
+            });
+
+            agregarMarcadores(mapMobile, markersMobile);
+            mapMobile.addListener('idle', () => filtrarConDebounce(mapMobile));
+        }
+
+        // Debounce para suavizar el filtrado
+        let filtroTimeout = null;
+        function filtrarConDebounce(mapInstance) {
+            if (filtroTimeout) clearTimeout(filtroTimeout);
+
+            // Mostrar loader
+            const loader = document.getElementById('filter-loader');
+            if (loader) loader.classList.add('visible');
+
+            filtroTimeout = setTimeout(() => {
+                filtrarPorAreaVisible(mapInstance);
+                // Ocultar loader después de un momento
+                setTimeout(() => {
+                    if (loader) loader.classList.remove('visible');
+                }, 300);
+            }, 200);
+        }
+
+        function getMapStyles() {
+            // Estilo por defecto con colores naturales, solo ocultamos POIs innecesarios
+            return [
+                { featureType: "poi.business", stylers: [{ visibility: "off" }] },
+                { featureType: "poi.park", elementType: "labels.text", stylers: [{ visibility: "off" }] },
+                { featureType: "transit", stylers: [{ visibility: "off" }] }
+            ];
+        }
+
+        function agregarMarcadores(mapInstance, markersArray) {
+            markersArray.forEach(m => m.setMap(null));
+            markersArray.length = 0;
+
+            let marcadoresCreados = 0;
+            console.log('Negocios recibidos:', negocios);
+
+            negocios.forEach((negocio, index) => {
+                let lat = negocio.Latitud;
+                let lng = negocio.Longitud;
+
+                // Si no hay coordenadas, intentar parsear de Localizacion
+                if ((!lat || !lng || lat === 0 || lng === 0) && negocio.Localizacion) {
+                    const coordMatch = negocio.Localizacion.match(/(-?\d+\.?\d*)\s*,\s*(-?\d+\.?\d*)/);
+                    if (coordMatch) {
+                        lat = parseFloat(coordMatch[1]);
+                        lng = parseFloat(coordMatch[2]);
+                        console.log(`Coordenadas parseadas de Localizacion: ${lat}, ${lng}`);
+                    }
+                }
+
+                console.log(`Negocio ${negocio.Nombre}: lat=${lat}, lng=${lng}`);
+
+                // Solo crear marcador si tiene coordenadas válidas
+                if (lat && lng && lat !== 0 && lng !== 0) {
+                    const marker = new google.maps.Marker({
+                        position: { lat: lat, lng: lng },
+                        map: mapInstance,
+                        title: negocio.Nombre,
+                        icon: getMarkerIcon(false)
                     });
-                })
-                .catch(error => console.error("Error cargando banners:", error));
+
+                    marker.negocioId = negocio.Id;
+                    marker.negocioData = negocio;
+
+                    marker.addListener('click', () => {
+                        mostrarInfoWindow(marker, negocio, mapInstance);
+                        resaltarNegocio(negocio.Id);
+                    });
+
+                    marker.addListener('mouseover', () => {
+                        if (negocioResaltado !== negocio.Id) {
+                            marker.setIcon(getMarkerIcon(true));
+                            marker.setZIndex(1000);
+                        }
+                    });
+
+                    marker.addListener('mouseout', () => {
+                        if (negocioResaltado !== negocio.Id) {
+                            marker.setIcon(getMarkerIcon(false));
+                            marker.setZIndex(1);
+                        }
+                    });
+
+                    markersArray.push(marker);
+                    marcadoresCreados++;
+                }
+            });
+
+            // Actualizar contador en el mapa
+            const mapCounter = document.getElementById('map-counter');
+            if (mapCounter) {
+                mapCounter.textContent = marcadoresCreados;
+            }
+
+            console.log(`Total marcadores creados: ${marcadoresCreados}`);
         }
-        cargarBannersOfertas();
-    </script>
-    <script>
+
+        function getMarkerIcon(isActive) {
+            const color = isActive ? '#23916A' : '#F66623';
+            const size = isActive ? 50 : 42;
+
+            // Pin clásico estilo Google Maps
+            const svg = `
+                <svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 48 48">
+                    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+                        <feDropShadow dx="0" dy="2" stdDeviation="2" flood-opacity="0.3"/>
+                    </filter>
+                    <path filter="url(%23shadow)" d="M24 4C15.163 4 8 11.163 8 20c0 11 16 24 16 24s16-13 16-24c0-8.837-7.163-16-16-16z" fill="${color}"/>
+                    <circle cx="24" cy="20" r="8" fill="white"/>
+                    <circle cx="24" cy="20" r="4" fill="${color}"/>
+                </svg>
+            `;
+
+            return {
+                url: 'data:image/svg+xml,' + encodeURIComponent(svg),
+                scaledSize: new google.maps.Size(size, size),
+                anchor: new google.maps.Point(size/2, size)
+            };
+        }
+
+        function mostrarInfoWindow(marker, negocio, mapInstance) {
+            const ubicacion = formatearUbicacion(negocio.Localizacion);
+            const content = `
+                <div style="
+                    width: 280px;
+                    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+                    background: white;
+                    border-radius: 16px;
+                    overflow: hidden;
+                    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+                ">
+                    <!-- Imagen con overlay -->
+                    <div style="position: relative; width: 100%; height: 140px; overflow: hidden;">
+                        <img src="${negocio.Imagen}"
+                             style="width: 100%; height: 100%; object-fit: cover;"
+                             onerror="this.src='/images/default.webp'">
+                        <div style="
+                            position: absolute;
+                            bottom: 0;
+                            left: 0;
+                            right: 0;
+                            height: 60px;
+                            background: linear-gradient(transparent, rgba(0,0,0,0.6));
+                        "></div>
+                        <!-- Badge verificado -->
+                        <div style="
+                            position: absolute;
+                            top: 10px;
+                            left: 10px;
+                            background: white;
+                            padding: 4px 10px;
+                            border-radius: 20px;
+                            display: flex;
+                            align-items: center;
+                            gap: 5px;
+                            font-size: 11px;
+                            font-weight: 600;
+                            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+                        ">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="#23916A">
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                            </svg>
+                            Verificado
+                        </div>
+                        <!-- Rating -->
+                        <div style="
+                            position: absolute;
+                            top: 10px;
+                            right: 10px;
+                            background: white;
+                            padding: 4px 8px;
+                            border-radius: 8px;
+                            display: flex;
+                            align-items: center;
+                            gap: 4px;
+                            font-size: 12px;
+                            font-weight: 600;
+                            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+                        ">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="#FFB800">
+                                <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                            </svg>
+                            5.0
+                        </div>
+                    </div>
+
+                    <!-- Contenido -->
+                    <div style="padding: 14px 16px;">
+                        <h3 style="
+                            margin: 0;
+                            font-size: 16px;
+                            font-weight: 700;
+                            color: #1a1a1a;
+                            line-height: 1.3;
+                        ">${negocio.Nombre}</h3>
+
+                        <div style="
+                            display: flex;
+                            align-items: center;
+                            gap: 6px;
+                            margin-top: 6px;
+                            color: #666;
+                            font-size: 13px;
+                        ">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="#F66623">
+                                <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                            </svg>
+                            ${ubicacion}
+                        </div>
+
+                        <!-- Botón -->
+                        <a href="/Negocios/ConsultarProductos?idLocal=${negocio.Id}"
+                           style="
+                               display: flex;
+                               align-items: center;
+                               justify-content: center;
+                               gap: 8px;
+                               margin-top: 14px;
+                               padding: 12px 16px;
+                               background: linear-gradient(135deg, #F66623 0%, #e55a1a 100%);
+                               color: white;
+                               text-decoration: none;
+                               border-radius: 12px;
+                               font-size: 14px;
+                               font-weight: 600;
+                               transition: all 0.2s ease;
+                               box-shadow: 0 4px 12px rgba(246, 102, 35, 0.3);
+                           "
+                           onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px rgba(246, 102, 35, 0.4)';"
+                           onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(246, 102, 35, 0.3)';">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
+                                <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 3c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm7 13H5v-.23c0-.62.28-1.2.76-1.58C7.47 15.82 9.64 15 12 15s4.53.82 6.24 2.19c.48.38.76.97.76 1.58V19z"/>
+                            </svg>
+                            Ver catálogo completo
+                        </a>
+                    </div>
+                </div>
+            `;
+            infoWindow.setContent(content);
+            infoWindow.open(mapInstance, marker);
+        }
+
+        function ajustarZoom(mapInstance) {
+            const bounds = new google.maps.LatLngBounds();
+            let hasValid = false;
+
+            negocios.forEach(n => {
+                if (n.Latitud && n.Longitud && n.Latitud !== 0 && n.Longitud !== 0) {
+                    bounds.extend({ lat: n.Latitud, lng: n.Longitud });
+                    hasValid = true;
+                }
+            });
+
+            if (hasValid) mapInstance.fitBounds(bounds);
+        }
+
+        function filtrarPorAreaVisible(mapInstance) {
+            const bounds = mapInstance.getBounds();
+            if (!bounds) return;
+
+            // Filtrar negocios que están dentro del área visible del mapa
+            negociosFiltrados = negocios.filter(n => {
+                let lat = n.Latitud;
+                let lng = n.Longitud;
+
+                // Si no hay coordenadas, intentar parsear de Localizacion
+                if ((!lat || !lng || lat === 0 || lng === 0) && n.Localizacion) {
+                    const coordMatch = n.Localizacion.match(/(-?\d+\.?\d*)\s*,\s*(-?\d+\.?\d*)/);
+                    if (coordMatch) {
+                        lat = parseFloat(coordMatch[1]);
+                        lng = parseFloat(coordMatch[2]);
+                    }
+                }
+
+                // Si no tiene coordenadas válidas, no mostrar
+                if (!lat || !lng || lat === 0 || lng === 0) return false;
+
+                // Verificar si está dentro del área visible
+                return bounds.contains({ lat: lat, lng: lng });
+            });
+
+            renderizarNegocios(negociosFiltrados);
+
+            // Actualizar contador del mapa con singular/plural
+            actualizarContadorMapa(negociosFiltrados.length);
+
+            // También actualizar visibilidad de marcadores
+            markers.forEach(marker => {
+                const pos = marker.getPosition();
+                const isVisible = bounds.contains(pos);
+                marker.setVisible(isVisible);
+            });
+        }
+
+        // Formatear ubicación - si son coordenadas, mostrar "Florencia, Caquetá"
+        function formatearUbicacion(ubicacion) {
+            if (!ubicacion) return 'Florencia, Caquetá';
+            // Si parece ser coordenadas (ej: "1.6143,-75.6062"), mostrar ubicación genérica
+            if (/^-?\d+\.?\d*\s*,\s*-?\d+\.?\d*$/.test(ubicacion.trim())) {
+                return 'Florencia, Caquetá';
+            }
+            return ubicacion;
+        }
+
+        // Función para actualizar contadores con singular/plural
+        function actualizarContadorMapa(cantidad) {
+            const mapCounter = document.getElementById('map-counter');
+            const mapLabel = document.getElementById('map-label-negocios');
+            if (mapCounter) mapCounter.textContent = cantidad;
+            if (mapLabel) mapLabel.textContent = cantidad === 1 ? 'negocio' : 'negocios';
+        }
+
+        function actualizarContadorPrincipal(cantidad) {
+            const contador = document.getElementById('contador-negocios');
+            const label = document.getElementById('label-negocios');
+            if (contador) contador.textContent = cantidad;
+            if (label) label.textContent = cantidad === 1 ? 'negocio' : 'negocios';
+        }
+
+        // Renderizar cards estilo Airbnb con transición suave
+        function renderizarNegocios(lista) {
+            const grid = document.getElementById('negocios-grid');
+            const noMsg = document.getElementById('no-negocios-msg');
+
+            // Actualizar contador con singular/plural
+            actualizarContadorPrincipal(lista.length);
+
+            if (lista.length === 0) {
+                // Fade out del grid antes de ocultarlo
+                grid.style.opacity = '0';
+                setTimeout(() => {
+                    grid.classList.add('hidden');
+                    noMsg.classList.remove('hidden');
+                    noMsg.style.opacity = '0';
+                    setTimeout(() => noMsg.style.opacity = '1', 50);
+                }, 200);
+                return;
+            }
+
+            noMsg.classList.add('hidden');
+            grid.classList.remove('hidden');
+
+            // Fade out -> actualizar -> fade in
+            grid.style.opacity = '0.3';
+
+            setTimeout(() => {
+                grid.innerHTML = lista.map(negocio => `
+                <div id="negocio-${negocio.Id}"
+                     class="negocio-card group cursor-pointer"
+                     onclick="verNegocio(${negocio.Id})"
+                     onmouseenter="resaltarMarcador(${negocio.Id})"
+                     onmouseleave="quitarResaltadoMarcador(${negocio.Id})">
+
+                    <!-- Card con imagen y contenido -->
+                    <div class="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100">
+                        <!-- Imagen -->
+                        <div class="relative aspect-square overflow-hidden">
+                            <img src="${negocio.Imagen}" alt="${negocio.Nombre}"
+                                 class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                 onerror="this.src='/images/default.webp'">
+
+                            <!-- Gradient overlay -->
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+
+                            <!-- Badge verificado -->
+                            <div class="absolute top-2.5 left-2.5 bg-white rounded-lg px-2 py-1 flex items-center gap-1 shadow-md">
+                                <svg class="w-3 h-3 text-[#23916A]" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                </svg>
+                                <span class="text-[10px] font-semibold text-gray-700">Verificado</span>
+                            </div>
+
+                            <!-- Rating badge -->
+                            <div class="absolute top-2.5 right-2.5 bg-white rounded-lg px-2 py-1 flex items-center gap-1 shadow-md">
+                                <svg class="w-3 h-3 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                                </svg>
+                                <span class="text-[10px] font-bold text-gray-700">5.0</span>
+                            </div>
+
+                            <!-- Favorito -->
+                            <button onclick="event.stopPropagation()" class="absolute bottom-2.5 right-2.5 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm hover:bg-white flex items-center justify-center transition-all hover:scale-110 shadow-md opacity-0 group-hover:opacity-100">
+                                <i class="far fa-heart text-gray-600 text-sm"></i>
+                            </button>
+                        </div>
+
+                        <!-- Info -->
+                        <div class="p-3">
+                            <h3 class="font-bold text-gray-900 text-sm leading-tight line-clamp-1">${negocio.Nombre}</h3>
+                            <p class="text-gray-500 text-xs mt-1 flex items-center gap-1">
+                                <svg class="w-3 h-3 text-[#F66623] flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/>
+                                </svg>
+                                <span class="truncate">${formatearUbicacion(negocio.Localizacion)}</span>
+                            </p>
+                            <div class="mt-2 pt-2 border-t border-gray-100">
+                                <span class="text-[#F66623] text-xs font-semibold flex items-center gap-1 group-hover:gap-2 transition-all">
+                                    Ver catálogo
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                    </svg>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+                // Fade in después de actualizar
+                requestAnimationFrame(() => {
+                    grid.style.opacity = '1';
+                });
+            }, 100);
+        }
+
+        function resaltarNegocio(id) {
+            negocioResaltado = id;
+
+            document.querySelectorAll('.negocio-card').forEach(c => c.classList.remove('card-selected'));
+
+            const card = document.getElementById(`negocio-${id}`);
+            if (card) {
+                card.classList.add('card-selected');
+                card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+
+            markers.forEach(m => {
+                m.setIcon(getMarkerIcon(m.negocioId === id));
+                if (m.negocioId === id) m.setZIndex(1000);
+            });
+        }
+
+        function resaltarMarcador(id) {
+            markers.forEach(m => {
+                if (m.negocioId === id) {
+                    m.setIcon(getMarkerIcon(true));
+                    m.setZIndex(1000);
+                }
+            });
+        }
+
+        function quitarResaltadoMarcador(id) {
+            if (negocioResaltado === id) return;
+            markers.forEach(m => {
+                if (m.negocioId === id) {
+                    m.setIcon(getMarkerIcon(false));
+                    m.setZIndex(1);
+                }
+            });
+        }
+
+        function verNegocio(id) {
+            window.location.href = `/Negocios/ConsultarProductos?idLocal=${id}`;
+        }
+
+        function resetearFiltros() {
+            negocioResaltado = null;
+            renderizarNegocios(negocios);
+            if (map) ajustarZoom(map);
+            if (infoWindow) infoWindow.close();
+        }
+
+        function verTodosNegocios() {
+            if (map && markers.length > 0) {
+                ajustarZoom(map);
+            } else if (map) {
+                // Si no hay marcadores, centrar en Florencia
+                map.setCenter({ lat: 1.6144, lng: -75.6062 });
+                map.setZoom(13);
+            }
+        }
+
+        let userMarker = null;
+
+        function centrarMapa() {
+            if (!navigator.geolocation) {
+                alert('Tu navegador no soporta geolocalización');
+                return;
+            }
+
+            // Mostrar loading en el botón
+            const btn = document.querySelector('[onclick="centrarMapa()"]');
+            const originalContent = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin text-[#F66623]"></i> Ubicando...';
+            btn.disabled = true;
+
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const userLocation = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude
+                    };
+
+                    console.log('Ubicación del usuario:', userLocation);
+
+                    // Centrar mapa en la ubicación del usuario
+                    if (map) {
+                        map.setCenter(userLocation);
+                        map.setZoom(15);
+
+                        // Agregar o actualizar marcador del usuario
+                        if (userMarker) {
+                            userMarker.setPosition(userLocation);
+                        } else {
+                            userMarker = new google.maps.Marker({
+                                position: userLocation,
+                                map: map,
+                                title: 'Tu ubicación',
+                                icon: {
+                                    url: 'data:image/svg+xml,' + encodeURIComponent(`
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                                            <circle cx="12" cy="12" r="10" fill="#4285F4" stroke="white" stroke-width="3"/>
+                                            <circle cx="12" cy="12" r="4" fill="white"/>
+                                        </svg>
+                                    `),
+                                    scaledSize: new google.maps.Size(24, 24),
+                                    anchor: new google.maps.Point(12, 12)
+                                },
+                                zIndex: 999
+                            });
+                        }
+                    }
+
+                    // Restaurar botón
+                    btn.innerHTML = originalContent;
+                    btn.disabled = false;
+                },
+                (error) => {
+                    console.error('Error de geolocalización:', error);
+                    let mensaje = 'No se pudo obtener tu ubicación';
+                    switch(error.code) {
+                        case error.PERMISSION_DENIED:
+                            mensaje = 'Permiso de ubicación denegado. Actívalo en la configuración del navegador.';
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            mensaje = 'Ubicación no disponible';
+                            break;
+                        case error.TIMEOUT:
+                            mensaje = 'Tiempo de espera agotado';
+                            break;
+                    }
+                    alert(mensaje);
+
+                    // Restaurar botón
+                    btn.innerHTML = originalContent;
+                    btn.disabled = false;
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 0
+                }
+            );
+        }
+
+        // Modal mapa
+        function abrirMapaModal() {
+            document.getElementById('modal-mapa').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+            setTimeout(() => initMapMobile(), 100);
+        }
+
+        function cerrarMapaModal() {
+            document.getElementById('modal-mapa').classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+
+        // Proveedores
+        function inicializarProveedores() {
+            const providers = JSON.parse('@Html.Raw(ViewBag.LocalesAleatoriosJson)');
+            const container = document.getElementById("providers-list");
+            const DEFAULT_IMAGE = "/images/Logo2.jpg";
+
+            for (let i = 0; i < Math.min(4, providers.length || 4); i++) {
+                const provider = providers[i] || { Nombre: "Tu negocio aquí", imagen: { Base64: DEFAULT_IMAGE } };
+                const isPlaceholder = !providers[i];
+
+                const card = document.createElement("div");
+                card.className = "group cursor-pointer";
+                card.onclick = () => {
+                    if (isPlaceholder) window.location.href = "/Login";
+                    else window.location.href = `/Negocios/ConsultarProductos?idLocal=${provider.Id}`;
+                };
+
+                card.innerHTML = `
+                    <div class="relative aspect-square rounded-xl overflow-hidden bg-gray-100 card-hover">
+                        <img src="${provider.imagen?.Base64 || DEFAULT_IMAGE}" alt="${provider.Nombre}"
+                             class="w-full h-full object-cover img-zoom">
+                        ${!isPlaceholder ? `
+                            <div class="absolute top-2 right-2 w-6 h-6 rounded-full bg-[#23916A] flex items-center justify-center">
+                                <i class="fas fa-check text-white text-xs"></i>
+                            </div>
+                        ` : ''}
+                    </div>
+                    <p class="mt-2 font-medium text-sm text-gray-900 truncate">${provider.Nombre}</p>
+                    <p class="text-xs text-gray-500">${isPlaceholder ? 'Regístrate' : 'Proveedor verificado'}</p>
+                `;
+
+                container.appendChild(card);
+            }
+        }
+
+        // Temporizadores
         function actualizarContadores() {
             document.querySelectorAll(".countdown-timer").forEach(timer => {
-                const expirationTime = new Date(timer.dataset.expiration).getTime();
-                const now = new Date().getTime();
-                const timeLeft = expirationTime - now;
+                const exp = new Date(timer.dataset.expiration).getTime();
+                const now = Date.now();
+                const left = exp - now;
 
-                if (timeLeft > 0) {
-                    const hours = Math.floor(timeLeft / (1000 * 60 * 60));
-                    const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
-                    const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
-                    timer.innerText = `${hours}h ${minutes}m ${seconds}s`;
+                if (left > 0) {
+                    const h = Math.floor(left / 3600000);
+                    const m = Math.floor((left % 3600000) / 60000);
+                    const s = Math.floor((left % 60000) / 1000);
+                    timer.textContent = `${h}h ${m}m ${s}s`;
                 } else {
-                    timer.innerText = "Expirado";
+                    timer.textContent = "Expirado";
                 }
             });
         }
@@ -320,321 +1257,8 @@
         actualizarContadores();
     </script>
 
-    <section class="proveedores-section p-6 lg:p-10" style="background-color: #F4F1E9">
-        <div class="mb-4 flex flex-col items-center justify-between lg:flex-row">
-            <h2 class="pl-0 text-center text-lg font-bold text-gray-800 lg:text-left lg:pl-10">Mejores proveedores</h2>
-            <a href="@Url.Action("Listar", "Categorias")"
-                class="flex items-center pr-0 text-sm font-medium text-gray-600 hover:text-gray-800 lg:pr-10">
-                Ver todo <span class="ml-1">&gt;</span>
-            </a>
+    <!-- Google Maps API -->
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=@ViewBag.GoogleMapsApiKey&callback=initMap"></script>
 
-        </div>
-
-        <div id="providers-grid">
-            <!-- Estos dos divs se llenan dinámicamente desde el script -->
-            <div id="providers-highlighted" class="mb-6"></div>
-            <div id="providers-list" class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3"></div>
-        </div>
-    </section>
-
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            const providers = JSON.parse('@Html.Raw(ViewBag.LocalesAleatoriosJson)');
-            const highlightedContainer = document.getElementById("providers-highlighted");
-            const providersListContainer = document.getElementById("providers-list");
-
-            const DEFAULT_IMAGE = "/images/Logo2.jpg";
-            const DEFAULT_TEXT = "Acá podría estar tu local";
-
-            const createProviderCard = (provider, index) => {
-                const isPlaceholder = provider.Nombre === DEFAULT_TEXT;
-                const buttonText = isPlaceholder ? "Registrarme" : "Ver Ahora";
-                const buttonColor = index % 2 === 0 ? "bg-green-600 hover:bg-green-700" : "bg-orange-500 hover:bg-orange-600";
-
-                const card = document.createElement("div");
-                card.className = "bg-white rounded-xl shadow-md p-4 lg:p-6 flex flex-row items-center gap-4 col-span-1 h-[170px] sm:h-[180px] lg:h-[190px]";
-
-                card.innerHTML = `
-              <img src="${provider.imagen?.Base64 || DEFAULT_IMAGE}" alt="${provider.Nombre}" class="h-16 w-16 rounded-xl object-contain lg:w-20 lg:h-20">
-              <div class="flex flex-col justify-center">
-                <h3 class="text-sm font-bold text-gray-600 lg:text-lg">${provider.Nombre || DEFAULT_TEXT}</h3>
-                <p class="text-base text-black lg:text-xl">${isPlaceholder ? "¡Anímate a unirte!" : "PROVEEDOR VERIFICADO"}</p>
-                <button
-                  class="proveedor-btn ${buttonColor} mt-3 rounded-full px-4 py-2 text-xs text-white lg:text-sm lg:px-5"
-                  data-id="${provider.Id || ''}"
-                  data-placeholder="${isPlaceholder}">
-                  ${buttonText}${isPlaceholder ? "" : " →"}
-                </button>
-              </div>
-            `;
-                return card;
-            };
-
-            const createHighlightedSection = () => {
-                const highlighted = document.createElement("div");
-                highlighted.className = `
-            rounded-xl flex flex-col lg:flex-row
-            px-0 py-6 overflow-hidden
-            max-h-[350px]
-            bg-green-700
-          `.trim();
-
-                highlighted.innerHTML = `
-            <div class="flex h-[220px] w-full items-center justify-center sm:h-[280px] lg:h-auto lg:w-1/2">
-              <img src="/images/mujer.png" alt="Imagen de mujer" class="max-h-[300px] w-auto object-contain">
-            </div>
-            <div class="flex w-full flex-col justify-center px-6 text-center lg:w-1/2 lg:text-start">
-              <h3 class="mb-2 text-base font-bold text-white lg:text-xl">Encuentra mejores proveedores</h3>
-              <p class="mb-4 text-lg leading-tight font-bold text-white lg:text-3xl">ABASTECE TU<br>NEGOCIO YA</p>
-              <a href="/Categorias/Listar">
-                <button class="mx-auto mt-3 rounded-full bg-orange-500 px-5 py-2 text-sm text-white hover:bg-orange-600 lg:text-base lg:mx-0">
-                  Ver más
-                </button>
-              </a>
-            </div>
-          `;
-                return highlighted;
-            };
-
-
-            // Insertar contenido dinámico
-            highlightedContainer.appendChild(createHighlightedSection());
-
-            for (let i = 0; i < 6; i++) {
-                const provider = providers[i] || { Nombre: DEFAULT_TEXT, imagen: { Base64: DEFAULT_IMAGE } };
-                providersListContainer.appendChild(createProviderCard(provider, i));
-            }
-
-            // Delegar eventos en el contenedor
-            document.getElementById("providers-grid").addEventListener("click", (e) => {
-                if (e.target.classList.contains("proveedor-btn")) {
-                    const button = e.target;
-                    const isPlaceholder = button.getAttribute("data-placeholder") === "true";
-                    const id = button.getAttribute("data-id");
-
-                    if (isPlaceholder) {
-                        window.location.href = "/Login/Login";
-                    } else {
-                        window.location.href = `/Negocios/ConsultarProductos?idLocal=${id}`;
-                    }
-                }
-            });
-        });
-
-    </script>
-
-
-    <section class="relative bg-[#23916A] px-6 py-10">
-        <div id="carousel" class="relative mx-auto w-full max-w-7xl" data-carousel="slide">
-            <!-- Contenedor del Carrusel -->
-            <div id="carousel-wrapper" class="overflow-hidden">
-                <div id="carousel-container" class="flex gap-6 transition-transform duration-700 ease-in-out">
-                    @if (ViewBag.Negocios != null && ViewBag.Negocios.Count > 0)
-                    {
-                        var negociosList = (List<BusinessLogic.Models.Negocio>)ViewBag.Negocios;
-                        var negociosDuplicados = negociosList.Concat(negociosList).ToList();
-
-                        @foreach (var negocio in negociosDuplicados)
-                        {
-                            <a href="@Url.Action("ConsultarProductos", "Negocios", new { idLocal = negocio.Id })"
-                                class="card w-72 flex-none overflow-hidden rounded-2xl bg-white shadow-lg transition-transform duration-300 hover:scale-105">
-                                <div class="flex flex-col items-center justify-center p-6">
-                                    <img src="@(negocio.imagen?.Base64 ?? "/images/default.webp")" alt="@negocio.Nombre"
-                                        class="h-32 w-32 rounded-full border border-gray-300 object-contain shadow" />
-                                    <h3 class="mt-4 text-center text-base font-semibold text-gray-800">@negocio.Nombre</h3>
-                                    <p class="text-center text-sm text-gray-500">@negocio.Localizacion</p>
-                                </div>
-                            </a>
-                        }
-                    }
-                    else
-                    {
-                        <p class="w-full text-center text-lg text-white">⚠ No hay negocios registrados aún.</p>
-                    }
-                </div>
-            </div>
-
-            <!-- Botones -->
-            <button type="button"
-                class="absolute top-1/2 left-0 z-10 -translate-y-1/2 rounded-full bg-white p-2 shadow hover:bg-gray-100"
-                data-carousel-prev>
-                <svg class="h-5 w-5 text-gray-700" fill="none" stroke="currentColor" stroke-width="2"
-                    viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-                </svg>
-            </button>
-
-            <button type="button"
-                class="absolute top-1/2 right-0 z-10 -translate-y-1/2 rounded-full bg-white p-2 shadow hover:bg-gray-100"
-                data-carousel-next>
-                <svg class="h-5 w-5 text-gray-700" fill="none" stroke="currentColor" stroke-width="2"
-                    viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
-                </svg>
-            </button>
-        </div>
-    </section>
-
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            const carouselContainer = document.getElementById('carousel-container');
-            const prevButton = document.querySelector("[data-carousel-prev]");
-            const nextButton = document.querySelector("[data-carousel-next]");
-            const cards = carouselContainer.querySelectorAll(".card");
-
-            let currentIndex = cards.length / 2;
-            const cardWidth = cards[0].getBoundingClientRect().width + 24;
-            const totalCards = cards.length;
-            const visibleCards = 3;
-
-            carouselContainer.style.transform = `translateX(${-currentIndex * cardWidth}px)`;
-
-            function updateCarousel() {
-                carouselContainer.style.transition = "transform 0.7s ease-in-out";
-                const offset = -currentIndex * cardWidth;
-                carouselContainer.style.transform = `translateX(${offset}px)`;
-            }
-
-            function checkLoop() {
-                if (currentIndex === 0) {
-                    setTimeout(() => {
-                        carouselContainer.style.transition = "none";
-                        currentIndex = totalCards / 2;
-                        carouselContainer.style.transform = `translateX(${-currentIndex * cardWidth}px)`;
-                    }, 700);
-                } else if (currentIndex === totalCards - visibleCards) {
-                    setTimeout(() => {
-                        carouselContainer.style.transition = "none";
-                        currentIndex = totalCards / 2 - visibleCards;
-                        carouselContainer.style.transform = `translateX(${-currentIndex * cardWidth}px)`;
-                    }, 700);
-                }
-            }
-
-            function nextSlide() {
-                currentIndex++;
-                updateCarousel();
-                checkLoop();
-            }
-
-            function prevSlide() {
-                currentIndex--;
-                updateCarousel();
-                checkLoop();
-            }
-
-            function autoSlide() {
-                nextSlide();
-            }
-
-            let interval = setInterval(autoSlide, 4000);
-
-            nextButton.addEventListener("click", () => {
-                clearInterval(interval);
-                nextSlide();
-                interval = setInterval(autoSlide, 4000);
-            });
-
-            prevButton.addEventListener("click", () => {
-                clearInterval(interval);
-                prevSlide();
-                interval = setInterval(autoSlide, 4000);
-            });
-        });
-    </script>
-
-    @{
-        var imagenPorDefecto = "/images/default.webp";
-    }
-
-    <section class="discounts-section p-6 lg:p-10" id="categorias-container">
-        <div class="mb-6 text-center lg:text-start">
-            <h2 class="text-3xl font-bold text-[#F66623] lg:text-5xl">DESCUENTOS</h2>
-            <h2 class="text-5xl font-bold text-[#23916A] lg:text-8xl">IMPERDIBLES</h2>
-        </div>
-
-        @foreach (var categoria in Model)
-        {
-            var categoriaNombre = categoria.Nombre;
-            var banners = ViewBag.BannersPorCategoria[categoriaNombre] as List<(BusinessLogic.Models.BannerModel Banner,
-            BusinessLogic.Models.ImagenModel Imagen)> ?? new();
-
-            var horizontal = banners.Where(b => b.Banner.Formato == "16:9").Select(b => b.Imagen).ToList();
-            var cuadrado = banners.Where(b => b.Banner.Formato == "1:1").Select(b => b.Imagen).ToList();
-
-            // Asegurar siempre 2 horizontales y 4 cuadrados
-            while (horizontal.Count < 2)
-                horizontal.Add(new BusinessLogic.Models.ImagenModel { Base64 = imagenPorDefecto });
-
-            while (cuadrado.Count < 4)
-                cuadrado.Add(new BusinessLogic.Models.ImagenModel { Base64 = imagenPorDefecto });
-
-
-            <div class="mb-10 rounded-xl bg-white p-5 shadow-md">
-                <div class="mb-4 flex flex-col items-center justify-between lg:flex-row">
-                    <h2 class="pl-0 text-center text-lg font-bold text-gray-800 lg:text-left lg:pl-10">
-                        @categoriaNombre
-                    </h2>
-                    <form method="post" action="@Url.Action("Consultar", "Negocios")" class="inline">
-                        <input type="hidden" name="idCategoria" value="@categoria.Id" />
-                        <input type="hidden" name="membre" value="" />
-                        <button type="submit"
-                            class="mt-2 flex items-center text-sm font-medium text-gray-600 hover:text-gray-800">
-                            Ver más
-                            <svg xmlns="http://www.w3.org/2000/svg" class="ml-1 h-4 w-4" fill="none" viewBox="0 0 24 24"
-                                stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                            </svg>
-                        </button>
-                    </form>
-                </div>
-
-                <!-- Rejilla de imágenes -->
-                <div class="grid grid-cols-1 gap-4 lg:grid-cols-5">
-
-                    <img src="@horizontal[0].Base64"
-                        class="col-span-3 hidden h-60 w-full rounded-tl-3xl object-cover lg:block">
-                    <img src="@cuadrado[3].Base64"
-                        class="col-span-1 hidden h-60 w-full rounded-tl-3xl rounded-br-3xl object-cover lg:block">
-                    <img src="@cuadrado[2].Base64"
-                        class="col-span-1 hidden h-60 w-full rounded-tl-3xl rounded-br-3xl object-cover lg:block">
-                    <img src="@cuadrado[0].Base64" class="col-span-1 hidden h-60 w-full object-cover lg:block">
-                    <img src="@cuadrado[1].Base64" class="col-span-1 hidden h-60 w-full object-cover lg:block">
-                    <img src="@horizontal[1].Base64" class="col-span-3 hidden h-60 w-full object-cover lg:block">
-
-                    <div class="flex flex-col gap-2 lg:hidden">
-                        <div class="aspect-[16/9] w-full overflow-hidden rounded-tl-3xl">
-                            <img src="@horizontal[0].Base64" class="h-full w-full object-cover" alt="..." />
-                        </div>
-
-                        <div class="grid grid-cols-2 gap-2">
-                            <div class="aspect-square overflow-hidden rounded-tl-3xl">
-                                <img src="@cuadrado[0].Base64" class="h-full w-full object-cover" alt="..." />
-                            </div>
-                            <div class="aspect-square overflow-hidden rounded-br-3xl">
-                                <img src="@cuadrado[1].Base64" class="h-full w-full object-cover" alt="..." />
-                            </div>
-                        </div>
-
-                        <div class="aspect-[16/9] w-full overflow-hidden rounded-br-3xl">
-                            <img src="@horizontal[1].Base64" class="h-full w-full object-cover" alt="..." />
-                        </div>
-
-                        <div class="grid grid-cols-2 gap-2">
-                            <div class="aspect-square overflow-hidden rounded-tl-3xl">
-                                <img src="@cuadrado[2].Base64" class="h-full w-full object-cover" alt="..." />
-                            </div>
-                            <div class="aspect-square overflow-hidden rounded-br-3xl">
-                                <img src="@cuadrado[3].Base64" class="h-full w-full object-cover" alt="..." />
-                            </div>
-                        </div>
-
-                    </div>
-
-                </div>
-            </div>
-        }
-    </section>
 </body>
-
 </html>

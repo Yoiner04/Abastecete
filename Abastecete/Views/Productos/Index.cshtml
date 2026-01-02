@@ -1,0 +1,2457 @@
+@model BusinessLogic.Models.NegocioUsuario
+
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link rel="icon" type="image/x-icon" href="~/images/Logo A naranja.png" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link rel="stylesheet" href="~/css/styles.css" asp-append-version="true" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Fondo que cubre toda la pantalla */
+        html {
+            min-height: 100%;
+            height: 100%;
+            background-color: #f3f4f6 !important;
+        }
+        body {
+            min-height: 100%;
+            background-color: #f3f4f6 !important;
+            background-image: linear-gradient(to bottom right, #f9fafb, #e5e7eb) !important;
+            background-attachment: fixed !important;
+        }
+
+        /* Animaciones de entrada */
+        @@keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        @@keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        @@keyframes pulse-gentle {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+        .animate-fadeInUp {
+            animation: fadeInUp 0.5s ease-out forwards;
+            opacity: 0;
+        }
+        .animate-slideInRight {
+            animation: slideInRight 0.4s ease-out forwards;
+        }
+        /* Delays escalonados */
+        .delay-100 { animation-delay: 0.1s; }
+        .delay-200 { animation-delay: 0.2s; }
+        .delay-300 { animation-delay: 0.3s; }
+        .delay-400 { animation-delay: 0.4s; }
+        .delay-500 { animation-delay: 0.5s; }
+
+        /* Card hover effects */
+        .producto-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .producto-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+        .producto-card:hover .producto-image {
+            transform: scale(1.08);
+        }
+        .producto-card:hover .producto-overlay {
+            opacity: 1;
+        }
+        .producto-image {
+            transition: transform 0.5s ease;
+        }
+        .producto-overlay {
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        /* Panel detalle - animación slide */
+        .panel-detalle {
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Botones de acción con tooltip */
+        .action-btn {
+            position: relative;
+            transition: all 0.2s ease;
+        }
+        .action-btn:hover {
+            transform: translateY(-2px);
+        }
+        .action-btn::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 6px 12px;
+            background: #1f2937;
+            color: white;
+            font-size: 12px;
+            border-radius: 6px;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s ease;
+            margin-bottom: 8px;
+        }
+        .action-btn:hover::after {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Gradiente del header */
+        .header-gradient {
+            background: linear-gradient(135deg, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.6) 100%);
+        }
+
+        /* Badge animado */
+        .badge-pulse {
+            animation: pulse-gentle 2s ease-in-out infinite;
+        }
+
+        /* WhatsApp button glow */
+        .whatsapp-btn:hover {
+            box-shadow: 0 0 20px rgba(37, 211, 102, 0.5);
+        }
+
+        /* Contador de productos */
+        .products-counter {
+            background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+        }
+
+        /* Panel lateral del local */
+        .local-panel {
+            background: linear-gradient(180deg, #ffffff 0%, #f9fafb 100%);
+        }
+
+        /* Galería grid */
+        .gallery-item {
+            transition: all 0.3s ease;
+        }
+        .gallery-item:hover {
+            transform: scale(1.05);
+            z-index: 10;
+        }
+
+        /* Redes sociales */
+        .social-btn {
+            transition: all 0.2s ease;
+        }
+        .social-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Scroll personalizado para panel */
+        .custom-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scroll::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 3px;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* Lightbox galería */
+        .lightbox {
+            transition: opacity 0.3s ease;
+        }
+
+        /* Modal moderno con animaciones fluidas */
+        .modal-backdrop {
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .modal-backdrop.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        .modal-backdrop .modal-content {
+            transform: scale(0.9) translateY(20px);
+            opacity: 0;
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
+        }
+        .modal-backdrop.show .modal-content {
+            transform: scale(1) translateY(0);
+            opacity: 1;
+        }
+
+        /* Scrollbar personalizado para modal */
+        .scrollbar-thin::-webkit-scrollbar {
+            width: 4px;
+        }
+        .scrollbar-thin::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .scrollbar-thin::-webkit-scrollbar-thumb {
+            background: #e5e7eb;
+            border-radius: 2px;
+        }
+        .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+            background: #d1d5db;
+        }
+
+        /* Animación de items en lista */
+        .marca-item {
+            animation: slideInItem 0.3s ease forwards;
+            opacity: 0;
+        }
+        @@keyframes slideInItem {
+            from {
+                opacity: 0;
+                transform: translateX(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        .marca-item:nth-child(1) { animation-delay: 0.05s; }
+        .marca-item:nth-child(2) { animation-delay: 0.1s; }
+        .marca-item:nth-child(3) { animation-delay: 0.15s; }
+        .marca-item:nth-child(4) { animation-delay: 0.2s; }
+        .marca-item:nth-child(5) { animation-delay: 0.25s; }
+    </style>
+</head>
+
+<body class="bg-gray-50">
+    <!-- Contenedor principal para blur -->
+    <div id="app-container" class="min-h-screen transition-all duration-300">
+    <!-- Header mejorado con gradiente -->
+    <header class="relative w-full overflow-hidden">
+        <!-- Banner con gradiente overlay -->
+        <div class="relative h-56 sm:h-64 w-full">
+            @if (!string.IsNullOrWhiteSpace(Model.Negocio?.BannerImagen?.Base64))
+            {
+                <img src="@Model.Negocio.BannerImagen.Base64" alt="Fondo"
+                    class="absolute inset-0 h-full w-full object-cover" />
+                <div class="header-gradient absolute inset-0"></div>
+            }
+            else
+            {
+                <div class="absolute inset-0 bg-gradient-to-br from-green-600 via-green-500 to-emerald-400"></div>
+            }
+
+            <!-- Contenido del header -->
+            <div class="relative z-10 h-full flex flex-col justify-end pb-4 px-4 sm:px-8 lg:px-12">
+                <div class="flex items-end gap-4">
+                    <!-- Logo del negocio -->
+                    <div class="animate-fadeInUp flex-shrink-0 w-20 h-20 sm:w-24 sm:h-24 rounded-2xl border-4 border-white bg-white shadow-xl overflow-hidden">
+                        @if (!string.IsNullOrWhiteSpace(Model.Negocio?.imagen?.Base64))
+                        {
+                            <img src="@Model.Negocio.imagen.Base64" alt="Logo negocio" class="h-full w-full object-cover" />
+                        }
+                        else
+                        {
+                            <div class="h-full w-full flex items-center justify-center bg-gray-100">
+                                <i class="fas fa-store text-2xl text-gray-400"></i>
+                            </div>
+                        }
+                    </div>
+
+                    <!-- Info del negocio sobre el banner -->
+                    <div class="animate-fadeInUp delay-100 flex-1 text-white pb-1">
+                        <h1 class="text-xl sm:text-2xl lg:text-3xl font-bold drop-shadow-lg">
+                            @Model.Negocio?.Nombre
+                        </h1>
+                        @if (!string.IsNullOrWhiteSpace(Model.Negocio?.Descripcion))
+                        {
+                            <p class="mt-1 text-sm text-white/90 drop-shadow line-clamp-1">
+                                @Model.Negocio?.Descripcion
+                            </p>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Barra de info debajo del header -->
+        <div class="bg-white border-b border-gray-100 shadow-sm">
+            <div class="px-4 sm:px-8 lg:px-12 py-2.5">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <!-- Info de contacto -->
+                    <div class="flex flex-wrap items-center gap-3 text-sm text-gray-600">
+                        @if (Model.Negocio?.Telefono != null)
+                        {
+                            <a href="tel:@Model.Negocio.Telefono" class="flex items-center gap-1.5 hover:text-green-600 transition-colors">
+                                <i class="fas fa-phone text-green-500 text-xs"></i>
+                                <span>@Model.Negocio.Telefono</span>
+                            </a>
+                        }
+                        <div class="flex items-center gap-1.5">
+                            <i class="fas fa-box text-orange-500 text-xs"></i>
+                            <span id="productos-count" class="font-medium">@(((IEnumerable<dynamic>)ViewBag.productos).Count()) productos</span>
+                        </div>
+                    </div>
+
+                    <!-- Botón de WhatsApp destacado -->
+                    @if (Model.Negocio?.Telefono != null)
+                    {
+                        <a href="https://wa.me/57@Model.Negocio.Telefono?text=Hola, vi tu negocio en Abastecete"
+                           target="_blank"
+                           class="whatsapp-btn flex items-center gap-1.5 px-3 py-1.5 bg-green-500 text-white rounded-full text-sm font-medium hover:bg-green-600 transition-all">
+                            <i class="fab fa-whatsapp"></i>
+                            <span class="hidden sm:inline">WhatsApp</span>
+                        </a>
+                    }
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div id="mensaje-modal" class="fixed inset-0 z-50 hidden bg-black/15 transition-opacity duration-300">
+        <div class="flex min-h-screen items-center justify-center">
+            <div class="w-full max-w-md rounded-lg p-6 shadow-lg" style="background-color: #F4F1E9;">
+                <div class="flex justify-center">
+                    <img src="~/images/LOGO FINAL.png" alt="Abastecete Logo" class="h-12">
+                </div>
+                <h2 class="mt-2 text-center text-xl font-bold text-[#23916A]">Solicitud</h2>
+
+                <form id="mensaje-form" class="mt-4">
+                    <input type="email" id="email" name="email" value="@Model?.Usuario?.Correo"
+                        class="mb-3 w-full rounded-lg border border-gray-300 bg-gray-100 p-3 text-black" required>
+
+                    <div class="mb-3 flex items-center space-x-2">
+                        <span class="flex items-center rounded-lg border border-gray-300 bg-white px-4 py-3">
+                            +57
+                        </span>
+                        <input type="text" id="phone" name="phone" value="@Model?.Negocio?.Telefono"
+                            class="w-full rounded-lg border border-gray-300 bg-gray-100 p-3 text-black" required>
+                    </div>
+
+                    <textarea id="message" name="message" placeholder="Escribe tu solicitud..."
+                        class="mb-3 h-32 w-full resize-none rounded-lg border border-gray-300 bg-gray-100 p-3 text-black"
+                        required></textarea>
+
+                    <button type="submit"
+                        class="w-full rounded-lg bg-[#23916A] py-3 font-bold text-white hover:bg-[#1E7B57]">
+                        Enviar solicitud
+                    </button>
+                </form>
+
+                <button id="close-mensaje-modal" class="mt-3 block w-full text-center font-medium text-black">
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <main class="w-full px-4 sm:px-6 lg:px-8 py-4">
+        @{
+            var limites = ViewBag.LimitesMembresia as BusinessLogic.Models.LimitesMembresia;
+            var errorMsg = TempData["Error"] as string;
+            var successMsg = TempData["Success"] as string;
+        }
+
+        <!-- Notificaciones de TempData -->
+        @if (!string.IsNullOrEmpty(errorMsg))
+        {
+            <div class="mb-4 px-4 py-3 rounded-xl bg-red-50 border border-red-200 text-red-700 flex items-center gap-3">
+                <i class="fas fa-exclamation-circle text-red-500"></i>
+                <span>@errorMsg</span>
+            </div>
+        }
+        @if (!string.IsNullOrEmpty(successMsg))
+        {
+            <div class="mb-4 px-4 py-3 rounded-xl bg-green-50 border border-green-200 text-green-700 flex items-center gap-3">
+                <i class="fas fa-check-circle text-green-500"></i>
+                <span>@successMsg</span>
+            </div>
+        }
+
+        <!-- Banner de membresía -->
+        @if (limites != null)
+        {
+            if (!limites.TieneSuscripcionActiva)
+            {
+                <!-- Membresía vencida o sin membresía -->
+                <div class="mb-4 px-4 py-4 rounded-xl bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
+                                <i class="fas fa-exclamation-triangle text-lg"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold">Sin membresía activa</h4>
+                                <p class="text-sm text-white/90">Activa tu plan para agregar productos y crear ofertas</p>
+                            </div>
+                        </div>
+                        <a href="@Url.Action("MiMembresia", "Negocios")"
+                           class="inline-flex items-center gap-2 px-4 py-2 bg-white text-red-600 rounded-xl font-semibold text-sm hover:bg-red-50 transition-colors shadow-sm">
+                            <i class="fas fa-crown"></i>
+                            Activar Membresía
+                        </a>
+                    </div>
+                </div>
+            }
+            else if (limites.ProximoAVencer)
+            {
+                <!-- Membresía próxima a vencer -->
+                <div class="mb-4 px-4 py-4 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow-lg">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
+                                <i class="fas fa-clock text-lg"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold">Tu membresía vence pronto</h4>
+                                <p class="text-sm text-white/90">
+                                    <span class="font-semibold">@limites.NombreMembresia</span> -
+                                    @(limites.DiasRestantes == 1 ? "Vence mañana" : $"Quedan {limites.DiasRestantes} días")
+                                </p>
+                            </div>
+                        </div>
+                        <a href="@Url.Action("MiMembresia", "Negocios")"
+                           class="inline-flex items-center gap-2 px-4 py-2 bg-white text-orange-600 rounded-xl font-semibold text-sm hover:bg-orange-50 transition-colors shadow-sm">
+                            <i class="fas fa-sync-alt"></i>
+                            Renovar Ahora
+                        </a>
+                    </div>
+                </div>
+            }
+        }
+
+        <!-- Layout principal: Productos + Panel del Local -->
+        <div class="flex flex-col lg:flex-row gap-4">
+
+            <!-- Sección de Productos (izquierda/principal) -->
+            <div class="flex-1 min-w-0">
+                <div id="productosWrapper"
+                    class="w-full rounded-2xl bg-white p-4 shadow-sm border border-gray-100 transition-all duration-300">
+
+                    <!-- Barra de acciones -->
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+                        <div class="flex items-center gap-2">
+                            <h2 class="text-lg font-bold text-gray-800">Mis Productos</h2>
+                            <span class="products-counter px-2 py-0.5 text-xs font-bold text-white rounded-full">
+                                @(((IEnumerable<dynamic>)ViewBag.productos).Count())
+                            </span>
+                        </div>
+
+                        <div class="flex items-center gap-2">
+                            <a href="#" onclick="openMensajeModal(); return false;"
+                               class="action-btn flex items-center gap-1.5 h-9 px-3 rounded-xl bg-gray-100 text-gray-700 hover:bg-gray-200 transition-all text-sm"
+                               data-tooltip="Enviar solicitud">
+                                <i class="fas fa-comment-dots text-sm"></i>
+                                <span class="hidden sm:inline">Solicitud</span>
+                            </a>
+
+                            @if (limites != null && limites.PuedeAgregarProductos)
+                            {
+                                <a href="@Url.Action("Agregar", "Productos")"
+                                   class="action-btn flex items-center gap-1.5 h-9 px-3 rounded-xl bg-orange-500 text-white hover:bg-orange-600 transition-all shadow-sm text-sm"
+                                   data-tooltip="Agregar producto">
+                                    <i class="fas fa-plus text-sm"></i>
+                                    <span class="hidden sm:inline">Agregar</span>
+                                </a>
+                            }
+                            else
+                            {
+                                <span class="action-btn flex items-center gap-1.5 h-9 px-3 rounded-xl bg-gray-300 text-gray-500 cursor-not-allowed text-sm"
+                                      title="@(limites?.TieneSuscripcionActiva == true ? "Límite de productos alcanzado" : "Activa tu membresía")">
+                                    <i class="fas fa-lock text-sm"></i>
+                                    <span class="hidden sm:inline">Agregar</span>
+                                </span>
+                            }
+
+                            <a href="@Url.Action("EditarNegocio", "Negocios")"
+                               class="action-btn flex items-center gap-1.5 h-9 px-3 rounded-xl bg-green-500 text-white hover:bg-green-600 transition-all shadow-sm text-sm"
+                               data-tooltip="Editar negocio">
+                                <i class="fas fa-pen-to-square text-sm"></i>
+                                <span class="hidden sm:inline">Editar</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Grid de productos -->
+                    <div id="productosContainer"
+                        class="grid grid-cols-3 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5">
+
+                        @{ var index = 0; }
+                        @foreach (var producto in ViewBag.productos)
+                        {
+                            var delayClass = $"delay-{Math.Min(index * 100, 500)}";
+                            <div id="producto-@producto.Id"
+                                class="producto producto-card animate-fadeInUp @delayClass group relative flex flex-col rounded-lg border border-gray-100 bg-white overflow-hidden shadow-sm"
+                                data-categoria-id="@producto.IdSubCategoria"
+                                data-precio="@producto.Precio"
+                                data-nombre="@producto.Nombre"
+                                data-imagen="@producto.ImagenUrl">
+
+                                <!-- Contenedor de imagen compacto -->
+                                <div class="relative aspect-[4/3] overflow-hidden bg-gray-50">
+                                    <img src="@producto.ImagenUrl"
+                                         alt="@producto.Nombre"
+                                         class="producto-image h-full w-full object-contain p-1"
+                                         loading="lazy" />
+
+                                    <!-- Overlay simplificado - clic en toda la imagen abre el modal -->
+                                    <div class="producto-overlay absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent flex items-center justify-center cursor-pointer"
+                                         onclick="mostrarDetalle('@producto.Nombre.Replace("'", "\\'"))', '@producto.Precio', '@producto.ImagenUrl', @producto.Id, '@(producto.Unidad?.Nombre ?? "")', @(producto.IdTipoUnidad ?? 0))">
+                                        <div class="w-10 h-10 rounded-full bg-white/95 backdrop-blur-sm flex items-center justify-center text-gray-600 hover:bg-emerald-500 hover:text-white transition-all duration-300 shadow-xl transform hover:scale-110">
+                                            <i class="fas fa-eye text-base"></i>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Info del producto compacta -->
+                                <div class="p-1.5">
+                                    <h3 class="text-xs font-medium text-gray-800 line-clamp-1 group-hover:text-green-600 transition-colors">
+                                        @producto.Nombre
+                                    </h3>
+                                    <div class="mt-0.5">
+                                        @if (producto.TieneMultiplesMarcas && producto.PrecioMinimo.HasValue)
+                                        {
+                                            <div class="flex items-center justify-between">
+                                                <div>
+                                                    <span class="text-[10px] text-gray-500">Desde</span>
+                                                    <p class="text-sm font-bold text-orange-500">$@producto.PrecioMinimo.Value.ToString("N0")</p>
+                                                </div>
+                                                <span class="text-[9px] text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded-full font-medium">@producto.CantidadMarcas marcas</span>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <div class="flex items-center justify-between">
+                                                <p class="text-sm font-bold text-orange-500">$@producto.Precio</p>
+                                                @if (producto.Unidad?.Nombre != null)
+                                                {
+                                                    <span class="text-[10px] text-gray-500 bg-gray-100 px-1 py-0.5 rounded">@producto.Unidad.Nombre</span>
+                                                }
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                            index++;
+                        }
+                    </div>
+
+                    <!-- Estado vacío -->
+                    @if (!((IEnumerable<dynamic>)ViewBag.productos).Any())
+                    {
+                        <div class="flex flex-col items-center justify-center py-12 text-center">
+                            <div class="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center mb-4">
+                                <i class="fas fa-box-open text-3xl text-gray-300"></i>
+                            </div>
+                            <h3 class="text-lg font-semibold text-gray-700 mb-2">No hay productos aún</h3>
+                            <p class="text-gray-500 mb-4 max-w-sm text-sm">Comienza agregando tu primer producto</p>
+                            <a href="@Url.Action("Agregar", "Productos")"
+                               class="inline-flex items-center gap-2 px-5 py-2.5 bg-orange-500 text-white rounded-xl font-medium hover:bg-orange-600 transition-colors shadow-lg text-sm">
+                                <i class="fas fa-plus"></i>
+                                Agregar mi primer producto
+                            </a>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Panel lateral del Local (derecha) -->
+            <div class="lg:w-80 xl:w-96 flex-shrink-0">
+                <div class="local-panel rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden sticky top-4">
+
+                    <!-- Header del panel -->
+                    <div class="bg-gradient-to-r from-[#23916A] to-emerald-500 px-4 py-3">
+                        <h3 class="text-white font-bold flex items-center gap-2">
+                            <i class="fas fa-store"></i>
+                            Mi Negocio
+                        </h3>
+                    </div>
+
+                    <div class="p-4 custom-scroll max-h-[calc(100vh-200px)] overflow-y-auto">
+
+                        <!-- Info básica del local -->
+                        <div class="mb-4">
+                            <div class="flex items-start gap-3 mb-3">
+                                <div class="w-14 h-14 rounded-xl overflow-hidden bg-gray-100 flex-shrink-0 border border-gray-200">
+                                    @if (!string.IsNullOrWhiteSpace(Model.Negocio?.imagen?.Base64))
+                                    {
+                                        <img src="@Model.Negocio.imagen.Base64" alt="Logo" class="w-full h-full object-cover" />
+                                    }
+                                    else
+                                    {
+                                        <div class="w-full h-full flex items-center justify-center">
+                                            <i class="fas fa-store text-gray-400"></i>
+                                        </div>
+                                    }
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <h4 class="font-bold text-gray-800 truncate">@Model.Negocio?.Nombre</h4>
+                                    <p class="text-sm text-gray-500 line-clamp-2">@(Model.Negocio?.Descripcion ?? "Sin descripción")</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Información de contacto -->
+                        <div class="mb-4">
+                            <h5 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Contacto</h5>
+                            <div class="space-y-2">
+                                @if (Model.Negocio?.Telefono > 0)
+                                {
+                                    <a href="tel:@Model.Negocio.Telefono" class="flex items-center gap-2 text-sm text-gray-600 hover:text-green-600 transition-colors">
+                                        <div class="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center">
+                                            <i class="fas fa-phone text-green-500 text-xs"></i>
+                                        </div>
+                                        <span>@Model.Negocio.Telefono</span>
+                                    </a>
+                                }
+                                @if (!string.IsNullOrEmpty(Model.Negocio?.Whatsapp))
+                                {
+                                    <a href="https://wa.me/57@Model.Negocio.Whatsapp" target="_blank" class="flex items-center gap-2 text-sm text-gray-600 hover:text-green-600 transition-colors">
+                                        <div class="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center">
+                                            <i class="fab fa-whatsapp text-green-500"></i>
+                                        </div>
+                                        <span>@Model.Negocio.Whatsapp</span>
+                                    </a>
+                                }
+                                @if (!string.IsNullOrEmpty(Model.Negocio?.EmailContacto))
+                                {
+                                    <a href="mailto:@Model.Negocio.EmailContacto" class="flex items-center gap-2 text-sm text-gray-600 hover:text-blue-600 transition-colors">
+                                        <div class="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
+                                            <i class="fas fa-envelope text-blue-500 text-xs"></i>
+                                        </div>
+                                        <span class="truncate">@Model.Negocio.EmailContacto</span>
+                                    </a>
+                                }
+                                @if (!string.IsNullOrEmpty(Model.Negocio?.SitioWeb))
+                                {
+                                    <a href="@Model.Negocio.SitioWeb" target="_blank" class="flex items-center gap-2 text-sm text-gray-600 hover:text-purple-600 transition-colors">
+                                        <div class="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center">
+                                            <i class="fas fa-globe text-purple-500 text-xs"></i>
+                                        </div>
+                                        <span class="truncate">Sitio web</span>
+                                    </a>
+                                }
+                            </div>
+                        </div>
+
+                        <!-- Redes Sociales -->
+                        @{
+                            var tieneRedes = !string.IsNullOrEmpty(Model.Negocio?.Instagram) ||
+                                            !string.IsNullOrEmpty(Model.Negocio?.Facebook) ||
+                                            !string.IsNullOrEmpty(Model.Negocio?.Tiktok) ||
+                                            !string.IsNullOrEmpty(Model.Negocio?.Youtube) ||
+                                            !string.IsNullOrEmpty(Model.Negocio?.Twitter);
+                        }
+                        @if (tieneRedes)
+                        {
+                            <div class="mb-4">
+                                <h5 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Redes Sociales</h5>
+                                <div class="flex flex-wrap gap-2">
+                                    @if (!string.IsNullOrEmpty(Model.Negocio?.Instagram))
+                                    {
+                                        <a href="https://instagram.com/@Model.Negocio.Instagram" target="_blank"
+                                           class="social-btn w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 via-pink-500 to-orange-400 flex items-center justify-center text-white shadow-sm">
+                                            <i class="fab fa-instagram"></i>
+                                        </a>
+                                    }
+                                    @if (!string.IsNullOrEmpty(Model.Negocio?.Facebook))
+                                    {
+                                        <a href="@Model.Negocio.Facebook" target="_blank"
+                                           class="social-btn w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-sm">
+                                            <i class="fab fa-facebook-f"></i>
+                                        </a>
+                                    }
+                                    @if (!string.IsNullOrEmpty(Model.Negocio?.Tiktok))
+                                    {
+                                        <a href="https://tiktok.com/@@Model.Negocio.Tiktok" target="_blank"
+                                           class="social-btn w-10 h-10 rounded-xl bg-black flex items-center justify-center text-white shadow-sm">
+                                            <i class="fab fa-tiktok"></i>
+                                        </a>
+                                    }
+                                    @if (!string.IsNullOrEmpty(Model.Negocio?.Youtube))
+                                    {
+                                        <a href="@Model.Negocio.Youtube" target="_blank"
+                                           class="social-btn w-10 h-10 rounded-xl bg-red-600 flex items-center justify-center text-white shadow-sm">
+                                            <i class="fab fa-youtube"></i>
+                                        </a>
+                                    }
+                                    @if (!string.IsNullOrEmpty(Model.Negocio?.Twitter))
+                                    {
+                                        <a href="https://twitter.com/@Model.Negocio.Twitter" target="_blank"
+                                           class="social-btn w-10 h-10 rounded-xl bg-gray-800 flex items-center justify-center text-white shadow-sm">
+                                            <i class="fab fa-x-twitter"></i>
+                                        </a>
+                                    }
+                                </div>
+                            </div>
+                        }
+
+                        <!-- Horarios (si existen) -->
+                        @{
+                            var tieneHorarios = !string.IsNullOrEmpty(Model.Negocio?.HorarioLunes) ||
+                                               !string.IsNullOrEmpty(Model.Negocio?.HorarioMartes) ||
+                                               !string.IsNullOrEmpty(Model.Negocio?.HorarioMiercoles);
+                        }
+                        @if (tieneHorarios)
+                        {
+                            <div class="mb-4">
+                                <h5 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Horarios</h5>
+                                <div class="bg-gray-50 rounded-xl p-3 text-sm">
+                                    <div class="grid grid-cols-2 gap-1.5 text-xs">
+                                        @if (!string.IsNullOrEmpty(Model.Negocio?.HorarioLunes))
+                                        {
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-500">Lun:</span>
+                                                <span class="text-gray-700 font-medium">@Model.Negocio.HorarioLunes</span>
+                                            </div>
+                                        }
+                                        @if (!string.IsNullOrEmpty(Model.Negocio?.HorarioMartes))
+                                        {
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-500">Mar:</span>
+                                                <span class="text-gray-700 font-medium">@Model.Negocio.HorarioMartes</span>
+                                            </div>
+                                        }
+                                        @if (!string.IsNullOrEmpty(Model.Negocio?.HorarioMiercoles))
+                                        {
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-500">Mié:</span>
+                                                <span class="text-gray-700 font-medium">@Model.Negocio.HorarioMiercoles</span>
+                                            </div>
+                                        }
+                                        @if (!string.IsNullOrEmpty(Model.Negocio?.HorarioJueves))
+                                        {
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-500">Jue:</span>
+                                                <span class="text-gray-700 font-medium">@Model.Negocio.HorarioJueves</span>
+                                            </div>
+                                        }
+                                        @if (!string.IsNullOrEmpty(Model.Negocio?.HorarioViernes))
+                                        {
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-500">Vie:</span>
+                                                <span class="text-gray-700 font-medium">@Model.Negocio.HorarioViernes</span>
+                                            </div>
+                                        }
+                                        @if (!string.IsNullOrEmpty(Model.Negocio?.HorarioSabado))
+                                        {
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-500">Sáb:</span>
+                                                <span class="text-gray-700 font-medium">@Model.Negocio.HorarioSabado</span>
+                                            </div>
+                                        }
+                                        @if (!string.IsNullOrEmpty(Model.Negocio?.HorarioDomingo))
+                                        {
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-500">Dom:</span>
+                                                <span class="text-gray-700 font-medium">@Model.Negocio.HorarioDomingo</span>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        }
+
+                        <!-- Galería de imágenes -->
+                        @{
+                            var galeria = Model.Negocio?.Galeria ?? new List<BusinessLogic.Models.GaleriaLocal>();
+                            var galeriaAprobada = galeria.Where(g => g.Estado == BusinessLogic.Models.EstadoGaleria.Aprobada).ToList();
+                        }
+                        @if (galeriaAprobada.Any())
+                        {
+                            <div class="mb-4">
+                                <h5 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                                    Galería
+                                    <span class="text-gray-300 font-normal">(@galeriaAprobada.Count)</span>
+                                </h5>
+                                <div class="grid grid-cols-3 gap-2">
+                                    @foreach (var imagen in galeriaAprobada.Take(6))
+                                    {
+                                        <div class="gallery-item aspect-square rounded-lg overflow-hidden bg-gray-100 cursor-pointer border border-gray-200"
+                                             onclick="abrirLightbox('@imagen.CloudinaryUrl')">
+                                            <img src="@imagen.CloudinaryUrl" alt="Galería" class="w-full h-full object-cover" loading="lazy" />
+                                        </div>
+                                    }
+                                </div>
+                                @if (galeriaAprobada.Count > 6)
+                                {
+                                    <button onclick="verTodasLasImagenes()" class="mt-2 w-full py-2 text-sm text-green-600 hover:text-green-700 font-medium flex items-center justify-center gap-1">
+                                        <i class="fas fa-images"></i>
+                                        Ver todas (@galeriaAprobada.Count)
+                                    </button>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="mb-4">
+                                <h5 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Galería</h5>
+                                <div class="bg-gray-50 rounded-xl p-4 text-center">
+                                    <i class="fas fa-images text-2xl text-gray-300 mb-2"></i>
+                                    <p class="text-xs text-gray-400">Sin imágenes aún</p>
+                                    <a href="@Url.Action("EditarNegocio", "Negocios")" class="text-xs text-green-600 hover:underline mt-1 inline-block">
+                                        Agregar fotos
+                                    </a>
+                                </div>
+                            </div>
+                        }
+
+                        <!-- Indicadores de uso de membresía -->
+                        @if (limites != null && limites.TieneSuscripcionActiva)
+                        {
+                            <div class="mb-4">
+                                <h5 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Tu Plan</h5>
+                                <div class="bg-gray-50 rounded-xl p-3 space-y-3">
+                                    <!-- Nombre del plan -->
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-sm font-medium text-gray-700">@limites.NombreMembresia</span>
+                                        <span class="text-xs text-gray-500">@limites.DiasRestantes días</span>
+                                    </div>
+
+                                    <!-- Barra de productos -->
+                                    <div>
+                                        <div class="flex items-center justify-between text-xs mb-1">
+                                            <span class="text-gray-600">Productos</span>
+                                            <span class="font-medium @(limites.PorcentajeProductosUsados >= 100 ? "text-red-600" : limites.PorcentajeProductosUsados >= 80 ? "text-amber-600" : "text-green-600")">
+                                                @limites.TextoUsoProductos
+                                            </span>
+                                        </div>
+                                        @if (!limites.ProductosIlimitados)
+                                        {
+                                            <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+                                                <div class="h-full rounded-full transition-all @(limites.PorcentajeProductosUsados >= 100 ? "bg-red-500" : limites.PorcentajeProductosUsados >= 80 ? "bg-amber-500" : "bg-green-500")"
+                                                     style="width: @Math.Min(limites.PorcentajeProductosUsados, 100)%"></div>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <div class="h-2 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full"></div>
+                                        }
+                                    </div>
+
+                                    <!-- Ofertas activas -->
+                                    <div class="flex items-center justify-between text-xs">
+                                        <span class="text-gray-600">Ofertas activas</span>
+                                        <span class="font-medium text-gray-700">@limites.TextoOfertasActivas</span>
+                                    </div>
+
+                                    <!-- Ofertas del período -->
+                                    @if (!limites.OfertasIlimitadas)
+                                    {
+                                        <div class="flex items-center justify-between text-xs">
+                                            <span class="text-gray-600">Ofertas este período</span>
+                                            <span class="font-medium @(limites.PorcentajeOfertasUsadas >= 100 ? "text-red-600" : "text-gray-700")">@limites.TextoOfertasPeriodo</span>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        }
+
+                        <!-- Código de Referido -->
+                        @if (!string.IsNullOrEmpty(Model.Usuario?.CodigoReferido))
+                        {
+                            <div class="mb-4">
+                                <h5 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                                    <i class="fas fa-gift mr-1"></i>
+                                    Tu Código de Referido
+                                </h5>
+                                <div class="bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl p-3 border border-orange-200">
+                                    <div class="flex items-center justify-between gap-2">
+                                        <code id="codigoReferido" class="text-lg font-bold text-orange-600 tracking-wider">@Model.Usuario.CodigoReferido</code>
+                                        <button onclick="copiarCodigo()" class="flex items-center gap-1.5 px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white text-xs font-medium rounded-lg transition-colors">
+                                            <i class="fas fa-copy"></i>
+                                            Copiar
+                                        </button>
+                                    </div>
+                                    <p class="text-xs text-gray-500 mt-2">Comparte tu código y gana créditos cuando tus referidos compren membresías</p>
+                                </div>
+                            </div>
+                        }
+
+                        <!-- Calificación y Opiniones -->
+                        @{
+                            var resumenOpiniones = ViewBag.ResumenOpiniones as BusinessLogic.Models.ResumenOpiniones;
+                        }
+                        <div class="mb-4">
+                            <h5 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                                <i class="fas fa-star mr-1"></i>
+                                Calificación
+                            </h5>
+                            @if (resumenOpiniones != null && resumenOpiniones.TotalConCalificacion > 0)
+                            {
+                                <div class="bg-gradient-to-r from-yellow-50 to-amber-50 rounded-xl p-3 border border-yellow-200">
+                                    <div class="flex items-center gap-3">
+                                        <div class="text-3xl font-bold text-gray-800">@resumenOpiniones.PromedioCalificacion.ToString("0.0")</div>
+                                        <div class="flex-1">
+                                            <div class="flex items-center gap-0.5 mb-1">
+                                                @for (int i = 1; i <= 5; i++)
+                                                {
+                                                    var filled = i <= Math.Round(resumenOpiniones.PromedioCalificacion);
+                                                    <i class="fas fa-star text-sm @(filled ? "text-yellow-400" : "text-gray-300")"></i>
+                                                }
+                                            </div>
+                                            <p class="text-xs text-gray-500">@resumenOpiniones.TotalConCalificacion opiniones</p>
+                                        </div>
+                                    </div>
+                                    <button onclick="abrirModalOpiniones()"
+                                       class="mt-3 flex items-center justify-center gap-1.5 w-full py-2 rounded-lg bg-yellow-500 hover:bg-yellow-600 text-white text-xs font-medium transition-colors">
+                                        <i class="fas fa-comments"></i>
+                                        Ver todas las opiniones
+                                    </button>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="bg-gray-50 rounded-xl p-4 text-center">
+                                    <div class="flex items-center justify-center gap-0.5 mb-2">
+                                        @for (int i = 1; i <= 5; i++)
+                                        {
+                                            <i class="fas fa-star text-lg text-gray-300"></i>
+                                        }
+                                    </div>
+                                    <p class="text-sm text-gray-500 mb-1">Sin calificaciones aún</p>
+                                    <p class="text-xs text-gray-400">Tus clientes podrán calificar tu negocio</p>
+                                </div>
+                            }
+                        </div>
+
+                        <!-- Botones de acción -->
+                        <div class="grid grid-cols-2 gap-2">
+                            <a href="@Url.Action("MiMembresia", "Negocios")"
+                               class="flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-center font-medium text-sm hover:shadow-lg hover:shadow-purple-500/30 transition-all">
+                                <i class="fas fa-crown text-xs"></i>
+                                <span>Membresía</span>
+                            </a>
+                            <a href="@Url.Action("EditarNegocio", "Negocios")"
+                               class="flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-gradient-to-r from-[#23916A] to-emerald-500 text-white text-center font-medium text-sm hover:shadow-lg transition-all">
+                                <i class="fas fa-pen-to-square text-xs"></i>
+                                <span>Editar</span>
+                            </a>
+                        </div>
+                        <a href="@Url.Action("Index", "Analiticas")"
+                           class="mt-2 flex items-center justify-center gap-1.5 w-full py-2.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 text-center font-medium text-sm transition-all">
+                            <i class="fas fa-chart-line text-xs"></i>
+                            <span>Ver Analíticas</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal de detalle de producto - Unificado con presentaciones -->
+        <div id="detalleModal" class="modal-backdrop fixed inset-0 z-50 hidden bg-black/30" onclick="cerrarModalDetalle()">
+            <!-- Contenedor del modal -->
+            <div class="flex min-h-screen items-center justify-center p-4" onclick="event.stopPropagation()">
+                <div class="modal-content w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden">
+
+                    <!-- Header compacto con imagen -->
+                    <div class="relative bg-gradient-to-br from-gray-50 to-gray-100">
+                        <div class="h-44 flex items-center justify-center p-4">
+                            <img id="detalleImagen" src="" alt="Producto" class="max-h-full max-w-full object-contain" />
+                        </div>
+
+                        <!-- Botón cerrar flotante -->
+                        <button onclick="cerrarModalDetalle()"
+                                class="absolute top-3 right-3 w-8 h-8 rounded-full bg-gray-800/60 flex items-center justify-center text-white hover:bg-gray-800/80 transition-all">
+                            <i class="fas fa-times text-sm"></i>
+                        </button>
+
+                        <!-- Badge del local -->
+                        <div class="absolute bottom-3 left-3 flex items-center gap-2 bg-white/95 px-2.5 py-1.5 rounded-full shadow-md">
+                            <div class="w-5 h-5 rounded-full overflow-hidden bg-gray-100 flex-shrink-0">
+                                @if (!string.IsNullOrWhiteSpace(Model.Negocio?.imagen?.Base64))
+                                {
+                                    <img src="@Model.Negocio.imagen.Base64" alt="Logo" class="w-full h-full object-cover" />
+                                }
+                                else
+                                {
+                                    <div class="w-full h-full flex items-center justify-center bg-emerald-100">
+                                        <i class="fas fa-store text-emerald-500 text-[8px]"></i>
+                                    </div>
+                                }
+                            </div>
+                            <span class="font-medium text-gray-700 text-xs">@Model.Negocio?.Nombre</span>
+                        </div>
+                    </div>
+
+                    <!-- Contenido -->
+                    <div class="p-4">
+                        <input type="hidden" id="detalleProductoId" />
+
+                        <!-- Nombre y precio -->
+                        <div class="flex items-start justify-between mb-3">
+                            <div class="flex-1">
+                                <h3 id="detalleNombre" class="text-lg font-bold text-gray-800"></h3>
+                                <p id="detalleUnidad" class="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
+                                    <i class="fas fa-balance-scale text-gray-400 text-[10px]"></i>
+                                    <span></span>
+                                </p>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-[10px] text-emerald-600 font-medium">DESDE</span>
+                                <p id="detallePrecioMinimo" class="text-xl font-bold text-emerald-600"></p>
+                                <p id="detallePrecioMaximo" class="text-xs text-gray-500 hidden">hasta <span></span></p>
+                            </div>
+                        </div>
+
+                        <!-- Presentaciones - Lista y Formulario unificados -->
+                        <div class="bg-gray-50 rounded-xl p-3 mb-3">
+                            <div class="flex items-center justify-between mb-2">
+                                <h5 class="text-xs font-semibold text-gray-700 flex items-center gap-1.5">
+                                    <i class="fas fa-layer-group text-indigo-500 text-[10px]"></i>
+                                    Presentaciones
+                                </h5>
+                                <button id="btnToggleFormPresentacion" onclick="toggleFormPresentacion()"
+                                        class="text-[10px] text-indigo-600 hover:text-indigo-700 font-medium flex items-center gap-1">
+                                    <i class="fas fa-plus text-[8px]"></i>
+                                    Nueva
+                                </button>
+                            </div>
+
+                            <!-- Lista de presentaciones -->
+                            <div id="detalleMarcasLista" class="space-y-1.5 max-h-28 overflow-y-auto scrollbar-thin mb-2">
+                                <!-- Las marcas se cargan dinámicamente -->
+                            </div>
+
+                            <div id="detalleMarcasVacio" class="hidden py-3 text-center">
+                                <i class="fas fa-box-open text-gray-300 text-xl mb-1"></i>
+                                <p class="text-xs text-gray-400">Sin presentaciones</p>
+                            </div>
+
+                            <!-- Formulario agregar (oculto por defecto) -->
+                            <div id="formNuevaPresentacion" class="hidden border-t border-gray-200 pt-3 mt-2">
+                                <div class="grid grid-cols-3 gap-2 mb-2">
+                                    <div>
+                                        <label class="block text-[10px] text-gray-500 mb-0.5">Marca</label>
+                                        <select id="nueva-marca-select" class="w-full px-2 py-1.5 rounded-lg border border-gray-200 text-xs focus:border-indigo-500 outline-none bg-white">
+                                            <option value="">Seleccionar</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] text-gray-500 mb-0.5">Medida</label>
+                                        <select id="nueva-unidad-select" class="w-full px-2 py-1.5 rounded-lg border border-gray-200 text-xs focus:border-indigo-500 outline-none bg-white">
+                                            <option value="">Sin medida</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] text-gray-500 mb-0.5">Precio</label>
+                                        <div class="relative">
+                                            <span class="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs">$</span>
+                                            <input type="number" id="nueva-marca-precio" min="0" step="100" placeholder="0"
+                                                   class="w-full pl-5 pr-2 py-1.5 rounded-lg border border-gray-200 text-xs focus:border-indigo-500 outline-none" />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flex gap-2">
+                                    <button onclick="toggleFormPresentacion()"
+                                            class="flex-1 py-1.5 rounded-lg border border-gray-200 text-gray-600 font-medium text-xs hover:bg-gray-100 transition-all">
+                                        Cancelar
+                                    </button>
+                                    <button onclick="agregarPresentacionDirecto()"
+                                            class="flex-1 py-1.5 rounded-lg bg-indigo-600 text-white font-medium text-xs hover:bg-indigo-700 transition-all flex items-center justify-center gap-1">
+                                        <i class="fas fa-plus text-[8px]"></i>
+                                        Agregar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Botón cerrar -->
+                        <button onclick="cerrarModalDetalle()"
+                                class="w-full py-2 rounded-xl bg-gray-100 text-gray-600 font-medium text-sm hover:bg-gray-200 transition-all">
+                            Cerrar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    </div><!-- Cierre app-container -->
+
+    <!-- Lightbox para galería -->
+    <div id="lightbox" class="lightbox fixed inset-0 z-50 hidden bg-black/90 items-center justify-center" onclick="cerrarLightbox(event)">
+        <button onclick="cerrarLightbox()" class="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors">
+            <i class="fas fa-times text-xl"></i>
+        </button>
+        <img id="lightbox-img" src="" alt="Imagen" class="max-w-[90%] max-h-[90%] rounded-lg shadow-2xl" onclick="event.stopPropagation()" />
+    </div>
+
+    <!-- Modal de edición de producto -->
+    <div id="editar-modal" class="fixed inset-0 z-50 hidden bg-black/30" onclick="cerrarModalEditar()">
+        <div class="flex min-h-screen items-center justify-center p-4" onclick="event.stopPropagation()">
+            <div class="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-bold text-gray-800">Editar Producto</h2>
+                    <button onclick="cerrarModalEditar()"
+                            class="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-600 transition-colors">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <form id="editar-form" enctype="multipart/form-data">
+                    <input type="hidden" id="editar-id" />
+
+                    <!-- Vista previa de imagen actual -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Imagen actual</label>
+                        <div class="w-full h-40 rounded-xl overflow-hidden bg-gray-50 flex items-center justify-center">
+                            <img id="editar-imagen-preview" src="" alt="Preview" class="max-h-full object-contain" />
+                        </div>
+                    </div>
+
+                    <!-- Nueva imagen -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Nueva imagen (opcional)</label>
+                        <input type="file" id="editar-imagen" name="Imagen" accept="image/*"
+                               class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-orange-50 file:text-orange-600 hover:file:bg-orange-100" />
+                    </div>
+
+                    <!-- Nombre -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Nombre</label>
+                        <input type="text" id="editar-nombre" name="Nombre" required
+                               class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 outline-none transition-all" />
+                    </div>
+
+                    <!-- Precio -->
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Precio</label>
+                        <div class="relative">
+                            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-medium">$</span>
+                            <input type="number" id="editar-precio" name="Precio" required
+                                   class="w-full pl-8 pr-4 py-3 rounded-xl border border-gray-200 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 outline-none transition-all" />
+                        </div>
+                    </div>
+
+                    <!-- Botones -->
+                    <div class="flex gap-3">
+                        <button type="button" onclick="cerrarModalEditar()"
+                                class="flex-1 py-3 rounded-xl border border-gray-200 text-gray-700 font-semibold hover:bg-gray-50 transition-colors">
+                            Cancelar
+                        </button>
+                        <button type="submit"
+                                class="flex-1 py-3 rounded-xl bg-green-500 text-white font-semibold hover:bg-green-600 transition-colors flex items-center justify-center gap-2">
+                            <i class="fas fa-save"></i>
+                            Guardar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de confirmación de eliminación -->
+    <div id="eliminar-modal" class="fixed inset-0 z-50 hidden bg-black/30" onclick="cerrarModalEliminar()">
+        <div class="flex min-h-screen items-center justify-center p-4" onclick="event.stopPropagation()">
+            <div class="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl text-center">
+                <div class="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-trash text-2xl text-red-500"></i>
+                </div>
+                <h2 class="text-xl font-bold text-gray-800 mb-2">¿Eliminar producto?</h2>
+                <p id="eliminar-nombre-producto" class="text-gray-600 mb-6"></p>
+
+                <input type="hidden" id="eliminar-id" />
+
+                <div class="flex gap-3">
+                    <button onclick="cerrarModalEliminar()"
+                            class="flex-1 py-3 rounded-xl border border-gray-200 text-gray-700 font-semibold hover:bg-gray-50 transition-colors">
+                        Cancelar
+                    </button>
+                    <button onclick="ejecutarEliminar()"
+                            class="flex-1 py-3 rounded-xl bg-red-500 text-white font-semibold hover:bg-red-600 transition-colors">
+                        Eliminar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Modal de todas las imágenes de galería -->
+    <div id="galeria-modal" class="fixed inset-0 z-50 hidden bg-black/80 overflow-y-auto">
+        <div class="min-h-screen py-8 px-4">
+            <div class="max-w-4xl mx-auto">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-xl font-bold text-white">Galería del negocio</h2>
+                    <button onclick="cerrarGaleriaModal()" class="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                <div id="galeria-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                    @foreach (var imagen in galeriaAprobada)
+                    {
+                        <div class="aspect-square rounded-xl overflow-hidden bg-gray-800 cursor-pointer hover:opacity-90 transition-opacity"
+                             onclick="abrirLightbox('@imagen.CloudinaryUrl')">
+                            <img src="@imagen.CloudinaryUrl" alt="Galería" class="w-full h-full object-cover" loading="lazy" />
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Opiniones -->
+    @{
+        var opinionesLista = ViewBag.Opiniones as List<BusinessLogic.Models.Opinion> ?? new List<BusinessLogic.Models.Opinion>();
+    }
+    <div id="opiniones-modal" class="modal-backdrop fixed inset-0 z-50 hidden bg-black/30" onclick="cerrarModalOpiniones()">
+        <div class="flex min-h-screen items-center justify-center p-4" onclick="event.stopPropagation()">
+            <div class="modal-content w-full max-w-2xl bg-white rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+                <!-- Header -->
+                <div class="bg-gradient-to-r from-yellow-500 to-amber-500 px-6 py-4 flex items-center justify-between">
+                    <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                        <i class="fas fa-comments"></i>
+                        Opiniones de mi Negocio
+                    </h2>
+                    <button onclick="cerrarModalOpiniones()" class="text-white/80 hover:text-white transition-colors">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+
+                <!-- Resumen de calificaciones -->
+                @if (resumenOpiniones != null && resumenOpiniones.TotalConCalificacion > 0)
+                {
+                    <div class="bg-gradient-to-r from-yellow-50 to-amber-50 px-6 py-4 border-b">
+                        <div class="flex items-center gap-6">
+                            <div class="text-center">
+                                <div class="text-4xl font-bold text-gray-800">@resumenOpiniones.PromedioCalificacion.ToString("0.0")</div>
+                                <div class="flex items-center justify-center gap-0.5 my-1">
+                                    @for (int i = 1; i <= 5; i++)
+                                    {
+                                        var filled = i <= Math.Round(resumenOpiniones.PromedioCalificacion);
+                                        <i class="fas fa-star text-sm @(filled ? "text-yellow-400" : "text-gray-300")"></i>
+                                    }
+                                </div>
+                                <p class="text-xs text-gray-500">@resumenOpiniones.TotalConCalificacion opiniones</p>
+                            </div>
+                            <div class="flex-1">
+                                @{
+                                    var estrellas = new[] {
+                                        (5, resumenOpiniones.Estrellas5),
+                                        (4, resumenOpiniones.Estrellas4),
+                                        (3, resumenOpiniones.Estrellas3),
+                                        (2, resumenOpiniones.Estrellas2),
+                                        (1, resumenOpiniones.Estrellas1)
+                                    };
+                                }
+                                @foreach (var (num, cantidad) in estrellas)
+                                {
+                                    var porcentaje = resumenOpiniones.TotalConCalificacion > 0 ? (cantidad * 100.0 / resumenOpiniones.TotalConCalificacion) : 0;
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <span class="text-xs text-gray-600 w-8">@num <i class="fas fa-star text-yellow-400 text-[10px]"></i></span>
+                                        <div class="flex-1 bg-gray-200 rounded-full h-2">
+                                            <div class="bg-yellow-400 h-2 rounded-full" style="width: @porcentaje%"></div>
+                                        </div>
+                                        <span class="text-xs text-gray-500 w-6 text-right">@cantidad</span>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+
+                <!-- Lista de opiniones -->
+                <div class="flex-1 overflow-y-auto p-6 custom-scroll">
+                    @if (opinionesLista.Count == 0)
+                    {
+                        <div class="text-center py-12">
+                            <i class="fas fa-comments text-6xl text-gray-300 mb-4"></i>
+                            <p class="text-gray-500 text-lg">Aún no tienes opiniones</p>
+                            <p class="text-gray-400 mt-2 text-sm">Cuando los clientes opinen sobre tu negocio, aparecerán aquí</p>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="space-y-4">
+                            @foreach (var opinion in opinionesLista)
+                            {
+                                <div class="bg-gray-50 rounded-xl p-4" id="opinion-modal-@opinion.Id">
+                                    <div class="flex items-start gap-3">
+                                        <img src="@(string.IsNullOrEmpty(opinion.FotoUsuario) ? "/images/default-avatar.png" : opinion.FotoUsuario)"
+                                             alt="@opinion.NombreUsuario"
+                                             class="w-10 h-10 rounded-full object-cover flex-shrink-0">
+                                        <div class="flex-1 min-w-0">
+                                            <div class="flex items-center justify-between gap-2">
+                                                <h4 class="font-semibold text-gray-800 text-sm truncate">@opinion.NombreUsuario</h4>
+                                                <span class="text-xs text-gray-400 flex-shrink-0">@opinion.FechaOpinion.ToString("dd/MM/yyyy")</span>
+                                            </div>
+
+                                            @if (opinion.Calificacion > 0)
+                                            {
+                                                <div class="flex items-center gap-0.5 my-1">
+                                                    @for (int i = 1; i <= 5; i++)
+                                                    {
+                                                        <i class="fas fa-star text-xs @(i <= opinion.Calificacion ? "text-yellow-400" : "text-gray-300")"></i>
+                                                    }
+                                                </div>
+                                            }
+
+                                            @if (!string.IsNullOrEmpty(opinion.Comentario))
+                                            {
+                                                <p class="text-gray-600 text-sm mt-1">@opinion.Comentario</p>
+                                            }
+
+                                            <!-- Respuesta del dueño existente -->
+                                            @if (!string.IsNullOrEmpty(opinion.RespuestaDueno))
+                                            {
+                                                <div class="bg-orange-50 rounded-lg p-3 mt-3 border-l-4 border-orange-400">
+                                                    <p class="text-xs font-semibold text-orange-600 mb-1">
+                                                        <i class="fas fa-reply mr-1"></i> Tu respuesta
+                                                    </p>
+                                                    <p class="text-gray-700 text-sm">@opinion.RespuestaDueno</p>
+                                                    @if (opinion.FechaRespuesta.HasValue)
+                                                    {
+                                                        <p class="text-xs text-gray-400 mt-1">@opinion.FechaRespuesta.Value.ToString("dd/MM/yyyy HH:mm")</p>
+                                                    }
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <!-- Formulario para responder -->
+                                                <div class="mt-3" id="form-respuesta-modal-@opinion.Id">
+                                                    <button onclick="mostrarFormularioRespuestaModal(@opinion.Id)"
+                                                            class="text-orange-500 hover:text-orange-600 text-xs font-medium"
+                                                            id="btn-responder-modal-@opinion.Id">
+                                                        <i class="fas fa-reply mr-1"></i> Responder
+                                                    </button>
+                                                    <div id="textarea-respuesta-modal-@opinion.Id" class="hidden mt-2">
+                                                        <textarea id="respuesta-modal-@opinion.Id"
+                                                                  class="w-full border border-gray-200 rounded-lg p-2 text-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-200 outline-none"
+                                                                  rows="2"
+                                                                  placeholder="Escribe tu respuesta..."></textarea>
+                                                        <div class="flex gap-2 mt-2">
+                                                            <button onclick="enviarRespuestaModal(@opinion.Id)"
+                                                                    class="bg-orange-500 text-white px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-orange-600 transition-colors">
+                                                                Enviar
+                                                            </button>
+                                                            <button onclick="cancelarRespuestaModal(@opinion.Id)"
+                                                                    class="bg-gray-200 text-gray-700 px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-gray-300 transition-colors">
+                                                                Cancelar
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            }
+
+                                            <!-- Ver respuestas de usuarios -->
+                                            @if (opinion.CantidadRespuestas > 0)
+                                            {
+                                                <button onclick="cargarRespuestasModal(@opinion.Id)"
+                                                        class="text-blue-500 hover:text-blue-600 text-xs font-medium mt-2"
+                                                        id="btn-ver-respuestas-modal-@opinion.Id">
+                                                    <i class="fas fa-comments mr-1"></i> Ver @opinion.CantidadRespuestas respuesta(s)
+                                                </button>
+                                                <div id="respuestas-modal-@opinion.Id" class="hidden mt-3 pl-4 border-l-2 border-gray-200 space-y-2"></div>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Definir la función en el ámbito global
+        function openMensajeModal() {
+            const mensajeModal = document.getElementById("mensaje-modal");
+            if (mensajeModal) {
+                mensajeModal.classList.remove("hidden");
+                document.body.classList.add("overflow-hidden");
+            }
+        }
+
+        function closeMensajeModal() {
+            const mensajeModal = document.getElementById("mensaje-modal");
+            if (mensajeModal) {
+                mensajeModal.classList.add("hidden");
+                document.body.classList.remove("overflow-hidden");
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const mensajeModal = document.getElementById("mensaje-modal");
+            const closeModalBtn = document.getElementById("close-mensaje-modal");
+            const mensajeForm = document.getElementById("mensaje-form");
+
+            // Manejo del botón de cierre
+            if (closeModalBtn) {
+                closeModalBtn.addEventListener("click", closeMensajeModal);
+            }
+
+            // Cerrar modal al hacer clic fuera de ella
+            window.addEventListener("click", function (e) {
+                if (e.target === mensajeModal) {
+                    closeMensajeModal();
+                }
+            });
+
+            // Manejo del envío del formulario
+            if (mensajeForm) {
+                mensajeForm.addEventListener("submit", async function (e) {
+                    e.preventDefault();
+
+                    const formData = new FormData(mensajeForm);
+
+                    try {
+                        const response = await fetch("/api/contact/send", {
+                            method: "POST",
+                            body: formData
+                        });
+
+                        const result = await response.json();
+
+                        if (result.success) {
+                            alert("Mensaje enviado correctamente.");
+                            mensajeForm.reset();
+                            closeMensajeModal();
+                        } else {
+                            alert("Error al enviar el mensaje.");
+                        }
+                    } catch (error) {
+                        console.error("Error enviando el mensaje:", error);
+                        alert("Hubo un problema al enviar el mensaje.");
+                    }
+                });
+            }
+        });
+
+    </script>
+    <script>
+        // Variables globales
+        let productoSeleccionado = null;
+        let productoIdActual = null;
+        let productoNombreActual = '';
+        let productoImagenActual = '';
+        let detalleAbierto = false;
+
+        // ==========================================
+        // COPIAR CÓDIGO DE REFERIDO
+        // ==========================================
+        function copiarCodigo() {
+            const codigo = document.getElementById('codigoReferido').textContent;
+            navigator.clipboard.writeText(codigo).then(function() {
+                // Mostrar feedback
+                const btn = event.target.closest('button');
+                const originalHTML = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-check"></i> Copiado';
+                btn.classList.remove('bg-orange-500', 'hover:bg-orange-600');
+                btn.classList.add('bg-green-500');
+                setTimeout(function() {
+                    btn.innerHTML = originalHTML;
+                    btn.classList.remove('bg-green-500');
+                    btn.classList.add('bg-orange-500', 'hover:bg-orange-600');
+                }, 2000);
+            }).catch(function(err) {
+                console.error('Error al copiar: ', err);
+            });
+        }
+
+        // ==========================================
+        // LIGHTBOX GALERÍA
+        // ==========================================
+        function abrirLightbox(url) {
+            const lightbox = document.getElementById('lightbox');
+            const img = document.getElementById('lightbox-img');
+            img.src = url;
+            lightbox.classList.remove('hidden');
+            lightbox.classList.add('flex');
+            document.body.classList.add('overflow-hidden');
+        }
+
+        function cerrarLightbox(event) {
+            if (event && event.target !== document.getElementById('lightbox')) return;
+            const lightbox = document.getElementById('lightbox');
+            lightbox.classList.add('hidden');
+            lightbox.classList.remove('flex');
+            document.body.classList.remove('overflow-hidden');
+        }
+
+        function verTodasLasImagenes() {
+            const modal = document.getElementById('galeria-modal');
+            modal.classList.remove('hidden');
+            document.body.classList.add('overflow-hidden');
+        }
+
+        function cerrarGaleriaModal() {
+            const modal = document.getElementById('galeria-modal');
+            modal.classList.add('hidden');
+            document.body.classList.remove('overflow-hidden');
+        }
+
+        // Cerrar galería modal al hacer clic fuera
+        document.getElementById('galeria-modal')?.addEventListener('click', function(e) {
+            if (e.target === this) cerrarGaleriaModal();
+        });
+
+        // ==========================================
+        // MODAL DE DETALLE - Moderno con animaciones fluidas
+        // ==========================================
+        let productoTipoUnidadActual = null;
+        let productoPrecioBaseActual = null;
+
+        async function mostrarDetalle(nombre, precio, imagen, id, unidad, idTipoUnidad) {
+            const modal = document.getElementById('detalleModal');
+
+            // Actualizar contenido básico
+            document.getElementById('detalleNombre').textContent = nombre;
+            document.getElementById('detalleImagen').src = imagen;
+
+            // Actualizar unidad
+            const unidadEl = document.getElementById('detalleUnidad');
+            const unidadSpan = unidadEl.querySelector('span');
+            if (unidad) {
+                unidadSpan.textContent = `Vendido por ${unidad}`;
+                unidadEl.classList.remove('hidden');
+            } else {
+                unidadEl.classList.add('hidden');
+            }
+
+            // Guardar datos actuales
+            productoIdActual = id;
+            productoNombreActual = nombre;
+            productoImagenActual = imagen;
+            productoTipoUnidadActual = idTipoUnidad || null;
+            productoPrecioBaseActual = precio;
+
+            // Mostrar modal con animación
+            modal.classList.remove('hidden');
+            document.body.classList.add('overflow-hidden');
+            // Trigger animation
+            requestAnimationFrame(() => {
+                modal.classList.add('show');
+            });
+            detalleAbierto = true;
+
+            // Cargar marcas del producto (después de mostrar el modal)
+            await cargarMarcasDetalleProducto(id, precio);
+        }
+
+        async function cargarMarcasDetalleProducto(idProducto, precioBase) {
+            const lista = document.getElementById('detalleMarcasLista');
+            const vacio = document.getElementById('detalleMarcasVacio');
+            const precioMinEl = document.getElementById('detallePrecioMinimo');
+            const precioMaxEl = document.getElementById('detallePrecioMaximo');
+            const rangoEl = document.getElementById('detallePrecioRango');
+
+            lista.innerHTML = '<div class="text-center py-4"><div class="w-6 h-6 mx-auto border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></div></div>';
+
+            try {
+                const response = await fetch(`/Productos/ListarMarcasProducto?idLocal=${idLocalActual}&idProducto=${idProducto}`);
+                if (!response.ok) {
+                    // Si hay error en la respuesta, mostrar precio base
+                    vacio.classList.add('hidden');
+                    precioMinEl.textContent = `$${Number(precioBase).toLocaleString('es-CO')}`;
+                    rangoEl?.classList.add('hidden');
+                    renderizarPrecioBase(precioBase);
+                    return;
+                }
+
+                const marcas = await response.json();
+
+                if (marcas.length === 0) {
+                    // Mostrar precio base como presentación editable
+                    vacio.classList.add('hidden');
+                    precioMinEl.textContent = `$${Number(precioBase).toLocaleString('es-CO')}`;
+                    rangoEl?.classList.add('hidden');
+                    renderizarPrecioBase(precioBase);
+                } else {
+                    vacio.classList.add('hidden');
+
+                    // Calcular precios
+                    const precios = marcas.map(m => m.precio);
+                    const precioMin = Math.min(...precios);
+                    const precioMax = Math.max(...precios);
+
+                    precioMinEl.textContent = `$${precioMin.toLocaleString('es-CO')}`;
+
+                    if (precioMin !== precioMax) {
+                        precioMaxEl.textContent = `$${precioMax.toLocaleString('es-CO')}`;
+                        rangoEl.classList.remove('hidden');
+                    } else {
+                        rangoEl.classList.add('hidden');
+                    }
+
+                    // Renderizar lista de presentaciones con botones inline
+                    lista.innerHTML = marcas.map((m, i) => `
+                        <div class="marca-item flex items-center justify-between p-2 bg-white rounded-lg border border-gray-100 hover:border-gray-200 transition-all duration-200 group"
+                             style="animation-delay: ${i * 0.05}s">
+                            <div class="flex items-center gap-2 flex-1 min-w-0">
+                                ${m.logoMarca
+                                    ? `<img src="${m.logoMarca}" class="w-7 h-7 rounded-lg object-cover border border-gray-100" />`
+                                    : `<div class="w-7 h-7 rounded-lg bg-indigo-50 flex items-center justify-center flex-shrink-0">
+                                        <i class="fas fa-tag text-indigo-400 text-[10px]"></i>
+                                       </div>`
+                                }
+                                <div class="min-w-0 flex-1">
+                                    <p class="font-medium text-gray-800 text-xs truncate">${m.nombreMarca}</p>
+                                    <div class="flex items-center gap-1">
+                                        ${m.nombreUnidad ? `<span class="text-[10px] text-indigo-600 bg-indigo-50 px-1 py-0.5 rounded">${m.nombreUnidad}</span>` : ''}
+                                        <span class="w-1 h-1 rounded-full ${m.disponible ? 'bg-green-500' : 'bg-red-400'}"></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-1.5">
+                                <span class="font-bold text-emerald-600 text-sm">$${Number(m.precio).toLocaleString('es-CO')}</span>
+                                <button onclick="event.stopPropagation(); editarPresentacionInline(${m.id}, ${m.idMarca}, ${m.idUnidad || 'null'}, ${m.precio}, ${m.disponible})"
+                                        class="w-6 h-6 rounded bg-orange-50 text-orange-500 hover:bg-orange-100 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all"
+                                        title="Editar">
+                                    <i class="fas fa-pen text-[8px]"></i>
+                                </button>
+                                <button onclick="event.stopPropagation(); eliminarPresentacionDirecto(${m.id})"
+                                        class="w-6 h-6 rounded bg-red-50 text-red-500 hover:bg-red-100 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all"
+                                        title="Eliminar">
+                                    <i class="fas fa-trash text-[8px]"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            } catch (error) {
+                console.error('Error cargando marcas:', error);
+                // En caso de error, mostrar el precio base del producto
+                vacio.classList.add('hidden');
+                precioMinEl.textContent = `$${Number(precioBase).toLocaleString('es-CO')}`;
+                rangoEl?.classList.add('hidden');
+                renderizarPrecioBase(precioBase);
+            }
+        }
+
+        function cerrarModalDetalle() {
+            const modal = document.getElementById('detalleModal');
+            modal.classList.remove('show');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                document.body.classList.remove('overflow-hidden');
+            }, 300);
+            productoIdActual = null;
+            detalleAbierto = false;
+        }
+
+        // Alias para compatibilidad con código existente
+        function ocultarDetalle() {
+            cerrarModalDetalle();
+        }
+
+        // ==========================================
+        // PRESENTACIONES - FUNCIONES UNIFICADAS
+        // ==========================================
+
+        // Toggle del formulario de nueva presentación
+        function toggleFormPresentacion() {
+            const form = document.getElementById('formNuevaPresentacion');
+            const btn = document.getElementById('btnToggleFormPresentacion');
+
+            if (form.classList.contains('hidden')) {
+                form.classList.remove('hidden');
+                btn.innerHTML = '<i class="fas fa-times text-[8px]"></i> Cancelar';
+
+                // Cargar marcas y unidades si no están cargadas
+                if (todasLasMarcas.length === 0) {
+                    cargarTodasLasMarcas();
+                }
+                if (todasLasUnidades.length === 0) {
+                    cargarTodasLasUnidades();
+                }
+                actualizarSelectMarcasUnificado();
+            } else {
+                form.classList.add('hidden');
+                btn.innerHTML = '<i class="fas fa-plus text-[8px]"></i> Nueva';
+                // Limpiar formulario
+                document.getElementById('nueva-marca-select').value = '';
+                document.getElementById('nueva-unidad-select').value = '';
+                document.getElementById('nueva-marca-precio').value = '';
+            }
+        }
+
+        // Actualizar selects de marca y unidad en el modal unificado
+        function actualizarSelectMarcasUnificado() {
+            const selectMarca = document.getElementById('nueva-marca-select');
+            const selectUnidad = document.getElementById('nueva-unidad-select');
+
+            // Marcas
+            selectMarca.innerHTML = '<option value="">Seleccionar</option>';
+            todasLasMarcas.forEach(m => {
+                selectMarca.innerHTML += `<option value="${m.id}">${m.nombre}</option>`;
+            });
+
+            // Unidades - filtrar por tipo de unidad del producto si existe
+            selectUnidad.innerHTML = '<option value="">Sin medida</option>';
+            let unidadesFiltradas = todasLasUnidades;
+
+            // Si el producto tiene un tipo de unidad definido, filtrar
+            if (productoTipoUnidadActual && productoTipoUnidadActual > 0) {
+                unidadesFiltradas = todasLasUnidades.filter(u => u.idTipoUnidad === productoTipoUnidadActual);
+            }
+
+            unidadesFiltradas.forEach(u => {
+                selectUnidad.innerHTML += `<option value="${u.id}">${u.nombre}</option>`;
+            });
+        }
+
+        // Agregar presentación directamente desde el modal unificado
+        async function agregarPresentacionDirecto() {
+            const idProducto = productoIdActual;
+            const idMarca = document.getElementById('nueva-marca-select').value;
+            const idUnidad = document.getElementById('nueva-unidad-select').value;
+            const precio = document.getElementById('nueva-marca-precio').value;
+
+            if (!idMarca) {
+                mostrarNotificacion('Selecciona una marca', 'error');
+                return;
+            }
+            if (!precio || precio <= 0) {
+                mostrarNotificacion('Ingresa un precio válido', 'error');
+                return;
+            }
+
+            try {
+                const formData = new URLSearchParams();
+                formData.append('idLocal', idLocalActual);
+                formData.append('idProducto', idProducto);
+                formData.append('idMarca', idMarca);
+                formData.append('precio', precio);
+                if (idUnidad) {
+                    formData.append('idUnidad', idUnidad);
+                }
+
+                const response = await fetch('/Productos/AgregarMarcaProducto', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    mostrarNotificacion('Presentación agregada', 'success');
+                    // Limpiar y ocultar formulario
+                    toggleFormPresentacion();
+                    // Recargar lista de presentaciones
+                    await cargarMarcasDetalleProducto(idProducto, 0);
+                } else {
+                    mostrarNotificacion(result.mensaje || 'Error al agregar', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarNotificacion('Error al agregar presentación', 'error');
+            }
+        }
+
+        // Eliminar presentación directamente
+        async function eliminarPresentacionDirecto(idPresentacion) {
+            if (!confirm('¿Eliminar esta presentación?')) return;
+
+            try {
+                const response = await fetch('/Productos/EliminarMarcaProducto', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: `id=${idPresentacion}`
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    mostrarNotificacion('Presentación eliminada', 'success');
+                    await cargarMarcasDetalleProducto(productoIdActual, 0);
+                } else {
+                    mostrarNotificacion(result.mensaje || 'Error al eliminar', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarNotificacion('Error al eliminar presentación', 'error');
+            }
+        }
+
+        // Editar presentación inline - abre el modal de edición existente
+        function editarPresentacionInline(id, idMarca, idUnidad, precio, disponible) {
+            editarPresentacionModal(id, idMarca, idUnidad, precio, disponible);
+        }
+
+        // ==========================================
+        // EDITAR PRECIO BASE (productos_local)
+        // ==========================================
+
+        // Renderiza el item del precio base (vista normal)
+        function renderizarPrecioBase(precio) {
+            const lista = document.getElementById('detalleMarcasLista');
+            lista.innerHTML = `
+                <div id="precio-base-item" class="flex items-center justify-between p-2 bg-white rounded-lg border border-gray-100 hover:border-gray-200 transition-all">
+                    <div class="flex items-center gap-2 flex-1 min-w-0">
+                        <div class="w-7 h-7 rounded-lg bg-emerald-50 flex items-center justify-center flex-shrink-0">
+                            <i class="fas fa-box text-emerald-500 text-[10px]"></i>
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <p class="font-medium text-gray-800 text-xs">Precio base</p>
+                            <span class="text-[10px] text-gray-500">Sin marca específica</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <span id="precio-base-valor" class="font-bold text-emerald-600 text-sm">$${Number(precio).toLocaleString('es-CO')}</span>
+                        <button type="button" id="btn-editar-precio-base"
+                                class="w-6 h-6 rounded bg-orange-50 text-orange-500 hover:bg-orange-100 flex items-center justify-center transition-all"
+                                title="Editar precio">
+                            <i class="fas fa-pen text-[8px]"></i>
+                        </button>
+                    </div>
+                </div>
+                <p class="text-[10px] text-gray-400 text-center mt-2">Agrega presentaciones con marca y medida para más opciones</p>
+            `;
+
+            // Agregar evento al botón después de renderizar
+            document.getElementById('btn-editar-precio-base').addEventListener('click', function(e) {
+                e.stopPropagation();
+                editarPrecioBase(precio);
+            });
+        }
+
+        function editarPrecioBase(precioActual) {
+            const lista = document.getElementById('detalleMarcasLista');
+            if (!lista) return;
+
+            // Reemplazar el contenido con un formulario inline
+            lista.innerHTML = `
+                <div id="precio-base-item" class="flex items-center justify-between p-2 bg-white rounded-lg border border-indigo-200 transition-all">
+                    <div class="flex items-center gap-2 flex-1 min-w-0">
+                        <div class="w-7 h-7 rounded-lg bg-emerald-50 flex items-center justify-center flex-shrink-0">
+                            <i class="fas fa-box text-emerald-500 text-[10px]"></i>
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <p class="font-medium text-gray-800 text-xs">Precio base</p>
+                            <span class="text-[10px] text-gray-500">Sin marca específica</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <div class="relative">
+                            <span class="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs">$</span>
+                            <input type="number" id="input-precio-base" value="${precioActual}" min="0" step="100"
+                                   class="w-24 pl-5 pr-2 py-1 rounded-lg border border-indigo-300 text-xs focus:border-indigo-500 outline-none text-right font-bold text-emerald-600" />
+                        </div>
+                        <button type="button" id="btn-guardar-precio"
+                                class="w-6 h-6 rounded bg-emerald-500 text-white hover:bg-emerald-600 flex items-center justify-center transition-all"
+                                title="Guardar">
+                            <i class="fas fa-check text-[8px]"></i>
+                        </button>
+                        <button type="button" id="btn-cancelar-precio"
+                                class="w-6 h-6 rounded bg-gray-200 text-gray-600 hover:bg-gray-300 flex items-center justify-center transition-all"
+                                title="Cancelar">
+                            <i class="fas fa-times text-[8px]"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            // Agregar eventos
+            document.getElementById('btn-guardar-precio').addEventListener('click', guardarPrecioBase);
+            document.getElementById('btn-cancelar-precio').addEventListener('click', function() {
+                renderizarPrecioBase(precioActual);
+            });
+
+            // Enfocar el input
+            const input = document.getElementById('input-precio-base');
+            input.focus();
+            input.select();
+
+            // Guardar con Enter
+            input.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    guardarPrecioBase();
+                } else if (e.key === 'Escape') {
+                    renderizarPrecioBase(precioActual);
+                }
+            });
+        }
+
+        async function guardarPrecioBase() {
+            const input = document.getElementById('input-precio-base');
+            const nuevoPrecio = parseInt(input.value);
+
+            if (!nuevoPrecio || nuevoPrecio <= 0) {
+                mostrarNotificacion('Ingresa un precio válido', 'error');
+                return;
+            }
+
+            try {
+                const formData = new URLSearchParams();
+                formData.append('idProducto', productoIdActual);
+                formData.append('precio', nuevoPrecio);
+
+                const response = await fetch('/Productos/ActualizarPrecioProductoLocal', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    mostrarNotificacion('Precio actualizado', 'success');
+                    productoPrecioBaseActual = nuevoPrecio;
+
+                    // Actualizar el precio en el header del modal
+                    document.getElementById('detallePrecioMinimo').textContent = `$${nuevoPrecio.toLocaleString('es-CO')}`;
+
+                    // Actualizar la tarjeta del producto en la grilla
+                    const card = document.querySelector(`[onclick*="mostrarDetalle"][onclick*="${productoIdActual}"]`);
+                    if (card) {
+                        const precioEl = card.querySelector('.text-orange-500');
+                        if (precioEl) {
+                            precioEl.textContent = `$${nuevoPrecio.toLocaleString('es-CO')}`;
+                        }
+                    }
+
+                    // Recargar la vista del precio base
+                    renderizarPrecioBase(nuevoPrecio);
+                } else {
+                    mostrarNotificacion(result.mensaje || 'Error al actualizar', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarNotificacion('Error al actualizar precio', 'error');
+            }
+        }
+
+        // ==========================================
+        // MODAL DE EDICIÓN
+        // ==========================================
+        function abrirModalEditar(id, nombre, precio, imagen) {
+            const modal = document.getElementById('editar-modal');
+
+            document.getElementById('editar-id').value = id;
+            document.getElementById('editar-nombre').value = nombre;
+            document.getElementById('editar-precio').value = precio;
+            document.getElementById('editar-imagen-preview').src = imagen;
+
+            modal.classList.remove('hidden');
+            document.body.classList.add('overflow-hidden');
+        }
+
+        function cerrarModalEditar() {
+            const modal = document.getElementById('editar-modal');
+            modal.classList.add('hidden');
+            document.body.classList.remove('overflow-hidden');
+            document.getElementById('editar-form').reset();
+        }
+
+        // Manejar envío del formulario de edición
+        document.getElementById('editar-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const id = document.getElementById('editar-id').value;
+            const formData = new FormData();
+            formData.append('Id', id);
+            formData.append('Nombre', document.getElementById('editar-nombre').value);
+            formData.append('Precio', document.getElementById('editar-precio').value);
+
+            const imagenInput = document.getElementById('editar-imagen');
+            if (imagenInput.files.length > 0) {
+                formData.append('Imagen', imagenInput.files[0]);
+            }
+
+            try {
+                const response = await fetch('/Productos/EditarProducto', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.mensaje.includes('exitosamente') || result.mensaje.includes('actualizado')) {
+                    // Actualizar la card en el DOM
+                    const card = document.getElementById(`producto-${id}`);
+                    if (card) {
+                        card.querySelector('h3').textContent = document.getElementById('editar-nombre').value;
+                        card.querySelector('p.text-orange-500').textContent = `$${document.getElementById('editar-precio').value}`;
+
+                        // Si hay nueva imagen, actualizar
+                        if (imagenInput.files.length > 0) {
+                            const reader = new FileReader();
+                            reader.onload = function(e) {
+                                card.querySelector('.producto-image').src = e.target.result;
+                            };
+                            reader.readAsDataURL(imagenInput.files[0]);
+                        }
+                    }
+
+                    cerrarModalEditar();
+                    mostrarNotificacion('Producto actualizado correctamente', 'success');
+                } else {
+                    mostrarNotificacion(result.mensaje || 'Error al actualizar', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarNotificacion('Error al actualizar el producto', 'error');
+            }
+        });
+
+        // ==========================================
+        // MODAL DE ELIMINACIÓN
+        // ==========================================
+        function confirmarEliminar(id, nombre) {
+            const modal = document.getElementById('eliminar-modal');
+            document.getElementById('eliminar-id').value = id;
+            document.getElementById('eliminar-nombre-producto').textContent = `"${nombre}" será eliminado permanentemente.`;
+
+            modal.classList.remove('hidden');
+            document.body.classList.add('overflow-hidden');
+        }
+
+        function cerrarModalEliminar() {
+            const modal = document.getElementById('eliminar-modal');
+            modal.classList.add('hidden');
+            document.body.classList.remove('overflow-hidden');
+        }
+
+        async function ejecutarEliminar() {
+            const id = document.getElementById('eliminar-id').value;
+
+            try {
+                const response = await fetch('/Productos/EliminarProducto', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `Id=${id}`
+                });
+
+                const result = await response.json();
+
+                if (result.mensaje.includes('eliminado')) {
+                    // Remover la card del DOM con animación
+                    const card = document.getElementById(`producto-${id}`);
+                    if (card) {
+                        card.style.transition = 'all 0.3s ease';
+                        card.style.transform = 'scale(0.8)';
+                        card.style.opacity = '0';
+                        setTimeout(() => card.remove(), 300);
+                    }
+
+                    // Cerrar panel de detalle si estaba abierto
+                    if (productoIdActual == id) {
+                        ocultarDetalle();
+                    }
+
+                    cerrarModalEliminar();
+                    mostrarNotificacion('Producto eliminado correctamente', 'success');
+                } else {
+                    mostrarNotificacion(result.mensaje || 'Error al eliminar', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarNotificacion('Error al eliminar el producto', 'error');
+            }
+        }
+
+        // ==========================================
+        // NOTIFICACIONES
+        // ==========================================
+        function mostrarNotificacion(mensaje, tipo) {
+            // Crear elemento de notificación
+            const notif = document.createElement('div');
+            notif.className = `fixed top-4 right-4 z-50 px-6 py-4 rounded-xl shadow-lg text-white font-medium transform transition-all duration-300 translate-x-full`;
+
+            if (tipo === 'success') {
+                notif.classList.add('bg-green-500');
+            } else {
+                notif.classList.add('bg-red-500');
+            }
+
+            notif.innerHTML = `
+                <div class="flex items-center gap-3">
+                    <i class="fas ${tipo === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i>
+                    <span>${mensaje}</span>
+                </div>
+            `;
+
+            document.body.appendChild(notif);
+
+            // Animar entrada
+            setTimeout(() => {
+                notif.classList.remove('translate-x-full');
+            }, 10);
+
+            // Remover después de 3 segundos
+            setTimeout(() => {
+                notif.classList.add('translate-x-full');
+                setTimeout(() => notif.remove(), 300);
+            }, 3000);
+        }
+
+        // ==========================================
+        // CERRAR MODALES AL HACER CLIC FUERA
+        // ==========================================
+        document.getElementById('detalleModal').addEventListener('click', function(e) {
+            // Cerrar si se hace clic en el backdrop (fondo) o en el contenedor
+            if (e.target === this || e.target.classList.contains('modal-bg') || e.target.closest('.modal-content') === null) {
+                cerrarModalDetalle();
+            }
+        });
+
+        document.getElementById('editar-modal').addEventListener('click', function(e) {
+            if (e.target === this) cerrarModalEditar();
+        });
+
+        document.getElementById('eliminar-modal').addEventListener('click', function(e) {
+            if (e.target === this) cerrarModalEliminar();
+        });
+
+        // Preview de imagen al seleccionar archivo
+        document.getElementById('editar-imagen').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('editar-imagen-preview').src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Tecla Escape para cerrar modales
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                cerrarModalDetalle();
+                cerrarModalEditar();
+                cerrarModalEliminar();
+                cerrarEditarPresentacion();
+                cerrarLightbox();
+                cerrarGaleriaModal();
+                cerrarModalOpiniones();
+            }
+        });
+
+        // ==========================================
+        // MODAL DE OPINIONES
+        // ==========================================
+        function abrirModalOpiniones() {
+            const modal = document.getElementById('opiniones-modal');
+            modal.classList.remove('hidden');
+            document.body.classList.add('overflow-hidden');
+            requestAnimationFrame(() => {
+                modal.classList.add('show');
+            });
+        }
+
+        function cerrarModalOpiniones() {
+            const modal = document.getElementById('opiniones-modal');
+            if (!modal) return;
+            modal.classList.remove('show');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                document.body.classList.remove('overflow-hidden');
+            }, 300);
+        }
+
+        function mostrarFormularioRespuestaModal(idOpinion) {
+            document.getElementById(`btn-responder-modal-${idOpinion}`).classList.add('hidden');
+            document.getElementById(`textarea-respuesta-modal-${idOpinion}`).classList.remove('hidden');
+        }
+
+        function cancelarRespuestaModal(idOpinion) {
+            document.getElementById(`btn-responder-modal-${idOpinion}`).classList.remove('hidden');
+            document.getElementById(`textarea-respuesta-modal-${idOpinion}`).classList.add('hidden');
+            document.getElementById(`respuesta-modal-${idOpinion}`).value = '';
+        }
+
+        async function enviarRespuestaModal(idOpinion) {
+            const respuesta = document.getElementById(`respuesta-modal-${idOpinion}`).value.trim();
+            if (!respuesta) {
+                mostrarNotificacion('Escribe una respuesta', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/opiniones/${idOpinion}/responder-dueno`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ respuesta })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Actualizar la UI sin recargar
+                    const formContainer = document.getElementById(`form-respuesta-modal-${idOpinion}`);
+                    formContainer.innerHTML = `
+                        <div class="bg-orange-50 rounded-lg p-3 mt-3 border-l-4 border-orange-400">
+                            <p class="text-xs font-semibold text-orange-600 mb-1">
+                                <i class="fas fa-reply mr-1"></i> Tu respuesta
+                            </p>
+                            <p class="text-gray-700 text-sm">${respuesta}</p>
+                            <p class="text-xs text-gray-400 mt-1">Ahora</p>
+                        </div>
+                    `;
+                    mostrarNotificacion('Respuesta enviada correctamente', 'success');
+                } else {
+                    mostrarNotificacion(data.mensaje || 'Error al enviar respuesta', 'error');
+                }
+            } catch (error) {
+                mostrarNotificacion('Error de conexión', 'error');
+            }
+        }
+
+        async function cargarRespuestasModal(idOpinion) {
+            const container = document.getElementById(`respuestas-modal-${idOpinion}`);
+            const btn = document.getElementById(`btn-ver-respuestas-modal-${idOpinion}`);
+
+            if (!container.classList.contains('hidden')) {
+                container.classList.add('hidden');
+                btn.innerHTML = btn.innerHTML.replace('Ocultar', 'Ver');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/opiniones/${idOpinion}/respuestas`);
+                const respuestas = await response.json();
+
+                container.innerHTML = respuestas.map(r => `
+                    <div class="bg-white rounded-lg p-2 shadow-sm">
+                        <div class="flex items-center gap-2 mb-1">
+                            <img src="${r.fotoUsuario || '/images/default-avatar.png'}"
+                                 class="w-6 h-6 rounded-full object-cover">
+                            <span class="font-medium text-xs text-gray-800">${r.nombreUsuario}</span>
+                            <span class="text-[10px] text-gray-400">${new Date(r.fechaOpinion).toLocaleDateString()}</span>
+                        </div>
+                        <p class="text-xs text-gray-600">${r.comentario}</p>
+                    </div>
+                `).join('');
+
+                container.classList.remove('hidden');
+                btn.innerHTML = btn.innerHTML.replace('Ver', 'Ocultar');
+            } catch (error) {
+                mostrarNotificacion('Error al cargar respuestas', 'error');
+            }
+        }
+
+        // ==========================================
+        // MODAL DE GESTIÓN DE MARCAS
+        // ==========================================
+        const idLocalActual = @(Model?.Negocio?.Id ?? 0);
+        let todasLasMarcas = [];
+
+        async function cargarTodasLasMarcas() {
+            try {
+                const response = await fetch('/Productos/ListarTodasLasMarcas');
+                if (response.ok) {
+                    todasLasMarcas = await response.json();
+                    actualizarSelectMarcas();
+                }
+            } catch (error) {
+                console.error('Error cargando marcas:', error);
+            }
+        }
+
+        // Variables para unidades
+        let todasLasUnidades = [];
+
+        function actualizarSelectMarcas(marcasExistentes = []) {
+            const select = document.getElementById('nueva-marca-select');
+            select.innerHTML = '<option value="">Seleccionar</option>';
+
+            todasLasMarcas.forEach(marca => {
+                select.innerHTML += `<option value="${marca.id}">${marca.nombre}</option>`;
+            });
+        }
+
+        async function cargarTodasLasUnidades() {
+            try {
+                const response = await fetch('/Productos/ObtenerUnidades');
+                if (response.ok) {
+                    todasLasUnidades = await response.json();
+                    actualizarSelectUnidades();
+                }
+            } catch (error) {
+                console.error('Error cargando unidades:', error);
+            }
+        }
+
+        function actualizarSelectUnidades() {
+            const select = document.getElementById('nueva-unidad-select');
+            select.innerHTML = '<option value="">Sin medida</option>';
+
+            // Filtrar unidades por el tipo de unidad del producto actual
+            const unidadesFiltradas = productoTipoUnidadActual
+                ? todasLasUnidades.filter(u => u.idTipoUnidad === productoTipoUnidadActual)
+                : todasLasUnidades;
+
+            unidadesFiltradas.forEach(unidad => {
+                select.innerHTML += `<option value="${unidad.id}">${unidad.nombre}</option>`;
+            });
+        }
+
+        // Variables para edición de presentación
+        let presentacionEditandoId = null;
+
+        // Abrir modal de edición de presentación
+        function editarPresentacionModal(id, idMarca, idUnidad, precio, disponible) {
+            presentacionEditandoId = id;
+
+            // Crear modal de edición inline si no existe
+            let editModal = document.getElementById('editar-presentacion-modal');
+            if (!editModal) {
+                editModal = document.createElement('div');
+                editModal.id = 'editar-presentacion-modal';
+                editModal.className = 'fixed inset-0 z-[60] hidden bg-black/30';
+                editModal.onclick = function(e) { if (e.target === editModal) cerrarEditarPresentacionModal(); };
+                editModal.innerHTML = `
+                    <div class="flex min-h-screen items-center justify-center p-4">
+                        <div class="modal-content w-full max-w-sm rounded-2xl bg-white shadow-xl overflow-hidden">
+                            <div class="bg-gradient-to-r from-orange-500 to-amber-500 px-6 py-4">
+                                <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                                    <i class="fas fa-edit"></i>
+                                    Editar Presentación
+                                </h2>
+                            </div>
+                            <div class="p-6">
+                                <input type="hidden" id="edit-presentacion-id" />
+                                <div class="space-y-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Medida</label>
+                                        <select id="edit-presentacion-unidad" class="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-200 outline-none transition-all">
+                                            <option value="">Sin medida</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Precio</label>
+                                        <div class="relative">
+                                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">$</span>
+                                            <input type="number" id="edit-presentacion-precio" min="0" step="100"
+                                                   class="w-full pl-7 pr-3 py-2 rounded-xl border border-gray-200 text-sm focus:border-orange-500 focus:ring-2 focus:ring-orange-200 outline-none transition-all" />
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <input type="checkbox" id="edit-presentacion-disponible" class="w-4 h-4 rounded text-orange-500 focus:ring-orange-500" />
+                                        <label for="edit-presentacion-disponible" class="text-sm text-gray-700">Disponible</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bg-gray-50 px-6 py-4 flex gap-3">
+                                <button onclick="cerrarEditarPresentacion()" class="flex-1 py-2.5 rounded-xl border border-gray-200 text-gray-700 font-medium text-sm hover:bg-gray-100 transition-all">
+                                    Cancelar
+                                </button>
+                                <button onclick="guardarPresentacion()" class="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 text-white font-medium text-sm hover:shadow-lg transition-all">
+                                    Guardar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(editModal);
+
+                // Cerrar al clic fuera
+                editModal.addEventListener('click', function(e) {
+                    if (e.target === this || e.target.classList.contains('modal-bg')) {
+                        cerrarEditarPresentacion();
+                    }
+                });
+            }
+
+            // Llenar select de unidades
+            const selectUnidad = document.getElementById('edit-presentacion-unidad');
+            selectUnidad.innerHTML = '<option value="">Sin medida</option>';
+            todasLasUnidades.forEach(u => {
+                selectUnidad.innerHTML += `<option value="${u.id}" ${u.id == idUnidad ? 'selected' : ''}>${u.nombre}</option>`;
+            });
+
+            // Llenar valores
+            document.getElementById('edit-presentacion-id').value = id;
+            document.getElementById('edit-presentacion-precio').value = precio;
+            document.getElementById('edit-presentacion-disponible').checked = disponible;
+
+            // Mostrar modal
+            editModal.classList.remove('hidden');
+            requestAnimationFrame(() => {
+                editModal.classList.add('show');
+            });
+        }
+
+        function cerrarEditarPresentacion() {
+            const modal = document.getElementById('editar-presentacion-modal');
+            if (modal) {
+                modal.classList.remove('show');
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                }, 300);
+            }
+            presentacionEditandoId = null;
+        }
+
+        async function guardarPresentacion() {
+            const id = document.getElementById('edit-presentacion-id').value;
+            const idUnidad = document.getElementById('edit-presentacion-unidad').value;
+            const precio = document.getElementById('edit-presentacion-precio').value;
+            const disponible = document.getElementById('edit-presentacion-disponible').checked;
+
+            if (!precio || precio <= 0) {
+                mostrarNotificacion('Ingresa un precio válido', 'error');
+                return;
+            }
+
+            try {
+                const formData = new URLSearchParams();
+                formData.append('id', id);
+                formData.append('precio', precio);
+                formData.append('stock', 0);
+                formData.append('disponible', disponible);
+                if (idUnidad) {
+                    formData.append('idUnidad', idUnidad);
+                }
+
+                const response = await fetch('/Productos/ActualizarMarcaProducto', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    mostrarNotificacion('Presentación actualizada', 'success');
+                    cerrarEditarPresentacion();
+                    // Recargar presentaciones en el modal unificado
+                    if (productoIdActual) {
+                        await cargarMarcasDetalleProducto(productoIdActual, 0);
+                    }
+                } else {
+                    mostrarNotificacion(result.mensaje || 'Error al actualizar', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarNotificacion('Error al actualizar', 'error');
+            }
+        }
+
+
+        // Cargar marcas y unidades disponibles al iniciar
+        cargarTodasLasMarcas();
+        cargarTodasLasUnidades();
+    </script>
+
+
+</body>
+
+</html>

@@ -10,12 +10,12 @@ namespace BusinessLogic
     public class ManejadorOfertasFlash
     {
         private Connection conexion;
-        private readonly ManejadorMongo _manejadorMongo;
+        private readonly ManejadorImagenes _manejadorMongo;
         private readonly EmailService _emailService;
 
         public ManejadorOfertasFlash()
         {
-            _manejadorMongo = new ManejadorMongo();
+            _manejadorMongo = new ManejadorImagenes();
             conexion = new Connection();
             _emailService = new EmailService();
         }
@@ -72,15 +72,15 @@ namespace BusinessLogic
                     ofertas.Add(new OfertaFlash
                     {
                         Id = Convert.ToInt32(row["ID_OFERTAFLASH"]),
-                        Titulo = row["TITULO_OFERTA_FLASH"].ToString(),
-                        Descripcion = row["DESCRIPCION_OFERTA_FLASH"].ToString(),
+                        Titulo = row["TITULO_OFERTA_FLASH"]?.ToString() ?? "",
+                        Descripcion = row["DESCRIPCION_OFERTA_FLASH"]?.ToString() ?? "",
                         Estado = Convert.ToInt32(row["ESTADO_OFERTA_FLASH"]),
                         TiempoOferta = Convert.ToDateTime(row["TIEMPO_OFERTA_FLASH"]),
-                        NombreLocal = row["NOMBRE_LOCAL"].ToString(),
-                        FotoLocal = row["FOTOS_LOCAL"].ToString(),
-                        ProductoOfertaFlash = row["PRODUCTO_OFERTA_FLASH"].ToString(),
-                        ImagenProductoOfertaFlash = row["IMAGEN_PRODUCTO_OFERTA_FLASH"].ToString(),
-                        ImagenLocal = _manejadorMongo.ObtenerImagen(row["FOTOS_LOCAL"].ToString()),
+                        NombreLocal = row["NOMBRE_LOCAL"]?.ToString() ?? "",
+                        FotoLocal = row["FOTOS_LOCAL"]?.ToString() ?? "",
+                        ProductoOfertaFlash = row["PRODUCTO_OFERTA_FLASH"]?.ToString() ?? "",
+                        ImagenProductoOfertaFlash = row["IMAGEN_PRODUCTO_OFERTA_FLASH"]?.ToString() ?? "",
+                        ImagenLocal = _manejadorMongo.ObtenerImagen(row["FOTOS_LOCAL"]?.ToString()),
                         IdLocal = Convert.ToInt32(row["PK_ID_LOCAL"])
                     });
                 }
@@ -190,8 +190,8 @@ namespace BusinessLogic
                 {
                     productos.Add((
                         Convert.ToInt32(row["PK_ID_PRODUCTO"]),
-                        row["NOMBRE_PRODUCTO"].ToString(),
-                        row["IMAGEN_URL"].ToString()
+                        row["NOMBRE_PRODUCTO"]?.ToString() ?? "",
+                        row["IMAGEN_URL"]?.ToString() ?? ""
                     ));
                 }
             }

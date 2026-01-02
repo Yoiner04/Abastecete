@@ -1,424 +1,771 @@
-﻿@model List<BusinessLogic.Models.Negocio>
+@model List<BusinessLogic.Models.Negocio>
+@{
+    var categoria = ViewBag.categoria as BusinessLogic.Models.Categoria;
+    var categorias = ViewBag.categorias as List<BusinessLogic.Models.Categoria> ?? new List<BusinessLogic.Models.Categoria>();
+    var membresias = ViewBag.membresias as List<BusinessLogic.Models.Membresia> ?? new List<BusinessLogic.Models.Membresia>();
+    var negociosCount = Model?.Count ?? 0;
 
-<!DOCTYPE html>
-<html lang="es">
+    ViewData["Title"] = (categoria?.Nombre ?? "Proveedores") + " - Abastecete";
+    ViewData["Description"] = "Descubre proveedores locales de " + (categoria?.Nombre ?? "todas las categorías") + " cerca de ti. Encuentra los mejores negocios en tu zona y consulta sus productos disponibles.";
+}
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Proveedores Abastecete</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script
-        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAPudyk3G3YG7GOEpId4xMK_WFIEenOSp8&libraries=places"></script>
-</head>
-
-<div id="loader" class="fixed inset-0 z-50 flex items-center justify-center bg-white">
-    <div class="flex flex-col items-center">
-        <div class="border-4 border-t-transparent h-12 w-12 animate-spin rounded-full border-green-500"></div>
-        <p class="mt-3 text-lg font-semibold text-gray-700">Cargando...</p>
-    </div>
-</div>
-
-<div id="location-error"
-    class="fixed top-20 left-1/2 z-50 hidden -translate-x-1/2 rounded-lg bg-red-100 px-6 py-4 text-center text-red-700 shadow-lg">
-    ⚠️ No se pudo obtener tu ubicación. Se mostrarán resultados generales.
-</div>
-
-
-<body class="bg-[#F4F1E9] text-gray-800">
-    <section class="flex w-full items-center justify-center overflow-hidden rounded-lg bg-gray-200">
-        @if (ViewBag.categoria.BannerImagen != null)
-        {
-            <img src="@ViewBag.categoria.BannerImagen.Base64" alt="Banner Proveedores"
-                class="max-h-64 w-full object-cover" />
+<style>
+        /* Animaciones */
+        @@keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-        else
-        {
-            <div class="flex h-64 w-full items-center justify-center bg-gray-300 text-gray-500">
-                Sin imagen
-            </div>
+        @@keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        .animate-fadeInUp {
+            animation: fadeInUp 0.5s ease-out forwards;
+            opacity: 0;
+        }
+        .animation-delay-100 { animation-delay: 0.1s; }
+        .animation-delay-200 { animation-delay: 0.2s; }
+
+        /* Cards de negocios */
+        .negocio-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .negocio-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+        }
+        .negocio-card:hover .negocio-image {
+            transform: scale(1.05);
+        }
+        .negocio-card:hover .negocio-overlay {
+            opacity: 1;
+        }
+        .negocio-image {
+            transition: transform 0.4s ease;
+        }
+        .negocio-overlay {
+            opacity: 0;
+            transition: opacity 0.3s ease;
         }
 
-    </section>
+        /* Range slider */
+        .range-slider {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 6px;
+            border-radius: 5px;
+            background: #e5e7eb;
+            outline: none;
+        }
+        .range-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #23916A 0%, #1d7a59 100%);
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(35, 145, 106, 0.4);
+            transition: transform 0.2s ease;
+        }
+        .range-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.15);
+        }
+        .range-slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #23916A 0%, #1d7a59 100%);
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 8px rgba(35, 145, 106, 0.4);
+        }
 
-    <div class="bg-white p-4 shadow-md">
-        <div class="flex flex-col gap-4 sm:flex-row sm:flex-wrap md:items-center md:justify-start">
-            <!-- Categorías -->
-            <div class="flex flex-col sm:flex-row sm:items-center gap-2">
-                <h3 class="text-lg font-semibold text-orange-600 whitespace-nowrap">Categorías</h3>
-                <select id="Categorias"
-                    class="rounded-lg border border-gray-300 bg-gray-50 p-2 text-sm text-gray-900 focus:ring-blue-500 focus:border-blue-500 w-full sm:w-auto">
-                    @foreach (var categoria in ViewBag.categorias)
-                    {
-                        if (categoria.Id == ViewBag.categoria.Id)
-                        {
-                            <option value="@categoria.Id" selected>@categoria.Nombre</option>
-                        }
-                        else
-                        {
-                            <option value="@categoria.Id">@categoria.Nombre</option>
-                        }
-                    }
-                </select>
+        /* Badge premium */
+        .badge-premium {
+            background: linear-gradient(90deg, #F66623, #fb923c, #F66623);
+            background-size: 200% auto;
+            animation: shimmer 3s linear infinite;
+        }
+
+    /* Scroll suave */
+    html { scroll-behavior: smooth; }
+</style>
+
+<!-- Skeleton Loader -->
+<div id="skeleton-consultar" class="animate-pulse">
+    <!-- Skeleton Banner -->
+    <div class="relative h-48 sm:h-56 md:h-64 bg-gray-300 -mt-4"></div>
+
+    <!-- Skeleton Barra de filtros -->
+    <div class="bg-gray-100 border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 py-3">
+            <div class="flex flex-col lg:flex-row lg:items-center gap-4">
+                <div class="h-10 bg-gray-200 rounded-full flex-1 max-w-md"></div>
+                <div class="flex flex-wrap items-center gap-3">
+                    <div class="h-10 bg-gray-200 rounded-lg w-40"></div>
+                    <div class="h-10 bg-gray-200 rounded-lg w-32"></div>
+                    <div class="h-10 bg-gray-200 rounded-lg w-48"></div>
+                </div>
             </div>
-
-            <!-- Tipo Proveedor -->
-            <div class="flex flex-col sm:flex-row sm:items-center gap-2">
-                <h3 class="text-lg font-semibold text-orange-600 whitespace-nowrap">Tipo Proveedor</h3>
-                <select id="TipoProveedor"
-                    class="rounded-lg border border-gray-300 bg-gray-50 p-2 text-sm text-gray-900 focus:ring-blue-500 focus:border-blue-500 w-full sm:w-auto">
-                    <option selected>Selecciona un Tipo</option>
-                    @foreach (var membresia in ViewBag.membresias)
-                    {
-                        if (membresia.Nombre == ViewBag.membresia)
-                        {
-                            <option value="@membresia.Nombre" selected>@membresia.Nombre</option>
-                        }
-                        else
-                        {
-                            <option value="@membresia.Nombre">@membresia.Nombre</option>
-                        }
-                    }
-                </select>
-            </div>
-
-            <!-- Distancia -->
-            <div class="flex flex-col sm:flex-row sm:items-center gap-2">
-                <h3 class="text-lg font-semibold text-orange-600 whitespace-nowrap">Distancia</h3>
-                <input id="labels-range-input" type="range" value="100" min="100" max="1600" step="100"
-                    class="h-2 w-full sm:w-32 cursor-pointer appearance-none rounded-lg bg-gray-300">
-                <span id="range-value" class="text-sm text-gray-700">100 m</span>
-            </div>
-
         </div>
     </div>
 
-    <div class="mt-4 flex flex-wrap gap-6 px-6 md:flex-nowrap">
-        <main class="w-full space-y-6 md:w-1/2" id="contenido">
-            <h2 class="text-center text-2xl font-bold text-green-600">Todos los proveedores</h2>
-
-            <div id="providers-container" class="grid grid-cols-1 gap-6 sm:grid-cols-3">
-                @foreach (var negocio in Model)
-                {
-                    <div class="flex h-full flex-col justify-between rounded-lg bg-white p-4 text-center shadow-md">
-                        <div>
-                            @if (negocio.imagen != null)
-                            {
-                                <div class="h-32 w-full overflow-hidden rounded-lg">
-                                    <img src="@negocio.imagen.Base64" class="h-full w-full object-cover">
-                                </div>
-                            }
-                            <p class="mt-3 text-lg font-bold line-clamp-2">@negocio.Nombre</p>
+    <!-- Skeleton Contenido principal -->
+    <div class="max-w-7xl mx-auto px-4 py-6">
+        <div class="flex flex-col lg:flex-row gap-6">
+            <!-- Skeleton Lista de negocios -->
+            <section class="w-full lg:w-1/2 xl:w-3/5">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <!-- Skeleton Card 1 -->
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                        <div class="h-36 bg-gray-200"></div>
+                        <div class="p-4 space-y-3">
+                            <div class="h-4 bg-gray-200 rounded w-3/4"></div>
+                            <div class="h-3 bg-gray-200 rounded w-full"></div>
+                            <div class="flex items-center justify-between">
+                                <div class="h-3 bg-gray-200 rounded w-24"></div>
+                                <div class="h-8 bg-gray-200 rounded-lg w-20"></div>
+                            </div>
                         </div>
-                        <a href="@Url.Action("ConsultarProductos", "Negocios", new { idLocal = @negocio.Id })"
-                            class="mt-4 block rounded-lg bg-green-600 px-4 py-2 text-white hover:bg-green-700">
-                            Ver
-                        </a>
                     </div>
+                    <!-- Skeleton Card 2 -->
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                        <div class="h-36 bg-gray-200"></div>
+                        <div class="p-4 space-y-3">
+                            <div class="h-4 bg-gray-200 rounded w-2/3"></div>
+                            <div class="h-3 bg-gray-200 rounded w-full"></div>
+                            <div class="flex items-center justify-between">
+                                <div class="h-3 bg-gray-200 rounded w-24"></div>
+                                <div class="h-8 bg-gray-200 rounded-lg w-20"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Skeleton Card 3 -->
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                        <div class="h-36 bg-gray-200"></div>
+                        <div class="p-4 space-y-3">
+                            <div class="h-4 bg-gray-200 rounded w-5/6"></div>
+                            <div class="h-3 bg-gray-200 rounded w-full"></div>
+                            <div class="flex items-center justify-between">
+                                <div class="h-3 bg-gray-200 rounded w-24"></div>
+                                <div class="h-8 bg-gray-200 rounded-lg w-20"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Skeleton Card 4 -->
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                        <div class="h-36 bg-gray-200"></div>
+                        <div class="p-4 space-y-3">
+                            <div class="h-4 bg-gray-200 rounded w-3/5"></div>
+                            <div class="h-3 bg-gray-200 rounded w-full"></div>
+                            <div class="flex items-center justify-between">
+                                <div class="h-3 bg-gray-200 rounded w-24"></div>
+                                <div class="h-8 bg-gray-200 rounded-lg w-20"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Skeleton Mapa -->
+            <aside class="w-full lg:w-1/2 xl:w-2/5">
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                    <div class="h-12 bg-gray-100 border-b border-gray-200"></div>
+                    <div class="h-[400px] lg:h-[500px] bg-gray-200"></div>
+                </div>
+            </aside>
+        </div>
+    </div>
+</div>
+
+<!-- Contenido real -->
+<div id="content-consultar" class="hidden">
+<!-- Loader -->
+<div id="loader" class="fixed inset-0 z-[100] flex items-center justify-center bg-white/95 backdrop-blur-sm">
+    <div class="flex flex-col items-center gap-4">
+        <div class="relative">
+            <div class="w-16 h-16 border-4 border-[#23916A]/20 rounded-full"></div>
+            <div class="w-16 h-16 border-4 border-[#23916A] border-t-transparent rounded-full animate-spin absolute top-0 left-0"></div>
+        </div>
+        <p class="text-lg font-medium text-gray-600">Buscando proveedores cercanos...</p>
+    </div>
+</div>
+
+<!-- Toast de ubicación -->
+<div id="location-toast" class="fixed top-44 left-1/2 -translate-x-1/2 z-50 hidden">
+    <div class="flex items-center gap-3 bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded-xl shadow-lg">
+        <i class="fas fa-location-crosshairs text-amber-500"></i>
+        <span id="location-message">Obteniendo tu ubicación...</span>
+    </div>
+</div>
+
+<!-- Banner de categoría -->
+<section class="relative -mt-4">
+    <div class="relative h-48 sm:h-56 md:h-64 overflow-hidden">
+        @if (categoria?.BannerImagen != null)
+        {
+            <img id="banner-image" src="@categoria.BannerImagen.Base64" alt="@categoria.Nombre"
+                 class="w-full h-full object-cover">
+        }
+        else
+        {
+            <div id="banner-image" class="w-full h-full bg-gradient-to-br from-[#23916A] to-[#1d7a59]"></div>
+        }
+        <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
+
+        <!-- Contenido sobre el banner -->
+        <div class="absolute inset-0 flex flex-col justify-end p-6 md:p-8">
+            <div class="max-w-7xl mx-auto w-full">
+                <!-- Breadcrumb -->
+                <nav class="flex items-center gap-2 text-white/80 text-sm mb-2">
+                    <a href="@Url.Action("Principal", "Home")" class="hover:text-white transition-colors">
+                        <i class="fas fa-home"></i>
+                    </a>
+                    <i class="fas fa-chevron-right text-xs"></i>
+                    <a href="@Url.Action("Listar", "Categorias")" class="hover:text-white transition-colors">Proveedores</a>
+                    <i class="fas fa-chevron-right text-xs"></i>
+                    <span id="breadcrumb-categoria" class="text-white font-medium">@(categoria?.Nombre ?? "Todos")</span>
+                </nav>
+                <!-- Título -->
+                <h1 id="header-title" class="text-2xl sm:text-3xl md:text-4xl font-bold text-white">
+                    @(categoria?.Nombre ?? "Todos los Proveedores")
+                </h1>
+                <p class="text-white/80 mt-1 text-sm sm:text-base">
+                    <span id="count-display">@negociosCount</span> proveedor@(negociosCount != 1 ? "es" : "") encontrado@(negociosCount != 1 ? "s" : "")
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Barra de filtros -->
+<div class="bg-[#F4F1E9] shadow-md border-b border-gray-200">
+    <div class="max-w-7xl mx-auto px-4 py-3">
+        <div class="flex flex-col lg:flex-row lg:items-center gap-4">
+            <!-- Búsqueda -->
+            <div class="relative flex-1 max-w-md">
+                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                <input type="text" id="search-input" placeholder="Buscar proveedor..."
+                       class="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-300 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-[#23916A]/20 focus:border-[#23916A] transition-all">
+            </div>
+
+            <!-- Filtros -->
+            <div class="flex flex-wrap items-center gap-3">
+                <!-- Categoría -->
+                <div class="flex items-center gap-2">
+                    <label class="text-sm font-medium text-gray-600 whitespace-nowrap">
+                        <i class="fas fa-layer-group text-[#23916A] mr-1"></i>Categoría
+                    </label>
+                    <select id="select-categoria"
+                            class="bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#23916A]/20 focus:border-[#23916A] min-w-[140px]">
+                        @foreach (var cat in categorias)
+                        {
+                            if (cat.Id == categoria?.Id)
+                            {
+                                <option value="@cat.Id" selected>@cat.Nombre</option>
+                            }
+                            else
+                            {
+                                <option value="@cat.Id">@cat.Nombre</option>
+                            }
+                        }
+                    </select>
+                </div>
+
+                <!-- Tipo de proveedor -->
+                <div class="flex items-center gap-2">
+                    <label class="text-sm font-medium text-gray-600 whitespace-nowrap">
+                        <i class="fas fa-crown text-[#F66623] mr-1"></i>Tipo
+                    </label>
+                    <select id="select-membresia"
+                            class="bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#23916A]/20 focus:border-[#23916A] min-w-[130px]">
+                        <option value="">Todos</option>
+                        @foreach (var mem in membresias)
+                        {
+                            <option value="@mem.Nombre">@mem.Nombre</option>
+                        }
+                    </select>
+                </div>
+
+                <!-- Distancia -->
+                <div class="flex items-center gap-3 bg-white border border-gray-300 rounded-lg px-3 py-2">
+                    <label class="text-sm font-medium text-gray-600 whitespace-nowrap">
+                        <i class="fas fa-location-dot text-blue-500 mr-1"></i>Distancia
+                    </label>
+                    <input type="range" id="range-distancia" min="100" max="1600" step="100" value="500"
+                           class="range-slider w-24 sm:w-32">
+                    <span id="range-value" class="text-sm font-medium text-[#23916A] min-w-[70px]">500 m</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Contenido principal -->
+<div class="max-w-7xl mx-auto px-4 py-6">
+    <div class="flex flex-col lg:flex-row gap-6">
+        <!-- Lista de negocios -->
+        <section class="w-full lg:w-1/2 xl:w-3/5">
+            <!-- Estado vacío -->
+            <div id="empty-state" class="hidden">
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-12 text-center">
+                    <div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-store-slash text-3xl text-gray-400"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-2">No encontramos proveedores</h3>
+                    <p class="text-gray-500 mb-6">Intenta ampliar la distancia de búsqueda o cambiar los filtros</p>
+                    <button onclick="resetFilters()" class="px-6 py-2.5 bg-[#23916A] hover:bg-[#1d7a59] text-white font-medium rounded-full transition-colors">
+                        <i class="fas fa-redo mr-2"></i>Restablecer filtros
+                    </button>
+                </div>
+            </div>
+
+            <!-- Grid de negocios -->
+            <div id="providers-container" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                @if (Model != null)
+                {
+                    @foreach (var negocio in Model)
+                    {
+                        <article class="negocio-card bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden animate-fadeInUp">
+                            <!-- Imagen -->
+                            <div class="relative h-36 overflow-hidden bg-gray-100">
+                                @if (negocio.imagen != null)
+                                {
+                                    <img src="@negocio.imagen.Base64" alt="@negocio.Nombre"
+                                         class="negocio-image w-full h-full object-cover">
+                                }
+                                else
+                                {
+                                    <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
+                                        <i class="fas fa-store text-4xl text-gray-300"></i>
+                                    </div>
+                                }
+                                <!-- Overlay hover -->
+                                <div class="negocio-overlay absolute inset-0 bg-black/40 flex items-center justify-center">
+                                    <span class="px-4 py-2 bg-white text-gray-800 rounded-full text-sm font-medium">
+                                        Ver productos
+                                    </span>
+                                </div>
+                                <!-- Badge membresía -->
+                                @if (negocio.SuscripcionActiva?.TipoMembresia != null && negocio.SuscripcionActiva.TipoMembresia.Nombre != "Básico")
+                                {
+                                    <span class="absolute top-2 right-2 badge-premium px-2 py-1 text-xs font-bold text-white rounded-full">
+                                        <i class="fas fa-crown mr-1"></i>@negocio.SuscripcionActiva.TipoMembresia.Nombre
+                                    </span>
+                                }
+                            </div>
+                            <!-- Info -->
+                            <div class="p-4">
+                                <h3 class="font-bold text-gray-800 line-clamp-1 mb-1">@negocio.Nombre</h3>
+                                @if (!string.IsNullOrEmpty(negocio.Direccion))
+                                {
+                                    <p class="text-sm text-gray-500 line-clamp-1 mb-2">
+                                        <i class="fas fa-map-marker-alt text-[#23916A] mr-1"></i>@negocio.Direccion
+                                    </p>
+                                }
+                                <div class="flex items-center justify-between">
+                                    @if (negocio.Telefono > 0)
+                                    {
+                                        <span class="text-xs text-gray-400">
+                                            <i class="fas fa-phone mr-1"></i>@negocio.Telefono
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span></span>
+                                    }
+                                    <a href="@Url.Action("ConsultarProductos", "Negocios", new { idLocal = negocio.Id })"
+                                       class="px-4 py-1.5 bg-[#23916A] hover:bg-[#1d7a59] text-white text-sm font-medium rounded-lg transition-colors">
+                                        Ver <i class="fas fa-arrow-right ml-1 text-xs"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </article>
+                    }
                 }
             </div>
-        </main>
-        <aside class="h-[500px] w-full md:w-1/2">
-            <div id="map" class="h-full w-full rounded-lg bg-gray-300"></div>
+        </section>
+
+        <!-- Mapa -->
+        <aside class="w-full lg:w-1/2 xl:w-2/5">
+            <div class="lg:sticky lg:top-52">
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                    <div class="p-3 border-b border-gray-200 flex items-center justify-between" style="background-color: #F4F1E9;">
+                        <h2 class="font-bold text-gray-800 flex items-center gap-2">
+                            <i class="fas fa-map-location-dot text-[#23916A]"></i>
+                            Mapa de proveedores
+                        </h2>
+                        <button onclick="centerOnUser()" class="p-2 hover:bg-[#23916A]/10 rounded-lg transition-colors" title="Centrar en mi ubicación">
+                            <i class="fas fa-crosshairs text-gray-500"></i>
+                        </button>
+                    </div>
+                    <div id="map" class="h-[400px] lg:h-[500px] w-full"></div>
+                </div>
+            </div>
         </aside>
     </div>
-</body>
+</div>
+</div>
+<!-- Fin contenido real -->
 
+@section Scripts {
+    <script src="https://maps.googleapis.com/maps/api/js?key=@ViewBag.GoogleMapsApiKey&libraries=places"></script>
+    <script>
+        // Variables globales
+        let negocios = @Html.Raw(Json.Serialize(Model ?? new List<BusinessLogic.Models.Negocio>()));
+        let map, userMarker, searchCircle;
+        let markers = [];
+        let userLocation = null;
+        let isLoading = true;
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"
-    integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g=="
-    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+        // Elementos DOM
+        const loader = document.getElementById('loader');
+        const locationToast = document.getElementById('location-toast');
+        const locationMessage = document.getElementById('location-message');
+        const providersContainer = document.getElementById('providers-container');
+        const emptyState = document.getElementById('empty-state');
+        const countDisplay = document.getElementById('count-display');
+        const rangeInput = document.getElementById('range-distancia');
+        const rangeValue = document.getElementById('range-value');
+        const searchInput = document.getElementById('search-input');
+        const selectCategoria = document.getElementById('select-categoria');
+        const selectMembresia = document.getElementById('select-membresia');
 
-<script>
-    var isLoading = true;
-    var negocios = @Html.Raw(Json.Serialize(Model));
-    var map;
-    var markers = [];
-    var searchCircle = null;
-    var ubicacionObtenida = false;
-    var filtrosAplicados = false;
+        // Inicializar mapa
+        function initMap() {
+            const defaultCenter = { lat: 1.6153858, lng: -75.6042364 };
 
-    function initMap() {
-        map = new google.maps.Map(document.getElementById('map'), {
-            center: { lat: 1.6153858, lng: -75.6042364 },
-            zoom: 14,
-            mapTypeControl: false,
-            streetViewControl: false,
-            fullscreenControl: false,
-            zoomControl: false,
-            rotateControl: false,
-        });
+            map = new google.maps.Map(document.getElementById('map'), {
+                center: defaultCenter,
+                zoom: 14,
+                mapTypeControl: false,
+                streetViewControl: false,
+                fullscreenControl: true,
+                zoomControl: true,
+                styles: [
+                    { featureType: "poi", elementType: "labels", stylers: [{ visibility: "off" }] },
+                    { featureType: "transit", stylers: [{ visibility: "off" }] }
+                ]
+            });
 
-        obtenerUbicacionUsuario();
-        configurarEventosFiltroUbicacion();
-    }
-
-    function obtenerUbicacionUsuario() {
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                function (position) {
-                    var latitudUsuario = position.coords.latitude;
-                    var longitudUsuario = position.coords.longitude;
-                    map.setCenter({ lat: latitudUsuario, lng: longitudUsuario });
-
-                    new google.maps.Marker({
-                        position: { lat: latitudUsuario, lng: longitudUsuario },
-                        map: map,
-                        title: "Tu ubicación",
-                        icon: {
-                            url: "http://maps.google.com/mapfiles/ms/icons/blue-dot.png"
-                        }
-                    });
-
-                    ubicacionObtenida = true;
-                    let distanciaInicial = parseInt(document.getElementById('labels-range-input').value);
-                    filtrarNegociosPorDistancia(latitudUsuario, longitudUsuario, distanciaInicial);
-                },
-                function (error) {
-                    console.warn("No se pudo obtener la ubicación:", error.message);
-                    mostrarErrorUbicacion();
-                    ubicacionObtenida = true;
-                    filtrosAplicados = true;
-                    verificarCargaCompleta();
-                }
-            );
-        } else {
-            mostrarErrorUbicacion();
-            ubicacionObtenida = true;
-            filtrosAplicados = true;
-            verificarCargaCompleta();
-        }
-    }
-
-    function cargarNegocios(listaNegocios) {
-        markers.forEach(marker => marker.setMap(null));
-        markers = [];
-
-        listaNegocios.forEach(negocio => {
-            if (negocio.localizacion) {
-                let [latitud, longitud] = negocio.localizacion.split(",").map(parseFloat);
-
-                let marker = new google.maps.Marker({
-                    position: { lat: latitud, lng: longitud },
-                    map: map,
-                    title: negocio.nombre,
-                    icon: {
-                        url: "https://cdn-icons-png.flaticon.com/512/553/553983.png",
-                        scaledSize: new google.maps.Size(40, 40),
-                    }
-                });
-                var infoWindow = new google.maps.InfoWindow({
-                    content: `
-            <div class="info-window flex max-w-[220px] flex-col items-center rounded-lg bg-white px-4 py-3 shadow-lg">
-                ${negocio.imagen
-                            ? `<img src="${negocio.imagen.base64}" class="h-32 w-full rounded-lg object-cover">`
-                            : `<div class="flex h-32 w-full items-center justify-center rounded-lg bg-gray-200 text-gray-500">Sin imagen</div>`}
-                <h3 class="mt-2 text-center text-base font-bold text-gray-800">${negocio.nombre}</h3>
-                <a href="/Negocios/ConsultarProductos?idLocal=${negocio.id}"
-                   class="mt-3 inline-block rounded bg-green-600 px-3 py-1 text-sm text-white hover:bg-green-700">
-                    Ver
-                </a>
-            </div>`
-                });
-
-
-                marker.addListener("click", function () {
-                    infoWindow.open(map, marker);
-                });
-
-                markers.push(marker);
-            }
-        });
-    }
-
-    function actualizarRadio(lat, lng, radio) {
-        if (searchCircle) {
-            searchCircle.setMap(null);
+            obtenerUbicacion();
         }
 
-        if (radio === 1600) {
-            return;
-        }
-
-        searchCircle = new google.maps.Circle({
-            map: map,
-            center: { lat: lat, lng: lng },
-            radius: radio,
-            fillColor: "#00aaff",
-            fillOpacity: 0.2,
-            strokeColor: "#0055aa",
-            strokeOpacity: 0.8,
-            strokeWeight: 2
-        });
-    }
-
-    function calcularDistancia(lat1, lon1, lat2, lon2) {
-        const R = 6371e3;
-        const φ1 = lat1 * Math.PI / 180, φ2 = lat2 * Math.PI / 180;
-        const Δφ = (lat2 - lat1) * Math.PI / 180, Δλ = (lon2 - lon1) * Math.PI / 180;
-
-        const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
-            Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
-
-        return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
-    }
-
-    function filtrarNegociosPorDistancia(latUsuario, lonUsuario, distanciaMaxima) {
-        let negociosFiltrados = negocios.filter(negocio => {
-            if (negocio.localizacion) {
-                let [latNegocio, lonNegocio] = negocio.localizacion.split(",").map(parseFloat);
-                let distancia = calcularDistancia(latUsuario, lonUsuario, latNegocio, lonNegocio);
-                return distancia <= distanciaMaxima || distanciaMaxima === 1600;
-            }
-            return false;
-        });
-
-        cargarNegocios(negociosFiltrados);
-        actualizarListaNegocios(negociosFiltrados);
-        actualizarRadio(latUsuario, lonUsuario, distanciaMaxima);
-        filtrosAplicados = true;
-        verificarCargaCompleta();
-    }
-
-    function verificarCargaCompleta() {
-        if (ubicacionObtenida && filtrosAplicados) {
-            document.getElementById("loader").classList.add("hidden");
-            isLoading = false;
-        }
-    }
-
-    function configurarEventosFiltroUbicacion() {
-        document.getElementById('labels-range-input').addEventListener('input', function () {
-            let distanciaMaxima = parseInt(this.value);
-            let rangeText = (distanciaMaxima === 1600) ? "Sin límites" : `${distanciaMaxima} m (${(distanciaMaxima / 1000).toFixed(1)} km)`;
-            document.getElementById('range-value').innerText = rangeText;
+        // Obtener ubicación del usuario
+        function obtenerUbicacion() {
+            showLocationToast('Obteniendo tu ubicación...');
 
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
-                    function (position) {
-                        filtrarNegociosPorDistancia(position.coords.latitude, position.coords.longitude, distanciaMaxima);
+                    (position) => {
+                        userLocation = {
+                            lat: position.coords.latitude,
+                            lng: position.coords.longitude
+                        };
+
+                        map.setCenter(userLocation);
+                        map.setZoom(15);
+
+                        // Marcador del usuario
+                        userMarker = new google.maps.Marker({
+                            position: userLocation,
+                            map: map,
+                            title: "Tu ubicación",
+                            icon: {
+                                path: google.maps.SymbolPath.CIRCLE,
+                                scale: 10,
+                                fillColor: "#3b82f6",
+                                fillOpacity: 1,
+                                strokeColor: "#ffffff",
+                                strokeWeight: 3
+                            },
+                            zIndex: 999
+                        });
+
+                        hideLocationToast();
+                        aplicarFiltroDistancia();
                     },
-                    function (error) {
-                        console.error("Error obteniendo ubicación:", error.message);
-                    }
+                    (error) => {
+                        console.warn("Error de ubicación:", error.message);
+                        showLocationToast('No se pudo obtener tu ubicación. Mostrando todos los resultados.', true);
+                        setTimeout(hideLocationToast, 4000);
+                        cargarNegocios(negocios);
+                        hideLoader();
+                    },
+                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 }
                 );
-            }
-        });
-    }
-
-    function actualizarListaNegocios(negociosFiltrados) {
-        let container = document.getElementById("providers-container");
-        container.innerHTML = negociosFiltrados.length === 0
-            ? `<p class="col-span-full text-center text-lg font-semibold text-gray-600">No se han encontrado locales con los filtros dados.</p>`
-            : negociosFiltrados.map(negocio => `
-            <div class="flex h-full flex-col justify-between rounded-lg bg-white p-4 text-center shadow-md">
-                <div>
-                    ${negocio.imagen
-                    ? `<div class="h-32 w-full overflow-hidden rounded-lg">
-                                <img src="${negocio.imagen.base64}" class="h-full w-full object-cover">
-                        </div>`
-                    : `<div class="h-40 w-full flex items-center justify-center rounded-lg bg-gray-200 text-gray-500">
-                                Sin imagen
-                        </div>`
-                }
-                    <p class="mt-3 text-lg font-bold line-clamp-2">${negocio.nombre}</p>
-                </div>
-                <a href="/Negocios/ConsultarProductos?idLocal=${negocio.id}"
-                class="mt-4 block rounded-lg bg-green-600 px-4 py-2 text-white hover:bg-green-700">
-                    Ver
-                </a>
-            </div>
-        `).join('');
-    }
-
-    function aplicarFiltros() {
-        var idCategoria = $("#Categorias").val();
-        var tipoMembresia = $("#TipoProveedor").val();
-
-        document.getElementById("loader").classList.remove("hidden");
-
-        let negociosCargados = false;
-        let categoriaCargada = false;
-        let nuevosNegocios = []; // vamos a guardar la respuesta aquí
-        let nuevaCategoria = null; // vamos a guardar el banner aquí
-
-        // Consulta negocios
-        $.ajax({
-            url: "/Negocios/ConsultarNegocios",
-            type: "POST",
-            data: { idCategoria: idCategoria, membe: tipoMembresia || "" },
-            success: function (response) {
-                nuevosNegocios = response;
-                negociosCargados = true;
-                verificarCargaFiltros();
-            },
-            error: function () {
-                alert("Error al cargar los negocios.");
-                negociosCargados = true;
-                verificarCargaFiltros();
-            }
-        });
-
-        // Consulta categoría
-        $.ajax({
-            url: `/Categorias/ObtenerCategoria?id=${idCategoria}`,
-            type: "GET",
-            success: function (categoria) {
-                nuevaCategoria = categoria;
-                categoriaCargada = true;
-                verificarCargaFiltros();
-            },
-            error: function () {
-                console.warn("Error al actualizar el banner.");
-                categoriaCargada = true;
-                verificarCargaFiltros();
-            }
-        });
-
-        function verificarCargaFiltros() {
-            if (negociosCargados && categoriaCargada) {
-                // ✅ Cuando ambos ya terminaron...
-
-                negocios = nuevosNegocios; // Actualiza la variable global
-
-                actualizarListaNegocios(negocios); // Ahora sí: refrescamos negocios
-                cargarNegocios(negocios); // Actualizamos markers
-
-                // Cambiar banner solo si llegó uno nuevo
-                if (nuevaCategoria && nuevaCategoria.bannerImagen && nuevaCategoria.bannerImagen.base64) {
-                    document.querySelector('section img').src = nuevaCategoria.bannerImagen.base64;
-                } else {
-                    document.querySelector('section img').src = "/path/to/placeholder/banner.jpg";
-                }
-
-                document.getElementById("loader").classList.add("hidden");
+            } else {
+                showLocationToast('Tu navegador no soporta geolocalización.', true);
+                setTimeout(hideLocationToast, 4000);
+                cargarNegocios(negocios);
+                hideLoader();
             }
         }
-    }
 
+        // Cargar marcadores en el mapa
+        function cargarNegocios(lista) {
+            markers.forEach(m => m.setMap(null));
+            markers = [];
 
+            lista.forEach((negocio, index) => {
+                if (negocio.localizacion) {
+                    const [lat, lng] = negocio.localizacion.split(",").map(parseFloat);
+                    if (isNaN(lat) || isNaN(lng)) return;
 
+                    const marker = new google.maps.Marker({
+                        position: { lat, lng },
+                        map: map,
+                        title: negocio.nombre,
+                        icon: {
+                            url: 'data:image/svg+xml,' + encodeURIComponent(`
+                                <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="#23916A">
+                                    <path d="M12 0C7.31 0 3.5 3.81 3.5 8.5c0 6.38 8.5 15.5 8.5 15.5s8.5-9.12 8.5-15.5C20.5 3.81 16.69 0 12 0zm0 12c-1.93 0-3.5-1.57-3.5-3.5S10.07 5 12 5s3.5 1.57 3.5 3.5S13.93 12 12 12z"/>
+                                </svg>
+                            `),
+                            scaledSize: new google.maps.Size(36, 36),
+                            anchor: new google.maps.Point(18, 36)
+                        },
+                        animation: google.maps.Animation.DROP
+                    });
 
+                    const infoContent = `
+                        <div style="min-width: 200px; padding: 8px;">
+                            ${negocio.imagen ? `<img src="${negocio.imagen.base64}" style="width:100%; height:100px; object-fit:cover; border-radius:8px; margin-bottom:8px;">` : ''}
+                            <h3 style="font-weight:bold; font-size:14px; margin-bottom:4px;">${negocio.nombre}</h3>
+                            ${negocio.direccion ? `<p style="font-size:12px; color:#666; margin-bottom:8px;"><i class="fas fa-map-marker-alt" style="color:#23916A;"></i> ${negocio.direccion}</p>` : ''}
+                            <a href="/Negocios/ConsultarProductos?idLocal=${negocio.id}"
+                               style="display:inline-block; background:#23916A; color:white; padding:6px 12px; border-radius:6px; text-decoration:none; font-size:12px; font-weight:500;">
+                                Ver productos
+                            </a>
+                        </div>
+                    `;
 
-    $("#Categorias").change(aplicarFiltros);
-    $("#TipoProveedor").change(aplicarFiltros);
+                    const infoWindow = new google.maps.InfoWindow({ content: infoContent });
+                    marker.addListener("click", () => infoWindow.open(map, marker));
 
+                    markers.push(marker);
+                }
+            });
 
+            actualizarListaHTML(lista);
+        }
 
-    window.onload = function () {
-        initMap();
-        configurarEventosFiltroUbicacion();
-    };
+        // Actualizar lista HTML
+        function actualizarListaHTML(lista) {
+            countDisplay.textContent = lista.length;
 
-    function mostrarErrorUbicacion() {
-        const errorDiv = document.getElementById("location-error");
-        errorDiv.classList.remove("hidden");
+            if (lista.length === 0) {
+                providersContainer.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+            } else {
+                emptyState.classList.add('hidden');
+                providersContainer.classList.remove('hidden');
 
-        setTimeout(() => {
-            errorDiv.classList.add("hidden");
-        }, 5000);
-    }
+                providersContainer.innerHTML = lista.map((negocio, i) => `
+                    <article class="negocio-card bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden animate-fadeInUp" style="animation-delay: ${i * 50}ms">
+                        <div class="relative h-36 overflow-hidden bg-gray-100">
+                            ${negocio.imagen
+                                ? `<img src="${negocio.imagen.base64}" alt="${negocio.nombre}" class="negocio-image w-full h-full object-cover">`
+                                : `<div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
+                                    <i class="fas fa-store text-4xl text-gray-300"></i>
+                                   </div>`
+                            }
+                            <div class="negocio-overlay absolute inset-0 bg-black/40 flex items-center justify-center">
+                                <span class="px-4 py-2 bg-white text-gray-800 rounded-full text-sm font-medium">Ver productos</span>
+                            </div>
+                            ${negocio.suscripcionActiva?.tipoMembresia?.nombre && negocio.suscripcionActiva.tipoMembresia.nombre !== 'Básico'
+                                ? `<span class="absolute top-2 right-2 badge-premium px-2 py-1 text-xs font-bold text-white rounded-full">
+                                    <i class="fas fa-crown mr-1"></i>${negocio.suscripcionActiva.tipoMembresia.nombre}
+                                   </span>`
+                                : ''
+                            }
+                        </div>
+                        <div class="p-4">
+                            <h3 class="font-bold text-gray-800 line-clamp-1 mb-1">${negocio.nombre}</h3>
+                            ${negocio.direccion
+                                ? `<p class="text-sm text-gray-500 line-clamp-1 mb-2">
+                                    <i class="fas fa-map-marker-alt text-[#23916A] mr-1"></i>${negocio.direccion}
+                                   </p>`
+                                : ''
+                            }
+                            <div class="flex items-center justify-between">
+                                ${negocio.telefono
+                                    ? `<span class="text-xs text-gray-400"><i class="fas fa-phone mr-1"></i>${negocio.telefono}</span>`
+                                    : '<span></span>'
+                                }
+                                <a href="/Negocios/ConsultarProductos?idLocal=${negocio.id}"
+                                   class="px-4 py-1.5 bg-[#23916A] hover:bg-[#1d7a59] text-white text-sm font-medium rounded-lg transition-colors">
+                                    Ver <i class="fas fa-arrow-right ml-1 text-xs"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </article>
+                `).join('');
+            }
 
-</script>
+            hideLoader();
+        }
 
-</html>
+        // Filtrar por distancia
+        function aplicarFiltroDistancia() {
+            if (!userLocation) {
+                cargarNegocios(negocios);
+                return;
+            }
+
+            const distancia = parseInt(rangeInput.value);
+            updateRangeLabel(distancia);
+
+            if (searchCircle) searchCircle.setMap(null);
+
+            if (distancia < 1600) {
+                searchCircle = new google.maps.Circle({
+                    map: map,
+                    center: userLocation,
+                    radius: distancia,
+                    fillColor: "#23916A",
+                    fillOpacity: 0.1,
+                    strokeColor: "#1d7a59",
+                    strokeOpacity: 0.6,
+                    strokeWeight: 2
+                });
+            }
+
+            const filtrados = negocios.filter(negocio => {
+                if (!negocio.localizacion) return false;
+                const [lat, lng] = negocio.localizacion.split(",").map(parseFloat);
+                if (isNaN(lat) || isNaN(lng)) return false;
+                const dist = calcularDistancia(userLocation.lat, userLocation.lng, lat, lng);
+                return distancia >= 1600 || dist <= distancia;
+            });
+
+            const searchTerm = searchInput.value.toLowerCase().trim();
+            const resultado = searchTerm
+                ? filtrados.filter(n => n.nombre?.toLowerCase().includes(searchTerm))
+                : filtrados;
+
+            cargarNegocios(resultado);
+        }
+
+        // Calcular distancia Haversine
+        function calcularDistancia(lat1, lon1, lat2, lon2) {
+            const R = 6371e3;
+            const p1 = lat1 * Math.PI / 180;
+            const p2 = lat2 * Math.PI / 180;
+            const dp = (lat2 - lat1) * Math.PI / 180;
+            const dl = (lon2 - lon1) * Math.PI / 180;
+
+            const a = Math.sin(dp / 2) ** 2 + Math.cos(p1) * Math.cos(p2) * Math.sin(dl / 2) ** 2;
+            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        }
+
+        function updateRangeLabel(value) {
+            if (value >= 1600) {
+                rangeValue.textContent = 'Sin límite';
+            } else if (value >= 1000) {
+                rangeValue.textContent = `${(value / 1000).toFixed(1)} km`;
+            } else {
+                rangeValue.textContent = `${value} m`;
+            }
+        }
+
+        // Aplicar filtros de categoría y membresía
+        function aplicarFiltrosCategoria() {
+            const idCategoria = selectCategoria.value;
+            const tipoMembresia = selectMembresia.value;
+
+            showLoader();
+
+            const newUrl = `/Negocios/Consultar?idCategoria=${idCategoria}`;
+            history.pushState({}, '', newUrl);
+
+            fetch('/Negocios/ConsultarNegocios', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `idCategoria=${idCategoria}&membe=${tipoMembresia}`
+            })
+            .then(res => res.json())
+            .then(data => {
+                negocios = data;
+                aplicarFiltroDistancia();
+            })
+            .catch(err => {
+                console.error('Error:', err);
+                hideLoader();
+            });
+
+            fetch(`/Categorias/ObtenerCategoria?id=${idCategoria}`)
+            .then(res => res.json())
+            .then(cat => {
+                if (cat) {
+                    document.getElementById('header-title').textContent = cat.nombre || 'Proveedores';
+                    document.getElementById('breadcrumb-categoria').textContent = cat.nombre || 'Todos';
+                    const banner = document.getElementById('banner-image');
+                    if (cat.bannerImagen?.base64 && banner.tagName === 'IMG') {
+                        banner.src = cat.bannerImagen.base64;
+                    }
+                }
+            })
+            .catch(() => {});
+        }
+
+        function centerOnUser() {
+            if (userLocation) {
+                map.setCenter(userLocation);
+                map.setZoom(15);
+            } else {
+                obtenerUbicacion();
+            }
+        }
+
+        function resetFilters() {
+            searchInput.value = '';
+            selectMembresia.value = '';
+            rangeInput.value = 500;
+            updateRangeLabel(500);
+            aplicarFiltroDistancia();
+        }
+
+        // Helpers UI
+        function showLoader() {
+            loader.classList.remove('hidden');
+            isLoading = true;
+        }
+        function hideLoader() {
+            loader.classList.add('hidden');
+            isLoading = false;
+        }
+        function showLocationToast(msg, isError = false) {
+            locationMessage.textContent = msg;
+            locationToast.classList.remove('hidden');
+            const container = locationToast.firstElementChild;
+            container.className = `flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg ${isError ? 'bg-amber-50 border border-amber-200 text-amber-800' : 'bg-blue-50 border border-blue-200 text-blue-800'}`;
+        }
+        function hideLocationToast() {
+            locationToast.classList.add('hidden');
+        }
+
+        function debounce(func, wait) {
+            let timeout;
+            return function(...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), wait);
+            };
+        }
+
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            // Mostrar contenido y ocultar skeleton
+            setTimeout(function() {
+                document.getElementById('skeleton-consultar').classList.add('hidden');
+                document.getElementById('content-consultar').classList.remove('hidden');
+            }, 300);
+
+            initMap();
+            rangeInput.addEventListener('input', debounce(aplicarFiltroDistancia, 150));
+            searchInput.addEventListener('input', debounce(aplicarFiltroDistancia, 300));
+            selectCategoria.addEventListener('change', aplicarFiltrosCategoria);
+            selectMembresia.addEventListener('change', aplicarFiltrosCategoria);
+        });
+    </script>
+}

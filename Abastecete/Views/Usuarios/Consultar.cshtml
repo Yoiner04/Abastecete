@@ -1,139 +1,1302 @@
-﻿@model List<BusinessLogic.Models.Usuario>
+@model BusinessLogic.Models.ResultadoPaginado<BusinessLogic.Models.UsuarioConLocalViewModel>
+@using BusinessLogic.Utilidades
+@{
+    ViewData["Title"] = "Gestión de Usuarios";
+    ViewData["Description"] = "Administra todos los usuarios del sistema: consulta información, gestiona estados y membresías activas.";
+    var permisos = Context.Session.GetString("permisosSistema") ?? "";
+    var puedeAdministrar = RolPermisos.TienePermiso("ADMIN_USUARIOS", permisos);
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Abastecete</title>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/Abastecete.styles.css" asp-append-version="true" />
-    <link rel="icon" type="image/x-icon" href="~/css/Images/Logo A naranja.png" />
-    <link rel="stylesheet" href="styles.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
-    <link rel="stylesheet" href="~/css/styles.css" asp-append-version="true" />
-</head>
+    var totalUsuarios = Model.TotalRegistros;
+    var busquedaActual = ViewBag.Busqueda as string ?? "";
+}
 
-<body>
-    <section class="mt-12 px-6 md:px-16 lg:px-36">
-        <div class="flex flex-col md:flex-row justify-between items-center mb-6 space-y-4 md:space-y-0">
-            <h2 class="text-lg font-bold text-gray-800 text-center md:text-left">Gestión de Usuarios</h2>
-            <input type="text" id="user-search" placeholder="Buscar usuario..." class="w-full md:w-1/3 p-3 rounded-lg bg-gray-100 border border-gray-300 text-black">
-        </div>
-
-        <div class="overflow-x-auto">
-            <table class="w-full bg-white rounded-lg shadow-md overflow-hidden">
-                <thead class="bg-gray-200">
-                    <tr>
-                        <th class="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Nombre</th>
-                        <th class="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Rol</th>
-                        <th class="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Correo</th>
-                        <th class="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Membresía</th>
-                        <th class="px-4 md:px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Teléfono</th>
-                        <th class="px-4 md:px-6 py-3 text-center text-xs font-medium text-gray-700 uppercase">Estado</th>
-                        <th class="px-4 md:px-6 py-3 text-center text-xs font-medium text-gray-700 uppercase">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody id="user-table-body">
-                    @foreach (var usuario in Model)
-                    {
-                        <tr class="hover:bg-gray-100">
-                            <td class="px-4 py-3 text-gray-700">@usuario.Persona.Nombre @usuario.Persona.Apellido</td>
-                            <td class="px-4 py-3 text-gray-700">@usuario.Rol.Nombre</td>
-                            <td class="px-4 py-3 text-gray-700">@usuario.Correo</td>
-                            <td class="px-4 py-3 text-gray-700">@usuario.Membresia</td>
-                            <td class="px-4 py-3 text-gray-700">@usuario.Persona.Telefono</td>
-                            <td class="px-4 py-3 text-center">
-                                <span id="estado-@usuario.Id" class="@(usuario.Persona.Estado == "Activo" ? "text-green-600" : "text-red-600")">
-                                    @(usuario.Persona.Estado == "Activo" ? "🟢 Activo" : "🔴 Inactivo")
-                                </span>
-                            </td>
-                            <td class="px-4 py-3 text-center">
-                                <button class="text-blue-600 hover:text-blue-800" onclick="abrirModal(@usuario.Id, '@usuario.Persona.Estado')">
-                                    ✏ Editar
-                                </button>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
-    </section>
-
-    <!-- Modal Editar Estado -->
-    <div id="modal-editar" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div class="p-6 rounded-lg shadow-lg bg-white w-full max-w-md mx-4">
-            <h2 class="text-center text-xl font-bold text-gray-800">Editar Estado</h2>
-            <form id="form-editar-estado" class="mt-4">
-                <input type="hidden" id="usuario-id">
-
-                <label class="block text-gray-700 font-medium">Estado</label>
-                <select id="estado-usuario" class="w-full p-3 rounded-lg bg-gray-100 border border-gray-300 text-black mb-3" required>
-                    <option value="1">🟢 Activo</option>
-                    <option value="0">🔴 Inactivo</option>
-                </select>
-
-                <button type="submit" class="w-full bg-green-600 text-white py-3 rounded-lg font-bold hover:bg-green-700">
-                    Guardar Cambios
-                </button>
-            </form>
-            <button id="cerrar-modal" class="block w-full text-center mt-3 text-gray-600 hover:text-gray-800">
-                Cerrar
-            </button>
+<!-- Skeleton de carga -->
+<div id="skeleton-usuarios" class="animate-pulse">
+    <!-- Header skeleton -->
+    <div class="bg-white border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-lg bg-gray-200"></div>
+                    <div>
+                        <div class="h-6 w-48 bg-gray-200 rounded mb-2"></div>
+                        <div class="h-4 w-56 bg-gray-200 rounded"></div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <!-- Stats Cards skeleton -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div class="bg-white rounded-xl border border-gray-200 p-4">
+                <div class="h-12 w-12 rounded-lg bg-gray-200 mb-2"></div>
+                <div class="h-8 w-12 bg-gray-200 rounded mb-1"></div>
+                <div class="h-4 w-24 bg-gray-200 rounded"></div>
+            </div>
+            <div class="bg-white rounded-xl border border-gray-200 p-4">
+                <div class="h-12 w-12 rounded-lg bg-gray-200 mb-2"></div>
+                <div class="h-8 w-12 bg-gray-200 rounded mb-1"></div>
+                <div class="h-4 w-24 bg-gray-200 rounded"></div>
+            </div>
+            <div class="bg-white rounded-xl border border-gray-200 p-4">
+                <div class="h-12 w-12 rounded-lg bg-gray-200 mb-2"></div>
+                <div class="h-8 w-12 bg-gray-200 rounded mb-1"></div>
+                <div class="h-4 w-24 bg-gray-200 rounded"></div>
+            </div>
+            <div class="bg-white rounded-xl border border-gray-200 p-4">
+                <div class="h-12 w-12 rounded-lg bg-gray-200 mb-2"></div>
+                <div class="h-8 w-12 bg-gray-200 rounded mb-1"></div>
+                <div class="h-4 w-24 bg-gray-200 rounded"></div>
+            </div>
+        </div>
 
-    <script>
-        document.getElementById("user-search").addEventListener("input", function () {
-            let query = this.value.toLowerCase();
-            let rows = document.querySelectorAll("#user-table-body tr");
+        <!-- Filtros skeleton -->
+        <div class="bg-white rounded-xl border border-gray-200 p-4 mb-6">
+            <div class="flex flex-col lg:flex-row gap-4">
+                <div class="flex-1 h-11 bg-gray-200 rounded-lg"></div>
+                <div class="flex gap-3">
+                    <div class="h-11 w-32 bg-gray-200 rounded-lg"></div>
+                </div>
+            </div>
+        </div>
 
-            rows.forEach(row => {
-                let text = row.textContent.toLowerCase();
-                row.style.display = text.includes(query) ? "" : "none";
-            });
+        <!-- Table skeleton -->
+        <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+            <!-- Pagination header skeleton -->
+            <div class="px-4 py-3 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div class="h-8 w-48 bg-gray-200 rounded"></div>
+                <div class="h-4 w-40 bg-gray-200 rounded"></div>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-50 border-b border-gray-200">
+                        <tr>
+                            <th class="px-4 py-3"><div class="h-4 w-20 bg-gray-200 rounded"></div></th>
+                            <th class="px-4 py-3"><div class="h-4 w-16 bg-gray-200 rounded"></div></th>
+                            <th class="px-4 py-3"><div class="h-4 w-16 bg-gray-200 rounded"></div></th>
+                            <th class="px-4 py-3"><div class="h-4 w-24 bg-gray-200 rounded"></div></th>
+                            <th class="px-4 py-3"><div class="h-4 w-20 bg-gray-200 rounded"></div></th>
+                            <th class="px-4 py-3"><div class="h-4 w-20 bg-gray-200 rounded"></div></th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        <tr>
+                            <td class="px-4 py-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-full bg-gray-200"></div>
+                                    <div>
+                                        <div class="h-4 w-32 bg-gray-200 rounded mb-1"></div>
+                                        <div class="h-3 w-40 bg-gray-200 rounded"></div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-4 py-4"><div class="h-6 w-20 bg-gray-200 rounded-full"></div></td>
+                            <td class="px-4 py-4"><div class="h-4 w-24 bg-gray-200 rounded"></div></td>
+                            <td class="px-4 py-4"><div class="h-6 w-24 bg-gray-200 rounded-full"></div></td>
+                            <td class="px-4 py-4"><div class="h-6 w-16 bg-gray-200 rounded-full mx-auto"></div></td>
+                            <td class="px-4 py-4"><div class="h-8 w-32 bg-gray-200 rounded-lg mx-auto"></div></td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-full bg-gray-200"></div>
+                                    <div>
+                                        <div class="h-4 w-32 bg-gray-200 rounded mb-1"></div>
+                                        <div class="h-3 w-40 bg-gray-200 rounded"></div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-4 py-4"><div class="h-6 w-20 bg-gray-200 rounded-full"></div></td>
+                            <td class="px-4 py-4"><div class="h-4 w-24 bg-gray-200 rounded"></div></td>
+                            <td class="px-4 py-4"><div class="h-6 w-24 bg-gray-200 rounded-full"></div></td>
+                            <td class="px-4 py-4"><div class="h-6 w-16 bg-gray-200 rounded-full mx-auto"></div></td>
+                            <td class="px-4 py-4"><div class="h-8 w-32 bg-gray-200 rounded-lg mx-auto"></div></td>
+                        </tr>
+                        <tr>
+                            <td class="px-4 py-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-full bg-gray-200"></div>
+                                    <div>
+                                        <div class="h-4 w-32 bg-gray-200 rounded mb-1"></div>
+                                        <div class="h-3 w-40 bg-gray-200 rounded"></div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-4 py-4"><div class="h-6 w-20 bg-gray-200 rounded-full"></div></td>
+                            <td class="px-4 py-4"><div class="h-4 w-24 bg-gray-200 rounded"></div></td>
+                            <td class="px-4 py-4"><div class="h-6 w-24 bg-gray-200 rounded-full"></div></td>
+                            <td class="px-4 py-4"><div class="h-6 w-16 bg-gray-200 rounded-full mx-auto"></div></td>
+                            <td class="px-4 py-4"><div class="h-8 w-32 bg-gray-200 rounded-lg mx-auto"></div></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Contenido real (oculto inicialmente) -->
+<div id="content-usuarios" class="hidden">
+<!-- Header a ancho completo -->
+<div class="bg-white border-b border-gray-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div class="flex items-center gap-4">
+                <a href="@Url.Action("Principal", "Home")"
+                   class="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors">
+                    <i class="fas fa-arrow-left text-gray-600"></i>
+                </a>
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900">Gestión de Usuarios</h1>
+                    <p class="text-sm text-gray-500 mt-1">Administra los usuarios del sistema</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Contenido con contenedor -->
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+<!-- Stats Cards -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+    <div class="bg-white rounded-xl border border-gray-200 p-4 flex items-center gap-4">
+        <div class="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center">
+            <i class="fas fa-users text-blue-600 text-xl"></i>
+        </div>
+        <div>
+            <p class="text-2xl font-bold text-gray-900">@totalUsuarios</p>
+            <p class="text-sm text-gray-500">Total Usuarios</p>
+        </div>
+    </div>
+    <div class="bg-white rounded-xl border border-gray-200 p-4 flex items-center gap-4">
+        <div class="w-12 h-12 rounded-lg bg-green-100 flex items-center justify-center">
+            <i class="fas fa-user-check text-green-600 text-xl"></i>
+        </div>
+        <div>
+            <p class="text-2xl font-bold text-gray-900">@Model.Items.Count(u => u.Usuario?.Estado == 1)</p>
+            <p class="text-sm text-gray-500">Activos (página)</p>
+        </div>
+    </div>
+    <div class="bg-white rounded-xl border border-gray-200 p-4 flex items-center gap-4">
+        <div class="w-12 h-12 rounded-lg bg-purple-100 flex items-center justify-center">
+            <i class="fas fa-store text-purple-600 text-xl"></i>
+        </div>
+        <div>
+            <p class="text-2xl font-bold text-gray-900">@Model.Items.Count(u => u.TieneLocal)</p>
+            <p class="text-sm text-gray-500">Con Local (página)</p>
+        </div>
+    </div>
+    <div class="bg-white rounded-xl border border-gray-200 p-4 flex items-center gap-4">
+        <div class="w-12 h-12 rounded-lg bg-yellow-100 flex items-center justify-center">
+            <i class="fas fa-crown text-yellow-600 text-xl"></i>
+        </div>
+        <div>
+            <p class="text-2xl font-bold text-gray-900">@Model.Items.Count(u => u.SuscripcionActiva)</p>
+            <p class="text-sm text-gray-500">Suscripciones (página)</p>
+        </div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="bg-white rounded-xl border border-gray-200 p-4 mb-6">
+    <form method="get" action="@Url.Action("Consultar", "Usuarios")" class="flex flex-col lg:flex-row gap-4">
+        <!-- Search -->
+        <div class="flex-1">
+            <div class="relative">
+                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                <input type="text"
+                       name="busqueda"
+                       value="@busquedaActual"
+                       placeholder="Buscar por nombre, correo, local..."
+                       class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 focus:border-[#23916A] focus:ring-2 focus:ring-[#23916A]/20 transition-all">
+            </div>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="flex gap-3">
+            <button type="submit" class="px-6 py-2.5 rounded-lg bg-[#23916A] text-white font-medium hover:bg-[#1a6b4f] transition-colors">
+                <i class="fas fa-search mr-2"></i>Buscar
+            </button>
+            @if (!string.IsNullOrEmpty(busquedaActual))
+            {
+                <a href="@Url.Action("Consultar", "Usuarios")" class="px-4 py-2.5 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition-colors">
+                    <i class="fas fa-times mr-2"></i>Limpiar
+                </a>
+            }
+        </div>
+    </form>
+</div>
+
+<!-- Table -->
+<div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+    <!-- Pagination Header -->
+    <div class="px-4 py-3 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div class="flex items-center gap-2">
+            <span class="text-sm text-gray-500">Mostrando</span>
+            <select id="itemsPerPage" onchange="cambiarRegistrosPorPagina(this.value)" class="px-3 py-1.5 rounded-lg border border-gray-300 text-sm focus:border-[#23916A] focus:ring-2 focus:ring-[#23916A]/20">
+                @{
+                    var sizes = new[] { 10, 25, 50, 100 };
+                    foreach (var size in sizes)
+                    {
+                        if (Model.RegistrosPorPagina == size)
+                        {
+                            <option value="@size" selected>@size</option>
+                        }
+                        else
+                        {
+                            <option value="@size">@size</option>
+                        }
+                    }
+                }
+            </select>
+            <span class="text-sm text-gray-500">registros</span>
+        </div>
+        <div class="text-sm text-gray-500">
+            @{
+                var inicio = (Model.PaginaActual - 1) * Model.RegistrosPorPagina + 1;
+                var fin = Math.Min(Model.PaginaActual * Model.RegistrosPorPagina, Model.TotalRegistros);
+                if (Model.TotalRegistros == 0) inicio = 0;
+            }
+            Mostrando @inicio - @fin de @Model.TotalRegistros usuarios
+        </div>
+    </div>
+
+    <div class="overflow-x-auto">
+        <table class="w-full">
+            <thead class="bg-gray-50 border-b border-gray-200">
+                <tr>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Usuario</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Local</th>
+                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Suscripción</th>
+                    <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Estado</th>
+                    @if (puedeAdministrar)
+                    {
+                        <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Acciones</th>
+                    }
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200">
+                @foreach (var item in Model.Items)
+                {
+                    var usuario = item.Usuario;
+                    var nombreCompleto = $"{usuario?.Nombres} {usuario?.Apellidos}";
+                    var estado = usuario?.Estado == 1 ? "Activo" : "Inactivo";
+                    var esActivo = usuario?.Estado == 1;
+
+                    <tr class="usuario-row hover:bg-gray-50 transition-colors">
+                        <td class="px-4 py-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-[#23916A] to-[#1a6b4f] flex items-center justify-center text-white font-semibold text-sm">
+                                    @(usuario?.Nombres?.Length > 0 ? usuario.Nombres.Substring(0, 1).ToUpper() : "?")@(usuario?.Apellidos?.Length > 0 ? usuario.Apellidos.Substring(0, 1).ToUpper() : "")
+                                </div>
+                                <div>
+                                    <p class="font-medium text-gray-900">@nombreCompleto</p>
+                                    <p class="text-sm text-gray-500">@usuario?.Correo</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-4 py-4">
+                            @if (item.TieneLocal)
+                            {
+                                <div class="space-y-1">
+                                    <p class="text-sm font-medium text-gray-900 flex items-center gap-2">
+                                        <i class="fas fa-store text-purple-500 text-xs"></i>
+                                        @item.Local?.Nombre
+                                    </p>
+                                </div>
+                            }
+                            else
+                            {
+                                <span class="text-gray-400 text-sm flex items-center gap-2">
+                                    <i class="fas fa-store-slash text-gray-300"></i>
+                                    Sin local
+                                </span>
+                            }
+                        </td>
+                        <td class="px-4 py-4">
+                            @if (item.TieneSuscripcion)
+                            {
+                                var diasRestantes = item.DiasRestantes;
+                                var colorClass = diasRestantes > 7 ? "bg-green-100 text-green-700" :
+                                                 diasRestantes > 0 ? "bg-yellow-100 text-yellow-700" :
+                                                 "bg-red-100 text-red-700";
+                                var iconClass = diasRestantes > 7 ? "text-green-500" :
+                                               diasRestantes > 0 ? "text-yellow-500" :
+                                               "text-red-500";
+
+                                <div class="space-y-1">
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium @colorClass">
+                                        <i class="fas fa-crown"></i>
+                                        @item.NombreMembresia
+                                    </span>
+                                    <p class="text-xs flex items-center gap-1.5">
+                                        <i class="fas fa-clock @iconClass"></i>
+                                        @if (diasRestantes > 0)
+                                        {
+                                            <span class="@(diasRestantes <= 7 ? "text-yellow-600 font-medium" : "text-gray-500")">
+                                                @diasRestantes días restantes
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-red-600 font-medium">Vencida</span>
+                                        }
+                                    </p>
+                                </div>
+                            }
+                            else if (item.TieneLocal)
+                            {
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+                                    <i class="fas fa-times-circle"></i>
+                                    Sin suscripción
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="text-gray-400 text-sm">-</span>
+                            }
+                        </td>
+                        <td class="px-4 py-4 text-center">
+                            <span id="estado-badge-@usuario?.Id"
+                                  class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium @(esActivo ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700")">
+                                <span class="w-1.5 h-1.5 rounded-full @(esActivo ? "bg-green-500" : "bg-red-500")"></span>
+                                @estado
+                            </span>
+                        </td>
+                        @if (puedeAdministrar)
+                        {
+                            <td class="px-4 py-4 text-center">
+                                <div class="flex items-center justify-center gap-2">
+                                    <button onclick="abrirModalPermisos(@usuario?.Id, '@nombreCompleto')"
+                                            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-purple-600 hover:bg-purple-50 transition-colors"
+                                            title="Ver/Editar permisos">
+                                        <i class="fas fa-key"></i>
+                                        Permisos
+                                    </button>
+                                    <button onclick="abrirModal(@usuario?.Id, '@estado')"
+                                            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-blue-600 hover:bg-blue-50 transition-colors"
+                                            title="Editar estado">
+                                        <i class="fas fa-edit"></i>
+                                        Estado
+                                    </button>
+                                    @if (item.TieneSuscripcion)
+                                    {
+                                        <button onclick="abrirModalExtender(@(item.Local?.Id ?? 0), '@item.NombreMembresia', @item.DiasRestantes)"
+                                                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-[#23916A] hover:bg-green-50 transition-colors"
+                                                title="Extender membresía">
+                                            <i class="fas fa-clock"></i>
+                                            Extender
+                                        </button>
+                                    }
+                                </div>
+                            </td>
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    @if (Model.Items.Count == 0)
+    {
+        <div class="px-4 py-12 text-center">
+            <div class="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-users text-gray-400 text-2xl"></i>
+            </div>
+            <h3 class="text-lg font-medium text-gray-900 mb-1">No hay usuarios</h3>
+            <p class="text-gray-500">
+                @if (!string.IsNullOrEmpty(busquedaActual))
+                {
+                    <span>No se encontraron usuarios con el término "@busquedaActual".</span>
+                }
+                else
+                {
+                    <span>No se encontraron usuarios en el sistema.</span>
+                }
+            </p>
+        </div>
+    }
+
+    <!-- Pagination Footer -->
+    @if (Model.TotalPaginas > 1)
+    {
+        <div class="px-4 py-3 border-t border-gray-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div class="text-sm text-gray-500">
+                Página @Model.PaginaActual de @Model.TotalPaginas
+            </div>
+            <div class="flex items-center gap-2">
+                @if (Model.TienePaginaAnterior)
+                {
+                    <a href="@Url.Action("Consultar", "Usuarios", new { pagina = 1, registrosPorPagina = Model.RegistrosPorPagina, busqueda = busquedaActual })"
+                       class="px-3 py-1.5 rounded-lg border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+                        <i class="fas fa-angle-double-left"></i>
+                    </a>
+                    <a href="@Url.Action("Consultar", "Usuarios", new { pagina = Model.PaginaActual - 1, registrosPorPagina = Model.RegistrosPorPagina, busqueda = busquedaActual })"
+                       class="px-3 py-1.5 rounded-lg border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+                        <i class="fas fa-angle-left"></i>
+                    </a>
+                }
+                else
+                {
+                    <span class="px-3 py-1.5 rounded-lg border border-gray-300 text-sm font-medium text-gray-400 opacity-50">
+                        <i class="fas fa-angle-double-left"></i>
+                    </span>
+                    <span class="px-3 py-1.5 rounded-lg border border-gray-300 text-sm font-medium text-gray-400 opacity-50">
+                        <i class="fas fa-angle-left"></i>
+                    </span>
+                }
+
+                @{
+                    var startPage = Math.Max(1, Model.PaginaActual - 2);
+                    var endPage = Math.Min(Model.TotalPaginas, startPage + 4);
+                    if (endPage - startPage < 4)
+                    {
+                        startPage = Math.Max(1, endPage - 4);
+                    }
+                }
+
+                @for (int i = startPage; i <= endPage; i++)
+                {
+                    if (i == Model.PaginaActual)
+                    {
+                        <span class="px-3 py-1.5 rounded-lg text-sm font-medium bg-[#23916A] text-white">@i</span>
+                    }
+                    else
+                    {
+                        <a href="@Url.Action("Consultar", "Usuarios", new { pagina = i, registrosPorPagina = Model.RegistrosPorPagina, busqueda = busquedaActual })"
+                           class="px-3 py-1.5 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors">@i</a>
+                    }
+                }
+
+                @if (Model.TienePaginaSiguiente)
+                {
+                    <a href="@Url.Action("Consultar", "Usuarios", new { pagina = Model.PaginaActual + 1, registrosPorPagina = Model.RegistrosPorPagina, busqueda = busquedaActual })"
+                       class="px-3 py-1.5 rounded-lg border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+                        <i class="fas fa-angle-right"></i>
+                    </a>
+                    <a href="@Url.Action("Consultar", "Usuarios", new { pagina = Model.TotalPaginas, registrosPorPagina = Model.RegistrosPorPagina, busqueda = busquedaActual })"
+                       class="px-3 py-1.5 rounded-lg border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+                        <i class="fas fa-angle-double-right"></i>
+                    </a>
+                }
+                else
+                {
+                    <span class="px-3 py-1.5 rounded-lg border border-gray-300 text-sm font-medium text-gray-400 opacity-50">
+                        <i class="fas fa-angle-right"></i>
+                    </span>
+                    <span class="px-3 py-1.5 rounded-lg border border-gray-300 text-sm font-medium text-gray-400 opacity-50">
+                        <i class="fas fa-angle-double-right"></i>
+                    </span>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Modal Editar Estado -->
+<div id="modal-editar" class="hidden fixed inset-0 z-50 overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:p-0">
+        <div class="fixed inset-0 bg-gray-900/50 transition-opacity" onclick="cerrarModal()"></div>
+
+        <div class="relative bg-white rounded-2xl shadow-xl transform transition-all sm:max-w-lg w-full mx-4">
+            <!-- Header -->
+            <div class="px-6 py-4 border-b border-gray-200">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-lg font-semibold text-gray-900">Editar Estado de Usuario</h3>
+                    <button onclick="cerrarModal()" class="w-8 h-8 rounded-lg hover:bg-gray-100 flex items-center justify-center transition-colors">
+                        <i class="fas fa-times text-gray-500"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Body -->
+            <div class="px-6 py-6">
+                <form id="form-editar-estado">
+                    <input type="hidden" id="usuario-id">
+
+                    <div class="mb-6">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Estado del Usuario</label>
+                        <div class="grid grid-cols-2 gap-3">
+                            <label class="relative">
+                                <input type="radio" name="estado" value="1" class="peer sr-only" checked>
+                                <div class="p-4 rounded-xl border-2 border-gray-200 cursor-pointer transition-all peer-checked:border-green-500 peer-checked:bg-green-50">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+                                            <i class="fas fa-user-check text-green-600"></i>
+                                        </div>
+                                        <div class="text-left">
+                                            <p class="font-medium text-gray-900">Activo</p>
+                                            <p class="text-xs text-gray-500">Usuario habilitado</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </label>
+                            <label class="relative">
+                                <input type="radio" name="estado" value="0" class="peer sr-only">
+                                <div class="p-4 rounded-xl border-2 border-gray-200 cursor-pointer transition-all peer-checked:border-red-500 peer-checked:bg-red-50">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+                                            <i class="fas fa-user-times text-red-600"></i>
+                                        </div>
+                                        <div class="text-left">
+                                            <p class="font-medium text-gray-900">Inactivo</p>
+                                            <p class="text-xs text-gray-500">Usuario deshabilitado</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-3">
+                        <button type="button" onclick="cerrarModal()"
+                                class="flex-1 px-4 py-2.5 rounded-xl border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition-colors">
+                            Cancelar
+                        </button>
+                        <button type="submit"
+                                class="flex-1 px-4 py-2.5 rounded-xl bg-[#23916A] text-white font-medium hover:bg-[#1a6b4f] transition-colors">
+                            Guardar Cambios
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Gestionar Membresía -->
+<div id="modal-extender" class="hidden fixed inset-0 z-50 overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen px-4 text-center">
+        <div class="fixed inset-0 bg-gray-900/50 transition-opacity" onclick="cerrarModalExtender()"></div>
+
+        <div class="relative bg-white rounded-2xl shadow-xl transform transition-all sm:max-w-md w-full mx-4">
+            <!-- Header compacto -->
+            <div class="px-4 py-3 border-b border-gray-200 bg-gradient-to-r from-[#23916A] to-[#1a6b4f] rounded-t-2xl">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
+                            <i class="fas fa-crown text-white text-sm"></i>
+                        </div>
+                        <h3 class="text-base font-semibold text-white">Gestionar Membresía</h3>
+                    </div>
+                    <button onclick="cerrarModalExtender()" class="w-7 h-7 rounded-lg hover:bg-white/20 flex items-center justify-center transition-colors">
+                        <i class="fas fa-times text-white text-sm"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="border-b border-gray-200">
+                <div class="flex">
+                    <button onclick="cambiarTab('extender')" id="tab-extender"
+                            class="flex-1 px-3 py-2 text-sm font-medium text-[#23916A] border-b-2 border-[#23916A] bg-green-50">
+                        <i class="fas fa-clock mr-1"></i>Extender
+                    </button>
+                    <button onclick="cambiarTab('cambiar')" id="tab-cambiar"
+                            class="flex-1 px-3 py-2 text-sm font-medium text-gray-500 border-b-2 border-transparent hover:text-gray-700 hover:bg-gray-50">
+                        <i class="fas fa-exchange-alt mr-1"></i>Cambiar Plan
+                    </button>
+                </div>
+            </div>
+
+            <!-- Body compacto -->
+            <div class="px-4 py-4">
+                <!-- Info actual inline -->
+                <div class="mb-4 p-3 bg-gray-50 rounded-lg border border-gray-200 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <div class="w-7 h-7 rounded-full bg-yellow-100 flex items-center justify-center">
+                            <i class="fas fa-crown text-yellow-600 text-xs"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-500">Plan actual</p>
+                            <p id="extender-membresia-actual" class="font-semibold text-gray-900 text-sm">-</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-xs text-gray-500">Restantes</p>
+                        <p id="extender-dias-restantes" class="font-semibold text-gray-900 text-sm">-</p>
+                    </div>
+                </div>
+
+                <input type="hidden" id="extender-local-id">
+                <input type="hidden" id="extender-suscripcion-id">
+                <input type="hidden" id="extender-membresia-id">
+
+                <!-- Tab Extender -->
+                <div id="content-extender">
+                    <form id="form-extender-membresia">
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Período a extender</label>
+                            <div class="grid grid-cols-4 gap-2">
+                                <label class="relative">
+                                    <input type="radio" name="periodo" value="mensual" class="peer sr-only" checked>
+                                    <div class="p-2 rounded-lg border-2 border-gray-200 cursor-pointer transition-all peer-checked:border-[#23916A] peer-checked:bg-green-50 text-center">
+                                        <p class="text-lg font-bold text-gray-900">1</p>
+                                        <p class="text-xs text-gray-500">Mes</p>
+                                    </div>
+                                </label>
+                                <label class="relative">
+                                    <input type="radio" name="periodo" value="trimestral" class="peer sr-only">
+                                    <div class="p-2 rounded-lg border-2 border-gray-200 cursor-pointer transition-all peer-checked:border-[#23916A] peer-checked:bg-green-50 text-center">
+                                        <p class="text-lg font-bold text-gray-900">3</p>
+                                        <p class="text-xs text-gray-500">Meses</p>
+                                    </div>
+                                </label>
+                                <label class="relative">
+                                    <input type="radio" name="periodo" value="semestral" class="peer sr-only">
+                                    <div class="p-2 rounded-lg border-2 border-gray-200 cursor-pointer transition-all peer-checked:border-[#23916A] peer-checked:bg-green-50 text-center">
+                                        <p class="text-lg font-bold text-gray-900">6</p>
+                                        <p class="text-xs text-gray-500">Meses</p>
+                                    </div>
+                                </label>
+                                <label class="relative">
+                                    <input type="radio" name="periodo" value="anual" class="peer sr-only">
+                                    <div class="p-2 rounded-lg border-2 border-gray-200 cursor-pointer transition-all peer-checked:border-[#23916A] peer-checked:bg-green-50 text-center">
+                                        <p class="text-lg font-bold text-gray-900">12</p>
+                                        <p class="text-xs text-gray-500">Meses</p>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="flex gap-2">
+                            <button type="button" onclick="cerrarModalExtender()"
+                                    class="flex-1 px-3 py-2 rounded-lg border border-gray-300 text-gray-700 text-sm font-medium hover:bg-gray-50 transition-colors">
+                                Cancelar
+                            </button>
+                            <button type="submit" id="btn-extender"
+                                    class="flex-1 px-3 py-2 rounded-lg bg-[#23916A] text-white text-sm font-medium hover:bg-[#1a6b4f] transition-colors">
+                                <i class="fas fa-plus mr-1"></i>Extender
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Tab Cambiar -->
+                <div id="content-cambiar" class="hidden">
+                    <form id="form-cambiar-membresia">
+                        <div class="mb-3">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Nuevo plan</label>
+                            <div id="planes-container" class="space-y-2 max-h-40 overflow-y-auto">
+                                <div class="text-center py-3 text-gray-500 text-sm">
+                                    <i class="fas fa-spinner fa-spin mr-1"></i>Cargando...
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Duración</label>
+                            <div class="grid grid-cols-4 gap-2">
+                                <label class="relative">
+                                    <input type="radio" name="periodo-cambio" value="mensual" class="peer sr-only" checked>
+                                    <div class="p-2 rounded-lg border-2 border-gray-200 cursor-pointer transition-all peer-checked:border-purple-500 peer-checked:bg-purple-50 text-center">
+                                        <p class="text-sm font-bold text-gray-900">1</p>
+                                        <p class="text-xs text-gray-500">Mes</p>
+                                    </div>
+                                </label>
+                                <label class="relative">
+                                    <input type="radio" name="periodo-cambio" value="trimestral" class="peer sr-only">
+                                    <div class="p-2 rounded-lg border-2 border-gray-200 cursor-pointer transition-all peer-checked:border-purple-500 peer-checked:bg-purple-50 text-center">
+                                        <p class="text-sm font-bold text-gray-900">3</p>
+                                        <p class="text-xs text-gray-500">Meses</p>
+                                    </div>
+                                </label>
+                                <label class="relative">
+                                    <input type="radio" name="periodo-cambio" value="semestral" class="peer sr-only">
+                                    <div class="p-2 rounded-lg border-2 border-gray-200 cursor-pointer transition-all peer-checked:border-purple-500 peer-checked:bg-purple-50 text-center">
+                                        <p class="text-sm font-bold text-gray-900">6</p>
+                                        <p class="text-xs text-gray-500">Meses</p>
+                                    </div>
+                                </label>
+                                <label class="relative">
+                                    <input type="radio" name="periodo-cambio" value="anual" class="peer sr-only">
+                                    <div class="p-2 rounded-lg border-2 border-gray-200 cursor-pointer transition-all peer-checked:border-purple-500 peer-checked:bg-purple-50 text-center">
+                                        <p class="text-sm font-bold text-gray-900">12</p>
+                                        <p class="text-xs text-gray-500">Meses</p>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="flex gap-2">
+                            <button type="button" onclick="cerrarModalExtender()"
+                                    class="flex-1 px-3 py-2 rounded-lg border border-gray-300 text-gray-700 text-sm font-medium hover:bg-gray-50 transition-colors">
+                                Cancelar
+                            </button>
+                            <button type="submit" id="btn-cambiar"
+                                    class="flex-1 px-3 py-2 rounded-lg bg-purple-600 text-white text-sm font-medium hover:bg-purple-700 transition-colors">
+                                <i class="fas fa-exchange-alt mr-1"></i>Cambiar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Permisos de Usuario -->
+<div id="modal-permisos" class="hidden fixed inset-0 z-50 overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen px-4 text-center">
+        <div class="fixed inset-0 bg-gray-900/50 transition-opacity" onclick="cerrarModalPermisos()"></div>
+
+        <div class="relative bg-white rounded-2xl shadow-xl transform transition-all sm:max-w-2xl w-full mx-4 max-h-[90vh] overflow-hidden flex flex-col">
+            <!-- Header -->
+            <div class="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-purple-600 to-purple-700 rounded-t-2xl">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
+                            <i class="fas fa-key text-white"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-white">Permisos del Usuario</h3>
+                            <p id="permisos-usuario-nombre" class="text-sm text-purple-200">-</p>
+                        </div>
+                    </div>
+                    <button onclick="cerrarModalPermisos()" class="w-8 h-8 rounded-lg hover:bg-white/20 flex items-center justify-center transition-colors">
+                        <i class="fas fa-times text-white"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Body con scroll -->
+            <div class="flex-1 overflow-y-auto px-6 py-4">
+                <input type="hidden" id="permisos-usuario-id">
+
+                <!-- Loader -->
+                <div id="permisos-loader" class="py-8 text-center">
+                    <i class="fas fa-spinner fa-spin text-2xl text-purple-500 mb-2"></i>
+                    <p class="text-gray-500">Cargando permisos...</p>
+                </div>
+
+                <!-- Contenido de permisos -->
+                <div id="permisos-contenido" class="hidden space-y-4">
+                    <!-- Se llena dinámicamente -->
+                </div>
+
+                <!-- Sin permisos -->
+                <div id="permisos-vacio" class="hidden py-8 text-center">
+                    <div class="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-ban text-gray-400 text-2xl"></i>
+                    </div>
+                    <p class="text-gray-500">Este usuario no tiene permisos asignados</p>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 flex gap-3">
+                <button type="button" onclick="cerrarModalPermisos()"
+                        class="flex-1 px-4 py-2.5 rounded-xl border border-gray-300 text-gray-700 font-medium hover:bg-gray-100 transition-colors">
+                    Cancelar
+                </button>
+                <button type="button" onclick="guardarPermisos()" id="btn-guardar-permisos"
+                        class="flex-1 px-4 py-2.5 rounded-xl bg-purple-600 text-white font-medium hover:bg-purple-700 transition-colors">
+                    <i class="fas fa-save mr-2"></i>Guardar Cambios
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Notification -->
+<div id="toast" class="fixed bottom-4 right-4 z-50 transform translate-y-full opacity-0 transition-all duration-300">
+    <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-4 flex items-center gap-3 max-w-sm">
+        <div id="toast-icon" class="w-10 h-10 rounded-full flex items-center justify-center">
+            <i class="fas fa-check"></i>
+        </div>
+        <div>
+            <p id="toast-title" class="font-medium text-gray-900">Éxito</p>
+            <p id="toast-message" class="text-sm text-gray-500">Operación completada</p>
+        </div>
+    </div>
+</div>
+
+</div> <!-- Cierre del contenedor principal -->
+</div>
+
+@section Scripts {
+<script>
+    // Mostrar contenido después de cargar el DOM
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(function() {
+            document.getElementById('skeleton-usuarios').style.display = 'none';
+            document.getElementById('content-usuarios').classList.remove('hidden');
+            document.getElementById('content-usuarios').style.transition = 'opacity 300ms';
+            document.getElementById('content-usuarios').style.opacity = '1';
+        }, 100);
+    });
+</script>
+<script>
+    function cambiarRegistrosPorPagina(valor) {
+        const url = new URL(window.location.href);
+        url.searchParams.set('registrosPorPagina', valor);
+        url.searchParams.set('pagina', '1');
+        window.location.href = url.toString();
+    }
+
+    // Modal functions
+    function abrirModal(idUsuario, estadoActual) {
+        document.getElementById('usuario-id').value = idUsuario;
+        const radios = document.querySelectorAll('input[name="estado"]');
+        radios.forEach(radio => {
+            radio.checked = (estadoActual === "Activo" && radio.value === "1") ||
+                           (estadoActual !== "Activo" && radio.value === "0");
         });
-    </script>
+        document.getElementById('modal-editar').classList.remove('hidden');
+    }
 
-    <script>
-        function abrirModal(idUsuario, estadoActual) {
-            document.getElementById("usuario-id").value = idUsuario;
-            document.getElementById("estado-usuario").value = estadoActual === "Activo" ? "1" : "0";
-            document.getElementById("modal-editar").classList.remove("hidden");
+    function cerrarModal() {
+        document.getElementById('modal-editar').classList.add('hidden');
+    }
+
+    // Form submission
+    document.getElementById('form-editar-estado').addEventListener('submit', function(event) {
+        event.preventDefault();
+
+        const idUsuario = document.getElementById('usuario-id').value;
+        const nuevoEstado = document.querySelector('input[name="estado"]:checked').value;
+
+        fetch('/Usuarios/EditarEstado', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                IdUsuario: parseInt(idUsuario),
+                NuevoEstado: parseInt(nuevoEstado)
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            cerrarModal();
+
+            // Update the badge
+            const badge = document.getElementById(`estado-badge-${idUsuario}`);
+
+            if (nuevoEstado === "1") {
+                badge.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700';
+                badge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>Activo';
+            } else {
+                badge.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700';
+                badge.innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>Inactivo';
+            }
+
+            showToast('success', 'Estado actualizado', data.mensaje);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showToast('error', 'Error', 'No se pudo actualizar el estado');
+        });
+    });
+
+    // Toast notification
+    function showToast(type, title, message) {
+        const toast = document.getElementById('toast');
+        const icon = document.getElementById('toast-icon');
+        const titleEl = document.getElementById('toast-title');
+        const messageEl = document.getElementById('toast-message');
+
+        titleEl.textContent = title;
+        messageEl.textContent = message;
+
+        if (type === 'success') {
+            icon.className = 'w-10 h-10 rounded-full flex items-center justify-center bg-green-100 text-green-600';
+            icon.innerHTML = '<i class="fas fa-check"></i>';
+        } else {
+            icon.className = 'w-10 h-10 rounded-full flex items-center justify-center bg-red-100 text-red-600';
+            icon.innerHTML = '<i class="fas fa-times"></i>';
         }
 
-        document.getElementById("cerrar-modal").addEventListener("click", function () {
-            document.getElementById("modal-editar").classList.add("hidden");
+        toast.classList.remove('translate-y-full', 'opacity-0');
+
+        setTimeout(() => {
+            toast.classList.add('translate-y-full', 'opacity-0');
+        }, 3000);
+    }
+
+    // Close modal on escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            cerrarModal();
+            cerrarModalExtender();
+        }
+    });
+
+    // ========================================
+    // GESTIONAR MEMBRESÍA (EXTENDER / CAMBIAR)
+    // ========================================
+
+    let planesMembresia = [];
+    let membresiaActualId = null;
+
+    function abrirModalExtender(idLocal, membresia, diasRestantes) {
+        document.getElementById('extender-local-id').value = idLocal;
+        document.getElementById('extender-membresia-actual').textContent = membresia;
+        document.getElementById('extender-dias-restantes').textContent = diasRestantes + ' días';
+
+        // Reset tabs
+        cambiarTab('extender');
+
+        // Obtener info de la suscripción
+        fetch(`/Usuarios/ObtenerInfoSuscripcion?idLocal=${idLocal}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('extender-suscripcion-id').value = data.suscripcion.id;
+                    document.getElementById('extender-membresia-id').value = data.suscripcion.tipoMembresiaId;
+                    membresiaActualId = data.suscripcion.tipoMembresiaId;
+                }
+            })
+            .catch(error => console.error('Error:', error));
+
+        // Cargar planes disponibles
+        cargarPlanesMembresia();
+
+        // Reset radio buttons
+        document.querySelector('input[name="periodo"][value="mensual"]').checked = true;
+        const periodoCambio = document.querySelector('input[name="periodo-cambio"][value="mensual"]');
+        if (periodoCambio) periodoCambio.checked = true;
+
+        document.getElementById('modal-extender').classList.remove('hidden');
+    }
+
+    function cerrarModalExtender() {
+        document.getElementById('modal-extender').classList.add('hidden');
+    }
+
+    function cambiarTab(tab) {
+        const tabExtender = document.getElementById('tab-extender');
+        const tabCambiar = document.getElementById('tab-cambiar');
+        const contentExtender = document.getElementById('content-extender');
+        const contentCambiar = document.getElementById('content-cambiar');
+
+        if (tab === 'extender') {
+            tabExtender.className = 'flex-1 px-3 py-2 text-sm font-medium text-[#23916A] border-b-2 border-[#23916A] bg-green-50';
+            tabCambiar.className = 'flex-1 px-3 py-2 text-sm font-medium text-gray-500 border-b-2 border-transparent hover:text-gray-700 hover:bg-gray-50';
+            contentExtender.classList.remove('hidden');
+            contentCambiar.classList.add('hidden');
+        } else {
+            tabCambiar.className = 'flex-1 px-3 py-2 text-sm font-medium text-purple-600 border-b-2 border-purple-600 bg-purple-50';
+            tabExtender.className = 'flex-1 px-3 py-2 text-sm font-medium text-gray-500 border-b-2 border-transparent hover:text-gray-700 hover:bg-gray-50';
+            contentCambiar.classList.remove('hidden');
+            contentExtender.classList.add('hidden');
+        }
+    }
+
+    function cargarPlanesMembresia() {
+        const container = document.getElementById('planes-container');
+        container.innerHTML = '<div class="text-center py-4 text-gray-500"><i class="fas fa-spinner fa-spin mr-2"></i>Cargando planes...</div>';
+
+        fetch('/Usuarios/ObtenerTiposMembresia')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.membresias) {
+                    planesMembresia = data.membresias;
+                    renderizarPlanes();
+                } else {
+                    container.innerHTML = '<div class="text-center py-4 text-red-500">Error al cargar planes</div>';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                container.innerHTML = '<div class="text-center py-4 text-red-500">Error al cargar planes</div>';
+            });
+    }
+
+    function renderizarPlanes() {
+        const container = document.getElementById('planes-container');
+        const colores = {
+            'Basico': { bg: 'bg-gray-100', icon: 'text-gray-600' },
+            'Premium': { bg: 'bg-yellow-100', icon: 'text-yellow-600' },
+            'Empresarial': { bg: 'bg-purple-100', icon: 'text-purple-600' }
+        };
+
+        let html = '';
+        planesMembresia.forEach((plan, index) => {
+            const color = colores[plan.nombre] || colores['Basico'];
+            const esActual = plan.id === membresiaActualId;
+
+            html += `
+                <label class="relative block ${esActual ? 'opacity-50 pointer-events-none' : ''}">
+                    <input type="radio" name="nuevo-plan" value="${plan.id}" class="peer sr-only" ${index === 0 && !esActual ? 'checked' : ''} ${esActual ? 'disabled' : ''}>
+                    <div class="p-2.5 rounded-lg border-2 border-gray-200 cursor-pointer transition-all peer-checked:border-purple-500 peer-checked:bg-purple-50 flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <div class="w-7 h-7 rounded-full ${color.bg} flex items-center justify-center">
+                                <i class="fas fa-crown ${color.icon} text-xs"></i>
+                            </div>
+                            <div>
+                                <p class="font-semibold text-gray-900 text-sm">${plan.nombre}</p>
+                                <p class="text-xs text-gray-500">$${plan.costoMensual.toLocaleString()}/mes</p>
+                            </div>
+                        </div>
+                        ${esActual ? '<span class="text-xs bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded-full">Actual</span>' : ''}
+                    </div>
+                </label>
+            `;
         });
 
-        document.getElementById("form-editar-estado").addEventListener("submit", function (event) {
-            event.preventDefault();
+        container.innerHTML = html;
+    }
 
-            let idUsuario = document.getElementById("usuario-id").value;
-            let nuevoEstado = document.getElementById("estado-usuario").value;
+    // Form extender membresía
+    document.getElementById('form-extender-membresia').addEventListener('submit', function(event) {
+        event.preventDefault();
 
-            console.log(`Enviando petición: ID Usuario: ${idUsuario}, Nuevo Estado: ${nuevoEstado}`);
+        const idLocal = document.getElementById('extender-local-id').value;
+        const idSuscripcion = document.getElementById('extender-suscripcion-id').value;
+        const periodo = document.querySelector('input[name="periodo"]:checked').value.toUpperCase();
 
-            fetch("/Usuarios/EditarEstado", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
+        const btn = document.getElementById('btn-extender');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Procesando...';
+
+        fetch('/Usuarios/ExtenderMembresia', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                IdLocal: parseInt(idLocal),
+                IdSuscripcion: parseInt(idSuscripcion),
+                Periodo: periodo,
+                Notas: 'Extensión desde panel de administración'
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            cerrarModalExtender();
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-plus mr-2"></i>Extender';
+
+            if (data.success) {
+                showToast('success', 'Membresía extendida', data.mensaje);
+                // Recargar la página para ver los cambios
+                setTimeout(() => window.location.reload(), 1500);
+            } else {
+                showToast('error', 'Error', data.mensaje);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-plus mr-2"></i>Extender';
+            showToast('error', 'Error', 'No se pudo extender la membresía');
+        });
+    });
+
+    // Form cambiar membresía
+    document.getElementById('form-cambiar-membresia').addEventListener('submit', function(event) {
+        event.preventDefault();
+
+        const idLocal = document.getElementById('extender-local-id').value;
+        const nuevoPlan = document.querySelector('input[name="nuevo-plan"]:checked');
+        const periodo = document.querySelector('input[name="periodo-cambio"]:checked').value.toUpperCase();
+
+        if (!nuevoPlan) {
+            showToast('error', 'Error', 'Selecciona un plan');
+            return;
+        }
+
+        const btn = document.getElementById('btn-cambiar');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Procesando...';
+
+        fetch('/Usuarios/CambiarMembresia', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                IdLocal: parseInt(idLocal),
+                IdTipoMembresia: parseInt(nuevoPlan.value),
+                Periodo: periodo
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            cerrarModalExtender();
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-exchange-alt mr-2"></i>Cambiar Plan';
+
+            if (data.success) {
+                showToast('success', 'Plan cambiado', data.mensaje);
+                setTimeout(() => window.location.reload(), 1500);
+            } else {
+                showToast('error', 'Error', data.mensaje);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-exchange-alt mr-2"></i>Cambiar Plan';
+            showToast('error', 'Error', 'No se pudo cambiar el plan');
+        });
+    });
+
+    // ========================================
+    // PERMISOS DE USUARIO
+    // ========================================
+
+    let todosLosPermisos = [];
+    let permisosUsuarioActual = [];
+
+    function abrirModalPermisos(idUsuario, nombreUsuario) {
+        document.getElementById('permisos-usuario-id').value = idUsuario;
+        document.getElementById('permisos-usuario-nombre').textContent = nombreUsuario;
+
+        // Mostrar loader
+        document.getElementById('permisos-loader').classList.remove('hidden');
+        document.getElementById('permisos-contenido').classList.add('hidden');
+        document.getElementById('permisos-vacio').classList.add('hidden');
+
+        document.getElementById('modal-permisos').classList.remove('hidden');
+
+        // Cargar permisos
+        cargarPermisosUsuario(idUsuario);
+    }
+
+    function cerrarModalPermisos() {
+        document.getElementById('modal-permisos').classList.add('hidden');
+    }
+
+    async function cargarPermisosUsuario(idUsuario) {
+        try {
+            // Cargar todos los permisos y los del usuario en paralelo
+            const [todosRes, usuarioRes] = await Promise.all([
+                fetch('/Usuarios/ObtenerTodosPermisos'),
+                fetch(`/Usuarios/ObtenerPermisosUsuario?idUsuario=${idUsuario}`)
+            ]);
+
+            const todosData = await todosRes.json();
+            const usuarioData = await usuarioRes.json();
+
+            if (todosData.success && usuarioData.success) {
+                todosLosPermisos = todosData.permisos;
+                permisosUsuarioActual = usuarioData.permisos;
+                renderizarPermisos();
+            } else {
+                document.getElementById('permisos-loader').classList.add('hidden');
+                document.getElementById('permisos-vacio').classList.remove('hidden');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            document.getElementById('permisos-loader').classList.add('hidden');
+            document.getElementById('permisos-vacio').classList.remove('hidden');
+        }
+    }
+
+    function renderizarPermisos() {
+        const contenedor = document.getElementById('permisos-contenido');
+        const idsActivos = new Set(permisosUsuarioActual.filter(p => p.estado).map(p => p.id));
+
+        // Agrupar por categoría
+        const porCategoria = {};
+        todosLosPermisos.forEach(permiso => {
+            if (!porCategoria[permiso.categoria]) {
+                porCategoria[permiso.categoria] = [];
+            }
+            porCategoria[permiso.categoria].push(permiso);
+        });
+
+        // Colores por categoría
+        const colores = {
+            'ADMIN': { bg: 'bg-red-50', border: 'border-red-200', badge: 'bg-red-100 text-red-700', icon: 'text-red-500' },
+            'NEGOCIO': { bg: 'bg-blue-50', border: 'border-blue-200', badge: 'bg-blue-100 text-blue-700', icon: 'text-blue-500' },
+            'PRODUCTOS': { bg: 'bg-green-50', border: 'border-green-200', badge: 'bg-green-100 text-green-700', icon: 'text-green-500' },
+            'OFERTAS': { bg: 'bg-yellow-50', border: 'border-yellow-200', badge: 'bg-yellow-100 text-yellow-700', icon: 'text-yellow-500' },
+            'ANALITICAS': { bg: 'bg-purple-50', border: 'border-purple-200', badge: 'bg-purple-100 text-purple-700', icon: 'text-purple-500' },
+            'MARKETING': { bg: 'bg-pink-50', border: 'border-pink-200', badge: 'bg-pink-100 text-pink-700', icon: 'text-pink-500' },
+            'COMUNICACION': { bg: 'bg-indigo-50', border: 'border-indigo-200', badge: 'bg-indigo-100 text-indigo-700', icon: 'text-indigo-500' }
+        };
+
+        let html = '';
+        for (const [categoria, permisos] of Object.entries(porCategoria)) {
+            const color = colores[categoria] || colores['NEGOCIO'];
+
+            html += `
+                <div class="rounded-xl border ${color.border} ${color.bg} overflow-hidden">
+                    <div class="px-4 py-2 border-b ${color.border} flex items-center justify-between">
+                        <span class="font-semibold text-gray-800 flex items-center gap-2">
+                            <i class="fas fa-folder ${color.icon}"></i>
+                            ${categoria}
+                        </span>
+                        <span class="text-xs ${color.badge} px-2 py-0.5 rounded-full">${permisos.length} permisos</span>
+                    </div>
+                    <div class="p-3 space-y-2">
+            `;
+
+            permisos.forEach(permiso => {
+                const activo = idsActivos.has(permiso.id);
+                const permisoUsuario = permisosUsuarioActual.find(p => p.id === permiso.id);
+                const origen = permisoUsuario?.origen || '';
+
+                html += `
+                    <label class="flex items-center justify-between p-2 rounded-lg hover:bg-white/50 cursor-pointer transition-colors">
+                        <div class="flex items-center gap-3">
+                            <input type="checkbox" id="permiso-${permiso.id}" value="${permiso.id}"
+                                   ${activo ? 'checked' : ''}
+                                   class="w-4 h-4 rounded border-gray-300 text-purple-600 focus:ring-purple-500">
+                            <div>
+                                <p class="text-sm font-medium text-gray-900">${permiso.nombre}</p>
+                                <p class="text-xs text-gray-500">${permiso.descripcion || permiso.codigo}</p>
+                            </div>
+                        </div>
+                        ${origen ? `<span class="text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full">${origen}</span>` : ''}
+                    </label>
+                `;
+            });
+
+            html += `
+                    </div>
+                </div>
+            `;
+        }
+
+        contenedor.innerHTML = html;
+        document.getElementById('permisos-loader').classList.add('hidden');
+        contenedor.classList.remove('hidden');
+    }
+
+    async function guardarPermisos() {
+        const idUsuario = document.getElementById('permisos-usuario-id').value;
+        const checkboxes = document.querySelectorAll('#permisos-contenido input[type="checkbox"]');
+        const permisosSeleccionados = [];
+
+        checkboxes.forEach(cb => {
+            if (cb.checked) {
+                permisosSeleccionados.push(parseInt(cb.value));
+            }
+        });
+
+        const btn = document.getElementById('btn-guardar-permisos');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Guardando...';
+
+        try {
+            const response = await fetch('/Usuarios/ActualizarPermisosUsuario', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     IdUsuario: parseInt(idUsuario),
-                    NuevoEstado: parseInt(nuevoEstado)
+                    IdsPermisos: permisosSeleccionados
                 })
-            })
-                .then(response => response.json())
-                .then(data => {
-                    console.log("Respuesta del servidor:", data);
-                    alert(data.mensaje);
-                    document.getElementById("modal-editar").classList.add("hidden");
+            });
 
-                    let estadoElemento = document.getElementById(`estado-${idUsuario}`);
-                    estadoElemento.textContent = nuevoEstado == "1" ? "🟢 Activo" : "🔴 Inactivo";
-                    estadoElemento.className = nuevoEstado == "1" ? "text-green-600" : "text-red-600";
-                })
-                .catch(error => console.error("Error en fetch:", error));
-        });
+            const data = await response.json();
 
-    </script>
-</body>
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-save mr-2"></i>Guardar Cambios';
+
+            if (data.success) {
+                cerrarModalPermisos();
+                showToast('success', 'Permisos actualizados', data.mensaje || 'Los permisos se guardaron correctamente');
+            } else {
+                showToast('error', 'Error', data.mensaje || 'No se pudieron guardar los permisos');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-save mr-2"></i>Guardar Cambios';
+            showToast('error', 'Error', 'No se pudieron guardar los permisos');
+        }
+    }
+</script>
+}

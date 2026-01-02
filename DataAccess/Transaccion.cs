@@ -8,7 +8,7 @@ namespace DataAccess
 {
     public class Transaccion
     {
-        public string Procedimiento { get; set; }
-        public List<Parametro> Parametros { get; set; }
+        public string Procedimiento { get; set; } = "";
+        public List<Parametro> Parametros { get; set; } = new();
     }
 }

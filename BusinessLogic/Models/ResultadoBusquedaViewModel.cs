@@ -8,9 +8,9 @@ namespace BusinessLogic.Models
 {
     public class ResultadoBusquedaViewModel
     {
-        public string Nombre { get; set; }
-        public string Tipo { get; set; }
-        public string Url { get; set; }
+        public string Nombre { get; set; } = "";
+        public string Tipo { get; set; } = "";
+        public string Url { get; set; } = "";
     }
 
 }

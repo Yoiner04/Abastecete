@@ -1,0 +1,500 @@
+@model Dictionary<string, List<BusinessLogic.Models.AddonTipo>>
+@{
+    Layout = null;
+    var addonsComprados = ViewBag.AddonsComprados as List<BusinessLogic.Models.AddonLocal> ?? new List<BusinessLogic.Models.AddonLocal>();
+    var idLocal = ViewBag.IdLocal as int? ?? 0;
+    var epaycoKey = ViewBag.EpaycoPublicKey as string ?? "";
+}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tienda de Addons - Abastecete</title>
+    <link rel="icon" type="image/x-icon" href="~/images/Logo A naranja.png" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <style>
+        @@keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @@keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        @@keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        .animate-fadeIn { animation: fadeIn 0.5s ease-out forwards; }
+        .animate-slideIn { animation: slideIn 0.4s ease-out forwards; }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+        }
+
+        .addon-card {
+            transition: all 0.3s ease;
+        }
+        .addon-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+
+        .addon-card.popular {
+            border: 2px solid #f97316;
+        }
+        .addon-card.popular::before {
+            content: 'Popular';
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+            color: white;
+            padding: 2px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+
+<body class="bg-gradient-to-br from-gray-50 via-white to-orange-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white border-b border-gray-200 sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center gap-4">
+                    <a href="@Url.Action("MiMembresia", "Negocios")" class="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors">
+                        <i class="fas fa-arrow-left"></i>
+                        <span class="hidden sm:inline">Volver a Mi Membresia</span>
+                    </a>
+                </div>
+                <h1 class="text-xl font-bold text-gray-900">
+                    <i class="fas fa-puzzle-piece text-orange-500 mr-2"></i>
+                    Tienda de Addons
+                </h1>
+                <div class="w-24"></div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Alertas -->
+        @if (TempData["Success"] != null)
+        {
+            <div class="mb-6 p-4 rounded-xl bg-green-50 border border-green-200 flex items-start gap-3 animate-slideIn">
+                <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+                    <i class="fas fa-check-circle text-green-500"></i>
+                </div>
+                <div>
+                    <p class="text-sm font-medium text-green-800">@TempData["Success"]</p>
+                </div>
+                <button onclick="this.parentElement.remove()" class="ml-auto text-green-500 hover:text-green-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        }
+        @if (TempData["Error"] != null)
+        {
+            <div class="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 flex items-start gap-3 animate-slideIn">
+                <div class="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+                    <i class="fas fa-exclamation-circle text-red-500"></i>
+                </div>
+                <div>
+                    <p class="text-sm font-medium text-red-800">@TempData["Error"]</p>
+                </div>
+                <button onclick="this.parentElement.remove()" class="ml-auto text-red-500 hover:text-red-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        }
+
+        <!-- Banner informativo -->
+        <div class="mb-8 bg-gradient-to-r from-orange-500 to-amber-500 rounded-2xl p-6 text-white animate-fadeIn">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div class="flex items-center gap-4">
+                    <div class="w-14 h-14 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
+                        <i class="fas fa-rocket text-3xl"></i>
+                    </div>
+                    <div>
+                        <h2 class="font-bold text-xl">Potencia tu negocio</h2>
+                        <p class="text-orange-100">Aumenta tus limites y llega a mas clientes con nuestros addons</p>
+                    </div>
+                </div>
+                @if (addonsComprados.Any())
+                {
+                    <div class="bg-white/20 rounded-xl px-4 py-2 text-center">
+                        <p class="text-2xl font-bold">@addonsComprados.Count</p>
+                        <p class="text-xs text-orange-100">Addons activos</p>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Mis Addons Comprados -->
+        @if (addonsComprados.Any())
+        {
+            <div class="mb-8 glass-card rounded-2xl shadow-xl p-6 animate-fadeIn">
+                <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                    <i class="fas fa-check-circle text-green-500"></i>
+                    Mis Addons Activos
+                </h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    @foreach (var addon in addonsComprados)
+                    {
+                        var colorTipo = addon.TipoLimite switch {
+                            "PRODUCTOS" => "blue",
+                            "OFERTAS_FLASH" => "purple",
+                            "DURACION_OFERTA" => "amber",
+                            _ => "gray"
+                        };
+                        <div class="p-4 rounded-xl bg-@(colorTipo)-50 border border-@(colorTipo)-200">
+                            <div class="flex items-center gap-3 mb-2">
+                                <div class="w-10 h-10 rounded-lg bg-@(colorTipo)-100 flex items-center justify-center">
+                                    <i class="fas fa-check text-@(colorTipo)-600"></i>
+                                </div>
+                                <div>
+                                    <p class="font-semibold text-gray-900">@addon.NombreAddon</p>
+                                    <p class="text-xs text-gray-500">+@addon.TotalAgregado @addon.TipoLimite.ToLower().Replace("_", " ")</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between text-xs text-gray-500">
+                                <span>Comprado: @addon.FechaCompra.ToString("dd/MM/yyyy")</span>
+                                @if (addon.FechaExpiracion.HasValue)
+                                {
+                                    <span class="text-orange-600">Vence: @addon.FechaExpiracion.Value.ToString("dd/MM/yyyy")</span>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+
+        <!-- Addons por tipo -->
+        @foreach (var grupo in Model)
+        {
+            var tipoLimite = grupo.Key;
+            var addons = grupo.Value;
+            var colorTipo = tipoLimite switch {
+                "PRODUCTOS" => "blue",
+                "OFERTAS_FLASH" => "purple",
+                "DURACION_OFERTA" => "amber",
+                _ => "gray"
+            };
+            var iconoTipo = tipoLimite switch {
+                "PRODUCTOS" => "fa-box",
+                "OFERTAS_FLASH" => "fa-bolt",
+                "DURACION_OFERTA" => "fa-clock",
+                _ => "fa-puzzle-piece"
+            };
+            var tituloTipo = tipoLimite switch {
+                "PRODUCTOS" => "Productos Adicionales",
+                "OFERTAS_FLASH" => "Ofertas Flash",
+                "DURACION_OFERTA" => "Duracion de Ofertas",
+                _ => tipoLimite
+            };
+            var descripcionTipo = tipoLimite switch {
+                "PRODUCTOS" => "Aumenta la cantidad de productos que puedes publicar en tu catalogo",
+                "OFERTAS_FLASH" => "Consigue mas ofertas flash para promocionar tus productos",
+                "DURACION_OFERTA" => "Extiende la duracion de tus ofertas activas",
+                _ => ""
+            };
+
+            <div class="mb-8 animate-fadeIn" style="animation-delay: @(Model.Keys.ToList().IndexOf(tipoLimite) * 0.1)s">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-12 h-12 rounded-xl bg-@(colorTipo)-100 flex items-center justify-center">
+                        <i class="fas @iconoTipo text-@(colorTipo)-600 text-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold text-gray-900">@tituloTipo</h3>
+                        <p class="text-sm text-gray-500">@descripcionTipo</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    @{
+                        var index = 0;
+                        var popularIndex = addons.Count > 1 ? 1 : 0;
+                    }
+                    @foreach (var addon in addons)
+                    {
+                        var esPopular = index == popularIndex;
+                        <div class="addon-card relative glass-card rounded-2xl shadow-lg overflow-hidden @(esPopular ? "popular" : "")">
+                            <!-- Header del addon -->
+                            <div class="bg-gradient-to-br from-@(colorTipo)-500 to-@(colorTipo)-600 px-6 py-6 text-white">
+                                <div class="flex items-center justify-between mb-2">
+                                    <div class="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center">
+                                        <i class="@(string.IsNullOrEmpty(addon.Icono) ? $"fas {iconoTipo}" : addon.Icono) text-2xl"></i>
+                                    </div>
+                                    <span class="text-3xl font-bold">+@addon.Cantidad</span>
+                                </div>
+                                <h4 class="text-lg font-bold">@addon.Nombre</h4>
+                                @if (!string.IsNullOrEmpty(addon.Descripcion))
+                                {
+                                    <p class="text-sm text-white/80 mt-1">@addon.Descripcion</p>
+                                }
+                            </div>
+
+                            <!-- Precio y acciones -->
+                            <div class="p-6">
+                                <div class="text-center mb-4">
+                                    <p class="text-3xl font-bold text-gray-900">
+                                        $@addon.Precio.ToString("N0")
+                                        <span class="text-sm font-normal text-gray-500">COP</span>
+                                    </p>
+                                    <p class="text-xs text-gray-500">Pago unico</p>
+                                </div>
+
+                                <!-- Selector de cantidad -->
+                                <div class="flex items-center justify-center gap-3 mb-4">
+                                    <button onclick="cambiarCantidad(@addon.Id, -1)"
+                                            class="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors">
+                                        <i class="fas fa-minus text-sm text-gray-600"></i>
+                                    </button>
+                                    <input type="number" id="cantidad-@addon.Id" value="1" min="1" max="10"
+                                           class="w-16 text-center text-lg font-bold border-2 border-gray-200 rounded-lg py-1 focus:border-@(colorTipo)-500 focus:outline-none"
+                                           onchange="actualizarTotal(@addon.Id, @((int)addon.Precio))">
+                                    <button onclick="cambiarCantidad(@addon.Id, 1)"
+                                            class="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors">
+                                        <i class="fas fa-plus text-sm text-gray-600"></i>
+                                    </button>
+                                </div>
+
+                                <!-- Total -->
+                                <div class="flex items-center justify-between mb-4 p-3 bg-gray-50 rounded-lg">
+                                    <span class="text-gray-600">Total:</span>
+                                    <span id="total-@addon.Id" class="text-xl font-bold text-@(colorTipo)-600">$@addon.Precio.ToString("N0")</span>
+                                </div>
+
+                                <!-- Boton comprar -->
+                                <button onclick="iniciarCompra(@addon.Id, '@addon.Nombre.Replace("'", "\\'"))', @((int)addon.Precio))"
+                                        class="w-full py-3 rounded-xl bg-gradient-to-r from-@(colorTipo)-500 to-@(colorTipo)-600 text-white font-semibold hover:shadow-lg hover:shadow-@(colorTipo)-500/30 transition-all flex items-center justify-center gap-2">
+                                    <i class="fas fa-shopping-cart"></i>
+                                    Comprar Ahora
+                                </button>
+                            </div>
+                        </div>
+                        index++;
+                    }
+                </div>
+            </div>
+        }
+
+        @if (!Model.Any())
+        {
+            <div class="text-center py-16">
+                <div class="w-24 h-24 mx-auto mb-6 bg-gray-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-puzzle-piece text-4xl text-gray-400"></i>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-2">No hay addons disponibles</h3>
+                <p class="text-gray-500">Por el momento no hay addons para comprar. Vuelve pronto.</p>
+            </div>
+        }
+
+        <!-- FAQ -->
+        <div class="mt-12 glass-card rounded-2xl shadow-xl p-6 animate-fadeIn">
+            <h3 class="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <i class="fas fa-question-circle text-blue-500"></i>
+                Preguntas Frecuentes
+            </h3>
+            <div class="space-y-4">
+                <div class="border-b border-gray-200 pb-4">
+                    <h4 class="font-semibold text-gray-900 mb-2">¿Cuanto duran los addons?</h4>
+                    <p class="text-sm text-gray-600">Los addons de productos y ofertas flash son permanentes mientras tu membresia este activa. Los addons de duracion de oferta se aplican a ofertas especificas.</p>
+                </div>
+                <div class="border-b border-gray-200 pb-4">
+                    <h4 class="font-semibold text-gray-900 mb-2">¿Puedo comprar varios addons del mismo tipo?</h4>
+                    <p class="text-sm text-gray-600">Si, puedes acumular addons del mismo tipo. Los limites se suman a tu plan actual.</p>
+                </div>
+                <div>
+                    <h4 class="font-semibold text-gray-900 mb-2">¿Que pasa si mi membresia vence?</h4>
+                    <p class="text-sm text-gray-600">Los addons quedan pausados hasta que renueves tu membresia. No pierdes lo que compraste.</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal de Compra -->
+    <div id="modalCompra" class="fixed inset-0 z-50 hidden">
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="cerrarModalCompra()"></div>
+        <div class="relative min-h-screen flex items-center justify-center p-4">
+            <div class="glass-card rounded-2xl shadow-2xl w-full max-w-md animate-fadeIn">
+                <!-- Header -->
+                <div class="bg-gradient-to-r from-orange-500 to-amber-500 px-6 py-5 text-white rounded-t-2xl">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-xl font-bold">Confirmar Compra</h3>
+                            <p id="modalAddonNombre" class="text-orange-100 text-sm">Addon</p>
+                        </div>
+                        <button onclick="cerrarModalCompra()" class="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Contenido -->
+                <div class="p-6">
+                    <input type="hidden" id="modalAddonId" value="">
+                    <input type="hidden" id="modalAddonCantidad" value="1">
+
+                    <div class="p-4 rounded-xl bg-gray-50 border border-gray-200 mb-6">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-gray-600">Addon:</span>
+                            <span id="modalAddonNombreResumen" class="font-semibold"></span>
+                        </div>
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-gray-600">Cantidad:</span>
+                            <span id="modalCantidadResumen" class="font-semibold">1</span>
+                        </div>
+                        <div class="border-t border-gray-200 pt-3 mt-3">
+                            <div class="flex items-center justify-between">
+                                <span class="font-bold text-gray-900">Total a Pagar</span>
+                                <span id="modalTotalResumen" class="text-2xl font-bold text-orange-600">$0</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Metodos de pago -->
+                    <div class="mb-6">
+                        <p class="text-sm text-gray-500 text-center mb-4">Metodos de pago seguros</p>
+                        <div class="flex items-center justify-center gap-4 opacity-60">
+                            <img src="https://multimedia.epayco.co/epayco-landing/btns/epayco-logo.png" alt="ePayco" class="h-6">
+                        </div>
+                    </div>
+
+                    <!-- Contenedor del botón ePayco -->
+                    <div id="epaycoContainerAddon" class="flex justify-center"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="fixed bottom-4 right-4 z-50 transform translate-y-full opacity-0 transition-all duration-300">
+        <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-4 flex items-center gap-3 max-w-sm">
+            <div id="toast-icon" class="w-10 h-10 rounded-full flex items-center justify-center bg-green-100 text-green-600">
+                <i class="fas fa-check"></i>
+            </div>
+            <div>
+                <p id="toast-title" class="font-medium text-gray-900">Exito</p>
+                <p id="toast-message" class="text-sm text-gray-500">Operacion completada</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const epaycoKey = '@epaycoKey';
+        const idLocal = @idLocal;
+
+        // Cambiar cantidad
+        function cambiarCantidad(addonId, delta) {
+            const input = document.getElementById(`cantidad-${addonId}`);
+            let cantidad = parseInt(input.value) || 1;
+            cantidad = Math.max(1, Math.min(10, cantidad + delta));
+            input.value = cantidad;
+
+            const precio = parseInt(input.closest('.addon-card').querySelector('[onclick*="iniciarCompra"]').getAttribute('onclick').match(/,\s*(\d+)\)/)[1]);
+            actualizarTotal(addonId, precio);
+        }
+
+        // Actualizar total
+        function actualizarTotal(addonId, precioUnitario) {
+            const cantidad = parseInt(document.getElementById(`cantidad-${addonId}`).value) || 1;
+            const total = cantidad * precioUnitario;
+            document.getElementById(`total-${addonId}`).textContent = `$${total.toLocaleString('es-CO')}`;
+        }
+
+        // Iniciar compra
+        function iniciarCompra(addonId, addonNombre, precioUnitario) {
+            const cantidad = parseInt(document.getElementById(`cantidad-${addonId}`).value) || 1;
+            const total = cantidad * precioUnitario;
+
+            document.getElementById('modalAddonId').value = addonId;
+            document.getElementById('modalAddonCantidad').value = cantidad;
+            document.getElementById('modalAddonNombre').textContent = addonNombre;
+            document.getElementById('modalAddonNombreResumen').textContent = addonNombre;
+            document.getElementById('modalCantidadResumen').textContent = cantidad;
+            document.getElementById('modalTotalResumen').textContent = `$${total.toLocaleString('es-CO')}`;
+
+            crearBotonEpaycoAddon(addonId, addonNombre, total, cantidad);
+            document.getElementById('modalCompra').classList.remove('hidden');
+            document.body.classList.add('overflow-hidden');
+        }
+
+        // Cerrar modal
+        function cerrarModalCompra() {
+            document.getElementById('modalCompra').classList.add('hidden');
+            document.body.classList.remove('overflow-hidden');
+        }
+
+        // Crear botón ePayco
+        function crearBotonEpaycoAddon(addonId, addonNombre, total, cantidad) {
+            const container = document.getElementById('epaycoContainerAddon');
+            container.innerHTML = '';
+
+            const precioTotal = Math.round(total);
+            const precioBase = Math.round(total / 1.19);
+            const impuesto = precioTotal - precioBase;
+
+            const descripcion = `Addon: ${addonNombre} x${cantidad}`;
+            const responseUrl = `@Url.Action("ConfirmarCompraAddon", "Addons", null, Context.Request.Scheme)?idAddon=${addonId}&cantidad=${cantidad}`;
+
+            const script = document.createElement('script');
+            script.src = 'https://checkout.epayco.co/checkout.js';
+            script.classList.add('epayco-button');
+            script.setAttribute('data-epayco-key', epaycoKey);
+            script.setAttribute('data-epayco-amount', precioTotal.toString());
+            script.setAttribute('data-epayco-tax', impuesto.toString());
+            script.setAttribute('data-epayco-tax-base', precioBase.toString());
+            script.setAttribute('data-epayco-name', descripcion);
+            script.setAttribute('data-epayco-description', descripcion);
+            script.setAttribute('data-epayco-currency', 'cop');
+            script.setAttribute('data-epayco-country', 'co');
+            script.setAttribute('data-epayco-external', 'false');
+            script.setAttribute('data-epayco-button', 'https://multimedia.epayco.co/dashboard/btns/btn5.png');
+            script.setAttribute('data-epayco-response', responseUrl);
+            script.setAttribute('data-epayco-test', 'true');
+
+            container.appendChild(script);
+        }
+
+        // Toast
+        function showToast(type, title, message) {
+            const toast = document.getElementById('toast');
+            const icon = document.getElementById('toast-icon');
+            const titleEl = document.getElementById('toast-title');
+            const messageEl = document.getElementById('toast-message');
+
+            titleEl.textContent = title;
+            messageEl.textContent = message;
+
+            if (type === 'success') {
+                icon.className = 'w-10 h-10 rounded-full flex items-center justify-center bg-green-100 text-green-600';
+                icon.innerHTML = '<i class="fas fa-check"></i>';
+            } else {
+                icon.className = 'w-10 h-10 rounded-full flex items-center justify-center bg-red-100 text-red-600';
+                icon.innerHTML = '<i class="fas fa-times"></i>';
+            }
+
+            toast.classList.remove('translate-y-full', 'opacity-0');
+
+            setTimeout(() => {
+                toast.classList.add('translate-y-full', 'opacity-0');
+            }, 3000);
+        }
+
+        // Cerrar con ESC
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                cerrarModalCompra();
+            }
+        });
+    </script>
+</body>
+</html>

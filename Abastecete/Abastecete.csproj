@@ -9,11 +9,12 @@
 
 	<ItemGroup>
 		<Content Remove="wwwroot\css\custom-mobile.css" />
+		<Content Remove="wwwroot\images\LOGO FINAL.png" />
 		<Content Remove="wwwroot\LOGO FINAL.png" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<None Include="wwwroot\css\Images\LOGO FINAL.png" />
+		<None Include="wwwroot\images\LOGO FINAL.png" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -32,7 +33,7 @@
 	</ItemGroup>
 
 	<Target Name="Tailwind" BeforeTargets="Build">
-		<Exec Command="npm run css:build" />
+		<Exec Command="npm run css:build" WorkingDirectory="$(MSBuildProjectDirectory)" />
 	</Target>
 
 </Project>

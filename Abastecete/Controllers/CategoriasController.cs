@@ -1,5 +1,6 @@
-﻿using BusinessLogic;
+using BusinessLogic;
 using BusinessLogic.Models;
+using BusinessLogic.Utilidades;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -9,14 +10,15 @@ namespace Abastecete.Controllers
     public class CategoriasController : Controller
     {
         private readonly ManejadorCategorias manejadorCategorias;
-        private readonly ManejadorMongo manejadorMongo;
+        private readonly ManejadorImagenes manejadorImagenes;
 
         public CategoriasController()
         {
-            manejadorMongo = new ManejadorMongo();
+            manejadorImagenes = new ManejadorImagenes();
             manejadorCategorias = new ManejadorCategorias();
         }
 
+        [RequierePermiso("ADMIN_CATEGORIAS")]
         public IActionResult Consultar()
         {
             List<Categoria> categorias = manejadorCategorias.ConsultarCategorias();
@@ -31,52 +33,117 @@ namespace Abastecete.Controllers
         }
 
         [HttpPost]
+        [RequierePermiso("ADMIN_CATEGORIAS")]
+        [Auditar(ModulosAuditoria.CATEGORIAS, TiposAccionAuditoria.CREATE, ParametroDescripcion = "Nombre")]
         public IActionResult Crear(IFormFile Imagen, string Nombre, int Estado, IFormFile Banner)
         {
+            string imagenUrl = "";
+            string cloudinaryPublicIdImagen = "";
+            string bannerUrl = "";
+            string cloudinaryPublicIdBanner = "";
 
-            var categoria = new Categoria { Nombre = Nombre, Estado = Estado, ImagenId = manejadorMongo.SubirImagen(Imagen), BannerId = manejadorMongo.SubirImagen(Banner) };
+            // Subir imagen
+            if (Imagen != null && Imagen.Length > 0)
+            {
+                var resultado = manejadorImagenes.SubirImagenCompleto(Imagen, "categorias");
+                if (resultado.Success)
+                {
+                    imagenUrl = resultado.SecureUrl;
+                    cloudinaryPublicIdImagen = resultado.PublicId;
+                }
+            }
+
+            // Subir banner
+            if (Banner != null && Banner.Length > 0)
+            {
+                var resultado = manejadorImagenes.SubirImagenCompleto(Banner, "categorias/banners");
+                if (resultado.Success)
+                {
+                    bannerUrl = resultado.SecureUrl;
+                    cloudinaryPublicIdBanner = resultado.PublicId;
+                }
+            }
+
+            var categoria = new Categoria
+            {
+                Nombre = Nombre,
+                Estado = Estado,
+                ImagenId = imagenUrl,
+                CloudinaryPublicIdImagen = cloudinaryPublicIdImagen,
+                BannerId = bannerUrl,
+                CloudinaryPublicIdBanner = cloudinaryPublicIdBanner
+            };
             string mensaje = manejadorCategorias.CrearCategoria(categoria);
             return Json(new { mensaje });
         }
 
 
         [HttpPost]
+        [RequierePermiso("ADMIN_CATEGORIAS")]
+        [Auditar(ModulosAuditoria.CATEGORIAS, TiposAccionAuditoria.UPDATE, ParametroId = "Id", ParametroDescripcion = "Nombre")]
         public IActionResult EditarCategoria(int Id, IFormFile Imagen, string Nombre, int Estado, IFormFile Banner)
         {
-            // 1. Consultar la categoría actual
-            Categoria categoriaActual = manejadorCategorias.ObtenerCategoria(Id);
+            Categoria? categoriaActual = manejadorCategorias.ObtenerCategoria(Id);
+            if (categoriaActual == null)
+            {
+                return NotFound(new { mensaje = "Categoría no encontrada" });
+            }
 
-            // 2. Definir variables para los nuevos IDs de imagen y banner
-            string imagenId = categoriaActual.ImagenId;
-            string bannerId = categoriaActual.BannerId;
+            string? imagenUrl = categoriaActual.ImagenId;
+            string? cloudinaryPublicIdImagen = categoriaActual.CloudinaryPublicIdImagen;
+            string? bannerUrl = categoriaActual.BannerId;
+            string? cloudinaryPublicIdBanner = categoriaActual.CloudinaryPublicIdBanner;
 
-            // 3. Si subieron nueva imagen, la subimos a Mongo
+            // Si hay nueva imagen, eliminar la anterior de Cloudinary y subir la nueva
             if (Imagen != null && Imagen.Length > 0)
             {
-                imagenId = manejadorMongo.updateImage(Imagen, imagenId);
+                // Eliminar imagen anterior de Cloudinary
+                if (!string.IsNullOrEmpty(categoriaActual.CloudinaryPublicIdImagen))
+                {
+                    manejadorImagenes.EliminarImagenCloudinary(categoriaActual.CloudinaryPublicIdImagen);
+                }
+
+                // Subir nueva imagen
+                var resultado = manejadorImagenes.SubirImagenCompleto(Imagen, "categorias");
+                if (resultado.Success)
+                {
+                    imagenUrl = resultado.SecureUrl;
+                    cloudinaryPublicIdImagen = resultado.PublicId;
+                }
             }
 
-            // 4. Si subieron nuevo banner, lo subimos a Mongo
+            // Si hay nuevo banner, eliminar el anterior de Cloudinary y subir el nuevo
             if (Banner != null && Banner.Length > 0)
             {
-                bannerId = manejadorMongo.updateImage(Banner, bannerId);
+                // Eliminar banner anterior de Cloudinary
+                if (!string.IsNullOrEmpty(categoriaActual.CloudinaryPublicIdBanner))
+                {
+                    manejadorImagenes.EliminarImagenCloudinary(categoriaActual.CloudinaryPublicIdBanner);
+                }
+
+                // Subir nuevo banner
+                var resultado = manejadorImagenes.SubirImagenCompleto(Banner, "categorias/banners");
+                if (resultado.Success)
+                {
+                    bannerUrl = resultado.SecureUrl;
+                    cloudinaryPublicIdBanner = resultado.PublicId;
+                }
             }
 
-            // 5. Crear la nueva categoría que queremos guardar
             var categoria = new Categoria
             {
                 Id = Id,
                 Nombre = Nombre,
                 Estado = Estado,
-                ImagenId = imagenId,
-                BannerId = bannerId
+                ImagenId = imagenUrl,
+                CloudinaryPublicIdImagen = cloudinaryPublicIdImagen,
+                BannerId = bannerUrl,
+                CloudinaryPublicIdBanner = cloudinaryPublicIdBanner
             };
 
-            // 6. Ejecutar la actualización
             string mensaje = manejadorCategorias.EditarCategoria(categoria);
 
-            // 7. Retornar la respuesta
-            return Json( mensaje );
+            return Json(mensaje);
         }
 
 
@@ -85,7 +152,7 @@ namespace Abastecete.Controllers
         [Route("Categorias/ObtenerCategoria")]
         public IActionResult ObtenerCategoria([FromQuery] int id)
         {
-            Categoria categoria = manejadorCategorias.ObtenerCategoria(id);
+            Categoria? categoria = manejadorCategorias.ObtenerCategoria(id);
             if (categoria != null)
             {
                 return Json(categoria);

@@ -1,172 +1,415 @@
-﻿using MySql.Data.MySqlClient;
+﻿using Microsoft.Extensions.Configuration;
+using MySql.Data.MySqlClient;
 using System.Data;
-using System.Reflection.Metadata;
-using System.Transactions;
 
 namespace DataAccess
 {
     public class Connection
     {
-        public MySqlConnection connection;
-        public bool Conectar()
-        {
-            string cadenaConnection = "server=167.71.91.199; database=abastecete; user=bd_abastecete; password=root_abastecete; port=3306";
+        private static string _connectionString = "";
 
-            connection = new MySqlConnection(cadenaConnection);
-            try
-            {
-                connection.Open();
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
+        static Connection()
+        {
+            // Cargar configuración desde appsettings.json
+            var configuration = new ConfigurationBuilder()
+                .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
+                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                .Build();
+
+            _connectionString = configuration.GetConnectionString("MySql") ?? "";
         }
 
-        public bool DesConectar()
+        private MySqlConnection CrearConexion()
         {
-            try
-            {
-                connection.Close();
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
+            return new MySqlConnection(_connectionString);
         }
 
-        public DataTable EjecutarConsulta(string procedimiento, List<Parametro> parametros = null)
+        public DataTable EjecutarConsulta(string procedimiento, List<Parametro>? parametros = null)
         {
-            Conectar();
-
             DataTable datos = new DataTable();
-            try
+
+            using (var connection = CrearConexion())
             {
-                MySqlCommand comando = new MySqlCommand(procedimiento, connection);
-                comando.CommandType = System.Data.CommandType.StoredProcedure;
-                if (parametros != null)
+                try
                 {
-                    foreach (Parametro parametro in parametros)
+                    connection.Open();
+
+                    using (var comando = new MySqlCommand(procedimiento, connection))
                     {
-                        comando.Parameters.AddWithValue(parametro.Nombre, parametro.Valor);
+                        comando.CommandType = CommandType.StoredProcedure;
+
+                        if (parametros != null)
+                        {
+                            foreach (Parametro parametro in parametros)
+                            {
+                                comando.Parameters.AddWithValue(parametro.Nombre, parametro.Valor);
+                            }
+                        }
+
+                        var pMensaje = new MySqlParameter("@mensaje", MySqlDbType.VarChar, 255)
+                        {
+                            Direction = ParameterDirection.Output
+                        };
+                        var pResultado = new MySqlParameter("@resultado", MySqlDbType.Int64)
+                        {
+                            Direction = ParameterDirection.Output
+                        };
+
+                        comando.Parameters.Add(pMensaje);
+                        comando.Parameters.Add(pResultado);
+
+                        using (var lector = comando.ExecuteReader())
+                        {
+                            datos.Load(lector);
+                        }
                     }
-
                 }
-                var pMensaje = new MySqlParameter("@mensaje", MySqlDbType.VarChar, 255);
-                var pResultado = new MySqlParameter("@resultado", MySqlDbType.Int64);
-
-                pMensaje.Direction = System.Data.ParameterDirection.Output;
-                pResultado.Direction = System.Data.ParameterDirection.Output;
-
-                comando.Parameters.Add(pMensaje);
-                comando.Parameters.Add(pResultado);
-
-                MySqlDataReader lector = comando.ExecuteReader();
-                datos.Load(lector);
+                catch (Exception e)
+                {
+                    Console.WriteLine("Error al ejecutar consulta: " + e.Message);
+                }
             }
-            catch (Exception e)
-            {
-                Console.WriteLine("Error al traer datos de user" + e.Message);
-            }
-            finally
-            {
 
-                DesConectar();
-            }
             return datos;
         }
 
-        public bool EjecutarTransaccion(string procedimiento, List<Parametro> parametros = null)
+        public bool EjecutarTransaccion(string procedimiento, List<Parametro>? parametros = null)
         {
-            Conectar();
-            try
+            using (var connection = CrearConexion())
             {
-                MySqlCommand comando = new MySqlCommand(procedimiento, connection);
-                comando.CommandType = CommandType.StoredProcedure;
-
-                if (parametros != null)
+                try
                 {
-                    foreach (Parametro parametro in parametros)
+                    connection.Open();
+
+                    using (var comando = new MySqlCommand(procedimiento, connection))
                     {
-                        if (parametro.Nombre == "mensaje")
+                        comando.CommandType = CommandType.StoredProcedure;
+
+                        if (parametros != null)
                         {
-                            var pMensaje = new MySqlParameter(parametro.Nombre, MySqlDbType.VarChar, 500);
-                            pMensaje.Direction = ParameterDirection.Output;
-                            comando.Parameters.Add(pMensaje);
+                            foreach (Parametro parametro in parametros)
+                            {
+                                if (parametro.Nombre == "mensaje")
+                                {
+                                    var pMensaje = new MySqlParameter(parametro.Nombre, MySqlDbType.VarChar, 500)
+                                    {
+                                        Direction = ParameterDirection.Output
+                                    };
+                                    comando.Parameters.Add(pMensaje);
+                                }
+                                else
+                                {
+                                    // Manejar null correctamente para MySQL
+                                    var valor = parametro.Valor ?? DBNull.Value;
+
+                                    // Para parametros JSON, usar MySqlDbType.JSON explicitamente
+                                    if (parametro.Nombre.Contains("datos_anteriores") || parametro.Nombre.Contains("datos_nuevos"))
+                                    {
+                                        var param = new MySqlParameter(parametro.Nombre, MySqlDbType.JSON);
+                                        param.Value = valor;
+                                        comando.Parameters.Add(param);
+                                    }
+                                    else
+                                    {
+                                        comando.Parameters.AddWithValue(parametro.Nombre, valor);
+                                    }
+                                }
+                            }
                         }
-                        else
+
+                        // Usar ExecuteReader para capturar el resultado del SP
+                        using (var reader = comando.ExecuteReader())
                         {
-                            comando.Parameters.AddWithValue(parametro.Nombre, parametro.Valor);
+                            if (reader.Read())
+                            {
+                                // Verificar si hay columna "resultado"
+                                for (int i = 0; i < reader.FieldCount; i++)
+                                {
+                                    if (reader.GetName(i).ToLower() == "resultado")
+                                    {
+                                        int resultado = reader.GetInt32(i);
+
+                                        // Buscar mensaje para logging
+                                        string mensaje = "";
+                                        for (int j = 0; j < reader.FieldCount; j++)
+                                        {
+                                            if (reader.GetName(j).ToLower() == "mensaje")
+                                            {
+                                                mensaje = reader.IsDBNull(j) ? "" : reader.GetString(j);
+                                                break;
+                                            }
+                                        }
+
+                                        if (resultado < 0)
+                                        {
+                                            Console.WriteLine($"SP retornó error: {resultado} - {mensaje}");
+                                            return false;
+                                        }
+
+                                        Console.WriteLine($"SP exitoso: {resultado} - {mensaje}");
+                                        return resultado > 0;
+                                    }
+                                }
+                            }
+                        }
+
+                        if (comando.Parameters.Contains("mensaje"))
+                        {
+                            string? mensaje = comando.Parameters["mensaje"].Value?.ToString();
+                            Console.WriteLine("Mensaje SQL: " + mensaje);
                         }
                     }
+
+                    return true;
                 }
-
-                comando.ExecuteNonQuery();
-
-                // Verificar si el procedimiento maneja el parámetro "mensaje"
-                if (comando.Parameters.Contains("mensaje"))
+                catch (Exception e)
                 {
-                    string mensaje = comando.Parameters["mensaje"].Value?.ToString();
-                    Console.WriteLine("Mensaje SQL: " + mensaje);
+                    Console.WriteLine("Error al ejecutar procedimiento: " + e.Message);
+                    return false;
                 }
-                else
-                {
-                    Console.WriteLine("Procedimiento ejecutado sin mensaje de salida.");
-                }
+            }
+        }
 
-                return true;
-            }
-            catch (Exception e)
+        /// <summary>
+        /// Ejecuta un SP que retorna resultado y mensaje (para crear_usuario_persona, etc.)
+        /// </summary>
+        public (bool exito, string mensaje) EjecutarTransaccionConMensaje(string procedimiento, List<Parametro>? parametros = null)
+        {
+            using (var connection = CrearConexion())
             {
-                Console.WriteLine("Error al ejecutar procedimiento: " + e.Message);
-                return false;
+                try
+                {
+                    connection.Open();
+
+                    using (var comando = new MySqlCommand(procedimiento, connection))
+                    {
+                        comando.CommandType = CommandType.StoredProcedure;
+
+                        if (parametros != null)
+                        {
+                            foreach (Parametro parametro in parametros)
+                            {
+                                comando.Parameters.AddWithValue(parametro.Nombre, parametro.Valor);
+                            }
+                        }
+
+                        using (var reader = comando.ExecuteReader())
+                        {
+                            if (reader.Read())
+                            {
+                                int resultado = 0;
+                                string mensaje = "";
+
+                                for (int i = 0; i < reader.FieldCount; i++)
+                                {
+                                    string columnName = reader.GetName(i).ToLower();
+                                    if (columnName == "resultado")
+                                    {
+                                        resultado = reader.IsDBNull(i) ? 0 : reader.GetInt32(i);
+                                    }
+                                    else if (columnName == "mensaje")
+                                    {
+                                        mensaje = reader.IsDBNull(i) ? "" : reader.GetString(i);
+                                    }
+                                }
+
+                                Console.WriteLine($"SP resultado: {resultado} - {mensaje}");
+                                return (resultado > 0, mensaje);
+                            }
+                        }
+                    }
+
+                    return (true, "Operación completada");
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("Error al ejecutar procedimiento: " + e.Message);
+                    return (false, "Error interno: " + e.Message);
+                }
             }
-            finally
+        }
+
+        /// <summary>
+        /// Ejecuta un SP con parámetros OUTPUT para resultado y mensaje
+        /// </summary>
+        public (int Id, string Mensaje) EjecutarConOutput(string procedimiento, List<Parametro>? parametros = null)
+        {
+            using (var connection = CrearConexion())
             {
-                DesConectar();
+                try
+                {
+                    connection.Open();
+                    using (var comando = new MySqlCommand(procedimiento, connection))
+                    {
+                        comando.CommandType = CommandType.StoredProcedure;
+
+                        if (parametros != null)
+                        {
+                            foreach (var param in parametros)
+                            {
+                                if (param.Nombre == "mensaje")
+                                {
+                                    var pMensaje = new MySqlParameter("mensaje", MySqlDbType.VarChar, 255)
+                                    {
+                                        Direction = ParameterDirection.Output
+                                    };
+                                    comando.Parameters.Add(pMensaje);
+                                }
+                                else if (param.Nombre == "resultado")
+                                {
+                                    var pResultado = new MySqlParameter("resultado", MySqlDbType.Int32)
+                                    {
+                                        Direction = ParameterDirection.Output
+                                    };
+                                    comando.Parameters.Add(pResultado);
+                                }
+                                else if (param.Nombre == "public_id")
+                                {
+                                    var pPublicId = new MySqlParameter("public_id", MySqlDbType.VarChar, 255)
+                                    {
+                                        Direction = ParameterDirection.Output
+                                    };
+                                    comando.Parameters.Add(pPublicId);
+                                }
+                                else
+                                {
+                                    comando.Parameters.AddWithValue(param.Nombre, param.Valor ?? DBNull.Value);
+                                }
+                            }
+                        }
+
+                        comando.ExecuteNonQuery();
+
+                        var mensaje = comando.Parameters.Contains("mensaje")
+                            ? comando.Parameters["mensaje"].Value?.ToString() ?? ""
+                            : "";
+                        var id = comando.Parameters.Contains("resultado")
+                            ? Convert.ToInt32(comando.Parameters["resultado"].Value ?? 0)
+                            : 0;
+
+                        return (id, mensaje);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error en EjecutarConOutput: {ex.Message}");
+                    return (0, $"Error: {ex.Message}");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Ejecuta un SP con parámetros OUTPUT incluyendo public_id (para eliminar banners)
+        /// </summary>
+        public (int Resultado, string Mensaje, string? PublicId) EjecutarConOutputPublicId(string procedimiento, List<Parametro>? parametros = null)
+        {
+            using (var connection = CrearConexion())
+            {
+                try
+                {
+                    connection.Open();
+                    using (var comando = new MySqlCommand(procedimiento, connection))
+                    {
+                        comando.CommandType = CommandType.StoredProcedure;
+
+                        if (parametros != null)
+                        {
+                            foreach (var param in parametros)
+                            {
+                                if (param.Nombre == "mensaje")
+                                {
+                                    var pMensaje = new MySqlParameter("mensaje", MySqlDbType.VarChar, 255)
+                                    {
+                                        Direction = ParameterDirection.Output
+                                    };
+                                    comando.Parameters.Add(pMensaje);
+                                }
+                                else if (param.Nombre == "resultado")
+                                {
+                                    var pResultado = new MySqlParameter("resultado", MySqlDbType.Int32)
+                                    {
+                                        Direction = ParameterDirection.Output
+                                    };
+                                    comando.Parameters.Add(pResultado);
+                                }
+                                else if (param.Nombre == "public_id")
+                                {
+                                    var pPublicId = new MySqlParameter("public_id", MySqlDbType.VarChar, 255)
+                                    {
+                                        Direction = ParameterDirection.Output
+                                    };
+                                    comando.Parameters.Add(pPublicId);
+                                }
+                                else
+                                {
+                                    comando.Parameters.AddWithValue(param.Nombre, param.Valor ?? DBNull.Value);
+                                }
+                            }
+                        }
+
+                        comando.ExecuteNonQuery();
+
+                        var mensaje = comando.Parameters.Contains("mensaje")
+                            ? comando.Parameters["mensaje"].Value?.ToString() ?? ""
+                            : "";
+                        var resultado = comando.Parameters.Contains("resultado")
+                            ? Convert.ToInt32(comando.Parameters["resultado"].Value ?? 0)
+                            : 0;
+                        var publicId = comando.Parameters.Contains("public_id")
+                            ? comando.Parameters["public_id"].Value?.ToString()
+                            : null;
+
+                        return (resultado, mensaje, publicId);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error en EjecutarConOutputPublicId: {ex.Message}");
+                    return (0, $"Error: {ex.Message}", null);
+                }
             }
         }
 
         public bool EjecutarTransacciones(List<Transaccion> transacciones)
         {
-            Conectar();
-            MySqlTransaction transaction = null;
-
-            try
+            if (transacciones == null || transacciones.Count == 0)
             {
-                transaction = connection.BeginTransaction();
-                MySqlCommand comando = new MySqlCommand();
-                if (transacciones != null)
-                {
-                    foreach (Transaccion transaccion in transacciones)
-                    {
-                        comando = new MySqlCommand(transaccion.Procedimiento, connection, transaction);
-                        comando.CommandType = System.Data.CommandType.StoredProcedure;
-
-                        foreach (Parametro parametro in transaccion.Parametros)
-                        {
-                            comando.Parameters.AddWithValue(parametro.Nombre, parametro.Valor);
-                        }
-                        comando.ExecuteNonQuery();
-                    }
-                    transaction.Commit();
-                    comando.Dispose();
-                }
                 return true;
             }
-            catch (Exception e)
+
+            using (var connection = CrearConexion())
             {
-                transaction.Rollback();
-                Console.WriteLine("Error al insertar datos de user" + e.Message);
-                return false;
-            }
-            finally
-            {
-                DesConectar();
+                connection.Open();
+                using (var transaction = connection.BeginTransaction())
+                {
+                    try
+                    {
+                        foreach (Transaccion transaccion in transacciones)
+                        {
+                            using (var comando = new MySqlCommand(transaccion.Procedimiento, connection, transaction))
+                            {
+                                comando.CommandType = CommandType.StoredProcedure;
+
+                                foreach (Parametro parametro in transaccion.Parametros)
+                                {
+                                    comando.Parameters.AddWithValue(parametro.Nombre, parametro.Valor);
+                                }
+
+                                comando.ExecuteNonQuery();
+                            }
+                        }
+
+                        transaction.Commit();
+                        return true;
+                    }
+                    catch (Exception e)
+                    {
+                        transaction.Rollback();
+                        Console.WriteLine("Error en transacción múltiple: " + e.Message);
+                        return false;
+                    }
+                }
             }
         }
     }
-
 }
