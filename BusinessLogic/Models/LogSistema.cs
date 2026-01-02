@@ -81,7 +81,6 @@ namespace BusinessLogic.Models
         public const string BANNERS = "BANNERS";
         public const string CATEGORIAS = "CATEGORIAS";
         public const string SUBCATEGORIAS = "SUBCATEGORIAS";
-        public const string ROLES = "ROLES";
         public const string AUTENTICACION = "AUTENTICACION";
         public const string GALERIA = "GALERIA";
         public const string NEGOCIOS = "NEGOCIOS";

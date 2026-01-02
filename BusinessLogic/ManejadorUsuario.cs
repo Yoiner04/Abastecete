@@ -40,74 +40,54 @@ namespace BusinessLogic
 
         public DataTable Login(string nombreUsuario, string contrasenia)
         {
-            Console.WriteLine($"[LOGIN DEBUG] ========================================");
-            Console.WriteLine($"[LOGIN DEBUG] Intentando login para: '{nombreUsuario}'");
-
             List<Parametro> parametros = new List<Parametro>()
             {
                 new Parametro("p_nombre_usuario", nombreUsuario),
                 new Parametro("p_contrasenia", "") // No se usa, pero el SP lo requiere
             };
 
-            try
+            var result = conexion.EjecutarConsulta("login_usuario", parametros);
+
+            if (result.Rows.Count > 0)
             {
-                var result = conexion.EjecutarConsulta("login_usuario", parametros);
-                Console.WriteLine($"[LOGIN DEBUG] Resultado SP: {result.Rows.Count} filas");
+                // CODIGO_ESTADO: 97=inhabilitado, 98=no existe, 0=bloqueado, 1=OK
+                int codigoEstado = Convert.ToInt32(result.Rows[0]["CODIGO_ESTADO"]);
 
-                if (result.Rows.Count > 0)
+                // Si es código de error (97, 98, 0), retornar directamente
+                if (codigoEstado == 97 || codigoEstado == 98 || codigoEstado == 0)
                 {
-                    // CODIGO_ESTADO: 97=inhabilitado, 98=no existe, 0=bloqueado, 1=OK
-                    int codigoEstado = Convert.ToInt32(result.Rows[0]["CODIGO_ESTADO"]);
-                    Console.WriteLine($"[LOGIN DEBUG] CODIGO_ESTADO: {codigoEstado}");
-
-                    // Si es código de error (97, 98, 0), retornar directamente
-                    if (codigoEstado == 97 || codigoEstado == 98 || codigoEstado == 0)
-                    {
-                        Console.WriteLine($"[LOGIN DEBUG] Código de error: {codigoEstado}");
-                        return result;
-                    }
-
-                    // Verificar contraseña con BCrypt
-                    if (result.Columns.Contains("CONTRASENIA_HASH") && result.Rows[0]["CONTRASENIA_HASH"] != DBNull.Value)
-                    {
-                        string hashAlmacenado = result.Rows[0]["CONTRASENIA_HASH"]?.ToString() ?? "";
-                        Console.WriteLine($"[LOGIN DEBUG] Verificando BCrypt...");
-
-                        bool contraseniaValida = Seguridad.VerificarContrasenia(contrasenia, hashAlmacenado);
-                        Console.WriteLine($"[LOGIN DEBUG] Contraseña válida: {contraseniaValida}");
-
-                        if (contraseniaValida)
-                        {
-                            // Limpiar intentos fallidos
-                            int idUsuario = Convert.ToInt32(result.Rows[0]["PK_ID_USUARIO"]);
-                            LimpiarIntentosFallidos(idUsuario);
-                            Console.WriteLine($"[LOGIN DEBUG] Login exitoso para usuario {idUsuario}");
-                            return result;
-                        }
-                        else
-                        {
-                            // Contraseña incorrecta - registrar intento fallido
-                            int idUsuario = Convert.ToInt32(result.Rows[0]["PK_ID_USUARIO"]);
-                            RegistrarIntentoFallido(idUsuario);
-
-                            // Retornar código 99 (contraseña incorrecta)
-                            DataTable errorResult = new DataTable();
-                            errorResult.Columns.Add("CODIGO_ESTADO", typeof(int));
-                            errorResult.Rows.Add(99);
-                            Console.WriteLine($"[LOGIN DEBUG] Contraseña incorrecta, retornando 99");
-                            return errorResult;
-                        }
-                    }
+                    return result;
                 }
 
-                Console.WriteLine($"[LOGIN DEBUG] ========================================");
-                return result;
+                // Verificar contraseña con BCrypt
+                if (result.Columns.Contains("CONTRASENIA_HASH") && result.Rows[0]["CONTRASENIA_HASH"] != DBNull.Value)
+                {
+                    string hashAlmacenado = result.Rows[0]["CONTRASENIA_HASH"]?.ToString() ?? "";
+                    bool contraseniaValida = Seguridad.VerificarContrasenia(contrasenia, hashAlmacenado);
+
+                    if (contraseniaValida)
+                    {
+                        // Limpiar intentos fallidos
+                        int idUsuario = Convert.ToInt32(result.Rows[0]["PK_ID_USUARIO"]);
+                        LimpiarIntentosFallidos(idUsuario);
+                        return result;
+                    }
+                    else
+                    {
+                        // Contraseña incorrecta - registrar intento fallido
+                        int idUsuario = Convert.ToInt32(result.Rows[0]["PK_ID_USUARIO"]);
+                        RegistrarIntentoFallido(idUsuario);
+
+                        // Retornar código 99 (contraseña incorrecta)
+                        DataTable errorResult = new DataTable();
+                        errorResult.Columns.Add("CODIGO_ESTADO", typeof(int));
+                        errorResult.Rows.Add(99);
+                        return errorResult;
+                    }
+                }
             }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[LOGIN DEBUG] ERROR: {ex.Message}");
-                throw;
-            }
+
+            return result;
         }
 
         private void RegistrarIntentoFallido(int idUsuario)

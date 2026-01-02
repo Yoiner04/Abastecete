@@ -81,17 +81,12 @@ namespace BusinessLogic
         /// </summary>
         public List<PermisoSistema> ObtenerPermisosUsuario(int idUsuario)
         {
-            var sw = System.Diagnostics.Stopwatch.StartNew();
             List<Parametro> parametros = new List<Parametro>()
             {
                 new Parametro("p_id_usuario", idUsuario)
             };
             DataTable data = conexion.EjecutarConsulta("obtener_permisos_usuario", parametros);
-            Console.WriteLine($"[PERMISOS TIMING] SP obtener_permisos_usuario: {sw.ElapsedMilliseconds}ms, filas: {data.Rows.Count}");
-            sw.Restart();
-            var result = MapearPermisosUsuario(data);
-            Console.WriteLine($"[PERMISOS TIMING] Mapeo: {sw.ElapsedMilliseconds}ms");
-            return result;
+            return MapearPermisosUsuario(data);
         }
 
         /// <summary>

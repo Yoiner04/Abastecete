@@ -113,14 +113,8 @@ namespace Abastecete.Controllers
         [HttpPost]
         public IActionResult Index(Usuario usuario)
         {
-            var swTotal = System.Diagnostics.Stopwatch.StartNew();
-            var sw = System.Diagnostics.Stopwatch.StartNew();
-
             // Reutilizar el manejador existente en lugar de crear uno nuevo
             DataTable data = _manejadorUsuario.Login(usuario.Correo, usuario.Contrasenia);
-
-            Console.WriteLine($"[LOGIN TIMING] Login DB query: {sw.ElapsedMilliseconds}ms");
-            sw.Restart();
 
             if (data.Rows.Count == 0)
             {
@@ -180,9 +174,6 @@ namespace Abastecete.Controllers
                     }
                 }
 
-                Console.WriteLine($"[LOGIN TIMING] Session setup: {sw.ElapsedMilliseconds}ms");
-                sw.Restart();
-
                 if (HttpContext.Session.GetString("LastLoginError") == usuario.Correo)
                 {
                     TempData["Error"] = "Contraseña incorrecta. Si fallas 5 veces, tu cuenta será bloqueada.";
@@ -198,8 +189,6 @@ namespace Abastecete.Controllers
                 // Registrar login exitoso
                 RegistrarLogAutenticacion(idUsuario, usuario.Correo, TiposAccionAuditoria.LOGIN, "EXITO");
 
-                Console.WriteLine($"[LOGIN TIMING] Permisos loaded: {sw.ElapsedMilliseconds}ms");
-                Console.WriteLine($"[LOGIN TIMING] TOTAL: {swTotal.ElapsedMilliseconds}ms");
                 return Redirect("~/Home/Principal");
             }
             catch (Exception ex)
@@ -238,14 +227,11 @@ namespace Abastecete.Controllers
         /// </summary>
         private void GuardarTodosLosPermisos(int idUsuario)
         {
-            var sw = System.Diagnostics.Stopwatch.StartNew();
             ManejadorPermisos manejadorP = new ManejadorPermisos();
 
             // Cargar permisos del sistema por membresía (UNA sola llamada a DB)
             var permisos = manejadorP.ObtenerDiccionarioPermisos(idUsuario);
             HttpContext.Session.SetString("permisosSistema", JsonConvert.SerializeObject(permisos));
-
-            Console.WriteLine($"[PERMISOS TIMING] Permisos cargados: {sw.ElapsedMilliseconds}ms ({permisos.Count} permisos)");
         }
 
         public IActionResult LoginWithGoogle()

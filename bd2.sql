@@ -744,50 +744,6 @@ BEGIN
 END//
 DELIMITER ;
 
--- Volcando estructura para procedimiento abastecete.buscar_productos
-DELIMITER //
-CREATE PROCEDURE `buscar_productos`(
-    IN busqueda VARCHAR(255)
-)
-BEGIN
-    SELECT DISTINCT
-        p.*,
-        pm.PRECIO,
-        l.PK_ID_LOCAL,
-        l.NOMBRE_LOCAL
-    FROM producto p
-    INNER JOIN producto_marca pm ON pm.FK_ID_PRODUCTO = p.PK_ID_PRODUCTO
-    INNER JOIN `local` l ON pm.FK_ID_LOCAL = l.PK_ID_LOCAL
-    WHERE p.NOMBRE_PRODUCTO LIKE CONCAT('%', busqueda, '%')
-      AND pm.DISPONIBLE = 1;
-END//
-DELIMITER ;
-
--- Volcando estructura para procedimiento abastecete.buscar_sugerencias_productos
-DELIMITER //
-CREATE PROCEDURE `buscar_sugerencias_productos`(
-    IN p_termino VARCHAR(100),
-    IN p_limite INT
-)
-BEGIN
-    SELECT DISTINCT
-        p.PK_ID_PRODUCTO AS id,
-        p.NOMBRE_PRODUCTO AS nombre,
-        p.IMAGEN_URL AS imagen,
-        l.PK_ID_LOCAL AS idLocal,
-        l.NOMBRE_LOCAL AS nombreLocal,
-        l.FOTOS_LOCAL AS imagenLocal
-    FROM producto p
-    INNER JOIN producto_marca pm ON pm.FK_ID_PRODUCTO = p.PK_ID_PRODUCTO
-    INNER JOIN `local` l ON pm.FK_ID_LOCAL = l.PK_ID_LOCAL
-    WHERE l.FK_ID_ESTADO_LOCAL = 1
-      AND pm.DISPONIBLE = 1
-      AND p.NOMBRE_PRODUCTO LIKE CONCAT('%', p_termino, '%')
-    ORDER BY CASE WHEN p.NOMBRE_PRODUCTO LIKE CONCAT(p_termino, '%') THEN 0 ELSE 1 END, p.NOMBRE_PRODUCTO
-    LIMIT p_limite;
-END//
-DELIMITER ;
-
 -- Volcando estructura para procedimiento abastecete.calcular_descuento_referido
 DELIMITER //
 CREATE PROCEDURE `calcular_descuento_referido`(
@@ -1580,69 +1536,6 @@ CREATE PROCEDURE `consultar_opinion`()
 BEGIN
   
   SELECT * FROM opinion;
-END//
-DELIMITER ;
-
--- Volcando estructura para procedimiento abastecete.consultar_permisos_membresia
-DELIMITER //
-CREATE PROCEDURE `consultar_permisos_membresia`(
-    IN p_id_tipo_membresia INT
-)
-BEGIN
-    SELECT
-        ps.PK_ID_PERMISO,
-        ps.CODIGO,
-        ps.NOMBRE,
-        ps.DESCRIPCION,
-        ps.ICONO,
-        ps.CATEGORIA,
-        ps.ORDEN
-    FROM permiso ps
-    INNER JOIN tipo_membresia_permiso tmp ON ps.PK_ID_PERMISO = tmp.FK_ID_PERMISO
-    WHERE tmp.FK_ID_TIPO_MEMBRESIA = p_id_tipo_membresia
-    ORDER BY ps.CATEGORIA, ps.ORDEN;
-END//
-DELIMITER ;
-
--- Volcando estructura para procedimiento abastecete.consultar_permisos_sistema
-DELIMITER //
-CREATE PROCEDURE `consultar_permisos_sistema`()
-BEGIN
-    SELECT
-        PK_ID_PERMISO,
-        CODIGO,
-        NOMBRE,
-        DESCRIPCION,
-        ICONO,
-        CATEGORIA,
-        ORDEN,
-        ESTADO
-    FROM permiso
-    WHERE ESTADO = 1
-    ORDER BY CATEGORIA, ORDEN;
-END//
-DELIMITER ;
-
--- Volcando estructura para procedimiento abastecete.consultar_permisos_usuario
-DELIMITER //
-CREATE PROCEDURE `consultar_permisos_usuario`(
-    IN p_id_usuario INT
-)
-BEGIN
-    SELECT
-        ps.PK_ID_PERMISO,
-        ps.CODIGO,
-        ps.NOMBRE,
-        ps.DESCRIPCION,
-        ps.ICONO,
-        ps.CATEGORIA,
-        up.ORIGEN,
-        up.FECHA_ASIGNACION
-    FROM usuario_permiso up
-    INNER JOIN permiso ps ON up.FK_ID_PERMISO = ps.PK_ID_PERMISO
-    WHERE up.FK_ID_USUARIO = p_id_usuario
-      AND up.ESTADO = 1
-    ORDER BY ps.CATEGORIA, ps.ORDEN;
 END//
 DELIMITER ;
 
@@ -4234,11 +4127,14 @@ CREATE TABLE IF NOT EXISTS `evento_analitica` (
   KEY `idx_evento_tipo` (`TIPO_EVENTO`),
   KEY `idx_evento_local_fecha` (`FK_ID_LOCAL`,`FECHA_EVENTO`),
   KEY `fk_evento_producto` (`FK_ID_PRODUCTO`),
+  KEY `idx_ea_fecha` (`FECHA_EVENTO`),
+  KEY `idx_ea_local_fecha` (`FK_ID_LOCAL`,`FECHA_EVENTO`),
+  KEY `idx_ea_tipo` (`TIPO_EVENTO`),
   CONSTRAINT `fk_evento_local` FOREIGN KEY (`FK_ID_LOCAL`) REFERENCES `local` (`PK_ID_LOCAL`) ON DELETE CASCADE,
   CONSTRAINT `fk_evento_producto` FOREIGN KEY (`FK_ID_PRODUCTO`) REFERENCES `producto` (`PK_ID_PRODUCTO`) ON DELETE SET NULL
 ) ENGINE=InnoDB AUTO_INCREMENT=65 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla abastecete.evento_analitica: ~17 rows (aproximadamente)
+-- Volcando datos para la tabla abastecete.evento_analitica: ~35 rows (aproximadamente)
 INSERT INTO `evento_analitica` (`PK_ID_EVENTO`, `FK_ID_LOCAL`, `FK_ID_PRODUCTO`, `TIPO_EVENTO`, `IP_VISITANTE`, `USER_AGENT`, `REFERRER`, `FECHA_EVENTO`) VALUES
 	(30, 1, NULL, 'BUSQUEDA_APARICION', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'http://localhost:5235/Productos/ProductosNegocio', '2025-12-29 22:11:30'),
 	(31, 1, NULL, 'VISITA_LOCAL', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'http://localhost:5235/Negocios/ConsultarProductos?idLocal=1', '2025-12-29 22:11:34'),
@@ -4848,9 +4744,9 @@ CREATE TABLE IF NOT EXISTS `logs_sistema` (
   KEY `IDX_logs_tipo_accion` (`TIPO_ACCION`),
   KEY `IDX_logs_entidad` (`MODULO`,`ENTIDAD_ID`),
   CONSTRAINT `FK_logs_usuario` FOREIGN KEY (`FK_ID_USUARIO`) REFERENCES `usuario` (`PK_ID_USUARIO`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=160 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=165 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla abastecete.logs_sistema: ~132 rows (aproximadamente)
+-- Volcando datos para la tabla abastecete.logs_sistema: ~162 rows (aproximadamente)
 INSERT INTO `logs_sistema` (`PK_ID_LOG`, `FK_ID_USUARIO`, `NOMBRE_USUARIO`, `MODULO`, `TIPO_ACCION`, `ENTIDAD_ID`, `ENTIDAD_DESCRIPCION`, `DATOS_ANTERIORES`, `DATOS_NUEVOS`, `IP_CLIENTE`, `USER_AGENT`, `FECHA_REGISTRO`, `RESULTADO`, `MENSAJE_ERROR`, `CONTROLLER`, `ACTION`) VALUES
 	(1, 54, 'prueba123@gmail.com', 'AUTENTICACION', 'LOGIN', 54, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-22 05:25:06', 'EXITO', '', 'Login', 'Login'),
 	(2, 54, 'Usuario', 'AUTENTICACION', 'LOGOUT', 54, 'Cierre de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-22 05:27:25', 'EXITO', '', 'Login', 'Logout'),
@@ -5009,7 +4905,12 @@ INSERT INTO `logs_sistema` (`PK_ID_LOG`, `FK_ID_USUARIO`, `NOMBRE_USUARIO`, `MOD
 	(155, NULL, 'kevin12@gmail.com', 'AUTENTICACION', 'LOGIN', NULL, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2025-12-31 17:34:53', 'ERROR', 'Correo no valido', 'Login', 'Login'),
 	(156, NULL, 'Usuario', 'AUTENTICACION', 'LOGOUT', 3, 'Cierre de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36 OPR/125.0.0.0', '2025-12-31 17:38:53', 'EXITO', '', 'Login', 'Logout'),
 	(158, 6, 'Usuario', 'AUTENTICACION', 'LOGOUT', 6, 'Cierre de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36 OPR/125.0.0.0', '2025-12-31 18:42:32', 'EXITO', '', 'Login', 'Logout'),
-	(159, 2, 'johans.ramirez@udla.edu.co', 'AUTENTICACION', 'LOGIN', 2, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36 OPR/125.0.0.0', '2025-12-31 18:42:42', 'EXITO', '', 'Login', 'Login');
+	(159, 2, 'johans.ramirez@udla.edu.co', 'AUTENTICACION', 'LOGIN', 2, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36 OPR/125.0.0.0', '2025-12-31 18:42:42', 'EXITO', '', 'Login', 'Login'),
+	(160, 2, 'johans.ramirez@udla.edu.co', 'AUTENTICACION', 'LOGIN', 2, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36 OPR/125.0.0.0', '2025-12-31 18:47:19', 'EXITO', '', 'Login', 'Login'),
+	(161, 2, 'johans.ramirez@udla.edu.co', 'AUTENTICACION', 'LOGIN', 2, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36 OPR/125.0.0.0', '2025-12-31 18:51:47', 'EXITO', '', 'Login', 'Login'),
+	(162, 2, 'johans.ramirez@udla.edu.co', 'AUTENTICACION', 'LOGIN', 2, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36 OPR/125.0.0.0', '2026-01-01 00:52:59', 'EXITO', '', 'Login', 'Login'),
+	(163, 2, 'johans.ramirez@udla.edu.co', 'AUTENTICACION', 'LOGIN', 2, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36 OPR/125.0.0.0', '2026-01-01 00:58:50', 'EXITO', '', 'Login', 'Login'),
+	(164, 2, 'johans.ramirez@udla.edu.co', 'AUTENTICACION', 'LOGIN', 2, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36 OPR/125.0.0.0', '2026-01-01 23:42:44', 'EXITO', '', 'Login', 'Login');
 
 -- Volcando estructura para tabla abastecete.marca
 CREATE TABLE IF NOT EXISTS `marca` (
@@ -5766,7 +5667,7 @@ CREATE TABLE IF NOT EXISTS `opinion` (
   CONSTRAINT `FK_opinion_usuario` FOREIGN KEY (`FK_ID_USUARIO`) REFERENCES `usuario` (`PK_ID_USUARIO`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla abastecete.opinion: ~0 rows (aproximadamente)
+-- Volcando datos para la tabla abastecete.opinion: ~1 rows (aproximadamente)
 INSERT INTO `opinion` (`PK_ID_OPINION`, `FK_ID_LOCAL`, `FK_ID_USUARIO`, `FK_ID_OPINION_PADRE`, `CALIFICACION`, `COMENTARIO`, `RESPUESTA_DUENO`, `FECHA_RESPUESTA`, `ESTADO`, `FECHA_OPINION`) VALUES
 	(1, 1, 6, NULL, 5, 'Buenos productos', NULL, NULL, 1, '2025-12-31 18:39:58');
 
@@ -5810,7 +5711,7 @@ CREATE TABLE IF NOT EXISTS `permiso` (
   KEY `idx_permiso_sistema_estado` (`ESTADO`)
 ) ENGINE=InnoDB AUTO_INCREMENT=40 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla abastecete.permiso: ~38 rows (aproximadamente)
+-- Volcando datos para la tabla abastecete.permiso: ~39 rows (aproximadamente)
 INSERT INTO `permiso` (`PK_ID_PERMISO`, `CODIGO`, `NOMBRE`, `DESCRIPCION`, `ICONO`, `CATEGORIA`, `ORDEN`, `ESTADO`) VALUES
 	(1, 'ADMIN_CATEGORIAS', 'Administrar Categorías', 'Crear, editar, eliminar categorías de productos', 'fa-folder-tree', 'ADMIN', 1, 1),
 	(2, 'ADMIN_USUARIOS', 'Administrar Usuarios', 'Ver, editar, bloquear usuarios del sistema', 'fa-users-gear', 'ADMIN', 2, 1),
@@ -6504,7 +6405,7 @@ CREATE TABLE IF NOT EXISTS `producto_marca` (
   CONSTRAINT `fk_pm_unidad` FOREIGN KEY (`FK_ID_UNIDAD`) REFERENCES `unidad` (`ID_UNIDAD`) ON DELETE SET NULL
 ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla abastecete.producto_marca: ~25 rows (aproximadamente)
+-- Volcando datos para la tabla abastecete.producto_marca: ~1 rows (aproximadamente)
 INSERT INTO `producto_marca` (`PK_ID`, `FK_ID_PRODUCTO`, `FK_ID_MARCA`, `FK_ID_UNIDAD`, `FK_ID_LOCAL`, `PRECIO`, `STOCK`, `DISPONIBLE`, `FECHA_REGISTRO`, `FECHA_ACTUALIZACION`) VALUES
 	(1, 41, 1, 1, 1, 5000.00, 0, 1, '2025-12-31 13:03:43', '2025-12-31 13:03:43');
 
@@ -7548,10 +7449,12 @@ CREATE TABLE IF NOT EXISTS `resumen_analitica_diario` (
   PRIMARY KEY (`PK_ID_RESUMEN`),
   UNIQUE KEY `uk_local_fecha` (`FK_ID_LOCAL`,`FECHA`),
   KEY `idx_resumen_fecha` (`FECHA`),
+  KEY `idx_rad_fecha` (`FECHA`),
+  KEY `idx_rad_local_fecha` (`FK_ID_LOCAL`,`FECHA`),
   CONSTRAINT `fk_resumen_local` FOREIGN KEY (`FK_ID_LOCAL`) REFERENCES `local` (`PK_ID_LOCAL`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=62 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla abastecete.resumen_analitica_diario: ~10 rows (aproximadamente)
+-- Volcando datos para la tabla abastecete.resumen_analitica_diario: ~11 rows (aproximadamente)
 INSERT INTO `resumen_analitica_diario` (`PK_ID_RESUMEN`, `FK_ID_LOCAL`, `FECHA`, `VISITAS_LOCAL`, `VISITAS_PRODUCTOS`, `CLICS_WHATSAPP`, `CLICS_TELEFONO`, `APARICIONES_BUSQUEDA`, `COMPARTIDOS`) VALUES
 	(1, 28, '2025-12-23', 6, 2, 1, 0, 4, 0),
 	(2, 35, '2025-12-23', 0, 0, 0, 0, 3, 0),
@@ -7575,11 +7478,14 @@ CREATE TABLE IF NOT EXISTS `resumen_producto_vistas` (
   PRIMARY KEY (`PK_ID_RESUMEN`),
   UNIQUE KEY `uk_producto_fecha` (`FK_ID_PRODUCTO`,`FECHA`),
   KEY `idx_producto_local` (`FK_ID_LOCAL`),
+  KEY `idx_rpv_fecha` (`FECHA`),
+  KEY `idx_rpv_local_fecha` (`FK_ID_LOCAL`,`FECHA`),
+  KEY `idx_rpv_producto` (`FK_ID_PRODUCTO`),
   CONSTRAINT `fk_resumen_producto` FOREIGN KEY (`FK_ID_PRODUCTO`) REFERENCES `producto` (`PK_ID_PRODUCTO`) ON DELETE CASCADE,
   CONSTRAINT `fk_resumen_producto_local` FOREIGN KEY (`FK_ID_LOCAL`) REFERENCES `local` (`PK_ID_LOCAL`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla abastecete.resumen_producto_vistas: ~1 rows (aproximadamente)
+-- Volcando datos para la tabla abastecete.resumen_producto_vistas: ~3 rows (aproximadamente)
 INSERT INTO `resumen_producto_vistas` (`PK_ID_RESUMEN`, `FK_ID_PRODUCTO`, `FK_ID_LOCAL`, `FECHA`, `VISTAS`) VALUES
 	(1, 10, 1, '2025-12-30', 1),
 	(2, 387, 1, '2025-12-31', 1),
@@ -7983,6 +7889,36 @@ BEGIN
     WHERE pm.FK_ID_LOCAL = p_id_local
       AND pm.FK_ID_PRODUCTO = p_id_producto
     ORDER BY pm.PRECIO ASC;
+END//
+DELIMITER ;
+
+-- Volcando estructura para procedimiento abastecete.sp_listar_marcas_productos_bulk
+DELIMITER //
+CREATE PROCEDURE `sp_listar_marcas_productos_bulk`(
+    IN p_id_local INT,
+    IN p_ids_productos TEXT
+)
+BEGIN
+    SELECT
+        pm.PK_ID AS Id,
+        pm.FK_ID_LOCAL AS IdLocal,
+        pm.FK_ID_PRODUCTO AS IdProducto,
+        pm.FK_ID_MARCA AS IdMarca,
+        m.NOMBRE AS NombreMarca,
+        m.LOGO_URL AS LogoMarca,
+        pm.FK_ID_UNIDAD AS IdUnidad,
+        u.NOMBRE_UNIDAD AS NombreUnidad,
+        pm.PRECIO AS Precio,
+        pm.STOCK AS Stock,
+        pm.DISPONIBLE AS Disponible,
+        pm.FECHA_REGISTRO AS FechaRegistro,
+        pm.FECHA_ACTUALIZACION AS FechaActualizacion
+    FROM producto_marca pm
+    INNER JOIN marca m ON pm.FK_ID_MARCA = m.PK_ID_MARCA
+    LEFT JOIN unidad u ON pm.FK_ID_UNIDAD = u.ID_UNIDAD
+    WHERE pm.FK_ID_LOCAL = p_id_local
+      AND FIND_IN_SET(pm.FK_ID_PRODUCTO, p_ids_productos) > 0
+    ORDER BY pm.FK_ID_PRODUCTO, pm.PRECIO ASC;
 END//
 DELIMITER ;
 
