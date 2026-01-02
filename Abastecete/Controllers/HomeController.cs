@@ -14,14 +14,16 @@ namespace Abastecete.Controllers
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
+        private readonly IConfiguration _configuration;
         private readonly ManejadorCategorias manejadorCategorias;
         private readonly ManejadorNegocios manejadorNegocios;
         private readonly ManejadorOfertasFlash manejadorOfertasFlash;
         private readonly ManejadorImagenes manejadorImagenes;
 
-        public HomeController(ILogger<HomeController> logger)
+        public HomeController(ILogger<HomeController> logger, IConfiguration configuration)
         {
             _logger = logger;
+            _configuration = configuration;
             manejadorImagenes = new ManejadorImagenes();
             manejadorCategorias = new ManejadorCategorias();
             manejadorNegocios = new ManejadorNegocios();
@@ -109,6 +111,45 @@ namespace Abastecete.Controllers
             ViewBag.LocalesAleatoriosJson = JsonConvert.SerializeObject(localesAleatorios ?? new List<Negocio>());
             ViewBag.OfertasFlash = ofertasFlash ?? new List<OfertaFlash>();
             ViewBag.BannersPorCategoria = bannersPorCategoria;
+
+            // Google Maps API Key para el mapa de negocios
+            ViewBag.GoogleMapsApiKey = _configuration["GoogleMaps:ApiKey"] ?? "";
+
+            // JSON de negocios con coordenadas para el mapa
+            var negociosParaMapa = (negocios ?? new List<Negocio>()).Select(n => {
+                double lat = (double)(n.Latitud ?? 0);
+                double lng = (double)(n.Longitud ?? 0);
+
+                // Si no hay coordenadas en campos separados, intentar parsear de Localizacion
+                // El formato puede ser "1.6143,-75.6062" o con espacios
+                if ((lat == 0 || lng == 0) && !string.IsNullOrEmpty(n.Localizacion))
+                {
+                    var localizacion = n.Localizacion.Trim();
+                    // Buscar si contiene coordenadas (números con punto decimal y posiblemente signo negativo)
+                    var regex = new System.Text.RegularExpressions.Regex(@"(-?\d+\.?\d*)\s*,\s*(-?\d+\.?\d*)");
+                    var match = regex.Match(localizacion);
+                    if (match.Success)
+                    {
+                        double.TryParse(match.Groups[1].Value, System.Globalization.NumberStyles.Any,
+                            System.Globalization.CultureInfo.InvariantCulture, out lat);
+                        double.TryParse(match.Groups[2].Value, System.Globalization.NumberStyles.Any,
+                            System.Globalization.CultureInfo.InvariantCulture, out lng);
+                    }
+                }
+
+                // Debug log
+                System.Diagnostics.Debug.WriteLine($"Negocio {n.Nombre}: Lat={lat}, Lng={lng}, Localizacion={n.Localizacion}");
+
+                return new {
+                    n.Id,
+                    n.Nombre,
+                    Localizacion = n.Direccion ?? "Florencia, Caquetá",
+                    Latitud = lat,
+                    Longitud = lng,
+                    Imagen = n.imagen?.Base64 ?? "/images/default.webp"
+                };
+            });
+            ViewBag.NegociosJson = JsonConvert.SerializeObject(negociosParaMapa);
 
             return View(categorias);
         }
