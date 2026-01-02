@@ -9,17 +9,18 @@ namespace BusinessLogic.Models
     public class OfertaFlash
     {
         public int Id { get; set; }
-        public string Titulo { get; set; }
-        public string Descripcion { get; set; }
+        public string Titulo { get; set; } = "";
+        public string Descripcion { get; set; } = "";
         public int Estado { get; set; }
         public DateTime FechaOferta { get; set; }
         public DateTime TiempoOferta { get; set; }
         public int IdLocal { get; set; }
-        public string NombreLocal { get; set; }
-        public string FotoLocal { get; set; }
-        public string ProductoOfertaFlash { get; set; }
-        public string ImagenProductoOfertaFlash { get; set; }
+        public string NombreLocal { get; set; } = "";
+        public string FotoLocal { get; set; } = "";
+        public string ProductoOfertaFlash { get; set; } = "";
+        public string ImagenProductoOfertaFlash { get; set; } = "";
         public int Prioridad { get; set; }
+        public ImagenModel? ImagenLocal { get; set; }
     }
 }
 

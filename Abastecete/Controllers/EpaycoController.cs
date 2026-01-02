@@ -3,28 +3,44 @@ using BusinessLogic.Utilidades;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 
-[Route("api/[controller]")]
-[ApiController]
-public class EpaycoController : ControllerBase
+namespace Abastecete.Controllers
 {
-    private readonly EpaycoService _epaycoService;
-
-    public EpaycoController(EpaycoService epaycoService)
+    [Route("api/[controller]")]
+    [ApiController]
+    public class EpaycoController : ControllerBase
     {
-        _epaycoService = epaycoService;
-    }
+        private readonly EpaycoService _epaycoService;
 
-    [HttpPost("process-payment")]
-    public async Task<IActionResult> ProcessPayment([FromBody] EpaycoPaymentRequest request)
-    {
-        try
+        public EpaycoController(EpaycoService epaycoService)
         {
-            var response = await _epaycoService.ProcessPayment(request);
-            return Ok(new { Message = "Pago exitoso", Response = response });
+            _epaycoService = epaycoService;
         }
-        catch (Exception ex)
+
+        [HttpPost("process-payment")]
+        public async Task<IActionResult> ProcessPayment([FromBody] EpaycoPaymentRequest request)
         {
-            return BadRequest(new { Message = "Error en el pago", Error = ex.Message });
+            // Validar que el usuario esté autenticado
+            var usuarioId = HttpContext.Session.GetInt32("idUsuario");
+            if (usuarioId == null)
+            {
+                return Unauthorized(new { Message = "Sesión no válida" });
+            }
+
+            // Validar request
+            if (request == null)
+            {
+                return BadRequest(new { Message = "Datos de pago inválidos" });
+            }
+
+            try
+            {
+                var response = await _epaycoService.ProcessPayment(request);
+                return Ok(new { Message = "Pago exitoso", Response = response });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { Message = "Error en el pago", Error = ex.Message });
+            }
         }
     }
 }

@@ -1,0 +1,445 @@
+@* Partial view para mostrar sección de opiniones en la página de un negocio *@
+@* Uso: @await Html.PartialAsync("_OpinionesLocal", idLocal) *@
+
+@model int
+
+<section id="seccion-opiniones" class="mt-8">
+    <h2 class="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+        <i class="fas fa-star text-yellow-400"></i>Opiniones y Reseñas
+    </h2>
+
+    <!-- Resumen de calificaciones -->
+    <div id="resumen-opiniones" class="mb-6"></div>
+
+    <!-- Formulario para opinar - Diseño mejorado -->
+    <div id="formulario-opinion" class="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-6 mb-8 border border-gray-200">
+        <div id="estado-puntuacion"></div>
+
+        <div id="form-nueva-opinion" class="hidden">
+            <h3 class="font-bold text-gray-800 text-lg mb-4">Deja tu opinión</h3>
+
+            <!-- Estrellas para calificar - Diseño mejorado -->
+            <div id="calificacion-container" class="mb-5">
+                <p class="text-sm font-medium text-gray-700 mb-3">Tu calificación:</p>
+                <div class="flex gap-2" id="estrellas-input">
+                    @for (int i = 1; i <= 5; i++)
+                    {
+                        <button type="button"
+                                onclick="seleccionarCalificacion(@i)"
+                                class="estrella-btn group relative text-4xl text-gray-300 hover:scale-110 transition-all duration-200"
+                                data-value="@i">
+                            <i class="fas fa-star drop-shadow-sm"></i>
+                            <span class="absolute -bottom-6 left-1/2 -translate-x-1/2 text-xs font-medium text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity">@i</span>
+                        </button>
+                    }
+                </div>
+                <input type="hidden" id="calificacion-seleccionada" value="0">
+                <p id="texto-calificacion" class="text-sm text-gray-500 mt-4 h-5"></p>
+            </div>
+
+            <!-- Comentario - Diseño mejorado -->
+            <div class="mb-5">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Tu comentario (opcional)</label>
+                <textarea id="comentario-opinion"
+                          class="w-full border-2 border-gray-200 rounded-xl p-4 focus:border-green-500 focus:ring-2 focus:ring-green-500/20 outline-none transition-all resize-none"
+                          rows="4"
+                          placeholder="Comparte tu experiencia con este negocio..."></textarea>
+                <p class="text-xs text-gray-400 mt-1">Máximo 500 caracteres</p>
+            </div>
+
+            <button onclick="enviarOpinion()"
+                    class="inline-flex items-center gap-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white px-6 py-3 rounded-xl font-semibold shadow-lg shadow-green-500/30 hover:shadow-xl hover:shadow-green-500/40 hover:-translate-y-0.5 transition-all duration-300">
+                <i class="fas fa-paper-plane"></i>
+                Publicar opinión
+            </button>
+        </div>
+
+        <div id="mensaje-login" class="hidden text-center py-6">
+            <div class="w-16 h-16 mx-auto mb-4 bg-gray-200 rounded-full flex items-center justify-center">
+                <i class="fas fa-user-lock text-2xl text-gray-400"></i>
+            </div>
+            <p class="text-gray-600 mb-3">Inicia sesión para dejar tu opinión</p>
+            <a href="/Login"
+               class="inline-flex items-center gap-2 bg-green-500 text-white px-5 py-2.5 rounded-xl font-medium hover:bg-green-600 transition-colors">
+                <i class="fas fa-sign-in-alt"></i>
+                Iniciar sesión
+            </a>
+        </div>
+
+        <div id="mensaje-ya-puntuo" class="hidden">
+            <div class="flex items-center gap-3 bg-green-50 text-green-700 px-4 py-3 rounded-xl mb-4">
+                <i class="fas fa-check-circle text-xl"></i>
+                <span class="font-medium">¡Gracias! Ya calificaste este negocio</span>
+            </div>
+            <button onclick="mostrarFormularioComentario()"
+                    class="inline-flex items-center gap-2 text-green-600 hover:text-green-700 font-medium transition-colors">
+                <i class="fas fa-comment-dots"></i>
+                Agregar otro comentario
+            </button>
+        </div>
+    </div>
+
+    <!-- Lista de opiniones -->
+    <div id="lista-opiniones" class="space-y-6"></div>
+
+    <!-- Paginación -->
+    <div id="paginacion-opiniones" class="mt-8 flex justify-center gap-2"></div>
+
+    <!-- Loading -->
+    <div id="loading-opiniones" class="text-center py-12 hidden">
+        <div class="inline-flex items-center gap-3 text-green-600">
+            <i class="fas fa-spinner fa-spin text-2xl"></i>
+            <span class="font-medium">Cargando opiniones...</span>
+        </div>
+    </div>
+</section>
+
+<script>
+    const idLocalOpiniones = @Model;
+    let paginaActual = 1;
+    const opinionesPorPagina = 5;
+
+    const textosCalificacion = {
+        1: '😞 Muy malo',
+        2: '😕 Malo',
+        3: '😐 Regular',
+        4: '😊 Bueno',
+        5: '🤩 Excelente'
+    };
+
+    document.addEventListener('DOMContentLoaded', function() {
+        verificarEstadoPuntuacion();
+        cargarOpiniones(1);
+    });
+
+    async function verificarEstadoPuntuacion() {
+        try {
+            const response = await fetch(`/api/opiniones/${idLocalOpiniones}/verificar-puntuacion`);
+            const data = await response.json();
+
+            if (!data.logueado) {
+                document.getElementById('mensaje-login').classList.remove('hidden');
+            } else if (data.yaPuntuo) {
+                document.getElementById('mensaje-ya-puntuo').classList.remove('hidden');
+                document.getElementById('calificacion-container').classList.add('hidden');
+            } else {
+                document.getElementById('form-nueva-opinion').classList.remove('hidden');
+            }
+        } catch (error) {
+            document.getElementById('mensaje-login').classList.remove('hidden');
+        }
+    }
+
+    function mostrarFormularioComentario() {
+        document.getElementById('mensaje-ya-puntuo').classList.add('hidden');
+        document.getElementById('form-nueva-opinion').classList.remove('hidden');
+        document.getElementById('calificacion-container').classList.add('hidden');
+    }
+
+    function seleccionarCalificacion(valor) {
+        document.getElementById('calificacion-seleccionada').value = valor;
+        document.getElementById('texto-calificacion').textContent = textosCalificacion[valor] || '';
+
+        document.querySelectorAll('.estrella-btn').forEach((btn, index) => {
+            const icon = btn.querySelector('i');
+            if (index < valor) {
+                icon.classList.remove('text-gray-300');
+                icon.classList.add('text-yellow-400');
+                btn.classList.add('scale-110');
+            } else {
+                icon.classList.remove('text-yellow-400');
+                icon.classList.add('text-gray-300');
+                btn.classList.remove('scale-110');
+            }
+        });
+    }
+
+    async function enviarOpinion(idOpinionPadre = null) {
+        const calificacion = parseInt(document.getElementById('calificacion-seleccionada').value);
+        const comentario = document.getElementById('comentario-opinion').value.trim();
+
+        if (!comentario && calificacion === 0) {
+            alert('Debes escribir un comentario o dar una calificación');
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/opiniones', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    idLocal: idLocalOpiniones,
+                    calificacion: calificacion,
+                    comentario: comentario,
+                    idOpinionPadre: idOpinionPadre
+                })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                document.getElementById('comentario-opinion').value = '';
+                document.getElementById('calificacion-seleccionada').value = '0';
+                document.getElementById('texto-calificacion').textContent = '';
+                document.querySelectorAll('.estrella-btn').forEach(btn => {
+                    const icon = btn.querySelector('i');
+                    icon.classList.remove('text-yellow-400');
+                    icon.classList.add('text-gray-300');
+                    btn.classList.remove('scale-110');
+                });
+                cargarOpiniones(1);
+                verificarEstadoPuntuacion();
+            } else {
+                alert(data.mensaje || 'Error al publicar opinión');
+            }
+        } catch (error) {
+            alert('Error de conexión');
+        }
+    }
+
+    async function cargarOpiniones(pagina) {
+        document.getElementById('loading-opiniones').classList.remove('hidden');
+
+        try {
+            const response = await fetch(`/api/opiniones/${idLocalOpiniones}?pagina=${pagina}&cantidad=${opinionesPorPagina}`);
+            const data = await response.json();
+
+            renderizarResumen(data.resumen);
+            renderizarOpiniones(data.opiniones);
+            renderizarPaginacion(data.totalPaginas, pagina);
+            paginaActual = pagina;
+        } catch (error) {
+            document.getElementById('lista-opiniones').innerHTML =
+                '<p class="text-center text-gray-500">Error al cargar opiniones</p>';
+        } finally {
+            document.getElementById('loading-opiniones').classList.add('hidden');
+        }
+    }
+
+    function renderizarResumen(resumen) {
+        if (!resumen || resumen.totalConCalificacion === 0) {
+            document.getElementById('resumen-opiniones').innerHTML = '';
+            return;
+        }
+
+        const estrellas = [
+            { num: 5, cantidad: resumen.estrellas5 },
+            { num: 4, cantidad: resumen.estrellas4 },
+            { num: 3, cantidad: resumen.estrellas3 },
+            { num: 2, cantidad: resumen.estrellas2 },
+            { num: 1, cantidad: resumen.estrellas1 }
+        ];
+
+        document.getElementById('resumen-opiniones').innerHTML = `
+            <div class="flex flex-col md:flex-row items-center gap-8 p-6 bg-gradient-to-br from-yellow-50 to-orange-50 rounded-2xl border border-yellow-100">
+                <div class="text-center">
+                    <div class="text-5xl font-bold text-gray-800">${resumen.promedioCalificacion.toFixed(1)}</div>
+                    <div class="flex gap-1 justify-center my-2">
+                        ${[1,2,3,4,5].map(i =>
+                            `<i class="fas fa-star text-lg ${i <= Math.round(resumen.promedioCalificacion) ? 'text-yellow-400' : 'text-gray-300'}"></i>`
+                        ).join('')}
+                    </div>
+                    <p class="text-sm text-gray-500">${resumen.totalConCalificacion} calificaciones</p>
+                </div>
+                <div class="flex-1 w-full max-w-md">
+                    ${estrellas.map(e => {
+                        const pct = resumen.totalConCalificacion > 0 ? (e.cantidad * 100 / resumen.totalConCalificacion) : 0;
+                        return `
+                            <div class="flex items-center gap-3 mb-2">
+                                <span class="text-sm text-gray-600 w-8 font-medium">${e.num}</span>
+                                <i class="fas fa-star text-yellow-400 text-sm"></i>
+                                <div class="flex-1 bg-gray-200 rounded-full h-2.5 overflow-hidden">
+                                    <div class="bg-gradient-to-r from-yellow-400 to-orange-400 h-full rounded-full transition-all duration-500" style="width: ${pct}%"></div>
+                                </div>
+                                <span class="text-sm text-gray-500 w-8 text-right">${e.cantidad}</span>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            </div>
+        `;
+    }
+
+    function renderizarOpiniones(opiniones) {
+        if (!opiniones || opiniones.length === 0) {
+            document.getElementById('lista-opiniones').innerHTML = `
+                <div class="text-center py-12 bg-gray-50 rounded-2xl">
+                    <div class="w-20 h-20 mx-auto mb-4 bg-gray-200 rounded-full flex items-center justify-center">
+                        <i class="fas fa-comments text-3xl text-gray-400"></i>
+                    </div>
+                    <p class="text-gray-500 text-lg mb-2">Aún no hay opiniones</p>
+                    <p class="text-gray-400">¡Sé el primero en opinar!</p>
+                </div>
+            `;
+            return;
+        }
+
+        document.getElementById('lista-opiniones').innerHTML = opiniones.map(o => `
+            <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-md transition-shadow" id="opinion-${o.id}">
+                <div class="flex items-start gap-4">
+                    <img src="${o.fotoUsuario || '/images/default-avatar.png'}"
+                         class="w-12 h-12 rounded-full object-cover ring-2 ring-gray-100"
+                         alt="${o.nombreUsuario}">
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center justify-between flex-wrap gap-2">
+                            <span class="font-semibold text-gray-800">${o.nombreUsuario}</span>
+                            <span class="text-xs text-gray-400">${formatearFecha(o.fechaOpinion)}</span>
+                        </div>
+                        ${o.calificacion > 0 ? `
+                            <div class="flex gap-0.5 my-2">
+                                ${[1,2,3,4,5].map(i =>
+                                    `<i class="fas fa-star text-sm ${i <= o.calificacion ? 'text-yellow-400' : 'text-gray-200'}"></i>`
+                                ).join('')}
+                            </div>
+                        ` : ''}
+                        ${o.comentario ? `<p class="text-gray-600 mt-2 leading-relaxed">${o.comentario}</p>` : ''}
+
+                        ${o.respuestaDueno ? `
+                            <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-4 mt-4 border-l-4 border-green-500">
+                                <p class="text-xs font-semibold text-green-700 mb-2 flex items-center gap-2">
+                                    <i class="fas fa-store"></i>Respuesta del negocio
+                                </p>
+                                <p class="text-sm text-gray-700">${o.respuestaDueno}</p>
+                            </div>
+                        ` : ''}
+
+                        <div class="flex items-center gap-4 mt-4 pt-3 border-t border-gray-100">
+                            <button onclick="mostrarResponder(${o.id})" class="text-gray-500 hover:text-green-600 text-sm font-medium transition-colors flex items-center gap-1">
+                                <i class="fas fa-reply"></i>Responder
+                            </button>
+                            ${o.cantidadRespuestas > 0 ? `
+                                <button onclick="toggleRespuestas(${o.id})" class="text-green-600 hover:text-green-700 text-sm font-medium transition-colors flex items-center gap-1">
+                                    <i class="fas fa-comments"></i>${o.cantidadRespuestas} respuesta(s)
+                                </button>
+                            ` : ''}
+                        </div>
+
+                        <!-- Formulario respuesta usuario -->
+                        <div id="form-respuesta-${o.id}" class="hidden mt-4 bg-gray-50 rounded-xl p-4">
+                            <textarea id="texto-respuesta-${o.id}"
+                                      class="w-full border-2 border-gray-200 rounded-lg p-3 text-sm focus:border-green-500 focus:ring-2 focus:ring-green-500/20 outline-none transition-all resize-none"
+                                      rows="2"
+                                      placeholder="Escribe tu respuesta..."></textarea>
+                            <div class="flex gap-2 mt-3">
+                                <button onclick="enviarRespuestaUsuario(${o.id})"
+                                        class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                                    <i class="fas fa-paper-plane mr-1"></i>Enviar
+                                </button>
+                                <button onclick="ocultarResponder(${o.id})"
+                                        class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                                    Cancelar
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Respuestas de usuarios -->
+                        <div id="respuestas-${o.id}" class="hidden mt-4 pl-4 border-l-2 border-green-200 space-y-3"></div>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function formatearFecha(fechaStr) {
+        const fecha = new Date(fechaStr);
+        const ahora = new Date();
+        const diff = ahora - fecha;
+        const dias = Math.floor(diff / (1000 * 60 * 60 * 24));
+
+        if (dias === 0) return 'Hoy';
+        if (dias === 1) return 'Ayer';
+        if (dias < 7) return `Hace ${dias} días`;
+        if (dias < 30) return `Hace ${Math.floor(dias / 7)} semanas`;
+
+        return fecha.toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' });
+    }
+
+    function renderizarPaginacion(totalPaginas, paginaActual) {
+        if (totalPaginas <= 1) {
+            document.getElementById('paginacion-opiniones').innerHTML = '';
+            return;
+        }
+
+        let html = '';
+        for (let i = 1; i <= totalPaginas; i++) {
+            html += `
+                <button onclick="cargarOpiniones(${i})"
+                        class="px-4 py-2 rounded-lg font-medium transition-all ${i === paginaActual
+                            ? 'bg-green-500 text-white shadow-lg shadow-green-500/30'
+                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}">
+                    ${i}
+                </button>
+            `;
+        }
+        document.getElementById('paginacion-opiniones').innerHTML = html;
+    }
+
+    function mostrarResponder(idOpinion) {
+        document.getElementById(`form-respuesta-${idOpinion}`).classList.remove('hidden');
+    }
+
+    function ocultarResponder(idOpinion) {
+        document.getElementById(`form-respuesta-${idOpinion}`).classList.add('hidden');
+    }
+
+    async function enviarRespuestaUsuario(idOpinionPadre) {
+        const comentario = document.getElementById(`texto-respuesta-${idOpinionPadre}`).value.trim();
+        if (!comentario) {
+            alert('Escribe una respuesta');
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/opiniones', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    idLocal: idLocalOpiniones,
+                    calificacion: 0,
+                    comentario: comentario,
+                    idOpinionPadre: idOpinionPadre
+                })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                ocultarResponder(idOpinionPadre);
+                cargarOpiniones(paginaActual);
+            } else {
+                alert(data.mensaje || 'Error al enviar respuesta');
+            }
+        } catch (error) {
+            alert('Error de conexión');
+        }
+    }
+
+    async function toggleRespuestas(idOpinion) {
+        const container = document.getElementById(`respuestas-${idOpinion}`);
+
+        if (!container.classList.contains('hidden')) {
+            container.classList.add('hidden');
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/opiniones/${idOpinion}/respuestas`);
+            const respuestas = await response.json();
+
+            container.innerHTML = respuestas.map(r => `
+                <div class="bg-white rounded-xl p-3 border border-gray-100">
+                    <div class="flex items-center gap-2 mb-2">
+                        <img src="${r.fotoUsuario || '/images/default-avatar.png'}" class="w-8 h-8 rounded-full object-cover">
+                        <span class="text-sm font-medium text-gray-800">${r.nombreUsuario}</span>
+                        <span class="text-xs text-gray-400">${formatearFecha(r.fechaOpinion)}</span>
+                    </div>
+                    <p class="text-sm text-gray-600">${r.comentario}</p>
+                </div>
+            `).join('');
+
+            container.classList.remove('hidden');
+        } catch (error) {
+            alert('Error al cargar respuestas');
+        }
+    }
+</script>

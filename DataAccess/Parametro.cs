@@ -8,13 +8,13 @@ namespace DataAccess
 {
     public class Parametro
     {
-        public string Nombre { get; set; }
-        public object Valor { get; set; }
+        public string Nombre { get; set; } = "";
+        public object? Valor { get; set; }
 
-        public Parametro(string Nombre, object Valor)
+        public Parametro(string nombre, object? valor)
         {
-            this.Nombre = Nombre;
-            this.Valor = Valor;
+            Nombre = nombre;
+            Valor = valor;
         }
     }
 }

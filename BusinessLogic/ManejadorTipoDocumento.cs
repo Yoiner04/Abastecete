@@ -27,7 +27,7 @@ namespace BusinessLogic
                 tipoDocumentos.Add(new TipoDocumento()
                 {
                     Id = Convert.ToInt32(row["PK_ID_TIPO_DOCUMENTO"].ToString()),
-                    Nombre = row["NOMBRE_TIPO_DOCUMENTO"].ToString()
+                    Nombre = row["NOMBRE_TIPO_DOCUMENTO"].ToString() ?? ""
                 });
             }
             return tipoDocumentos;

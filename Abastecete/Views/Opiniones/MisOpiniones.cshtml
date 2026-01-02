@@ -1,0 +1,141 @@
+@model List<BusinessLogic.Models.Opinion>
+@{
+    ViewData["Title"] = "Mis Opiniones - Abastecete";
+    ViewData["Description"] = "Revisa tus opiniones y reseñas sobre los negocios que has visitado en Abastecete.";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<!-- Skeleton Loader -->
+<div id="skeleton-opiniones" class="container mx-auto px-4 py-8 animate-pulse">
+    <div class="h-8 w-64 bg-gray-300 rounded mb-6"></div>
+    <div class="space-y-4">
+        @for(int i = 0; i < 3; i++)
+        {
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-start gap-4">
+                    <div class="w-16 h-16 rounded-lg bg-gray-300"></div>
+                    <div class="flex-1 space-y-3">
+                        <div class="flex justify-between">
+                            <div class="h-5 w-40 bg-gray-300 rounded"></div>
+                            <div class="h-4 w-24 bg-gray-200 rounded"></div>
+                        </div>
+                        <div class="flex gap-1">
+                            @for(int j = 0; j < 5; j++)
+                            {
+                                <div class="w-4 h-4 bg-gray-200 rounded"></div>
+                            }
+                        </div>
+                        <div class="h-4 w-full bg-gray-200 rounded"></div>
+                        <div class="h-4 w-3/4 bg-gray-200 rounded"></div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Contenido Principal -->
+<div id="content-opiniones" class="hidden">
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-2xl font-bold text-gray-800 mb-6">Mis Opiniones y Reseñas</h1>
+
+    @if (Model == null || Model.Count == 0)
+    {
+        <div class="bg-white rounded-lg shadow p-8 text-center">
+            <i class="fas fa-comment-slash text-6xl text-gray-300 mb-4"></i>
+            <p class="text-gray-500 text-lg">Aún no has dejado ninguna opinión</p>
+            <p class="text-gray-400 mt-2">Visita los negocios y comparte tu experiencia</p>
+        </div>
+    }
+    else
+    {
+        <div class="space-y-4">
+            @foreach (var opinion in Model)
+            {
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex items-start gap-4">
+                        <img src="@(string.IsNullOrEmpty(opinion.FotoLocal) ? "/images/default-store.png" : opinion.FotoLocal)"
+                             alt="@opinion.NombreLocal"
+                             class="w-16 h-16 rounded-lg object-cover">
+                        <div class="flex-1">
+                            <div class="flex items-center justify-between">
+                                <h3 class="font-semibold text-lg text-gray-800">@opinion.NombreLocal</h3>
+                                <span class="text-sm text-gray-500">@opinion.FechaOpinion.ToString("dd/MM/yyyy")</span>
+                            </div>
+
+                            @if (opinion.Calificacion > 0)
+                            {
+                                <div class="flex items-center gap-1 my-2">
+                                    @for (int i = 1; i <= 5; i++)
+                                    {
+                                        <i class="fas fa-star @(i <= opinion.Calificacion ? "text-yellow-400" : "text-gray-300")"></i>
+                                    }
+                                </div>
+                            }
+
+                            @if (!string.IsNullOrEmpty(opinion.Comentario))
+                            {
+                                <p class="text-gray-600 mt-2">@opinion.Comentario</p>
+                            }
+
+                            @if (!string.IsNullOrEmpty(opinion.RespuestaDueno))
+                            {
+                                <div class="bg-orange-50 rounded-lg p-4 mt-4 border-l-4 border-orange-400">
+                                    <p class="text-sm font-semibold text-orange-600 mb-1">
+                                        <i class="fas fa-store mr-1"></i> Respuesta del negocio
+                                    </p>
+                                    <p class="text-gray-700">@opinion.RespuestaDueno</p>
+                                    @if (opinion.FechaRespuesta.HasValue)
+                                    {
+                                        <p class="text-xs text-gray-500 mt-2">@opinion.FechaRespuesta.Value.ToString("dd/MM/yyyy HH:mm")</p>
+                                    }
+                                </div>
+                            }
+
+                            <div class="flex items-center gap-4 mt-4">
+                                <a href="/Negocios/Detalle/@opinion.IdLocal" class="text-orange-500 hover:text-orange-600 text-sm">
+                                    <i class="fas fa-external-link-alt mr-1"></i> Ver negocio
+                                </a>
+                                <button onclick="eliminarOpinion(@opinion.Id)" class="text-red-500 hover:text-red-600 text-sm">
+                                    <i class="fas fa-trash mr-1"></i> Eliminar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+</div><!-- Fin content-opiniones -->
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                document.getElementById('skeleton-opiniones').classList.add('hidden');
+                document.getElementById('content-opiniones').classList.remove('hidden');
+            }, 300);
+        });
+
+        async function eliminarOpinion(idOpinion) {
+            if (!confirm('¿Estás seguro de eliminar esta opinión?')) return;
+
+            try {
+                const response = await fetch(`/api/opiniones/${idOpinion}`, {
+                    method: 'DELETE'
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    location.reload();
+                } else {
+                    alert(data.mensaje || 'Error al eliminar la opinión');
+                }
+            } catch (error) {
+                alert('Error de conexión');
+            }
+        }
+    </script>
+}

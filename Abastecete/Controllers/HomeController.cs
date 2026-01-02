@@ -1,11 +1,11 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using Abastecete.Models;
 using BusinessLogic;
 using BusinessLogic.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
-using ConnectionProject.Controllers;
+using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Humanizer;
 
@@ -14,15 +14,17 @@ namespace Abastecete.Controllers
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
+        private readonly IConfiguration _configuration;
         private readonly ManejadorCategorias manejadorCategorias;
         private readonly ManejadorNegocios manejadorNegocios;
         private readonly ManejadorOfertasFlash manejadorOfertasFlash;
-        private readonly ManejadorMongo manejadorMongo;
+        private readonly ManejadorImagenes manejadorImagenes;
 
-        public HomeController(ILogger<HomeController> logger)
+        public HomeController(ILogger<HomeController> logger, IConfiguration configuration)
         {
             _logger = logger;
-            manejadorMongo = new ManejadorMongo();
+            _configuration = configuration;
+            manejadorImagenes = new ManejadorImagenes();
             manejadorCategorias = new ManejadorCategorias();
             manejadorNegocios = new ManejadorNegocios();
             manejadorOfertasFlash = new ManejadorOfertasFlash();
@@ -30,7 +32,7 @@ namespace Abastecete.Controllers
 
         public IActionResult Index()
         {
-            return View();
+            return RedirectToAction("Principal");
         }
 
         public IActionResult Privacy()
@@ -43,46 +45,111 @@ namespace Abastecete.Controllers
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
+
         public IActionResult Principal()
         {
-            var bannersPorCategoria = new Dictionary<string, List<(BannerModel Banner, ImagenModel Imagen)>>();
-            var bannerInicio = new List<(BannerModel, ImagenModel)>();
-            var bannersInicio = manejadorMongo.ListarBannersInicio();
+            // Ejecutar consultas principales en paralelo
+            List<Categoria> categorias = new List<Categoria>();
+            List<Negocio> negocios = new List<Negocio>();
+            List<Negocio> localesAleatorios = new List<Negocio>();
+            List<OfertaFlash> ofertasFlash = new List<OfertaFlash>();
+            List<Banner> bannersInicio = new List<Banner>();
+            Dictionary<int, List<Banner>> todosBannersCategorias = new Dictionary<int, List<Banner>>();
 
-            foreach (var banner in bannersInicio)
+            var tasks = new List<Task>
             {
-                var imagen = manejadorMongo.ObtenerImagen(banner.FileId);
-                bannerInicio.Add((banner, imagen));
+                Task.Run(() => categorias = manejadorCategorias.ConsultarCategorias()),
+                Task.Run(() => negocios = manejadorNegocios.ConsultarTodosLosNegocios()),
+                Task.Run(() => localesAleatorios = manejadorNegocios.ObtenerLocalesAleatorios()),
+                Task.Run(() => ofertasFlash = manejadorOfertasFlash.ConsultarOfertasFlash()),
+                Task.Run(() => bannersInicio = manejadorImagenes.ListarBannersInicio()),
+                Task.Run(() => todosBannersCategorias = manejadorImagenes.ListarTodosBannersCategorias())
+            };
+
+            Task.WaitAll(tasks.ToArray());
+
+            // Banners de inicio
+            if (bannersInicio != null && bannersInicio.Count > 0)
+            {
+                var bannerInicio = bannersInicio.Select(b => new {
+                    Id = b.Id,
+                    Nombre = b.Nombre ?? "",
+                    Url = b.CloudinaryUrl,
+                    Formato = b.Formato
+                }).ToList();
+                ViewBag.BannerInicio = bannerInicio;
             }
-            ViewBag.BannerInicio = bannerInicio;
-
-            List<Categoria> categorias = manejadorCategorias.ConsultarCategorias();
-            List<Negocio> negocios = manejadorNegocios.ConsultarTodosLosNegocios();
-            List<Negocio> localesAleatorios = manejadorNegocios.ObtenerLocalesAleatorios();
-            List<OfertaFlash> ofertasFlash = manejadorOfertasFlash.ConsultarOfertasFlash();
-
-
-
-
-            foreach (var categoria in categorias)
+            else
             {
-                var banners = manejadorMongo.ListarBannersPorCategoria(categoria.Nombre);
-                var lista = new List<(BannerModel, ImagenModel)>();
+                ViewBag.BannerInicio = new List<object>();
+            }
 
-                foreach (var banner in banners)
+            // Mapear banners por nombre de categoría (ya cargados en una sola consulta)
+            var bannersPorCategoria = new Dictionary<string, List<object>>();
+            if (categorias != null && todosBannersCategorias != null)
+            {
+                foreach (var categoria in categorias)
                 {
-                    var imagen = manejadorMongo.ObtenerImagen(banner.FileId);
-                    lista.Add((banner, imagen));
+                    if (todosBannersCategorias.TryGetValue(categoria.Id, out var banners))
+                    {
+                        bannersPorCategoria[categoria.Nombre] = banners.Select(b => new {
+                            Id = b.Id,
+                            Nombre = b.Nombre ?? "",
+                            Url = b.CloudinaryUrl,
+                            Formato = b.Formato
+                        }).Cast<object>().ToList();
+                    }
+                    else
+                    {
+                        bannersPorCategoria[categoria.Nombre] = new List<object>();
+                    }
                 }
-
-                bannersPorCategoria[categoria.Nombre] = lista;
             }
 
             ViewBag.rol = LoginController.rol;
-            ViewBag.Negocios = negocios;
-            ViewBag.LocalesAleatoriosJson = JsonConvert.SerializeObject(localesAleatorios);
-            ViewBag.OfertasFlash = ofertasFlash;
+            ViewBag.Negocios = negocios ?? new List<Negocio>();
+            ViewBag.LocalesAleatoriosJson = JsonConvert.SerializeObject(localesAleatorios ?? new List<Negocio>());
+            ViewBag.OfertasFlash = ofertasFlash ?? new List<OfertaFlash>();
             ViewBag.BannersPorCategoria = bannersPorCategoria;
+
+            // Google Maps API Key para el mapa de negocios
+            ViewBag.GoogleMapsApiKey = _configuration["GoogleMaps:ApiKey"] ?? "";
+
+            // JSON de negocios con coordenadas para el mapa
+            var negociosParaMapa = (negocios ?? new List<Negocio>()).Select(n => {
+                double lat = (double)(n.Latitud ?? 0);
+                double lng = (double)(n.Longitud ?? 0);
+
+                // Si no hay coordenadas en campos separados, intentar parsear de Localizacion
+                // El formato puede ser "1.6143,-75.6062" o con espacios
+                if ((lat == 0 || lng == 0) && !string.IsNullOrEmpty(n.Localizacion))
+                {
+                    var localizacion = n.Localizacion.Trim();
+                    // Buscar si contiene coordenadas (números con punto decimal y posiblemente signo negativo)
+                    var regex = new System.Text.RegularExpressions.Regex(@"(-?\d+\.?\d*)\s*,\s*(-?\d+\.?\d*)");
+                    var match = regex.Match(localizacion);
+                    if (match.Success)
+                    {
+                        double.TryParse(match.Groups[1].Value, System.Globalization.NumberStyles.Any,
+                            System.Globalization.CultureInfo.InvariantCulture, out lat);
+                        double.TryParse(match.Groups[2].Value, System.Globalization.NumberStyles.Any,
+                            System.Globalization.CultureInfo.InvariantCulture, out lng);
+                    }
+                }
+
+                // Debug log
+                System.Diagnostics.Debug.WriteLine($"Negocio {n.Nombre}: Lat={lat}, Lng={lng}, Localizacion={n.Localizacion}");
+
+                return new {
+                    n.Id,
+                    n.Nombre,
+                    Localizacion = n.Direccion ?? "Florencia, Caquetá",
+                    Latitud = lat,
+                    Longitud = lng,
+                    Imagen = n.imagen?.Base64 ?? "/images/default.webp"
+                };
+            });
+            ViewBag.NegociosJson = JsonConvert.SerializeObject(negociosParaMapa);
 
             return View(categorias);
         }

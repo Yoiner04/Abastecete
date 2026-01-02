@@ -1,6 +1,8 @@
-﻿@model BusinessLogic.Models.Negocio
+@model BusinessLogic.Models.Negocio
 @{
     var producto = ViewBag.SelectedProduct as BusinessLogic.Models.Producto;
+    var productosRelacionados = ViewBag.ProductosRelacionados as List<BusinessLogic.Models.Producto> ?? new List<BusinessLogic.Models.Producto>();
+    Layout = null;
 }
 
 <!DOCTYPE html>
@@ -8,108 +10,459 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@Model?.Nombre - @producto?.Nombre</title>
+    <title>@producto?.Nombre - @Model?.Nombre | Abastecete</title>
+    <meta name="description" content="@producto?.Nombre a $@producto?.Precio en @Model?.Nombre. @(Model?.Descripcion ?? "Compra en Abastecete, tu marketplace de proveedores locales en Florencia, Caquetá.")" />
+    <meta name="keywords" content="@producto?.Nombre, @Model?.Nombre, productos, proveedor, Abastecete, Florencia, Caquetá" />
+    <meta name="author" content="Abastecete" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="@Context.Request.Scheme://@Context.Request.Host/Productos/ProductDetailLocal?idlocal=@Model?.Id&idProducto=@producto?.Id" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="product" />
+    <meta property="og:url" content="@Context.Request.Scheme://@Context.Request.Host/Productos/ProductDetailLocal?idlocal=@Model?.Id&idProducto=@producto?.Id" />
+    <meta property="og:title" content="@producto?.Nombre - @Model?.Nombre | Abastecete" />
+    <meta property="og:description" content="@producto?.Nombre a $@producto?.Precio. @(Model?.Descripcion ?? "Compra en Abastecete")" />
+    <meta property="og:site_name" content="Abastecete" />
+    <meta property="og:locale" content="es_CO" />
+    @if (!string.IsNullOrEmpty(producto?.ImagenUrl))
+    {
+        <meta property="og:image" content="@producto.ImagenUrl" />
+    }
+    else if (!string.IsNullOrWhiteSpace(Model?.imagen?.Base64))
+    {
+        <meta property="og:image" content="@Model.imagen.Base64" />
+    }
+    else
+    {
+        <meta property="og:image" content="@Context.Request.Scheme://@Context.Request.Host/images/og-image.webp" />
+    }
+    <meta property="product:price:amount" content="@producto?.Precio" />
+    <meta property="product:price:currency" content="COP" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="@Context.Request.Scheme://@Context.Request.Host/Productos/ProductDetailLocal?idlocal=@Model?.Id&idProducto=@producto?.Id" />
+    <meta name="twitter:title" content="@producto?.Nombre - @Model?.Nombre" />
+    <meta name="twitter:description" content="@producto?.Nombre a $@producto?.Precio. @(Model?.Descripcion ?? "Compra en Abastecete")" />
+    @if (!string.IsNullOrEmpty(producto?.ImagenUrl))
+    {
+        <meta name="twitter:image" content="@producto.ImagenUrl" />
+    }
+
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <style>
+        .animate-fadeIn { animation: fadeIn 0.5s ease-out forwards; }
+        .animate-slideUp { animation: slideUp 0.6s ease-out forwards; }
+        .animate-scaleIn { animation: scaleIn 0.4s ease-out forwards; }
+        @@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @@keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        @@keyframes scaleIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+        .product-card:hover .product-overlay { opacity: 1; }
+        .product-overlay { opacity: 0; transition: opacity 0.3s ease; }
+        .contact-btn { transition: all 0.3s ease; }
+        .contact-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px -5px rgba(0,0,0,0.2); }
+    </style>
 </head>
-<body class="bg-white">
+<body class="bg-gray-50 min-h-screen">
 
-    <header class="relative w-full bg-[#F5EFE4] shadow-md">
-        <div class="relative h-56 w-full">
-            @if (!string.IsNullOrWhiteSpace(Model.BannerImagen?.Base64))
-            {
-                <img src="@Model.BannerImagen.Base64" alt="Fondo"
-                     class="absolute inset-0 h-full w-full object-cover brightness-50" />
-            }
+    <!-- Header compacto con navegación -->
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-3">
+            <div class="flex items-center justify-between">
+                <!-- Botón volver -->
+                <a href="@Url.Action("ConsultarProductos", "Negocios", new { idLocal = Model?.Id })"
+                   class="flex items-center gap-2 text-gray-600 hover:text-green-600 transition-colors">
+                    <i class="fas fa-arrow-left"></i>
+                    <span class="hidden sm:inline">Volver al local</span>
+                </a>
 
-            <!-- Logo del negocio -->
-            <div class="relative z-10 flex flex-row items-start gap-4 px-4 sm:top-24 md:items-start md:gap-6 md:px-10">
-                <div class="flex size-32 items-center justify-center overflow-hidden rounded-xl border bg-white shadow-lg sm:size-60">
-                    @if (!string.IsNullOrWhiteSpace(Model?.imagen?.Base64))
+                <!-- Info del negocio -->
+                <a href="@Url.Action("ConsultarProductos", "Negocios", new { idLocal = Model?.Id })"
+                   class="flex items-center gap-3 hover:opacity-80 transition-opacity">
+                    <div class="w-10 h-10 rounded-xl overflow-hidden border-2 border-green-100 bg-white shadow-sm">
+                        @if (!string.IsNullOrWhiteSpace(Model?.imagen?.Base64))
+                        {
+                            <img src="@Model.imagen.Base64" alt="@Model.Nombre" class="w-full h-full object-cover" />
+                        }
+                        else
+                        {
+                            <div class="w-full h-full flex items-center justify-center bg-green-50">
+                                <i class="fas fa-store text-green-500"></i>
+                            </div>
+                        }
+                    </div>
+                    <div class="hidden sm:block">
+                        <p class="font-semibold text-gray-800 text-sm">@Model?.Nombre</p>
+                        <p class="text-xs text-gray-500">@Model?.Direccion</p>
+                    </div>
+                </a>
+
+                <!-- Acciones rápidas -->
+                <div class="flex items-center gap-2">
+                    @{
+                        var urlCompartirProducto = $"{Context.Request.Scheme}://{Context.Request.Host}/Productos/ProductDetailLocal?idlocal={Model?.Id}&idProducto={producto?.Id}";
+                        var textoCompartirProducto = $"¡Mira {producto?.Nombre} en {Model?.Nombre}! ${producto?.Precio}";
+                    }
+                    <!-- Botón compartir -->
+                    <div class="relative" id="shareProductDropdownContainer">
+                        <button id="shareProductButton"
+                                class="w-10 h-10 rounded-full bg-orange-500 text-white flex items-center justify-center hover:bg-orange-600 transition-colors shadow-lg">
+                            <i class="fas fa-share-alt text-lg"></i>
+                        </button>
+                        <div id="shareProductDropdown" class="hidden absolute right-0 mt-2 w-52 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-50">
+                            <button onclick="AbasteceteTracking.compartirFacebook(@(Model?.Id ?? 0), @(producto?.Id ?? 0), '@urlCompartirProducto')"
+                                    class="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-gray-50 transition-colors">
+                                <i class="fab fa-facebook text-lg text-blue-600"></i>
+                                <span class="text-gray-700 text-sm">Facebook</span>
+                            </button>
+                            <button onclick="AbasteceteTracking.compartirTwitter(@(Model?.Id ?? 0), @(producto?.Id ?? 0), '@urlCompartirProducto', '@textoCompartirProducto')"
+                                    class="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-gray-50 transition-colors">
+                                <i class="fab fa-x-twitter text-lg text-gray-800"></i>
+                                <span class="text-gray-700 text-sm">X (Twitter)</span>
+                            </button>
+                            <button onclick="AbasteceteTracking.compartirWhatsapp(@(Model?.Id ?? 0), @(producto?.Id ?? 0), '@urlCompartirProducto', '@textoCompartirProducto')"
+                                    class="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-gray-50 transition-colors">
+                                <i class="fab fa-whatsapp text-lg text-green-500"></i>
+                                <span class="text-gray-700 text-sm">WhatsApp</span>
+                            </button>
+                            <hr class="my-2 border-gray-100">
+                            <button onclick="AbasteceteTracking.copiarEnlace(@(Model?.Id ?? 0), @(producto?.Id ?? 0), '@urlCompartirProducto')"
+                                    class="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-gray-50 transition-colors">
+                                <i class="fas fa-link text-lg text-gray-500"></i>
+                                <span class="text-gray-700 text-sm">Copiar enlace</span>
+                            </button>
+                        </div>
+                    </div>
+                    @if (!string.IsNullOrEmpty(Model?.Whatsapp))
                     {
-                        <img src="@Model.imagen.Base64" alt="Logo negocio" class="h-full w-full object-cover" />
+                        <a href="https://wa.me/57@Model.Whatsapp?text=Hola, me interesa el producto: @producto?.Nombre"
+                           target="_blank"
+                           onclick="if(window.AbasteceteTracking) AbasteceteTracking.registrarClicWhatsapp(@Model.Id, @(producto?.Id ?? 0));"
+                           class="w-10 h-10 rounded-full bg-green-500 text-white flex items-center justify-center hover:bg-green-600 transition-colors shadow-lg">
+                            <i class="fab fa-whatsapp text-lg"></i>
+                        </a>
                     }
                 </div>
             </div>
         </div>
     </header>
 
-    <!-- NUEVA sección centrada con datos del negocio -->
-    <section class="w-full bg-white px-4 py-6 text-center">
-        <h1 class="text-3xl font-extrabold tracking-tight text-gray-800 sm:text-4xl">
-            @Model?.Nombre
-        </h1>
-        <p class="mt-2 text-base font-semibold tracking-wide text-[#15803D] uppercase sm:text-lg">
-            @Model?.Descripcion
-        </p>
-        <p class="text-base font-semibold tracking-wide text-[#15803D] uppercase sm:text-lg">
-            @Model?.Telefono
-        </p>
-    </section>
+    <main class="max-w-7xl mx-auto px-4 py-6 lg:py-10">
+        <!-- Producto principal -->
+        <div class="bg-white rounded-3xl shadow-lg overflow-hidden animate-fadeIn">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-0">
 
-    @Html.Partial("_ContactModal")
-
-    <!-- DETALLE DE PRODUCTO -->
-    <main class="mx-auto mt-8 max-w-5xl px-4 sm:px-6 lg:px-8">
-        <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
-
-            <!-- GALERÍA -->
-            <section>
-                <div class="overflow-hidden rounded-lg border">
-                    <img id="main-img"
-                         src="@producto?.ImagenUrl"
-                         alt="@producto?.Nombre"
-                         class="h-64 w-full object-contain sm:h-80 md:h-96" />
+                <!-- Galería de producto -->
+                <div class="relative bg-gradient-to-br from-gray-50 to-gray-100">
+                    <div class="aspect-square overflow-hidden bg-white animate-scaleIn">
+                        <img id="main-img"
+                             src="@producto?.ImagenUrl"
+                             alt="@producto?.Nombre"
+                             class="w-full h-full object-cover" />
+                    </div>
+                    <!-- Badge del local -->
+                    <div class="absolute top-8 left-8 lg:top-12 lg:left-12">
+                        <div class="flex items-center gap-2 bg-white/90 backdrop-blur-sm px-3 py-2 rounded-full shadow-lg">
+                            <div class="w-8 h-8 rounded-full overflow-hidden border border-gray-200">
+                                @if (!string.IsNullOrWhiteSpace(Model?.imagen?.Base64))
+                                {
+                                    <img src="@Model.imagen.Base64" alt="@Model.Nombre" class="w-full h-full object-cover" />
+                                }
+                                else
+                                {
+                                    <div class="w-full h-full bg-green-100 flex items-center justify-center">
+                                        <i class="fas fa-store text-green-500 text-xs"></i>
+                                    </div>
+                                }
+                            </div>
+                            <span class="text-sm font-medium text-gray-700">@Model?.Nombre</span>
+                        </div>
+                    </div>
                 </div>
-            </section>
 
-            <!-- DATOS -->
-            <section>
-                <h2 class="text-2xl font-bold sm:text-3xl">@producto?.Nombre</h2>
-                <div class="mt-2 flex items-center space-x-4">
-                    <span class="text-xl font-bold text-green-600 sm:text-2xl">$@producto?.Precio</span>
+                <!-- Info del producto -->
+                <div class="p-6 lg:p-10 flex flex-col animate-slideUp">
+                    <!-- Categoría -->
+                    @if (!string.IsNullOrEmpty(producto?.NombreSubCategoria))
+                    {
+                        <span class="inline-flex items-center gap-1.5 text-sm text-green-600 font-medium mb-3">
+                            <i class="fas fa-tag"></i>
+                            @producto.NombreSubCategoria
+                        </span>
+                    }
+
+                    <!-- Nombre -->
+                    <h1 class="text-2xl lg:text-4xl font-bold text-gray-900 mb-4">
+                        @producto?.Nombre
+                    </h1>
+
+                    <!-- Precio -->
+                    <div class="flex items-baseline gap-3 mb-6">
+                        <span class="text-3xl lg:text-5xl font-bold text-green-600">
+                            $@producto?.Precio
+                        </span>
+                        @if (producto?.Unidad != null && !string.IsNullOrEmpty(producto.Unidad.Nombre))
+                        {
+                            <span class="text-lg text-gray-500">
+                                / @producto.Unidad.Nombre
+                            </span>
+                        }
+                    </div>
+
+                    <!-- Descripción del negocio -->
+                    @if (!string.IsNullOrEmpty(Model?.Descripcion))
+                    {
+                        <div class="bg-gray-50 rounded-xl p-4 mb-6">
+                            <p class="text-gray-600 text-sm leading-relaxed">
+                                <i class="fas fa-info-circle text-gray-400 mr-2"></i>
+                                @Model.Descripcion
+                            </p>
+                        </div>
+                    }
+
+                    <!-- Botones de contacto -->
+                    <div class="space-y-3 mt-auto">
+                        <p class="text-sm font-medium text-gray-500 mb-2">Contacta al vendedor:</p>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            @if (!string.IsNullOrEmpty(Model?.Whatsapp))
+                            {
+                                <a href="https://wa.me/57@Model.Whatsapp?text=Hola, me interesa el producto: @producto?.Nombre - $@producto?.Precio"
+                                   target="_blank"
+                                   onclick="if(window.AbasteceteTracking) AbasteceteTracking.registrarClicWhatsapp(@Model.Id, @(producto?.Id ?? 0));"
+                                   class="contact-btn flex items-center justify-center gap-3 bg-green-500 hover:bg-green-600 text-white font-semibold py-4 px-6 rounded-xl shadow-lg">
+                                    <i class="fab fa-whatsapp text-xl"></i>
+                                    <span>WhatsApp</span>
+                                </a>
+                            }
+
+                            @if (Model?.Telefono > 0)
+                            {
+                                <a href="tel:@Model.Telefono"
+                                   class="contact-btn flex items-center justify-center gap-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-4 px-6 rounded-xl shadow-lg">
+                                    <i class="fas fa-phone text-lg"></i>
+                                    <span>Llamar</span>
+                                </a>
+                            }
+
+                            @if (!string.IsNullOrEmpty(Model?.EmailContacto))
+                            {
+                                <a href="mailto:@Model.EmailContacto?subject=Consulta sobre @producto?.Nombre"
+                                   class="contact-btn flex items-center justify-center gap-3 bg-gray-700 hover:bg-gray-800 text-white font-semibold py-4 px-6 rounded-xl shadow-lg">
+                                    <i class="fas fa-envelope text-lg"></i>
+                                    <span>Email</span>
+                                </a>
+                            }
+
+                            <a href="@Url.Action("ConsultarProductos", "Negocios", new { idLocal = Model?.Id })"
+                               class="contact-btn flex items-center justify-center gap-3 bg-orange-500 hover:bg-orange-600 text-white font-semibold py-4 px-6 rounded-xl shadow-lg">
+                                <i class="fas fa-store text-lg"></i>
+                                <span>Ver Local</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Redes sociales -->
+                    @{
+                        var tieneRedes = !string.IsNullOrEmpty(Model?.Instagram) ||
+                                        !string.IsNullOrEmpty(Model?.Facebook) ||
+                                        !string.IsNullOrEmpty(Model?.Tiktok);
+                    }
+                    @if (tieneRedes)
+                    {
+                        <div class="mt-6 pt-6 border-t border-gray-100">
+                            <p class="text-sm text-gray-500 mb-3">Síguenos:</p>
+                            <div class="flex gap-3">
+                                @if (!string.IsNullOrEmpty(Model?.Instagram))
+                                {
+                                    <a href="https://instagram.com/@Model.Instagram" target="_blank"
+                                       class="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 via-pink-500 to-orange-400 flex items-center justify-center text-white hover:scale-110 transition-transform">
+                                        <i class="fab fa-instagram"></i>
+                                    </a>
+                                }
+                                @if (!string.IsNullOrEmpty(Model?.Facebook))
+                                {
+                                    <a href="@Model.Facebook" target="_blank"
+                                       class="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white hover:scale-110 transition-transform">
+                                        <i class="fab fa-facebook-f"></i>
+                                    </a>
+                                }
+                                @if (!string.IsNullOrEmpty(Model?.Tiktok))
+                                {
+                                    <a href="https://tiktok.com/@@Model.Tiktok" target="_blank"
+                                       class="w-10 h-10 rounded-xl bg-black flex items-center justify-center text-white hover:scale-110 transition-transform">
+                                        <i class="fab fa-tiktok"></i>
+                                    </a>
+                                }
+                            </div>
+                        </div>
+                    }
                 </div>
-                <a href="tel:@Model?.Telefono"
-                   class="mt-6 block w-full rounded-lg bg-green-600 py-3 text-center text-sm text-white hover:bg-green-700 sm:text-base">
-                    Contáctanos
-                </a>
-            </section>
+            </div>
         </div>
 
-        <!-- UBICACIÓN -->
-        <section class="mt-10">
-            <h3 class="mb-4 text-xl font-semibold sm:text-2xl">Ubicación</h3>
-            <div class="mb-4">
-                <input id="location" type="hidden" value="@Model?.Localizacion" />
+        <!-- Ubicación -->
+        <section class="mt-8 bg-white rounded-3xl shadow-lg overflow-hidden animate-slideUp" style="animation-delay: 0.2s">
+            <div class="p-6 border-b border-gray-100">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center">
+                            <i class="fas fa-map-marker-alt text-green-600 text-xl"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-xl font-bold text-gray-900">Ubicación</h2>
+                            <p class="text-gray-500 text-sm">@Model?.Direccion</p>
+                        </div>
+                    </div>
+                    @if (!string.IsNullOrEmpty(Model?.Localizacion))
+                    {
+                        <a href="https://www.google.com/maps?q=@Model.Localizacion"
+                           target="_blank"
+                           class="hidden sm:flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-gray-700 transition-colors">
+                            <i class="fas fa-directions"></i>
+                            <span>Cómo llegar</span>
+                        </a>
+                    }
+                </div>
             </div>
-            <div id="map" class="h-64 w-full rounded-lg border sm:h-80 md:h-96"></div>
+            <div id="map" class="h-64 sm:h-80 w-full"></div>
+            <input id="location" type="hidden" value="@Model?.Localizacion" />
         </section>
+
+        <!-- Productos relacionados -->
+        @if (productosRelacionados.Any())
+        {
+            <section class="mt-8 animate-slideUp" style="animation-delay: 0.3s">
+                <div class="flex items-center justify-between mb-6">
+                    <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 rounded-xl bg-orange-100 flex items-center justify-center">
+                            <i class="fas fa-box-open text-orange-600 text-xl"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-xl font-bold text-gray-900">Más productos de @Model?.Nombre</h2>
+                            <p class="text-gray-500 text-sm">Otros productos que te pueden interesar</p>
+                        </div>
+                    </div>
+                    <a href="@Url.Action("ConsultarProductos", "Negocios", new { idLocal = Model?.Id })"
+                       class="hidden sm:flex items-center gap-2 text-green-600 hover:text-green-700 font-medium">
+                        Ver todos
+                        <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+
+                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                    @foreach (var prod in productosRelacionados)
+                    {
+                        <a href="@Url.Action("ProductDetailLocal", "Productos", new { idlocal = Model?.Id, idProducto = prod.Id })"
+                           class="product-card group bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300">
+                            <div class="relative aspect-square bg-gray-50">
+                                <img src="@prod.ImagenUrl" alt="@prod.Nombre"
+                                     class="w-full h-full object-contain p-3" loading="lazy" />
+                                <div class="product-overlay absolute inset-0 bg-black/40 flex items-center justify-center">
+                                    <span class="bg-white text-gray-800 px-4 py-2 rounded-full text-sm font-medium">
+                                        Ver producto
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="p-3">
+                                <h3 class="font-medium text-gray-800 text-sm line-clamp-2 group-hover:text-green-600 transition-colors">
+                                    @prod.Nombre
+                                </h3>
+                                <p class="mt-1 text-lg font-bold text-orange-500">$@prod.Precio</p>
+                            </div>
+                        </a>
+                    }
+                </div>
+
+                <!-- Ver todos en móvil -->
+                <div class="mt-4 sm:hidden">
+                    <a href="@Url.Action("ConsultarProductos", "Negocios", new { idLocal = Model?.Id })"
+                       class="block w-full py-3 bg-green-500 hover:bg-green-600 text-white text-center rounded-xl font-medium transition-colors">
+                        Ver todos los productos
+                    </a>
+                </div>
+            </section>
+        }
     </main>
 
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAPudyk3G3YG7GOEpId4xMK_WFIEenOSp8&libraries=places"></script>
+    <!-- Footer simple -->
+    <footer class="bg-white border-t border-gray-100 mt-12 py-6">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <p class="text-gray-500 text-sm">
+                Producto de <strong class="text-gray-700">@Model?.Nombre</strong>
+            </p>
+        </div>
+    </footer>
+
+    <!-- Google Maps -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=@ViewBag.GoogleMapsApiKey&libraries=places"></script>
     <script>
         function initMap() {
-          const defaultLatLng = { lat: 2.9273, lng: -75.2819 };
-          const locField = document.getElementById('location');
-          let initial = defaultLatLng;
-          if (locField && locField.value.includes(',')) {
-            const parts = locField.value.split(',');
-            initial = { lat: parseFloat(parts[0]), lng: parseFloat(parts[1]) };
-          }
-          const map = new google.maps.Map(document.getElementById('map'), { center: initial, zoom: 13 });
-          const marker = new google.maps.Marker({ position: initial, map, draggable: true });
-          const searchBox = new google.maps.places.SearchBox(document.getElementById('searchLocation'));
-          searchBox.addListener('places_changed', () => {
-            const places = searchBox.getPlaces(); if (!places.length) return;
-            const loc = places[0].geometry.location;
-            map.setCenter(loc); marker.setPosition(loc);
-            locField.value = `${loc.lat()},${loc.lng()}`;
-          });
-          marker.addListener('dragend', () => {
-            const pos = marker.getPosition(); locField.value = `${pos.lat()},${pos.lng()}`;
-          });
+            const defaultLatLng = { lat: 2.9273, lng: -75.2819 };
+            const locField = document.getElementById('location');
+            let initial = defaultLatLng;
+
+            if (locField && locField.value && locField.value.includes(',')) {
+                const parts = locField.value.split(',');
+                const lat = parseFloat(parts[0]);
+                const lng = parseFloat(parts[1]);
+                if (!isNaN(lat) && !isNaN(lng)) {
+                    initial = { lat, lng };
+                }
+            }
+
+            const map = new google.maps.Map(document.getElementById('map'), {
+                center: initial,
+                zoom: 15,
+                styles: [
+                    { featureType: "poi", elementType: "labels", stylers: [{ visibility: "off" }] }
+                ],
+                mapTypeControl: false,
+                streetViewControl: false,
+                fullscreenControl: true
+            });
+
+            new google.maps.Marker({
+                position: initial,
+                map: map,
+                title: '@Model?.Nombre',
+                icon: {
+                    url: 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="%2316a34a"><path d="M12 0C7.31 0 3.5 3.81 3.5 8.5c0 6.38 8.5 15.5 8.5 15.5s8.5-9.12 8.5-15.5C20.5 3.81 16.69 0 12 0zm0 12c-1.93 0-3.5-1.57-3.5-3.5S10.07 5 12 5s3.5 1.57 3.5 3.5S13.93 12 12 12z"/></svg>'),
+                    scaledSize: new google.maps.Size(40, 40)
+                }
+            });
         }
+
         window.onload = initMap;
+    </script>
+
+    <!-- Tracking de Analíticas -->
+    <script src="~/js/tracking.js"></script>
+    <script>
+        // Registrar visita al producto al cargar la página
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.AbasteceteTracking) {
+                AbasteceteTracking.registrarVisitaProducto(@(Model?.Id ?? 0), @(producto?.Id ?? 0));
+            }
+
+            // Dropdown de compartir producto
+            var shareBtn = document.getElementById('shareProductButton');
+            var shareDropdown = document.getElementById('shareProductDropdown');
+
+            if (shareBtn && shareDropdown) {
+                shareBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    shareDropdown.classList.toggle('hidden');
+                });
+
+                document.addEventListener('click', function(e) {
+                    if (!e.target.closest('#shareProductDropdownContainer')) {
+                        shareDropdown.classList.add('hidden');
+                    }
+                });
+            }
+        });
     </script>
 </body>
 </html>

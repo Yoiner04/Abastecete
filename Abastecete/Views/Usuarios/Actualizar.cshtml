@@ -1,89 +1,552 @@
-﻿@using BusinessLogic.Models
-@model BusinessLogic.Models.Usuario;
+@using BusinessLogic.Models
+@model BusinessLogic.Models.Usuario
+@inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContextAccessor
+@{
+    string userPicture = HttpContextAccessor.HttpContext?.Session.GetString("userPicture") ?? Model?.FotoPerfil ?? "";
+}
 
-<main class="flex min-h-[80vh] items-center justify-center bg-gray-100 py-10 px-4">
-    <div class="w-full max-w-3xl rounded-2xl bg-white px-10 py-8 shadow-2xl">
+<!-- Header con barra blanca -->
+<div class="bg-white border-b border-gray-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div class="flex items-center gap-3">
+            <a href="@Url.Action("Index", "Home")" class="text-gray-400 hover:text-gray-600 transition-colors">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <div>
+                <h1 class="text-xl font-bold text-gray-900">Mi Perfil</h1>
+                <p class="text-gray-500 text-sm">Administra tu información personal y seguridad</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         @if (TempData["mensaje"] != null)
         {
             var tipo = TempData["tipo"]?.ToString() ?? "info";
-            var bgColor = tipo == "success" ? "bg-green-100 border-green-500 text-green-700"
-                        : tipo == "danger" ? "bg-red-100 border-red-500 text-red-700"
-                        : "bg-blue-100 border-blue-500 text-blue-700";
-    
-            <div class="mb-6 rounded border-l-4 px-4 py-3 shadow-sm @bgColor">
+            var bgColor = tipo == "success" ? "bg-green-50 border-green-500 text-green-700"
+                        : tipo == "danger" ? "bg-red-50 border-red-500 text-red-700"
+                        : "bg-blue-50 border-blue-500 text-blue-700";
+            var iconColor = tipo == "success" ? "text-green-500" : tipo == "danger" ? "text-red-500" : "text-blue-500";
+            var icon = tipo == "success" ? "fa-check-circle" : tipo == "danger" ? "fa-exclamation-circle" : "fa-info-circle";
+
+            <div class="mb-6 rounded-xl border-l-4 px-4 py-3 shadow-sm @bgColor flex items-center gap-3">
+                <i class="fas @icon @iconColor"></i>
                 <p class="text-sm font-medium">@TempData["mensaje"]</p>
             </div>
         }
 
-        <h2 class="mb-6 text-center text-3xl font-bold text-green-600">Actualizar Información</h2>
-
-        @using (Html.BeginForm("EditarUsuario", "Usuarios", FormMethod.Post, new { id = "actualizarForm", @class = "grid grid-cols-1 md:grid-cols-2 gap-6" }))
-        {
-            <div class="md:col-span-2">
-                @Html.ValidationSummary(true, "", new { @class = "text-red-500 text-sm" })
+        <!-- Tabs -->
+        <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+            <div class="border-b border-gray-200">
+                <nav class="flex" role="tablist">
+                    <button type="button"
+                            class="tab-btn px-6 py-4 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 border-[#23916A] text-[#23916A]"
+                            data-tab="datos-personales"
+                            role="tab"
+                            aria-selected="true">
+                        <i class="fas fa-user"></i>
+                        Datos Personales
+                    </button>
+                    <button type="button"
+                            class="tab-btn px-6 py-4 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 border-transparent text-gray-500 hover:text-gray-700"
+                            data-tab="seguridad"
+                            role="tab"
+                            aria-selected="false">
+                        <i class="fas fa-lock"></i>
+                        Seguridad
+                    </button>
+                </nav>
             </div>
 
-            <div>
-                <label class="block font-medium text-gray-700">Nombre <span class="text-red-500">*</span></label>
-                @Html.TextBoxFor(m => m.Persona.Nombre, new { @class = "w-full border p-3 rounded-lg focus:ring-2 focus:ring-green-400 outline-none" })
+            <!-- Tab Content: Datos Personales -->
+            <div id="tab-datos-personales" class="tab-content p-6 md:p-8">
+                @using (Html.BeginForm("EditarUsuario", "Usuarios", FormMethod.Post, new { id = "actualizarForm" }))
+                {
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        @Html.ValidationSummary(true, "", new { @class = "text-red-500 text-sm md:col-span-2" })
+
+                        <!-- Avatar con foto de perfil -->
+                        <div class="md:col-span-2 flex flex-col items-center mb-4">
+                            <div class="relative group">
+                                @if (!string.IsNullOrEmpty(userPicture))
+                                {
+                                    <img src="@userPicture"
+                                         alt="Foto de perfil"
+                                         id="avatarPreview"
+                                         class="w-24 h-24 rounded-full object-cover shadow-lg border-4 border-white">
+                                }
+                                else
+                                {
+                                    <div id="avatarInitials" class="w-24 h-24 rounded-full bg-gradient-to-br from-[#23916A] to-[#1a6b4f] flex items-center justify-center text-white text-3xl font-bold shadow-lg border-4 border-white">
+                                        @(Model?.Nombres?.Substring(0, 1).ToUpper())@(Model?.Apellidos?.Substring(0, 1).ToUpper())
+                                    </div>
+                                    <img src=""
+                                         alt="Foto de perfil"
+                                         id="avatarPreview"
+                                         class="w-24 h-24 rounded-full object-cover shadow-lg border-4 border-white hidden">
+                                }
+                                <button type="button"
+                                        onclick="document.getElementById('inputFotoPerfil').click()"
+                                        class="absolute bottom-0 right-0 w-8 h-8 bg-[#23916A] hover:bg-[#1a6b4f] text-white rounded-full flex items-center justify-center shadow-lg transition-all duration-200 group-hover:scale-110"
+                                        title="Cambiar foto">
+                                    <i class="fas fa-camera text-sm"></i>
+                                </button>
+                            </div>
+                            <input type="file"
+                                   id="inputFotoPerfil"
+                                   accept="image/*"
+                                   class="hidden"
+                                   onchange="previsualizarFoto(this)">
+                            <p class="text-xs text-gray-500 mt-2">Haz clic en el icono para cambiar tu foto</p>
+                            <input type="hidden" id="fotoPerfilUrl" name="FotoPerfil" value="@userPicture">
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                Nombre <span class="text-red-500">*</span>
+                            </label>
+                            @Html.TextBoxFor(m => m.Nombres, new {
+                                @class = "w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-[#23916A] focus:ring-2 focus:ring-[#23916A]/20 outline-none transition-all",
+                                placeholder = "Tu nombre"
+                            })
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                Apellido <span class="text-red-500">*</span>
+                            </label>
+                            @Html.TextBoxFor(m => m.Apellidos, new {
+                                @class = "w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-[#23916A] focus:ring-2 focus:ring-[#23916A]/20 outline-none transition-all",
+                                placeholder = "Tu apellido"
+                            })
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                Tipo de Documento <span class="text-red-500">*</span>
+                            </label>
+                            <select name="TipoDocumentoId" required
+                                    class="w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-[#23916A] focus:ring-2 focus:ring-[#23916A]/20 outline-none transition-all">
+                                @if (Model?.TipoDocumentoId == 0)
+                                {
+                                    <option value="" selected disabled>Seleccione</option>
+                                }
+                                else
+                                {
+                                    <option value="" disabled>Seleccione</option>
+                                }
+                                @foreach (TipoDocumento td in ViewBag.TiposDocumento)
+                                {
+                                    if (Model?.TipoDocumentoId == td.Id)
+                                    {
+                                        <option value="@td.Id" selected>@td.Nombre</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@td.Id">@td.Nombre</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                Documento <span class="text-red-500">*</span>
+                            </label>
+                            @Html.TextBoxFor(m => m.DocumentoIdentidad, new {
+                                @class = "w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-[#23916A] focus:ring-2 focus:ring-[#23916A]/20 outline-none transition-all",
+                                oninput = "this.value=this.value.replace(/[^0-9]/g,'');",
+                                placeholder = "Número de documento"
+                            })
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                Teléfono <span class="text-red-500">*</span>
+                            </label>
+                            @Html.TextBoxFor(m => m.Telefono, new {
+                                @class = "w-full px-4 py-3 rounded-xl border border-gray-300 focus:border-[#23916A] focus:ring-2 focus:ring-[#23916A]/20 outline-none transition-all",
+                                oninput = "this.value=this.value.replace(/[^0-9]/g,'');",
+                                placeholder = "Tu teléfono"
+                            })
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                Correo Electrónico
+                            </label>
+                            <div class="relative">
+                                @Html.TextBoxFor(m => m.Correo, new {
+                                    @class = "w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-500 outline-none cursor-not-allowed",
+                                    @readonly = "readonly"
+                                })
+                                <div class="absolute right-3 top-1/2 -translate-y-1/2">
+                                    <i class="fas fa-lock text-gray-400 text-sm" title="El correo no se puede modificar"></i>
+                                </div>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1">El correo electrónico no se puede modificar</p>
+                        </div>
+
+                        <div class="md:col-span-2 pt-4">
+                            <button type="submit"
+                                    class="w-full md:w-auto px-8 py-3 bg-[#23916A] hover:bg-[#1a6b4f] text-white font-semibold rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center gap-2">
+                                <i class="fas fa-save"></i>
+                                Guardar Cambios
+                            </button>
+                        </div>
+                    </div>
+                }
             </div>
 
-            <div>
-                <label class="block font-medium text-gray-700">Apellido <span class="text-red-500">*</span></label>
-                @Html.TextBoxFor(m => m.Persona.Apellido, new { @class = "w-full border p-3 rounded-lg focus:ring-2 focus:ring-green-400 outline-none" })
+            <!-- Tab Content: Seguridad -->
+            <div id="tab-seguridad" class="tab-content p-6 md:p-8 hidden">
+                <div class="max-w-md mx-auto">
+                    <div class="mb-6">
+                        <h3 class="text-lg font-semibold text-gray-900">Cambiar Contraseña</h3>
+                        <p class="text-sm text-gray-600 mt-1">Asegúrate de usar una contraseña segura que no uses en otros sitios</p>
+                    </div>
+
+                    <form id="formCambiarContrasenia" class="space-y-5">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                Contraseña Actual <span class="text-red-500">*</span>
+                            </label>
+                            <div class="relative">
+                                <input type="password"
+                                       id="contraseniaActual"
+                                       name="contraseniaActual"
+                                       class="w-full px-4 py-3 pr-12 rounded-xl border border-gray-300 focus:border-[#23916A] focus:ring-2 focus:ring-[#23916A]/20 outline-none transition-all"
+                                       placeholder="Ingresa tu contraseña actual"
+                                       required>
+                                <button type="button"
+                                        onclick="togglePassword('contraseniaActual')"
+                                        class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                Nueva Contraseña <span class="text-red-500">*</span>
+                            </label>
+                            <div class="relative">
+                                <input type="password"
+                                       id="nuevaContrasenia"
+                                       name="nuevaContrasenia"
+                                       class="w-full px-4 py-3 pr-12 rounded-xl border border-gray-300 focus:border-[#23916A] focus:ring-2 focus:ring-[#23916A]/20 outline-none transition-all"
+                                       placeholder="Mínimo 8 caracteres"
+                                       minlength="8"
+                                       required>
+                                <button type="button"
+                                        onclick="togglePassword('nuevaContrasenia')"
+                                        class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            <div id="passwordStrength" class="mt-2 hidden">
+                                <div class="flex gap-1">
+                                    <div class="h-1 flex-1 rounded bg-gray-200" id="strength-1"></div>
+                                    <div class="h-1 flex-1 rounded bg-gray-200" id="strength-2"></div>
+                                    <div class="h-1 flex-1 rounded bg-gray-200" id="strength-3"></div>
+                                    <div class="h-1 flex-1 rounded bg-gray-200" id="strength-4"></div>
+                                </div>
+                                <p id="strengthText" class="text-xs mt-1 text-gray-500"></p>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                Confirmar Nueva Contraseña <span class="text-red-500">*</span>
+                            </label>
+                            <div class="relative">
+                                <input type="password"
+                                       id="confirmarContrasenia"
+                                       name="confirmarContrasenia"
+                                       class="w-full px-4 py-3 pr-12 rounded-xl border border-gray-300 focus:border-[#23916A] focus:ring-2 focus:ring-[#23916A]/20 outline-none transition-all"
+                                       placeholder="Repite la nueva contraseña"
+                                       minlength="8"
+                                       required>
+                                <button type="button"
+                                        onclick="togglePassword('confirmarContrasenia')"
+                                        class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            <p id="matchError" class="text-xs text-red-500 mt-1 hidden">Las contraseñas no coinciden</p>
+                        </div>
+
+                        <div id="alertContrasenia" class="hidden rounded-xl p-4 text-sm"></div>
+
+                        <div class="pt-2">
+                            <button type="submit"
+                                    id="btnCambiarContrasenia"
+                                    class="w-full md:w-auto px-8 py-3 bg-[#23916A] hover:bg-[#1a6b4f] text-white font-semibold rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                                <i class="fas fa-key"></i>
+                                <span>Cambiar Contraseña</span>
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Tips de seguridad -->
+                    <div class="mt-8 p-4 bg-blue-50 rounded-xl border border-blue-100">
+                        <h4 class="text-sm font-semibold text-blue-800 flex items-center gap-2">
+                            <i class="fas fa-shield-alt"></i>
+                            Consejos de seguridad
+                        </h4>
+                        <ul class="mt-2 space-y-1 text-xs text-blue-700">
+                            <li class="flex items-start gap-2">
+                                <i class="fas fa-check text-blue-500 mt-0.5"></i>
+                                Usa al menos 8 caracteres
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fas fa-check text-blue-500 mt-0.5"></i>
+                                Combina letras mayúsculas y minúsculas
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fas fa-check text-blue-500 mt-0.5"></i>
+                                Incluye números y símbolos
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="fas fa-check text-blue-500 mt-0.5"></i>
+                                Evita información personal obvia
+                            </li>
+                        </ul>
+                    </div>
+                </div>
             </div>
-
-            <div>
-                <label class="block font-medium text-gray-700">Tipo de Documento <span class="text-red-500">*</span></label>
-                <select class="w-full rounded-lg border p-3 outline-none focus:ring-2 focus:ring-green-400"
-        name="Persona.TipoDeDocumento.Id" required>
-
-    @if (Model.Persona.TipoDeDocumento == null)
-    {
-        <option value="" selected disabled>Seleccione</option>
-    }
-    else
-    {
-        <option value="" disabled>Seleccione</option>
-    }
-
-    @foreach (TipoDocumento td in ViewBag.TiposDocumento)
-    {
-        if (Model.Persona.TipoDeDocumento != null && Model.Persona.TipoDeDocumento.Id == td.Id)
-        {
-            <option value="@td.Id" selected>@td.Nombre</option>
-        }
-
-        else
-        {
-            <option value="@td.Id">@td.Nombre</option>
-        }
-    }
-</select>
-
-
-            </div>
-
-            <div>
-                <label class="block font-medium text-gray-700">Documento <span class="text-red-500">*</span></label>
-                @Html.TextBoxFor(m => m.Persona.Documento, new { @class = "w-full border p-3 rounded-lg focus:ring-2 focus:ring-green-400 outline-none", @oninput = "this.value=this.value.replace(/[^0-9]/g,'');" })
-            </div>
-
-            <div>
-                <label class="block font-medium text-gray-700">Teléfono <span class="text-red-500">*</span></label>
-                @Html.TextBoxFor(m => m.Persona.Telefono, new { @class = "w-full border p-3 rounded-lg focus:ring-2 focus:ring-green-400 outline-none", @oninput = "this.value=this.value.replace(/[^0-9]/g,'');" })
-            </div>
-
-            <div>
-                <label class="block font-medium text-gray-700">Correo Electrónico <span class="text-red-500">*</span></label>
-                @Html.TextBoxFor(m => m.Correo, new { @class = "w-full border p-3 rounded-lg focus:ring-2 focus:ring-green-400 outline-none", @readonly = "readonly" })
-            </div>
-
-            <div class="md:col-span-2">
-                <button type="submit" class="w-full transform rounded-lg bg-green-500 py-3 text-lg font-bold text-white transition-transform hover:scale-105">
-                    Actualizar Información
-                </button>
-            </div>
-        }
+        </div>
     </div>
-</main>
+</div>
+
+@section Scripts {
+    <script>
+        // Previsualizar foto de perfil
+        function previsualizarFoto(input) {
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+
+                // Validar tamaño (máx 5MB)
+                if (file.size > 5 * 1024 * 1024) {
+                    alert('La imagen es muy grande. Máximo 5MB.');
+                    input.value = '';
+                    return;
+                }
+
+                // Validar tipo
+                if (!file.type.startsWith('image/')) {
+                    alert('Por favor selecciona una imagen válida.');
+                    input.value = '';
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const preview = document.getElementById('avatarPreview');
+                    const initials = document.getElementById('avatarInitials');
+
+                    preview.src = e.target.result;
+                    preview.classList.remove('hidden');
+
+                    if (initials) {
+                        initials.classList.add('hidden');
+                    }
+
+                    // Subir la imagen
+                    subirFotoPerfil(file);
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        async function subirFotoPerfil(file) {
+            const formData = new FormData();
+            formData.append('foto', file);
+
+            try {
+                const response = await fetch('@Url.Action("SubirFotoPerfil", "Usuarios")', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    document.getElementById('fotoPerfilUrl').value = data.url;
+                    // Mostrar mensaje de éxito opcional
+                } else {
+                    alert(data.mensaje || 'Error al subir la foto');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al subir la foto');
+            }
+        }
+
+        // Tabs functionality
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                // Update tab buttons
+                document.querySelectorAll('.tab-btn').forEach(b => {
+                    b.classList.remove('border-[#23916A]', 'text-[#23916A]');
+                    b.classList.add('border-transparent', 'text-gray-500');
+                    b.setAttribute('aria-selected', 'false');
+                });
+                btn.classList.remove('border-transparent', 'text-gray-500');
+                btn.classList.add('border-[#23916A]', 'text-[#23916A]');
+                btn.setAttribute('aria-selected', 'true');
+
+                // Update tab content
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.add('hidden');
+                });
+                document.getElementById('tab-' + btn.dataset.tab).classList.remove('hidden');
+            });
+        });
+
+        // Toggle password visibility
+        function togglePassword(inputId) {
+            const input = document.getElementById(inputId);
+            const icon = input.nextElementSibling.querySelector('i');
+
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+
+        // Password strength indicator
+        const nuevaContrasenia = document.getElementById('nuevaContrasenia');
+        nuevaContrasenia.addEventListener('input', function() {
+            const password = this.value;
+            const strengthDiv = document.getElementById('passwordStrength');
+
+            if (password.length > 0) {
+                strengthDiv.classList.remove('hidden');
+
+                let strength = 0;
+                if (password.length >= 8) strength++;
+                if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength++;
+                if (/\d/.test(password)) strength++;
+                if (/[^a-zA-Z0-9]/.test(password)) strength++;
+
+                const colors = ['bg-red-500', 'bg-orange-500', 'bg-yellow-500', 'bg-green-500'];
+                const texts = ['Muy débil', 'Débil', 'Aceptable', 'Fuerte'];
+
+                for (let i = 1; i <= 4; i++) {
+                    const bar = document.getElementById('strength-' + i);
+                    bar.className = 'h-1 flex-1 rounded';
+                    if (i <= strength) {
+                        bar.classList.add(colors[strength - 1]);
+                    } else {
+                        bar.classList.add('bg-gray-200');
+                    }
+                }
+
+                document.getElementById('strengthText').textContent = strength > 0 ? texts[strength - 1] : '';
+            } else {
+                strengthDiv.classList.add('hidden');
+            }
+
+            checkPasswordMatch();
+        });
+
+        // Check password match
+        const confirmarContrasenia = document.getElementById('confirmarContrasenia');
+        confirmarContrasenia.addEventListener('input', checkPasswordMatch);
+
+        function checkPasswordMatch() {
+            const nueva = document.getElementById('nuevaContrasenia').value;
+            const confirmar = document.getElementById('confirmarContrasenia').value;
+            const errorEl = document.getElementById('matchError');
+
+            if (confirmar.length > 0 && nueva !== confirmar) {
+                errorEl.classList.remove('hidden');
+                confirmarContrasenia.classList.add('border-red-500');
+            } else {
+                errorEl.classList.add('hidden');
+                confirmarContrasenia.classList.remove('border-red-500');
+            }
+        }
+
+        // Form submit
+        document.getElementById('formCambiarContrasenia').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const btn = document.getElementById('btnCambiarContrasenia');
+            const alertDiv = document.getElementById('alertContrasenia');
+
+            const contraseniaActual = document.getElementById('contraseniaActual').value;
+            const nuevaContrasenia = document.getElementById('nuevaContrasenia').value;
+            const confirmarContrasenia = document.getElementById('confirmarContrasenia').value;
+
+            // Validations
+            if (nuevaContrasenia !== confirmarContrasenia) {
+                showAlert('Las contraseñas no coinciden', 'error');
+                return;
+            }
+
+            if (nuevaContrasenia.length < 8) {
+                showAlert('La nueva contraseña debe tener al menos 8 caracteres', 'error');
+                return;
+            }
+
+            // Disable button
+            btn.disabled = true;
+            btn.querySelector('span').textContent = 'Cambiando...';
+
+            try {
+                const response = await fetch('@Url.Action("CambiarContrasenia", "Usuarios")', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        contraseniaActual: contraseniaActual,
+                        nuevaContrasenia: nuevaContrasenia,
+                        confirmarContrasenia: confirmarContrasenia
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showAlert(data.mensaje, 'success');
+                    this.reset();
+                    document.getElementById('passwordStrength').classList.add('hidden');
+                } else {
+                    showAlert(data.mensaje, 'error');
+                }
+            } catch (error) {
+                showAlert('Error al procesar la solicitud', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.querySelector('span').textContent = 'Cambiar Contraseña';
+            }
+        });
+
+        function showAlert(message, type) {
+            const alertDiv = document.getElementById('alertContrasenia');
+            alertDiv.classList.remove('hidden', 'bg-green-50', 'text-green-700', 'border-green-200', 'bg-red-50', 'text-red-700', 'border-red-200');
+
+            if (type === 'success') {
+                alertDiv.classList.add('bg-green-50', 'text-green-700', 'border', 'border-green-200');
+                alertDiv.innerHTML = '<i class="fas fa-check-circle mr-2"></i>' + message;
+            } else {
+                alertDiv.classList.add('bg-red-50', 'text-red-700', 'border', 'border-red-200');
+                alertDiv.innerHTML = '<i class="fas fa-exclamation-circle mr-2"></i>' + message;
+            }
+
+            // Auto hide after 5 seconds
+            setTimeout(() => {
+                alertDiv.classList.add('hidden');
+            }, 5000);
+        }
+    </script>
+}

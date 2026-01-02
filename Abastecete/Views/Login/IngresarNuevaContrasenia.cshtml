@@ -1,4 +1,4 @@
-﻿@{
+@{
     Layout = null;
 }
 
@@ -8,69 +8,370 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Restablecer Contraseña - Abastécete</title>
+    <link rel="icon" type="image/x-icon" href="~/images/Logo A naranja.png" />
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/alpinejs@3.10.2/dist/cdn.min.js" defer></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <style>
+        @@keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @@keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @@keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        @@keyframes checkmark {
+            0% { transform: scale(0); opacity: 0; }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .animate-fadeIn { animation: fadeIn 0.5s ease-out forwards; }
+        .animate-slideIn { animation: slideIn 0.4s ease-out forwards; }
+        .animate-checkmark { animation: checkmark 0.5s ease-out forwards; }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+
+        .input-group {
+            position: relative;
+        }
+        .input-group input {
+            padding-left: 3rem;
+            padding-right: 3rem;
+        }
+        .input-group .input-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9ca3af;
+            transition: color 0.3s;
+        }
+        .input-group input:focus ~ .input-icon {
+            color: #23916A;
+        }
+        .input-group .toggle-password {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9ca3af;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+        .input-group .toggle-password:hover {
+            color: #23916A;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #23916A 0%, #1a6e50 100%);
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(35, 145, 106, 0.3);
+        }
+        .btn-primary:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        .spinner {
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 0.8s linear infinite;
+            display: inline-block;
+        }
+
+        .password-strength {
+            height: 4px;
+            border-radius: 2px;
+            transition: all 0.3s ease;
+        }
+        .strength-weak { background: #ef4444; width: 33%; }
+        .strength-medium { background: #f59e0b; width: 66%; }
+        .strength-strong { background: #22c55e; width: 100%; }
+    </style>
 </head>
 
-<body class="relative flex items-center justify-center min-h-screen">
-
+<body class="relative flex items-center justify-center min-h-screen p-4">
+    <!-- Fondo con imagen -->
     <div class="absolute inset-0 bg-cover bg-center z-[-2]"
-         style="background-image: url('/css/Images/fondo_olvidoContraseña.jpg');"></div>
+         style="background-image: url('/images/fondo_olvidoContraseña.jpg');"></div>
+    <div class="absolute inset-0 bg-gradient-to-br from-black/80 via-black/70 to-emerald-900/50 z-[-1]"></div>
 
-    <div class="absolute inset-0 bg-black opacity-70 z-[-1]"></div>
-
-    <div class="bg-white shadow-lg rounded-lg flex max-w-4xl w-full relative z-10">
-        <div class="w-1/2 bg-[#F8F1E6] p-8 flex flex-col justify-center items-center">
-            <img src="~/css/Images/Logo 2.png" alt="Logo Abastécete">
-            <h2 class="text-2xl font-bold text-[#23916A]">Recupera tu Contraseña</h2>
-            <p class="text-gray-600 text-center mt-2">Ingresa tu nueva contraseña para acceder a tu cuenta.</p>
+    <!-- Card principal -->
+    <div class="glass-card shadow-2xl rounded-3xl overflow-hidden max-w-md w-full animate-fadeIn">
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-[#23916A] to-emerald-600 px-8 py-10 text-center">
+            <div class="w-20 h-20 mx-auto mb-4 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
+                <i class="fas fa-key text-3xl text-white"></i>
+            </div>
+            <h1 class="text-2xl font-bold text-white mb-2">Nueva Contraseña</h1>
+            <p class="text-emerald-100 text-sm">Crea una contraseña segura para tu cuenta</p>
         </div>
 
-        <div class="w-1/2 p-8 flex flex-col justify-center">
-
+        <!-- Contenido -->
+        <div class="p-8">
+            <!-- Alertas -->
             @if (TempData["Error"] != null)
             {
-                <div class="alert alert-danger text-center bg-red-500 text-white p-3 rounded-md">
-                    @TempData["Error"]
-                </div>
-            }
-
-            @if (ViewData["Success"] != null)
-            {
-                <div x-data="{ open: true }" x-show="open" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-                    <div class="bg-white p-6 rounded-lg shadow-lg max-w-sm text-center">
-                        <h3 class="text-xl font-bold text-[#23916A]">¡Éxito!</h3>
-                        <p class="mt-2 text-gray-700">@ViewData["Success"]</p>
-                        <button x-on:click="open = false; window.location.href='@Url.Action("Login", "Login")'"
-                                class="mt-4 px-4 py-2 bg-[#1E7D46] text-white font-bold rounded-lg hover:bg-[#165B32] transition duration-300">
-                            Aceptar
-                        </button>
+                <div class="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 flex items-start gap-3 animate-slideIn">
+                    <div class="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+                        <i class="fas fa-exclamation-circle text-red-500"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-red-800">@TempData["Error"]</p>
                     </div>
                 </div>
             }
 
-            <form asp-action="IngresarNuevaContrasenia" method="post">
+            <!-- Modal de éxito -->
+            @if (ViewData["Success"] != null)
+            {
+                <div id="successModal" class="fixed inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm z-50">
+                    <div class="bg-white rounded-3xl p-8 max-w-sm mx-4 text-center shadow-2xl animate-fadeIn">
+                        <div class="w-20 h-20 mx-auto mb-4 bg-green-100 rounded-full flex items-center justify-center animate-checkmark">
+                            <i class="fas fa-check text-4xl text-green-500"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">¡Contraseña Actualizada!</h3>
+                        <p class="text-gray-600 mb-6">@ViewData["Success"]</p>
+                        <a href="@Url.Action("Index", "Login")"
+                           class="btn-primary inline-flex items-center justify-center gap-2 px-8 py-3 text-white font-bold rounded-xl">
+                            <i class="fas fa-sign-in-alt"></i>
+                            Iniciar Sesión
+                        </a>
+                    </div>
+                </div>
+            }
+
+            <form id="formNuevaContrasenia" asp-action="IngresarNuevaContrasenia" method="post" class="space-y-5">
                 <input type="hidden" name="userId" value="@ViewBag.UserId" />
 
-                <label for="NuevaContrasenia" class="block font-medium text-gray-700">Nueva Contraseña</label>
-                <input type="password" id="NuevaContrasenia" name="NuevaContrasenia" placeholder="Ingresa tu nueva contraseña"
-                       class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E6581E]" required>
+                <!-- Nueva contraseña -->
+                <div>
+                    <label for="NuevaContrasenia" class="block text-sm font-semibold text-gray-700 mb-2">
+                        <i class="fas fa-lock text-[#23916A] mr-2"></i>Nueva Contraseña
+                    </label>
+                    <div class="input-group">
+                        <input type="password"
+                               id="NuevaContrasenia"
+                               name="NuevaContrasenia"
+                               placeholder="Mínimo 8 caracteres"
+                               minlength="8"
+                               class="w-full px-4 py-4 pl-12 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#23916A] focus:ring-4 focus:ring-[#23916A]/10 transition-all text-gray-700"
+                               required>
+                        <i class="fas fa-lock input-icon"></i>
+                        <i class="fas fa-eye toggle-password" onclick="togglePassword('NuevaContrasenia', this)"></i>
+                    </div>
+                    <!-- Indicador de fuerza -->
+                    <div class="mt-2">
+                        <div class="bg-gray-200 rounded-full h-1 overflow-hidden">
+                            <div id="strengthBar" class="password-strength h-full" style="width: 0%"></div>
+                        </div>
+                        <p id="strengthText" class="text-xs text-gray-500 mt-1"></p>
+                    </div>
+                </div>
 
-                <label for="ConfirmarContrasenia" class="block font-medium text-gray-700">Confirmar Contraseña</label>
-                <input type="password" id="ConfirmarContrasenia" name="ConfirmarContrasenia" placeholder="Confirma tu nueva contraseña"
-                       class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#E6581E]" required>
+                <!-- Confirmar contraseña -->
+                <div>
+                    <label for="ConfirmarContrasenia" class="block text-sm font-semibold text-gray-700 mb-2">
+                        <i class="fas fa-lock text-[#23916A] mr-2"></i>Confirmar Contraseña
+                    </label>
+                    <div class="input-group">
+                        <input type="password"
+                               id="ConfirmarContrasenia"
+                               name="ConfirmarContrasenia"
+                               placeholder="Repite tu contraseña"
+                               minlength="8"
+                               class="w-full px-4 py-4 pl-12 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#23916A] focus:ring-4 focus:ring-[#23916A]/10 transition-all text-gray-700"
+                               required>
+                        <i class="fas fa-shield-alt input-icon"></i>
+                        <i class="fas fa-eye toggle-password" onclick="togglePassword('ConfirmarContrasenia', this)"></i>
+                    </div>
+                    <p id="matchText" class="text-xs mt-1 hidden"></p>
+                </div>
 
-                <button type="submit"
-                        class="w-full bg-[#1E7D46] text-white font-bold py-3 rounded-lg hover:bg-[#165B32] transition duration-300">
-                    Restablecer Contraseña
+                <!-- Tips de seguridad -->
+                <div class="p-4 rounded-xl bg-gray-50 border border-gray-200">
+                    <p class="text-xs font-semibold text-gray-600 mb-2">
+                        <i class="fas fa-shield-alt mr-1"></i>Tu contraseña debe tener:
+                    </p>
+                    <ul class="text-xs text-gray-500 space-y-1">
+                        <li id="req-length" class="flex items-center gap-2">
+                            <i class="fas fa-circle text-[6px]"></i>
+                            Mínimo 8 caracteres
+                        </li>
+                        <li id="req-upper" class="flex items-center gap-2">
+                            <i class="fas fa-circle text-[6px]"></i>
+                            Una letra mayúscula
+                        </li>
+                        <li id="req-number" class="flex items-center gap-2">
+                            <i class="fas fa-circle text-[6px]"></i>
+                            Un número
+                        </li>
+                    </ul>
+                </div>
+
+                <button type="submit" id="btnRestablecer"
+                        class="btn-primary w-full text-white font-bold py-4 rounded-xl flex items-center justify-center gap-3 text-lg">
+                    <span id="btnRestablecerText">Restablecer Contraseña</span>
+                    <span id="btnRestablecerLoader" class="hidden">
+                        <span class="spinner"></span>
+                    </span>
+                    <i id="btnRestablecerIcon" class="fas fa-check-circle"></i>
                 </button>
             </form>
 
-            <div class="mt-4 text-center">
-                <a href="@Url.Action("Login", "Login")" class="text-[#E6581E] font-semibold hover:underline">Volver al inicio de sesión</a>
+            <!-- Volver al login -->
+            <div class="mt-8 pt-6 border-t border-gray-100 text-center">
+                <a href="@Url.Action("Index", "Login")"
+                   class="inline-flex items-center gap-2 text-gray-600 hover:text-[#23916A] font-medium transition-colors">
+                    <i class="fas fa-arrow-left"></i>
+                    Volver al inicio de sesión
+                </a>
             </div>
         </div>
     </div>
 
+    <!-- Footer -->
+    <div class="fixed bottom-4 text-center w-full">
+        <p class="text-white/60 text-sm">© 2025 Abastécete. Todos los derechos reservados.</p>
+    </div>
+
+    <script>
+        // Toggle password visibility
+        function togglePassword(inputId, icon) {
+            const input = document.getElementById(inputId);
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+
+        // Password strength checker
+        const passwordInput = document.getElementById('NuevaContrasenia');
+        const confirmInput = document.getElementById('ConfirmarContrasenia');
+        const strengthBar = document.getElementById('strengthBar');
+        const strengthText = document.getElementById('strengthText');
+        const matchText = document.getElementById('matchText');
+
+        passwordInput.addEventListener('input', function() {
+            const password = this.value;
+            let strength = 0;
+            let text = '';
+
+            // Check requirements
+            const hasLength = password.length >= 8;
+            const hasUpper = /[A-Z]/.test(password);
+            const hasNumber = /[0-9]/.test(password);
+
+            // Update requirement indicators
+            updateRequirement('req-length', hasLength);
+            updateRequirement('req-upper', hasUpper);
+            updateRequirement('req-number', hasNumber);
+
+            if (hasLength) strength++;
+            if (hasUpper) strength++;
+            if (hasNumber) strength++;
+
+            // Update strength bar
+            strengthBar.className = 'password-strength h-full transition-all';
+            if (strength === 0) {
+                strengthBar.style.width = '0%';
+                text = '';
+            } else if (strength === 1) {
+                strengthBar.classList.add('strength-weak');
+                text = 'Débil';
+            } else if (strength === 2) {
+                strengthBar.classList.add('strength-medium');
+                text = 'Media';
+            } else {
+                strengthBar.classList.add('strength-strong');
+                text = 'Fuerte';
+            }
+            strengthText.textContent = text;
+
+            // Check match
+            checkMatch();
+        });
+
+        confirmInput.addEventListener('input', checkMatch);
+
+        function checkMatch() {
+            const password = passwordInput.value;
+            const confirm = confirmInput.value;
+
+            if (confirm.length === 0) {
+                matchText.classList.add('hidden');
+                return;
+            }
+
+            matchText.classList.remove('hidden');
+            if (password === confirm) {
+                matchText.textContent = '✓ Las contraseñas coinciden';
+                matchText.className = 'text-xs mt-1 text-green-600';
+            } else {
+                matchText.textContent = '✗ Las contraseñas no coinciden';
+                matchText.className = 'text-xs mt-1 text-red-500';
+            }
+        }
+
+        function updateRequirement(id, met) {
+            const el = document.getElementById(id);
+            const icon = el.querySelector('i');
+            if (met) {
+                el.classList.remove('text-gray-500');
+                el.classList.add('text-green-600');
+                icon.classList.remove('fa-circle');
+                icon.classList.add('fa-check-circle');
+            } else {
+                el.classList.remove('text-green-600');
+                el.classList.add('text-gray-500');
+                icon.classList.remove('fa-check-circle');
+                icon.classList.add('fa-circle');
+            }
+        }
+
+        // Loader para el formulario
+        document.getElementById('formNuevaContrasenia')?.addEventListener('submit', function(e) {
+            const password = passwordInput.value;
+            const confirm = confirmInput.value;
+
+            if (password !== confirm) {
+                e.preventDefault();
+                matchText.classList.remove('hidden');
+                matchText.textContent = '✗ Las contraseñas no coinciden';
+                matchText.className = 'text-xs mt-1 text-red-500';
+                confirmInput.focus();
+                return;
+            }
+
+            const btn = document.getElementById('btnRestablecer');
+            const text = document.getElementById('btnRestablecerText');
+            const loader = document.getElementById('btnRestablecerLoader');
+            const icon = document.getElementById('btnRestablecerIcon');
+
+            btn.disabled = true;
+            text.textContent = 'Guardando...';
+            loader.classList.remove('hidden');
+            icon.classList.add('hidden');
+        });
+    </script>
 </body>
 </html>

@@ -1,92 +1,533 @@
-﻿@model BusinessLogic.Models.Negocio
+@model BusinessLogic.Models.Negocio
 
-<div class="mx-auto mt-10 max-w-3xl px-4">
-    <h2 class="mb-6 text-2xl font-bold text-gray-800">Editar Negocio</h2>
-    @{
-        // ViewBag.banner contiene List<(BannerModel, ImagenModel)>
-        var proveedores = ViewBag.banner as IEnumerable<(BusinessLogic.Models.BannerModel, BusinessLogic.Models.ImagenModel)>;
-    }
-    @using (Html.BeginForm("EditarNegocio", "Negocios", FormMethod.Post, new { enctype = "multipart/form-data", @class = "space-y-6 rounded-xl bg-white p-6 shadow-md" }))
+@{
+    var banners = ViewBag.Banners as List<BusinessLogic.Models.Banner> ?? new List<BusinessLogic.Models.Banner>();
+    var galeria = Model.Galeria ?? new List<BusinessLogic.Models.GaleriaLocal>();
+}
+
+<!-- Header -->
+<div class="bg-white border-b border-gray-200">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div class="flex items-center gap-4">
+                <a asp-action="Index" asp-controller="Productos"
+                   class="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors">
+                    <i class="fas fa-arrow-left text-gray-600"></i>
+                </a>
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900">Editar Negocio</h1>
+                    <p class="text-sm text-gray-500 mt-1">Actualiza la información de tu negocio</p>
+                </div>
+            </div>
+            <a asp-action="MiMembresia" asp-controller="Negocios"
+               class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-semibold hover:shadow-lg hover:shadow-purple-500/30 transition-all">
+                <i class="fas fa-crown"></i>
+                <span>Mi Membresía</span>
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    @using (Html.BeginForm("EditarNegocio", "Negocios", FormMethod.Post, new { enctype = "multipart/form-data", id = "form-negocio" }))
     {
         @Html.HiddenFor(m => m.Id)
 
-        <div>
-            <label class="mb-1 block text-sm font-medium text-gray-700">Nombre del Negocio</label>
-            @Html.TextBoxFor(m => m.Nombre, new { @class = "w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring focus:ring-green-400" })
-        </div>
+        <!-- Información Básica -->
+        <div class="bg-white rounded-xl border border-gray-200 p-6 mb-6">
+            <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4 flex items-center gap-2">
+                <i class="fas fa-store text-[#23916A]"></i>
+                Información Básica
+            </h2>
 
-        <div>
-            <label class="mb-1 block text-sm font-medium text-gray-700">Dirección</label>
-            @Html.TextBoxFor(m => m.Direccion, new { @class = "w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring focus:ring-green-400", @id = "searchLocation" })
-        </div>
-
-         <div>
-            <label class="block font-medium">Descripción del negocio</label>
-            @Html.TextBoxFor(m => m.Descripcion, new { @class = "w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring focus:ring-green-400"})
-        </div>
-
-        <div>
-            <label class="mb-1 block text-sm font-medium text-gray-700">Teléfono / WhatsApp</label>
-            @Html.TextBoxFor(m => m.Telefono, new { @class = "w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring focus:ring-green-400" })
-        </div>
-
-        <div>
-            <label class="mb-1 block text-sm font-medium text-gray-700">Imagen o Logo</label>
-            <input type="file" name="logotipoArchivo" class="block w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100" />
-        </div>
-        @if (Model.imagen !=null)
-        {
-            <div class="mb-3">
-                <label class="mb-1 block text-sm font-medium text-gray-700">Imagen actual</label>
-                <img src="@Url.Content(Model.imagen.Base64)" alt="Logotipo actual" class="h-32 rounded border object-contain" />
-            </div>
-            @Html.TextBoxFor(m => m.LogotipoId, new { @class = "hidden" })
-
-        }
-
-
-        <div>
-            <label class="mb-1 block text-sm font-medium text-gray-700">Localización (lat, lng)</label>
-            @Html.TextBoxFor(m => m.Localizacion, new { @class = "w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring focus:ring-green-400", @id = "location" })
-        </div>
-
-        <div>
-            <div id="map" class="mt-4 h-64 w-full rounded border"></div>
-        </div>
-
-        <div class="text-right">
-            <button type="submit" class="rounded-lg bg-green-600 px-6 py-2 text-white transition duration-200 hover:bg-green-700">
-                Guardar Cambios
-            </button>
-        </div>
-        <div>
-            <h3 class="mb-2 text-lg font-semibold text-gray-800">Selecciona tu Banner</h3>
-            <div class="grid grid-cols-2 gap-4 sm:grid-cols-3">
-                @foreach (var tuple in proveedores ?? Enumerable.Empty<(BusinessLogic.Models.BannerModel, BusinessLogic.Models.ImagenModel)>())
-                {
-                    var banner = tuple.Item1;
-                    var imagen = tuple.Item2;
-                    <label class="block cursor-pointer">
-                        <input type="radio"
-                               name="BannerId"
-                               value="@banner.FileId"
-                               class="peer hidden"
-                               @(Model.BannerId == banner.FileId ? "checked" : "")/>
-                        <img src="@imagen.Base64"
-                             alt="Banner @banner.FileId"
-                             class="h-32 w-full rounded-lg border border-gray-200 object-contain peer-checked:border-green-500 peer-checked:ring-2 peer-checked:ring-green-500" />
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Nombre -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5">
+                        Nombre del Negocio <span class="text-red-500">*</span>
                     </label>
+                    <div class="relative">
+                        @Html.TextBoxFor(m => m.Nombre, new {
+                            @class = "w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#23916A]/20 focus:border-[#23916A] transition-all bg-gray-50 focus:bg-white",
+                            placeholder = "Ej: Mi Tienda Express",
+                            required = "required"
+                        })
+                        <i class="fas fa-store absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                    </div>
+                </div>
+
+                <!-- Teléfono -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5">
+                        Teléfono <span class="text-red-500">*</span>
+                    </label>
+                    <div class="relative">
+                        @Html.TextBoxFor(m => m.Telefono, new {
+                            @class = "w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#23916A]/20 focus:border-[#23916A] transition-all bg-gray-50 focus:bg-white",
+                            placeholder = "Ej: 3001234567",
+                            required = "required"
+                        })
+                        <i class="fas fa-phone absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                    </div>
+                </div>
+
+                <!-- NIT -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5">
+                        NIT <span class="text-gray-400 text-xs">(opcional)</span>
+                    </label>
+                    <div class="relative">
+                        @Html.TextBoxFor(m => m.Nit, new {
+                            @class = "w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#23916A]/20 focus:border-[#23916A] transition-all bg-gray-50 focus:bg-white",
+                            placeholder = "Ej: 900123456-1"
+                        })
+                        <i class="fas fa-id-card absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                    </div>
+                </div>
+
+                <!-- WhatsApp -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5">
+                        WhatsApp
+                    </label>
+                    <div class="relative">
+                        @Html.TextBoxFor(m => m.Whatsapp, new {
+                            @class = "w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#23916A]/20 focus:border-[#23916A] transition-all bg-gray-50 focus:bg-white",
+                            placeholder = "Ej: 573001234567"
+                        })
+                        <i class="fab fa-whatsapp absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                    </div>
+                </div>
+
+                <!-- Descripción -->
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5">
+                        Descripción del Negocio
+                    </label>
+                    <textarea name="Descripcion" rows="3"
+                              class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#23916A]/20 focus:border-[#23916A] transition-all bg-gray-50 focus:bg-white resize-none"
+                              placeholder="Describe tu negocio, productos principales, horarios especiales, etc.">@Model.Descripcion</textarea>
+                    <p class="text-xs text-gray-400 mt-1">Máximo 1000 caracteres</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contacto y Redes Sociales -->
+        <div class="bg-white rounded-xl border border-gray-200 p-6 mb-6">
+            <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4 flex items-center gap-2">
+                <i class="fas fa-share-alt text-[#23916A]"></i>
+                Contacto y Redes Sociales
+            </h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Email -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5">Email de Contacto</label>
+                    <div class="relative">
+                        @Html.TextBoxFor(m => m.EmailContacto, new {
+                            @class = "w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#23916A]/20 focus:border-[#23916A] transition-all bg-gray-50 focus:bg-white",
+                            placeholder = "correo@minegocio.com",
+                            type = "email"
+                        })
+                        <i class="fas fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                    </div>
+                </div>
+
+                <!-- Sitio Web -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5">Sitio Web</label>
+                    <div class="relative">
+                        @Html.TextBoxFor(m => m.SitioWeb, new {
+                            @class = "w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#23916A]/20 focus:border-[#23916A] transition-all bg-gray-50 focus:bg-white",
+                            placeholder = "https://www.minegocio.com"
+                        })
+                        <i class="fas fa-globe absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                    </div>
+                </div>
+
+                <!-- Instagram -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5">Instagram</label>
+                    <div class="relative">
+                        @Html.TextBoxFor(m => m.Instagram, new {
+                            @class = "w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#23916A]/20 focus:border-[#23916A] transition-all bg-gray-50 focus:bg-white",
+                            placeholder = "@@minegocio"
+                        })
+                        <i class="fab fa-instagram absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                    </div>
+                </div>
+
+                <!-- Facebook -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5">Facebook</label>
+                    <div class="relative">
+                        @Html.TextBoxFor(m => m.Facebook, new {
+                            @class = "w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#23916A]/20 focus:border-[#23916A] transition-all bg-gray-50 focus:bg-white",
+                            placeholder = "https://facebook.com/minegocio"
+                        })
+                        <i class="fab fa-facebook absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                    </div>
+                </div>
+
+                <!-- TikTok -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5">TikTok</label>
+                    <div class="relative">
+                        @Html.TextBoxFor(m => m.Tiktok, new {
+                            @class = "w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#23916A]/20 focus:border-[#23916A] transition-all bg-gray-50 focus:bg-white",
+                            placeholder = "@@minegocio"
+                        })
+                        <i class="fab fa-tiktok absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                    </div>
+                </div>
+
+                <!-- YouTube -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5">YouTube</label>
+                    <div class="relative">
+                        @Html.TextBoxFor(m => m.Youtube, new {
+                            @class = "w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#23916A]/20 focus:border-[#23916A] transition-all bg-gray-50 focus:bg-white",
+                            placeholder = "https://youtube.com/c/minegocio"
+                        })
+                        <i class="fab fa-youtube absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                    </div>
+                </div>
+
+                <!-- Twitter -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5">Twitter / X</label>
+                    <div class="relative">
+                        @Html.TextBoxFor(m => m.Twitter, new {
+                            @class = "w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#23916A]/20 focus:border-[#23916A] transition-all bg-gray-50 focus:bg-white",
+                            placeholder = "@@minegocio"
+                        })
+                        <i class="fab fa-x-twitter absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Horarios de Atención -->
+        <div class="bg-white rounded-xl border border-gray-200 p-6 mb-6">
+            <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4 flex items-center gap-2">
+                <i class="fas fa-clock text-[#23916A]"></i>
+                Horarios de Atención
+            </h2>
+
+            <!-- Checkbox para aplicar mismo horario -->
+            <div class="mb-4">
+                <label class="inline-flex items-center cursor-pointer">
+                    <input type="checkbox" id="mismo-horario" class="w-4 h-4 text-[#23916A] border-gray-300 rounded focus:ring-[#23916A]">
+                    <span class="ml-2 text-sm text-gray-600">Aplicar mismo horario a todos los días</span>
+                </label>
+                <div id="horario-unico" class="mt-2 hidden">
+                    <div class="flex items-center gap-2">
+                        <input type="text" id="horario-todos" placeholder="Ej: 08:00-18:00"
+                               class="px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#23916A]/20 focus:border-[#23916A]">
+                        <button type="button" onclick="aplicarHorarioTodos()"
+                                class="px-4 py-2 bg-[#23916A] text-white rounded-lg hover:bg-[#1a6b4f] transition-colors">
+                            Aplicar
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
+                <!-- Lunes -->
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 mb-1">Lunes</label>
+                    @Html.TextBoxFor(m => m.HorarioLunes, new {
+                        @class = "horario-dia w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#23916A]/20 focus:border-[#23916A] transition-all",
+                        placeholder = "08:00-18:00"
+                    })
+                </div>
+                <!-- Martes -->
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 mb-1">Martes</label>
+                    @Html.TextBoxFor(m => m.HorarioMartes, new {
+                        @class = "horario-dia w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#23916A]/20 focus:border-[#23916A] transition-all",
+                        placeholder = "08:00-18:00"
+                    })
+                </div>
+                <!-- Miércoles -->
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 mb-1">Miércoles</label>
+                    @Html.TextBoxFor(m => m.HorarioMiercoles, new {
+                        @class = "horario-dia w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#23916A]/20 focus:border-[#23916A] transition-all",
+                        placeholder = "08:00-18:00"
+                    })
+                </div>
+                <!-- Jueves -->
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 mb-1">Jueves</label>
+                    @Html.TextBoxFor(m => m.HorarioJueves, new {
+                        @class = "horario-dia w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#23916A]/20 focus:border-[#23916A] transition-all",
+                        placeholder = "08:00-18:00"
+                    })
+                </div>
+                <!-- Viernes -->
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 mb-1">Viernes</label>
+                    @Html.TextBoxFor(m => m.HorarioViernes, new {
+                        @class = "horario-dia w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#23916A]/20 focus:border-[#23916A] transition-all",
+                        placeholder = "08:00-18:00"
+                    })
+                </div>
+                <!-- Sábado -->
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 mb-1">Sábado</label>
+                    @Html.TextBoxFor(m => m.HorarioSabado, new {
+                        @class = "horario-dia w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#23916A]/20 focus:border-[#23916A] transition-all",
+                        placeholder = "09:00-14:00"
+                    })
+                </div>
+                <!-- Domingo -->
+                <div>
+                    <label class="block text-xs font-medium text-gray-500 mb-1">Domingo</label>
+                    @Html.TextBoxFor(m => m.HorarioDomingo, new {
+                        @class = "horario-dia w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#23916A]/20 focus:border-[#23916A] transition-all",
+                        placeholder = "Cerrado"
+                    })
+                </div>
+            </div>
+            <p class="text-xs text-gray-400 mt-2">Formato: HH:MM-HH:MM o escribe "Cerrado"</p>
+        </div>
+
+        <!-- Ubicación -->
+        <div class="bg-white rounded-xl border border-gray-200 p-6 mb-6">
+            <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4 flex items-center gap-2">
+                <i class="fas fa-map-marker-alt text-[#23916A]"></i>
+                Ubicación
+            </h2>
+
+            <div class="space-y-4">
+                <!-- Dirección -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1.5">
+                        Dirección <span class="text-red-500">*</span>
+                    </label>
+                    <div class="relative">
+                        @Html.TextBoxFor(m => m.Direccion, new {
+                            @class = "w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#23916A]/20 focus:border-[#23916A] transition-all bg-gray-50 focus:bg-white",
+                            @id = "searchLocation",
+                            placeholder = "Buscar dirección...",
+                            required = "required"
+                        })
+                        <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                    </div>
+                </div>
+
+                <!-- Mapa -->
+                <div id="map" class="h-80 w-full rounded-xl border border-gray-200"></div>
+
+                <!-- Coordenadas ocultas -->
+                @Html.HiddenFor(m => m.Localizacion, new { @id = "location" })
+                @Html.HiddenFor(m => m.Latitud, new { @id = "latitud" })
+                @Html.HiddenFor(m => m.Longitud, new { @id = "longitud" })
+            </div>
+        </div>
+
+        <!-- Logo del Negocio -->
+        <div class="bg-white rounded-xl border border-gray-200 p-6 mb-6">
+            <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4 flex items-center gap-2">
+                <i class="fas fa-image text-[#23916A]"></i>
+                Logo del Negocio
+            </h2>
+
+            <div class="flex flex-col md:flex-row gap-6">
+                <!-- Logo actual -->
+                @if (Model.imagen != null)
+                {
+                    <div class="flex-shrink-0">
+                        <p class="text-sm text-gray-500 mb-2">Logo actual</p>
+                        <img src="@Url.Content(Model.imagen.Base64)" alt="Logo actual"
+                             class="h-32 w-32 rounded-xl border border-gray-200 object-contain bg-gray-50" />
+                        @Html.HiddenFor(m => m.LogotipoId)
+                    </div>
+                }
+
+                <!-- Upload nuevo logo -->
+                <div class="flex-1">
+                    <p class="text-sm text-gray-500 mb-2">Subir nuevo logo</p>
+                    <label class="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer bg-gray-50 hover:bg-gray-100 hover:border-[#23916A] transition-all group">
+                        <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                            <i class="fas fa-cloud-upload-alt text-3xl text-gray-400 group-hover:text-[#23916A] transition-colors mb-2"></i>
+                            <p class="text-sm text-gray-500"><span class="font-semibold text-[#23916A]">Clic para subir</span> o arrastra</p>
+                            <p class="text-xs text-gray-400 mt-1">PNG, JPG (max 5MB)</p>
+                        </div>
+                        <input type="file" name="logotipoArchivo" accept="image/*" class="hidden" id="logo-input">
+                    </label>
+                    <div id="logo-preview" class="mt-2 hidden">
+                        <img id="logo-preview-img" src="" alt="Preview" class="h-20 rounded-lg border object-contain">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Galería de Imágenes -->
+        <div class="bg-white rounded-xl border border-gray-200 p-6 mb-6">
+            <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-2">
+                <i class="fas fa-images text-[#23916A]"></i>
+                Galería de Imágenes
+            </h2>
+            <p class="text-xs text-gray-400 mb-4">Las imágenes serán revisadas por el administrador antes de publicarse</p>
+
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                <!-- Imágenes existentes -->
+                @foreach (var img in galeria)
+                {
+                    <div class="relative group">
+                        <img src="@img.CloudinaryUrl" alt="Imagen galería"
+                             class="h-24 w-full rounded-lg border border-gray-200 object-cover">
+                        <!-- Badge de estado -->
+                        <span class="absolute top-1 right-1 px-2 py-0.5 text-xs rounded-full @img.EstadoClase">
+                            <i class="fas @img.EstadoIcono mr-1"></i>@img.EstadoDescripcion
+                        </span>
+                        <!-- Botón eliminar -->
+                        <button type="button" onclick="eliminarImagenGaleria(@img.Id)"
+                                class="absolute bottom-1 right-1 w-6 h-6 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <i class="fas fa-times text-xs"></i>
+                        </button>
+                    </div>
+                }
+
+                <!-- Botón agregar imagen -->
+                <label class="flex flex-col items-center justify-center h-24 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 hover:border-[#23916A] transition-all group">
+                    <i class="fas fa-plus text-2xl text-gray-400 group-hover:text-[#23916A] transition-colors"></i>
+                    <span class="text-xs text-gray-400 mt-1">Agregar</span>
+                    <input type="file" name="imagenesGaleria" accept="image/*" multiple class="hidden" id="galeria-input">
+                </label>
+            </div>
+
+            <!-- Preview de imágenes a subir -->
+            <div id="galeria-preview" class="mt-4 hidden">
+                <p class="text-sm text-gray-500 mb-2">Imágenes a subir:</p>
+                <div id="galeria-preview-container" class="flex flex-wrap gap-2"></div>
+            </div>
+        </div>
+
+        <!-- Selección de Banner -->
+        <div class="bg-white rounded-xl border border-gray-200 p-6 mb-6">
+            <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4 flex items-center gap-2">
+                <i class="fas fa-flag text-[#23916A]"></i>
+                Selecciona tu Banner
+            </h2>
+
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                @if (banners != null)
+                {
+                    @foreach (var banner in banners)
+                    {
+                        <label class="block cursor-pointer">
+                            <input type="radio" name="BannerId" value="@banner.CloudinaryUrl"
+                                   class="peer hidden"
+                                   @(Model.BannerId == banner.CloudinaryUrl ? "checked" : "") />
+                            <img src="@banner.CloudinaryUrl" alt="Banner"
+                                 class="h-24 w-full rounded-lg border-2 border-gray-200 object-cover transition-all peer-checked:border-[#23916A] peer-checked:ring-2 peer-checked:ring-[#23916A] hover:border-gray-300" />
+                        </label>
+                    }
                 }
             </div>
-            @Html.HiddenFor(m => m.BannerId)
+            @Html.HiddenFor(m => m.BannerId, new { @id = "banner-hidden" })
+        </div>
+
+        <!-- Botones de Acción -->
+        <div class="flex flex-col sm:flex-row justify-end gap-3 pt-4">
+            <a asp-action="Index" asp-controller="Productos"
+               class="px-6 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors text-center font-medium">
+                Cancelar
+            </a>
+            <button type="submit"
+                    class="px-6 py-3 bg-gradient-to-r from-[#23916A] to-[#2eb380] text-white rounded-xl hover:shadow-lg transition-all font-medium">
+                <i class="fas fa-save mr-2"></i>Guardar Cambios
+            </button>
         </div>
     }
 </div>
 
+<!-- Toast Notification -->
+<div id="toast" class="fixed bottom-4 right-4 z-50 transform translate-y-full opacity-0 transition-all duration-300">
+    <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-4 flex items-center gap-3 max-w-sm">
+        <div id="toast-icon" class="w-10 h-10 rounded-full flex items-center justify-center bg-green-100 text-green-600">
+            <i class="fas fa-check"></i>
+        </div>
+        <div>
+            <p id="toast-title" class="font-medium text-gray-900">Éxito</p>
+            <p id="toast-message" class="text-sm text-gray-500">Operación completada</p>
+        </div>
+    </div>
+</div>
+
+<script src="https://maps.googleapis.com/maps/api/js?key=@ViewBag.GoogleMapsApiKey&libraries=places"></script>
 <script>
+    // Inicializar mapa
+    function initMap() {
+        const defaultLatLng = { lat: 2.9273, lng: -75.2819 };
+        const locationField = document.getElementById('location');
+        const latField = document.getElementById('latitud');
+        const lngField = document.getElementById('longitud');
+        let initialCoords = defaultLatLng;
+
+        // Intentar usar coordenadas guardadas
+        if (latField.value && lngField.value) {
+            initialCoords = {
+                lat: parseFloat(latField.value),
+                lng: parseFloat(lngField.value)
+            };
+        } else if (locationField.value && locationField.value.includes(',')) {
+            const parts = locationField.value.split(',');
+            initialCoords = {
+                lat: parseFloat(parts[0]),
+                lng: parseFloat(parts[1])
+            };
+        }
+
+        const map = new google.maps.Map(document.getElementById('map'), {
+            center: initialCoords,
+            zoom: 15,
+            styles: [
+                { featureType: "poi", stylers: [{ visibility: "off" }] }
+            ]
+        });
+
+        const marker = new google.maps.Marker({
+            position: initialCoords,
+            map: map,
+            draggable: true,
+            animation: google.maps.Animation.DROP
+        });
+
+        const searchBox = new google.maps.places.SearchBox(document.getElementById('searchLocation'));
+
+        searchBox.addListener('places_changed', function () {
+            const places = searchBox.getPlaces();
+            if (places.length === 0) return;
+
+            const place = places[0];
+            map.setCenter(place.geometry.location);
+            map.setZoom(17);
+            marker.setPosition(place.geometry.location);
+            updateCoords(place.geometry.location.lat(), place.geometry.location.lng());
+        });
+
+        marker.addListener('dragend', function () {
+            const position = marker.getPosition();
+            updateCoords(position.lat(), position.lng());
+        });
+
+        function updateCoords(lat, lng) {
+            locationField.value = `${lat},${lng}`;
+            latField.value = lat;
+            lngField.value = lng;
+        }
+    }
+
+    // Sincronizar radio buttons de banner
     document.addEventListener("DOMContentLoaded", function () {
-        const radios = document.querySelectorAll('input[name="BannerId"]');
-        const hiddenInput = document.querySelector('input[name="BannerId"][type="hidden"]');
+        initMap();
+
+        const radios = document.querySelectorAll('input[name="BannerId"][type="radio"]');
+        const hiddenInput = document.getElementById('banner-hidden');
 
         radios.forEach(radio => {
             radio.addEventListener("change", function () {
@@ -94,60 +535,97 @@
                     hiddenInput.value = this.value;
                 }
             });
-
-            // Al cargar la página, si algún radio está marcado, sincronizarlo también
             if (radio.checked) {
                 hiddenInput.value = radio.value;
             }
         });
-    });
-</script>
 
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAPudyk3G3YG7GOEpId4xMK_WFIEenOSp8&libraries=places"></script>
-    <script>
-        function initMap() {
-            const defaultLatLng = { lat: 2.9273, lng: -75.2819 };
+        // Checkbox de mismo horario
+        document.getElementById('mismo-horario').addEventListener('change', function() {
+            document.getElementById('horario-unico').classList.toggle('hidden', !this.checked);
+        });
 
-            const locationField = document.getElementById('location');
-            let initialCoords = defaultLatLng;
-
-            if (locationField.value && locationField.value.includes(',')) {
-                const parts = locationField.value.split(',');
-                initialCoords = {
-                    lat: parseFloat(parts[0]),
-                    lng: parseFloat(parts[1])
+        // Preview de logo
+        document.getElementById('logo-input').addEventListener('change', function(e) {
+            if (e.target.files && e.target.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(ev) {
+                    document.getElementById('logo-preview-img').src = ev.target.result;
+                    document.getElementById('logo-preview').classList.remove('hidden');
                 };
+                reader.readAsDataURL(e.target.files[0]);
             }
+        });
 
-            const map = new google.maps.Map(document.getElementById('map'), {
-                center: initialCoords,
-                zoom: 13
-            });
+        // Preview de galería
+        document.getElementById('galeria-input').addEventListener('change', function(e) {
+            const container = document.getElementById('galeria-preview-container');
+            container.innerHTML = '';
 
-            const marker = new google.maps.Marker({
-                position: initialCoords,
-                map: map,
-                draggable: true
-            });
+            if (e.target.files && e.target.files.length > 0) {
+                document.getElementById('galeria-preview').classList.remove('hidden');
 
-            const searchBox = new google.maps.places.SearchBox(document.getElementById('searchLocation'));
+                Array.from(e.target.files).forEach(file => {
+                    const reader = new FileReader();
+                    reader.onload = function(ev) {
+                        const img = document.createElement('img');
+                        img.src = ev.target.result;
+                        img.className = 'h-16 w-16 rounded-lg border object-cover';
+                        container.appendChild(img);
+                    };
+                    reader.readAsDataURL(file);
+                });
+            } else {
+                document.getElementById('galeria-preview').classList.add('hidden');
+            }
+        });
+    });
 
-            searchBox.addListener('places_changed', function () {
-                const places = searchBox.getPlaces();
-                if (places.length === 0) return;
+    // Aplicar horario a todos los días
+    function aplicarHorarioTodos() {
+        const horario = document.getElementById('horario-todos').value;
+        document.querySelectorAll('.horario-dia').forEach(input => {
+            input.value = horario;
+        });
+        mostrarToast('Horario aplicado', 'Se aplicó el horario a todos los días');
+    }
 
-                const place = places[0];
-                map.setCenter(place.geometry.location);
-                marker.setPosition(place.geometry.location);
-                locationField.value = `${place.geometry.location.lat()},${place.geometry.location.lng()}`;
-            });
+    // Eliminar imagen de galería
+    function eliminarImagenGaleria(id) {
+        if (!confirm('¿Estás seguro de eliminar esta imagen?')) return;
 
-            marker.addListener('dragend', function () {
-                const position = marker.getPosition();
-                locationField.value = `${position.lat()},${position.lng()}`;
-            });
+        fetch(`/Negocios/EliminarImagenGaleria/${id}`, { method: 'DELETE' })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    mostrarToast('Error', data.mensaje || 'No se pudo eliminar', 'error');
+                }
+            })
+            .catch(() => mostrarToast('Error', 'Error de conexión', 'error'));
+    }
+
+    // Toast notification
+    function mostrarToast(titulo, mensaje, tipo = 'success') {
+        const toast = document.getElementById('toast');
+        const icon = document.getElementById('toast-icon');
+
+        document.getElementById('toast-title').textContent = titulo;
+        document.getElementById('toast-message').textContent = mensaje;
+
+        if (tipo === 'error') {
+            icon.className = 'w-10 h-10 rounded-full flex items-center justify-center bg-red-100 text-red-600';
+            icon.innerHTML = '<i class="fas fa-times"></i>';
+        } else {
+            icon.className = 'w-10 h-10 rounded-full flex items-center justify-center bg-green-100 text-green-600';
+            icon.innerHTML = '<i class="fas fa-check"></i>';
         }
 
-        window.onload = initMap;
-    </script>
+        toast.classList.remove('translate-y-full', 'opacity-0');
 
+        setTimeout(() => {
+            toast.classList.add('translate-y-full', 'opacity-0');
+        }, 3000);
+    }
+</script>

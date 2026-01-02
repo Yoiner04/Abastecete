@@ -1,0 +1,716 @@
+@model BusinessLogic.Models.DashboardAnaliticas
+@{
+    ViewData["Title"] = "Analíticas del Local";
+    ViewData["Description"] = "Visualiza las estadísticas de tu negocio: visitas al perfil, clics en WhatsApp, vistas de productos y apariciones en búsquedas.";
+    var local = ViewBag.Local as BusinessLogic.Models.Negocio;
+    var periodoSeleccionado = ViewBag.PeriodoSeleccionado as string ?? "7d";
+}
+
+<!-- Skeleton de carga -->
+<div id="skeleton-analiticas" class="animate-pulse">
+    <!-- Header skeleton -->
+    <div class="bg-white border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-6 h-6 bg-gray-200 rounded"></div>
+                    <div>
+                        <div class="h-6 w-32 bg-gray-200 rounded mb-2"></div>
+                        <div class="h-4 w-48 bg-gray-200 rounded"></div>
+                    </div>
+                </div>
+                <div class="h-10 w-40 bg-gray-200 rounded-lg"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <!-- Stats cards skeleton -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div class="bg-white rounded-xl shadow-sm p-5 border border-gray-100">
+                <div class="flex items-center justify-between">
+                    <div class="flex-1">
+                        <div class="h-4 w-24 bg-gray-200 rounded mb-2"></div>
+                        <div class="h-8 w-16 bg-gray-200 rounded"></div>
+                    </div>
+                    <div class="w-12 h-12 rounded-full bg-gray-200"></div>
+                </div>
+                <div class="mt-3 h-4 w-32 bg-gray-200 rounded"></div>
+            </div>
+            <div class="bg-white rounded-xl shadow-sm p-5 border border-gray-100">
+                <div class="flex items-center justify-between">
+                    <div class="flex-1">
+                        <div class="h-4 w-24 bg-gray-200 rounded mb-2"></div>
+                        <div class="h-8 w-16 bg-gray-200 rounded"></div>
+                    </div>
+                    <div class="w-12 h-12 rounded-full bg-gray-200"></div>
+                </div>
+                <div class="mt-3 h-4 w-32 bg-gray-200 rounded"></div>
+            </div>
+            <div class="bg-white rounded-xl shadow-sm p-5 border border-gray-100">
+                <div class="flex items-center justify-between">
+                    <div class="flex-1">
+                        <div class="h-4 w-24 bg-gray-200 rounded mb-2"></div>
+                        <div class="h-8 w-16 bg-gray-200 rounded"></div>
+                    </div>
+                    <div class="w-12 h-12 rounded-full bg-gray-200"></div>
+                </div>
+                <div class="mt-3 h-4 w-32 bg-gray-200 rounded"></div>
+            </div>
+            <div class="bg-white rounded-xl shadow-sm p-5 border border-gray-100">
+                <div class="flex items-center justify-between">
+                    <div class="flex-1">
+                        <div class="h-4 w-24 bg-gray-200 rounded mb-2"></div>
+                        <div class="h-8 w-16 bg-gray-200 rounded"></div>
+                    </div>
+                    <div class="w-12 h-12 rounded-full bg-gray-200"></div>
+                </div>
+                <div class="mt-3 h-4 w-32 bg-gray-200 rounded"></div>
+            </div>
+        </div>
+
+        <!-- Chart and products skeleton -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-2 bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                <div class="h-6 w-40 bg-gray-200 rounded mb-4"></div>
+                <div class="h-72 bg-gray-200 rounded"></div>
+            </div>
+            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                <div class="h-6 w-40 bg-gray-200 rounded mb-4"></div>
+                <div class="space-y-3">
+                    <div class="flex items-center gap-3 p-2">
+                        <div class="w-10 h-10 rounded-lg bg-gray-200"></div>
+                        <div class="flex-1">
+                            <div class="h-4 w-32 bg-gray-200 rounded mb-1"></div>
+                            <div class="h-3 w-20 bg-gray-200 rounded"></div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3 p-2">
+                        <div class="w-10 h-10 rounded-lg bg-gray-200"></div>
+                        <div class="flex-1">
+                            <div class="h-4 w-32 bg-gray-200 rounded mb-1"></div>
+                            <div class="h-3 w-20 bg-gray-200 rounded"></div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3 p-2">
+                        <div class="w-10 h-10 rounded-lg bg-gray-200"></div>
+                        <div class="flex-1">
+                            <div class="h-4 w-32 bg-gray-200 rounded mb-1"></div>
+                            <div class="h-3 w-20 bg-gray-200 rounded"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tips skeleton -->
+        <div class="mt-6 bg-gray-200 rounded-xl p-6 h-48"></div>
+    </div>
+</div>
+
+<!-- Contenido real (oculto inicialmente) -->
+<div id="content-analiticas" class="hidden">
+<!-- Header con barra blanca -->
+<div class="bg-white border-b border-gray-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <a href="@Url.Action("Index", "Home")" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+                <div>
+                    <h1 class="text-xl font-bold text-gray-900">Analíticas</h1>
+                    <p class="text-gray-500 text-sm">Estadísticas de @local?.Nombre</p>
+                </div>
+            </div>
+            <!-- Selector de período y botones de descarga -->
+            <div class="flex items-center gap-2">
+                <!-- Botón descargar imagen -->
+                <button onclick="descargarEstadisticas()"
+                        class="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-[#23916A] text-white text-sm font-medium hover:bg-[#1c7355] transition-colors shadow-sm"
+                        title="Descargar imagen PNG">
+                    <i class="fas fa-image"></i>
+                    <span class="hidden sm:inline">Imagen</span>
+                </button>
+                <!-- Botón exportar Excel -->
+                <button onclick="exportarExcel()"
+                        class="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 transition-colors shadow-sm"
+                        title="Exportar a Excel/CSV">
+                    <i class="fas fa-file-excel"></i>
+                    <span class="hidden sm:inline">Excel</span>
+                </button>
+                <select id="selectPeriodo" class="px-4 py-2 rounded-lg border border-gray-300 text-sm focus:border-[#23916A] focus:ring-2 focus:ring-[#23916A]/20 outline-none">
+                    @if (periodoSeleccionado == "today") { <option value="today" selected>Hoy</option> } else { <option value="today">Hoy</option> }
+                    @if (periodoSeleccionado == "7d") { <option value="7d" selected>Últimos 7 días</option> } else { <option value="7d">Últimos 7 días</option> }
+                    @if (periodoSeleccionado == "30d") { <option value="30d" selected>Últimos 30 días</option> } else { <option value="30d">Últimos 30 días</option> }
+                    @if (periodoSeleccionado == "90d") { <option value="90d" selected>Últimos 90 días</option> } else { <option value="90d">Últimos 90 días</option> }
+                    @if (periodoSeleccionado == "year") { <option value="year" selected>Este año</option> } else { <option value="year">Este año</option> }
+                </select>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <!-- Tarjetas de estadísticas -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <!-- Visitas al perfil -->
+        <div class="bg-white rounded-xl shadow-sm p-5 border border-gray-100">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500 mb-1">Visitas al perfil</p>
+                    <p class="text-2xl font-bold text-gray-900" id="stat-visitas">@Model.Estadisticas.TotalVisitas.ToString("N0")</p>
+                </div>
+                <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+                    <i class="fas fa-eye text-blue-600"></i>
+                </div>
+            </div>
+            @if (Model.Estadisticas.CambioVisitas.HasValue)
+            {
+                var cambio = Model.Estadisticas.CambioVisitas.Value;
+                var colorCambio = cambio >= 0 ? "text-green-600" : "text-red-600";
+                var iconoCambio = cambio >= 0 ? "fa-arrow-up" : "fa-arrow-down";
+                <div class="mt-3 flex items-center gap-1 text-sm @colorCambio">
+                    <i class="fas @iconoCambio text-xs"></i>
+                    <span id="cambio-visitas">@Math.Abs(cambio)%</span>
+                    <span class="text-gray-400">vs período anterior</span>
+                </div>
+            }
+        </div>
+
+        <!-- Clics en WhatsApp -->
+        <div class="bg-white rounded-xl shadow-sm p-5 border border-gray-100">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500 mb-1">Clics en WhatsApp</p>
+                    <p class="text-2xl font-bold text-gray-900" id="stat-whatsapp">@Model.Estadisticas.TotalClicsWhatsapp.ToString("N0")</p>
+                </div>
+                <div class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
+                    <i class="fab fa-whatsapp text-green-600 text-xl"></i>
+                </div>
+            </div>
+            @if (Model.Estadisticas.CambioClicsWhatsapp.HasValue)
+            {
+                var cambio = Model.Estadisticas.CambioClicsWhatsapp.Value;
+                var colorCambio = cambio >= 0 ? "text-green-600" : "text-red-600";
+                var iconoCambio = cambio >= 0 ? "fa-arrow-up" : "fa-arrow-down";
+                <div class="mt-3 flex items-center gap-1 text-sm @colorCambio">
+                    <i class="fas @iconoCambio text-xs"></i>
+                    <span id="cambio-whatsapp">@Math.Abs(cambio)%</span>
+                    <span class="text-gray-400">vs período anterior</span>
+                </div>
+            }
+        </div>
+
+        <!-- Vistas de productos -->
+        <div class="bg-white rounded-xl shadow-sm p-5 border border-gray-100">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500 mb-1">Vistas de productos</p>
+                    <p class="text-2xl font-bold text-gray-900" id="stat-productos">@Model.Estadisticas.TotalVisitasProductos.ToString("N0")</p>
+                </div>
+                <div class="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center">
+                    <i class="fas fa-box text-purple-600"></i>
+                </div>
+            </div>
+            @if (Model.Estadisticas.CambioVisitasProductos.HasValue)
+            {
+                var cambio = Model.Estadisticas.CambioVisitasProductos.Value;
+                var colorCambio = cambio >= 0 ? "text-green-600" : "text-red-600";
+                var iconoCambio = cambio >= 0 ? "fa-arrow-up" : "fa-arrow-down";
+                <div class="mt-3 flex items-center gap-1 text-sm @colorCambio">
+                    <i class="fas @iconoCambio text-xs"></i>
+                    <span id="cambio-productos">@Math.Abs(cambio)%</span>
+                    <span class="text-gray-400">vs período anterior</span>
+                </div>
+            }
+        </div>
+
+        <!-- Apariciones en búsqueda -->
+        <div class="bg-white rounded-xl shadow-sm p-5 border border-gray-100">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500 mb-1">En búsquedas</p>
+                    <p class="text-2xl font-bold text-gray-900" id="stat-busquedas">@Model.Estadisticas.TotalAparicionesBusqueda.ToString("N0")</p>
+                </div>
+                <div class="w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center">
+                    <i class="fas fa-search text-orange-600"></i>
+                </div>
+            </div>
+            <div class="mt-3 text-sm text-gray-400">
+                Veces que apareciste en resultados
+            </div>
+        </div>
+    </div>
+
+    <!-- Segunda fila de estadísticas -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <!-- Compartidos -->
+        <div class="bg-white rounded-xl shadow-sm p-5 border border-gray-100">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500 mb-1">Veces compartido</p>
+                    <p class="text-2xl font-bold text-gray-900" id="stat-compartidos">@Model.Estadisticas.TotalCompartidos.ToString("N0")</p>
+                </div>
+                <div class="w-12 h-12 rounded-full bg-pink-100 flex items-center justify-center">
+                    <i class="fas fa-share-alt text-pink-600"></i>
+                </div>
+            </div>
+            <div class="mt-3 text-sm text-gray-400">
+                En Facebook, Twitter, WhatsApp
+            </div>
+        </div>
+
+        <!-- Clics en teléfono -->
+        <div class="bg-white rounded-xl shadow-sm p-5 border border-gray-100">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500 mb-1">Clics en teléfono</p>
+                    <p class="text-2xl font-bold text-gray-900" id="stat-telefono">@Model.Estadisticas.TotalClicsTelefono.ToString("N0")</p>
+                </div>
+                <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+                    <i class="fas fa-phone text-blue-600"></i>
+                </div>
+            </div>
+            <div class="mt-3 text-sm text-gray-400">
+                Llamadas desde tu perfil
+            </div>
+        </div>
+    </div>
+
+    <!-- Gráfico y productos más vistos -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Gráfico de visitas -->
+        <div class="lg:col-span-2 bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-gray-900">Visitas en el tiempo</h3>
+                <div class="flex gap-4 text-sm">
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" id="toggleVisitas" checked class="rounded text-blue-600 focus:ring-blue-500">
+                        <span class="text-gray-600">Visitas</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" id="toggleWhatsapp" checked class="rounded text-green-600 focus:ring-green-500">
+                        <span class="text-gray-600">WhatsApp</span>
+                    </label>
+                </div>
+            </div>
+            <div class="h-72">
+                <canvas id="chartVisitas"></canvas>
+            </div>
+        </div>
+
+        <!-- Productos más vistos -->
+        <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Productos más vistos</h3>
+            @if (Model.ProductosMasVistos.Any())
+            {
+                <div class="space-y-3" id="lista-productos">
+                    @foreach (var producto in Model.ProductosMasVistos)
+                    {
+                        <div class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors">
+                            @if (!string.IsNullOrEmpty(producto.ImagenUrl))
+                            {
+                                <img src="@producto.ImagenUrl" alt="@producto.NombreProducto" class="w-10 h-10 rounded-lg object-cover">
+                            }
+                            else
+                            {
+                                <div class="w-10 h-10 rounded-lg bg-gray-200 flex items-center justify-center">
+                                    <i class="fas fa-box text-gray-400"></i>
+                                </div>
+                            }
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm font-medium text-gray-900 truncate">@producto.NombreProducto</p>
+                                <p class="text-xs text-gray-500">@producto.TotalVistas vistas</p>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="text-center py-8 text-gray-400">
+                    <i class="fas fa-chart-bar text-4xl mb-2"></i>
+                    <p class="text-sm">Sin datos aún</p>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Tips para mejorar -->
+    <div class="mt-6 bg-gradient-to-r from-[#23916A] to-[#1a6b4f] rounded-xl p-6 text-white">
+        <div class="flex items-start gap-4">
+            <div class="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+                <i class="fas fa-lightbulb text-xl"></i>
+            </div>
+            <div>
+                <h3 class="font-semibold text-lg mb-2">Tips para aumentar tus visitas</h3>
+                <ul class="space-y-1 text-sm text-white/90">
+                    <li><i class="fas fa-check mr-2"></i>Mantén tus productos actualizados con fotos de calidad</li>
+                    <li><i class="fas fa-check mr-2"></i>Completa toda la información de tu negocio</li>
+                    <li><i class="fas fa-check mr-2"></i>Responde rápido a los mensajes de WhatsApp</li>
+                    <li><i class="fas fa-check mr-2"></i>Comparte el enlace de tu tienda en redes sociales</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Mostrar contenido después de cargar el DOM
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(function() {
+                document.getElementById('skeleton-analiticas').style.display = 'none';
+                document.getElementById('content-analiticas').classList.remove('hidden');
+                document.getElementById('content-analiticas').style.transition = 'opacity 300ms';
+                document.getElementById('content-analiticas').style.opacity = '1';
+            }, 100);
+        });
+    </script>
+    <script>
+        // Datos iniciales del gráfico
+        const datosGrafico = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.DatosGrafico.Select(d => new {
+            fecha = d.Fecha.ToString("yyyy-MM-dd"),
+            fechaCorta = d.Fecha.ToString("dd MMM"),
+            visitas = d.Visitas,
+            clicsWhatsapp = d.ClicsWhatsapp
+        })));
+
+        // Configuración del gráfico
+        const ctx = document.getElementById('chartVisitas').getContext('2d');
+        const chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: datosGrafico.map(d => d.fechaCorta),
+                datasets: [
+                    {
+                        label: 'Visitas',
+                        data: datosGrafico.map(d => d.visitas),
+                        borderColor: '#3B82F6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        borderWidth: 2
+                    },
+                    {
+                        label: 'WhatsApp',
+                        data: datosGrafico.map(d => d.clicsWhatsapp),
+                        borderColor: '#22C55E',
+                        backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        borderWidth: 2
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        backgroundColor: 'white',
+                        titleColor: '#111827',
+                        bodyColor: '#6B7280',
+                        borderColor: '#E5E7EB',
+                        borderWidth: 1,
+                        padding: 12,
+                        displayColors: true,
+                        boxPadding: 4
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            color: '#9CA3AF',
+                            font: { size: 11 }
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: '#F3F4F6'
+                        },
+                        ticks: {
+                            color: '#9CA3AF',
+                            font: { size: 11 },
+                            precision: 0
+                        }
+                    }
+                },
+                interaction: {
+                    mode: 'nearest',
+                    axis: 'x',
+                    intersect: false
+                }
+            }
+        });
+
+        // Toggle datasets
+        document.getElementById('toggleVisitas').addEventListener('change', function() {
+            chart.data.datasets[0].hidden = !this.checked;
+            chart.update();
+        });
+
+        document.getElementById('toggleWhatsapp').addEventListener('change', function() {
+            chart.data.datasets[1].hidden = !this.checked;
+            chart.update();
+        });
+
+        // Cambio de período
+        document.getElementById('selectPeriodo').addEventListener('change', function() {
+            window.location.href = '@Url.Action("Index", "Analiticas")?periodo=' + this.value;
+        });
+
+        // Función para descargar estadísticas como card compacta estilo GitHub Stats
+        function descargarEstadisticas() {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+
+            // Dimensiones compactas tipo card
+            canvas.width = 450;
+            canvas.height = 280;
+
+            // Fondo oscuro con gradiente sutil
+            const bgGrad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+            bgGrad.addColorStop(0, '#0d1117');
+            bgGrad.addColorStop(1, '#161b22');
+            ctx.fillStyle = bgGrad;
+            roundRect(ctx, 0, 0, canvas.width, canvas.height, 10);
+            ctx.fill();
+
+            // Borde sutil
+            ctx.strokeStyle = '#30363d';
+            ctx.lineWidth = 1;
+            roundRect(ctx, 0.5, 0.5, canvas.width - 1, canvas.height - 1, 10);
+            ctx.stroke();
+
+            // Cargar logo del local (URL de Cloudinary)
+            const logoUrl = '@(local?.LogotipoId ?? "")';
+            if (logoUrl && logoUrl.length > 0) {
+                const logo = new Image();
+                logo.crossOrigin = 'anonymous';
+                logo.onload = function() {
+                    generarCardCompacta(ctx, canvas, logo);
+                };
+                logo.onerror = function() {
+                    generarCardCompacta(ctx, canvas, null);
+                };
+                logo.src = logoUrl;
+            } else {
+                generarCardCompacta(ctx, canvas, null);
+            }
+        }
+
+        function generarCardCompacta(ctx, canvas, logo) {
+            // ========== HEADER ==========
+            let startX = 25;
+            let currentY = 28;
+
+            // Logo del local (circular)
+            if (logo) {
+                const logoSize = 36;
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(startX + logoSize/2, currentY + logoSize/2 - 8, logoSize/2, 0, Math.PI * 2);
+                ctx.fillStyle = '#ffffff';
+                ctx.fill();
+                ctx.clip();
+                const scale = Math.max(logoSize / logo.width, logoSize / logo.height);
+                const w = logo.width * scale;
+                const h = logo.height * scale;
+                ctx.drawImage(logo, startX + logoSize/2 - w/2, currentY + logoSize/2 - 8 - h/2, w, h);
+                ctx.restore();
+                startX += logoSize + 12;
+            }
+
+            // Título: Nombre del local
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 18px "Segoe UI", system-ui, sans-serif';
+            ctx.textAlign = 'left';
+            ctx.fillText('@(local?.Nombre?.Replace("'", "\\'") ?? "Mi Local")', startX, currentY + 8);
+
+            // Subtítulo
+            ctx.fillStyle = '#8b949e';
+            ctx.font = '12px "Segoe UI", system-ui, sans-serif';
+            ctx.fillText('Estadísticas', startX, currentY + 26);
+
+            // Badge período (derecha)
+            const periodoTextos = {
+                'today': 'Hoy',
+                '7d': '7 días',
+                '30d': '30 días',
+                '90d': '90 días',
+                'year': 'Este año'
+            };
+            const periodo = periodoTextos['@periodoSeleccionado'] || '@periodoSeleccionado';
+            ctx.font = '11px "Segoe UI", system-ui, sans-serif';
+            ctx.fillStyle = '#23916A';
+            ctx.textAlign = 'right';
+            ctx.fillText(periodo, canvas.width - 25, currentY + 8);
+
+            currentY += 55;
+
+            // Línea separadora
+            ctx.fillStyle = '#30363d';
+            ctx.fillRect(25, currentY - 10, canvas.width - 50, 1);
+
+            // ========== MÉTRICAS EN LISTA ==========
+            const stats = [
+                { color: '#3b82f6', label: 'Visitas al perfil', value: '@Model.Estadisticas.TotalVisitas.ToString("N0")' },
+                { color: '#22c55e', label: 'Clics en WhatsApp', value: '@Model.Estadisticas.TotalClicsWhatsapp.ToString("N0")' },
+                { color: '#a855f7', label: 'Vistas de productos', value: '@Model.Estadisticas.TotalVisitasProductos.ToString("N0")' },
+                { color: '#f59e0b', label: 'Apariciones en búsqueda', value: '@Model.Estadisticas.TotalAparicionesBusqueda.ToString("N0")' },
+                { color: '#ec4899', label: 'Veces compartido', value: '@Model.Estadisticas.TotalCompartidos.ToString("N0")' },
+                { color: '#06b6d4', label: 'Clics en teléfono', value: '@Model.Estadisticas.TotalClicsTelefono.ToString("N0")' }
+            ];
+
+            const lineHeight = 28;
+            stats.forEach((stat, i) => {
+                const y = currentY + i * lineHeight;
+
+                // Círculo de color como icono
+                ctx.beginPath();
+                ctx.arc(35, y + 2, 5, 0, Math.PI * 2);
+                ctx.fillStyle = stat.color;
+                ctx.fill();
+
+                // Label
+                ctx.fillStyle = '#c9d1d9';
+                ctx.font = '13px "Segoe UI", system-ui, sans-serif';
+                ctx.textAlign = 'left';
+                ctx.fillText(stat.label, 50, y + 6);
+
+                // Valor (derecha)
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 14px "Segoe UI", system-ui, sans-serif';
+                ctx.textAlign = 'right';
+                ctx.fillText(stat.value, canvas.width - 25, y + 6);
+            });
+
+            // ========== FOOTER ==========
+            ctx.fillStyle = '#30363d';
+            ctx.fillRect(0, canvas.height - 35, canvas.width, 1);
+
+            ctx.fillStyle = '#8b949e';
+            ctx.font = '11px "Segoe UI", system-ui, sans-serif';
+            ctx.textAlign = 'left';
+            ctx.fillText('Generado con Abastecete', 25, canvas.height - 12);
+
+            ctx.textAlign = 'right';
+            ctx.fillText(new Date().toLocaleDateString('es-CO'), canvas.width - 25, canvas.height - 12);
+
+            // Descargar
+            const link = document.createElement('a');
+            link.download = 'stats-@(local?.Nombre?.Replace(" ", "-").Replace("'", "") ?? "local")-' + new Date().toISOString().split('T')[0] + '.png';
+            link.href = canvas.toDataURL('image/png', 1.0);
+            link.click();
+        }
+
+        // Función para exportar a Excel
+        function exportarExcel() {
+            // Datos de estadísticas
+            const nombreLocal = '@(local?.Nombre?.Replace("'", "\\'") ?? "Mi Local")';
+            const periodo = '@periodoSeleccionado';
+            const fechaGeneracion = new Date().toLocaleDateString('es-CO');
+
+            // Estadísticas totales
+            const estadisticas = [
+                ['Métrica', 'Valor'],
+                ['Visitas al perfil', '@Model.Estadisticas.TotalVisitas'],
+                ['Clics en WhatsApp', '@Model.Estadisticas.TotalClicsWhatsapp'],
+                ['Vistas de productos', '@Model.Estadisticas.TotalVisitasProductos'],
+                ['Apariciones en búsqueda', '@Model.Estadisticas.TotalAparicionesBusqueda'],
+                ['Veces compartido', '@Model.Estadisticas.TotalCompartidos'],
+                ['Clics en teléfono', '@Model.Estadisticas.TotalClicsTelefono']
+            ];
+
+            // Datos diarios del gráfico
+            const datosDiarios = [
+                ['Fecha', 'Visitas', 'WhatsApp']
+            ];
+
+            @if (Model.DatosGrafico != null)
+            {
+                @foreach (var dia in Model.DatosGrafico)
+                {
+                    @:datosDiarios.push(['@dia.Fecha.ToString("dd/MM/yyyy")', '@dia.Visitas', '@dia.ClicsWhatsapp']);
+                }
+            }
+
+            // Productos más vistos
+            const productosMasVistos = [
+                ['Producto', 'Vistas']
+            ];
+
+            @if (Model.ProductosMasVistos != null)
+            {
+                @foreach (var producto in Model.ProductosMasVistos)
+                {
+                    @:productosMasVistos.push(['@producto.NombreProducto?.Replace("'", "\\'")', '@producto.TotalVistas']);
+                }
+            }
+
+            // Crear contenido CSV con múltiples secciones
+            let csvContent = '\uFEFF'; // BOM para UTF-8
+
+            // Encabezado
+            csvContent += 'REPORTE DE ESTADÍSTICAS - ' + nombreLocal + '\n';
+            csvContent += 'Período: ' + periodo + '\n';
+            csvContent += 'Fecha de generación: ' + fechaGeneracion + '\n\n';
+
+            // Sección: Resumen de estadísticas
+            csvContent += '=== RESUMEN DE ESTADÍSTICAS ===\n';
+            estadisticas.forEach(row => {
+                csvContent += row.join(',') + '\n';
+            });
+            csvContent += '\n';
+
+            // Sección: Datos diarios
+            csvContent += '=== DATOS DIARIOS ===\n';
+            datosDiarios.forEach(row => {
+                csvContent += row.join(',') + '\n';
+            });
+            csvContent += '\n';
+
+            // Sección: Productos más vistos
+            csvContent += '=== PRODUCTOS MÁS VISTOS ===\n';
+            productosMasVistos.forEach(row => {
+                csvContent += row.join(',') + '\n';
+            });
+
+            // Crear y descargar archivo
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'estadisticas-' + nombreLocal.replace(/\s+/g, '-').toLowerCase() + '-' + new Date().toISOString().split('T')[0] + '.csv';
+            link.click();
+            URL.revokeObjectURL(link.href);
+        }
+
+        // Función auxiliar para rectángulos redondeados
+        function roundRect(ctx, x, y, width, height, radius) {
+            ctx.beginPath();
+            ctx.moveTo(x + radius, y);
+            ctx.lineTo(x + width - radius, y);
+            ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+            ctx.lineTo(x + width, y + height - radius);
+            ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+            ctx.lineTo(x + radius, y + height);
+            ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+            ctx.lineTo(x, y + radius);
+            ctx.quadraticCurveTo(x, y, x + radius, y);
+            ctx.closePath();
+        }
+    </script>
+}

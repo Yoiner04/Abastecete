@@ -1,5 +1,6 @@
-﻿using BusinessLogic;
+using BusinessLogic;
 using BusinessLogic.Models;
+using BusinessLogic.Utilidades;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
@@ -11,67 +12,167 @@ using Microsoft.AspNetCore.Authentication.Google;
 using System.Security.Claims;
 using System.Text.RegularExpressions;
 using Abastecete.Models;
-using System.Net.Mail;
-using System.Net;
 
-namespace ConnectionProject.Controllers
+namespace Abastecete.Controllers
 {
     public class LoginController : Controller
     {
         private readonly ManejadorUsuario _manejadorUsuario;
-        private readonly ManejadorMongo manejadorMongo;
+        private readonly ManejadorImagenes manejadorImagenes;
+        private readonly EmailService _emailService;
+        private readonly ManejadorLogs _manejadorLogs;
         public static int rol = 0;
 
         public LoginController()
         {
             _manejadorUsuario = new ManejadorUsuario();
-            manejadorMongo = new ManejadorMongo();
+            manejadorImagenes = new ManejadorImagenes();
+            _emailService = new EmailService();
+            _manejadorLogs = new ManejadorLogs();
         }
 
-        public IActionResult Login()
+        /// <summary>
+        /// Registra log de autenticación de forma asíncrona (fire-and-forget) para no bloquear el login
+        /// </summary>
+        private void RegistrarLogAutenticacion(int? usuarioId, string nombreUsuario, string tipoAccion, string resultado, string? mensajeError = null)
+        {
+            // Capturar datos del contexto antes del Task (HttpContext no es thread-safe)
+            var ipCliente = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+            var forwardedFor = HttpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            if (!string.IsNullOrEmpty(forwardedFor))
+                ipCliente = forwardedFor.Split(',').First().Trim();
+            var userAgent = HttpContext.Request.Headers["User-Agent"].FirstOrDefault() ?? "";
+
+            // Fire-and-forget: no esperamos el resultado
+            Task.Run(() =>
+            {
+                try
+                {
+                    var manejadorLogs = new ManejadorLogs();
+                    manejadorLogs.RegistrarLog(
+                        usuarioId,
+                        nombreUsuario ?? "Anonimo",
+                        ModulosAuditoria.AUTENTICACION,
+                        tipoAccion,
+                        usuarioId,
+                        tipoAccion == TiposAccionAuditoria.LOGIN ? "Inicio de sesion" : "Cierre de sesion",
+                        null,
+                        null,
+                        ipCliente,
+                        userAgent,
+                        resultado,
+                        mensajeError,
+                        "Login",
+                        tipoAccion == TiposAccionAuditoria.LOGIN ? "Login" : "Logout"
+                    );
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[AUTH LOG ERROR] {ex.Message}");
+                }
+            });
+        }
+
+        [HttpGet]
+        public IActionResult Index()
         {
             Response.Headers["Cache-Control"] = "no-cache, no-store, must-revalidate";
             Response.Headers["Pragma"] = "no-cache";
             Response.Headers["Expires"] = "0";
 
-            var bannerSesion= new List<(BannerModel, ImagenModel)>();
-            var bannersSesion = manejadorMongo.ListarBannersSesion();
-            foreach (var banner in bannersSesion)
-            {
-                var imagen = manejadorMongo.ObtenerImagen(banner.FileId);
-                bannerSesion.Add((banner, imagen));
-            }
-            ViewBag.BannerSesion = bannerSesion;
+            // Los banners se cargan via AJAX para no bloquear el renderizado de la página
+            ViewBag.BannerSesion = new List<object>();
             return View();
         }
 
-        [HttpPost]
-        public IActionResult Login(Usuario usuario)
+        /// <summary>
+        /// Endpoint para cargar banners de sesión de forma asíncrona (no bloquea el login)
+        /// </summary>
+        [HttpGet]
+        public IActionResult ObtenerBannersSesion()
         {
-            ManejadorUsuario manejador = new ManejadorUsuario();
-            DataTable data = manejador.Login(usuario.Correo, usuario.Contrasenia);
+            try
+            {
+                var bannersSesion = manejadorImagenes.ListarBannersSesion();
+                var bannerSesion = bannersSesion.Select(b => new {
+                    Id = b.Id,
+                    Nombre = b.Nombre ?? "",
+                    Url = b.CloudinaryUrl,
+                    Formato = b.Formato
+                }).ToList();
+
+                return Json(bannerSesion);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error al obtener banners: {ex.Message}");
+                return Json(new List<object>());
+            }
+        }
+
+        [HttpPost]
+        public IActionResult Index(Usuario usuario)
+        {
+            // Reutilizar el manejador existente en lugar de crear uno nuevo
+            DataTable data = _manejadorUsuario.Login(usuario.Correo, usuario.Contrasenia);
 
             if (data.Rows.Count == 0)
             {
+                RegistrarLogAutenticacion(null, usuario.Correo, TiposAccionAuditoria.LOGIN, "ERROR", "Credenciales incorrectas");
                 TempData["Error"] = "Credenciales incorrectas. Por favor, verifica tu usuario y contraseña.";
                 return View(usuario);
             }
 
             try
             {
-                int idRol = Convert.ToInt32(data.Rows[0]["FK_ID_ROL"]);
-                int idPersona = Convert.ToInt32(data.Rows[0]["FK_ID_PERSONA"]);
-                int idUsuario = Convert.ToInt32(data.Rows[0]["PK_ID_USUARIO"]);
-                int idTipoMembresia = 0;
-                if (data.Rows[0]["FK_ID_TIPOMEMBRESIA"] == "")
-                {
-                    idTipoMembresia = Convert.ToInt32(data.Rows[0]["FK_ID_TIPOMEMBRESIA"]);
+                int codigoEstado = Convert.ToInt32(data.Rows[0]["CODIGO_ESTADO"]);
 
+                // Primero verificar errores de login antes de acceder a otros campos
+                switch (codigoEstado)
+                {
+                    case 97:
+                        RegistrarLogAutenticacion(null, usuario.Correo, TiposAccionAuditoria.LOGIN, "ERROR", "Cuenta inhabilitada");
+                        TempData["Error"] = "Tu cuenta ha sido inhabilitada.";
+                        return View(usuario);
+                    case 98:
+                        RegistrarLogAutenticacion(null, usuario.Correo, TiposAccionAuditoria.LOGIN, "ERROR", "Correo no valido");
+                        TempData["Error"] = "Correo electrónico no válido.";
+                        return View(usuario);
+                    case 99:
+                        RegistrarLogAutenticacion(null, usuario.Correo, TiposAccionAuditoria.LOGIN, "ERROR", "Contrasena incorrecta");
+                        TempData["Error"] = "Contraseña incorrecta. Si fallas 5 veces, tu cuenta será bloqueada.";
+                        HttpContext.Session.SetString("LastLoginError", usuario.Correo);
+                        return View(usuario);
+                    case 0:
+                        RegistrarLogAutenticacion(null, usuario.Correo, TiposAccionAuditoria.LOGIN, "ERROR", "Cuenta bloqueada por intentos fallidos");
+                        TempData["Error"] = "Tu cuenta ha sido bloqueada por demasiados intentos fallidos. Inténtalo en una hora.";
+                        return View(usuario);
                 }
 
-                HttpContext.Session.SetInt32("PersonaId", idPersona);
+                // Solo si el login fue exitoso, obtener los demás datos
+                int idUsuario = Convert.ToInt32(data.Rows[0]["PK_ID_USUARIO"]);
+
+                // Obtener tipo de membresía de forma segura
+                int idTipoMembresia = 0;
+                var membresiaValue = data.Rows[0]["FK_ID_TIPOMEMBRESIA"];
+                if (membresiaValue != DBNull.Value && membresiaValue != null)
+                {
+                    idTipoMembresia = Convert.ToInt32(membresiaValue);
+                }
+
                 HttpContext.Session.SetInt32("idUsuario", idUsuario);
-                HttpContext.Session.SetString("membresia", ((data.Rows[0]["FK_ID_TIPOMEMBRESIA"] == "") ? "sin membresia" : idTipoMembresia.ToString()));
+                HttpContext.Session.SetString("membresia", idTipoMembresia > 0 ? idTipoMembresia.ToString() : "sin membresia");
+
+                // Guardar ID del local si el usuario tiene uno
+                var idLocalValue = data.Rows[0]["ID_LOCAL"];
+                if (idLocalValue != DBNull.Value && idLocalValue != null)
+                {
+                    int idLocal = Convert.ToInt32(idLocalValue);
+                    if (idLocal > 0)
+                    {
+                        HttpContext.Session.SetInt32("idLocal", idLocal);
+                    }
+                }
 
                 if (HttpContext.Session.GetString("LastLoginError") == usuario.Correo)
                 {
@@ -79,27 +180,16 @@ namespace ConnectionProject.Controllers
                     return View(usuario);
                 }
 
-                switch (idRol)
-                {
-                    case 97:
-                        TempData["Error"] = "Tu cuenta ha sido inhabilitada.";
-                        return View(usuario);
-                    case 98:
-                        TempData["Error"] = "Correo electrónico no válido.";
-                        return View(usuario);
-                    case 99:
-                        TempData["Error"] = "Contraseña incorrecta. Si fallas 5 veces, tu cuenta será bloqueada.";
-                        HttpContext.Session.SetString("LastLoginError", usuario.Correo);
-                        return View(usuario);
-                    case 0:
-                        TempData["Error"] = "Tu cuenta ha sido bloqueada por demasiados intentos fallidos. Inténtalo en una hora.";
-                        return View(usuario);
-                    default:
-                        HttpContext.Session.Remove("LastLoginError");
+                // Login exitoso
+                HttpContext.Session.Remove("LastLoginError");
 
-                        GuardarPermisosRol(idRol);
-                        return Redirect("~/Home/Principal");
-                }
+                // Cargar permisos (unificado - evita llamadas duplicadas a DB)
+                GuardarTodosLosPermisos(idUsuario);
+
+                // Registrar login exitoso
+                RegistrarLogAutenticacion(idUsuario, usuario.Correo, TiposAccionAuditoria.LOGIN, "EXITO");
+
+                return Redirect("~/Home/Principal");
             }
             catch (Exception ex)
             {
@@ -111,6 +201,13 @@ namespace ConnectionProject.Controllers
 
         public IActionResult Logout()
         {
+            // Obtener datos del usuario antes de limpiar la sesion
+            var usuarioId = HttpContext.Session.GetInt32("idUsuario");
+            var nombreUsuario = HttpContext.Session.GetString("nombreUsuario") ?? "Usuario";
+
+            // Registrar logout antes de limpiar sesion
+            RegistrarLogAutenticacion(usuarioId, nombreUsuario, TiposAccionAuditoria.LOGOUT, "EXITO");
+
             HttpContext.Session.Clear();
 
             Response.Cookies.Delete(".AspNetCore.Session");
@@ -122,18 +219,19 @@ namespace ConnectionProject.Controllers
             Response.Headers["Pragma"] = "no-cache";
             Response.Headers["Expires"] = "0";
 
-            return RedirectToAction("Login");
+            return RedirectToAction("Index");
         }
 
-        private void GuardarPermisosRol(int idRol)
+        /// <summary>
+        /// Carga todos los permisos del usuario en sesión
+        /// </summary>
+        private void GuardarTodosLosPermisos(int idUsuario)
         {
             ManejadorPermisos manejadorP = new ManejadorPermisos();
-            HttpContext.Session.SetString("idRol", idRol.ToString());
 
-            Dictionary<string, bool> permisos = manejadorP.ObtenerPermisos(idRol)
-                .ToDictionary(c => c.Nombre, c => c.Estado);
-
-            HttpContext.Session.SetString("permisos", JsonConvert.SerializeObject(permisos));
+            // Cargar permisos del sistema por membresía (UNA sola llamada a DB)
+            var permisos = manejadorP.ObtenerDiccionarioPermisos(idUsuario);
+            HttpContext.Session.SetString("permisosSistema", JsonConvert.SerializeObject(permisos));
         }
 
         public IActionResult LoginWithGoogle()
@@ -164,7 +262,7 @@ namespace ConnectionProject.Controllers
                 if (!result.Succeeded)
                 {
                     TempData["Error"] = "Error al autenticar con Google.";
-                    return RedirectToAction("Login");
+                    return RedirectToAction("Index");
                 }
 
                 var claims = result.Principal.Identities.FirstOrDefault()?.Claims.Select(claim => new
@@ -173,50 +271,102 @@ namespace ConnectionProject.Controllers
                     claim.Value
                 }).ToList();
 
-                string email = claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value;
-                string name = claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value;
-
-                if (!EsCorreoValido(email))
+                // DEBUG: Ver todos los claims que envía Google
+                Console.WriteLine("[GOOGLE AUTH] Claims recibidos:");
+                if (claims != null)
                 {
-                    TempData["Error"] = "El correo proporcionado no es válido.";
-                    return RedirectToAction("Login");
+                    foreach (var claim in claims)
+                    {
+                        Console.WriteLine($"  - {claim.Type}: {claim.Value}");
+                    }
                 }
 
-                ManejadorUsuario manejador = new ManejadorUsuario();
-                DataTable data = manejador.LoginGoogle(email);
+                string? email = claims?.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value;
+                string name = claims?.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value ?? "";
+                // Obtener foto de perfil de Google - buscar en varios tipos de claim
+                string pictureUrl = claims?.FirstOrDefault(c =>
+                    c.Type == "picture" ||
+                    c.Type == "image" ||
+                    c.Type == "urn:google:picture" ||
+                    c.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/uri" ||
+                    c.Type.Contains("picture") ||
+                    c.Type.Contains("image") ||
+                    c.Type.Contains("photo"))?.Value ?? "";
 
-                int rol = data.Rows.Count > 0 ? Convert.ToInt32(data.Rows[0]["FK_ID_ROL"]) : 0;
+                Console.WriteLine($"[GOOGLE AUTH] Foto URL capturada: '{pictureUrl}'");
 
-                // Si no existe, registrar nuevo usuario
-                if (rol == 0)
+                if (string.IsNullOrEmpty(email) || !EsCorreoValido(email))
                 {
-                    int userId = manejador.RegistrarUsuarioGoogle(email, name);
+                    TempData["Error"] = "El correo proporcionado no es válido.";
+                    return RedirectToAction("Index");
+                }
+
+                // Usar el manejador existente en lugar de crear uno nuevo
+                DataTable data = _manejadorUsuario.LoginGoogle(email);
+
+                int codigoEstado = data.Rows.Count > 0 ? Convert.ToInt32(data.Rows[0]["CODIGO_ESTADO"]) : 0;
+
+                // Validar estados de error igual que en login normal
+                switch (codigoEstado)
+                {
+                    case 97:
+                        TempData["Error"] = "Tu cuenta ha sido inhabilitada.";
+                        return RedirectToAction("Index");
+                    case 0 when data.Rows.Count > 0:
+                        TempData["Error"] = "Tu cuenta ha sido bloqueada.";
+                        return RedirectToAction("Index");
+                }
+
+                // Usuario no existe, registrarlo
+                if (codigoEstado == 0 && data.Rows.Count == 0)
+                {
+                    int userId = _manejadorUsuario.RegistrarUsuarioGoogle(email, name, pictureUrl);
                     if (userId == 0)
                     {
                         TempData["Error"] = "Hubo un problema al registrar tu cuenta con Google.";
-                        return RedirectToAction("Login");
+                        return RedirectToAction("Index");
                     }
 
-                    data = manejador.LoginGoogle(email);
-                    rol = data.Rows.Count > 0 ? Convert.ToInt32(data.Rows[0]["FK_ID_ROL"]) : 0;
+                    data = _manejadorUsuario.LoginGoogle(email);
+                    codigoEstado = data.Rows.Count > 0 ? Convert.ToInt32(data.Rows[0]["CODIGO_ESTADO"]) : 0;
                 }
 
                 if (data.Rows.Count > 0)
                 {
                     int idUsuario = Convert.ToInt32(data.Rows[0]["PK_ID_USUARIO"]);
-                    int idPersona = Convert.ToInt32(data.Rows[0]["FK_ID_PERSONA"]);
-                    string membresia = data.Rows[0]["FK_ID_TIPOMEMBRESIA"]?.ToString() ?? "sin membresia";
+
+                    // Manejo seguro de FK_ID_TIPOMEMBRESIA
+                    string membresia = "sin membresia";
+                    var membresiaValue = data.Rows[0]["FK_ID_TIPOMEMBRESIA"];
+                    if (membresiaValue != DBNull.Value && membresiaValue != null)
+                    {
+                        string? membresiaStr = membresiaValue.ToString();
+                        if (!string.IsNullOrWhiteSpace(membresiaStr))
+                        {
+                            membresia = membresiaStr;
+                        }
+                    }
 
                     HttpContext.Session.SetInt32("idUsuario", idUsuario);
-                    HttpContext.Session.SetInt32("PersonaId", idPersona);
-                    HttpContext.Session.SetString("membresia", string.IsNullOrWhiteSpace(membresia) ? "sin membresia" : membresia);
+                    HttpContext.Session.SetString("membresia", membresia);
+
+                    // Actualizar y guardar foto de perfil si existe
+                    if (!string.IsNullOrEmpty(pictureUrl))
+                    {
+                        _manejadorUsuario.ActualizarFotoPerfil(idUsuario, pictureUrl);
+                        HttpContext.Session.SetString("userPicture", pictureUrl);
+                    }
                 }
 
-                HttpContext.Session.SetString("userEmail", email);
+                HttpContext.Session.SetString("userEmail", email ?? "");
                 HttpContext.Session.SetString("userName", name);
-                HttpContext.Session.SetInt32("userRol", rol);
 
-                GuardarPermisosRol(rol);
+                // Cargar permisos (unificado)
+                var idUsuarioGoogle = HttpContext.Session.GetInt32("idUsuario");
+                if (idUsuarioGoogle.HasValue)
+                {
+                    GuardarTodosLosPermisos(idUsuarioGoogle.Value);
+                }
 
                 await HttpContext.SignInAsync(
                     CookieAuthenticationDefaults.AuthenticationScheme,
@@ -227,8 +377,9 @@ namespace ConnectionProject.Controllers
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"Error en GoogleResponse: {ex.Message}");
                 TempData["Error"] = "Hubo un error en el inicio de sesión.";
-                return RedirectToAction("Login");
+                return RedirectToAction("Index");
             }
         }
 
@@ -239,7 +390,7 @@ namespace ConnectionProject.Controllers
         }
 
         [HttpPost]
-        public IActionResult RecuperarContrasenia(string Correo)
+        public async Task<IActionResult> RecuperarContrasenia(string Correo)
         {
             if (string.IsNullOrEmpty(Correo))
             {
@@ -257,9 +408,8 @@ namespace ConnectionProject.Controllers
 
             int userId = Convert.ToInt32(data.Rows[0]["PK_ID_USUARIO"]);
 
-
             _manejadorUsuario.GenerarTokenRecuperacion(userId);
-            string token = _manejadorUsuario.ObtenerTokenRecuperacion(userId);
+            string? token = _manejadorUsuario.ObtenerTokenRecuperacion(userId);
 
             if (string.IsNullOrEmpty(token))
             {
@@ -270,9 +420,17 @@ namespace ConnectionProject.Controllers
             TempData["CorreoIngresado"] = Correo;
             TempData["MostrarCodigo"] = true;
 
-            EnviarCorreoRecuperacion(Correo, token);
+            var (success, message) = await _emailService.EnviarCodigoRecuperacion(Correo, "", token);
 
-            TempData["Success"] = "Se ha enviado un código a tu correo.";
+            if (success)
+            {
+                TempData["Success"] = "Se ha enviado un código a tu correo. Revisa tu bandeja de entrada.";
+            }
+            else
+            {
+                TempData["Error"] = "Hubo un problema al enviar el correo. Por favor intenta nuevamente.";
+            }
+
             return RedirectToAction("RecuperarContrasenia");
         }
 
@@ -336,65 +494,7 @@ namespace ConnectionProject.Controllers
 
             ViewData["Success"] = "¡Tu contraseña ha sido restablecida exitosamente!";
             TempData.Keep("Success");
-            return RedirectToAction("Login");
-        }
-
-        private void EnviarCorreoRecuperacion(string correo, string token)
-        {
-            try
-            {
-                string asunto = "Código de recuperación de contraseña";
-                string cuerpo = $"Tu código de recuperación es: {token}\n\n" +
-                                $"Este código expirará en 5 minutos.\n\n" +
-                                $"Ingresa este código en la página de recuperación de contraseña para continuar.";
-
-                MailMessage mail = new MailMessage
-                {
-                    From = new MailAddress("abastecetecol@gmail.com"),
-                    Subject = asunto,
-                    Body = cuerpo,
-                    IsBodyHtml = false
-                };
-                mail.To.Add(correo);
-
-                string dominio = correo.Split('@')[1].ToLower();
-                SmtpClient smtp = new SmtpClient();
-
-                switch (dominio)
-                {
-                    case "gmail.com":
-                        smtp.Host = "smtp.gmail.com";
-                        break;
-                    case "outlook.com":
-                    case "hotmail.com":
-                    case "live.com":
-                        smtp.Host = "smtp.office365.com";
-                        break;
-                    case "yahoo.com":
-                        smtp.Host = "smtp.mail.yahoo.com";
-                        break;
-                    case "zoho.com":
-                        smtp.Host = "smtp.zoho.com";
-                        break;
-                    case "icloud.com":
-                        smtp.Host = "smtp.mail.me.com";
-                        break;
-                    default:
-                        smtp.Host = "smtp.tudominio.com";
-                        break;
-                }
-
-                smtp.Port = 587;
-                smtp.EnableSsl = true;
-                smtp.Credentials = new NetworkCredential("abastecetecol@gmail.com", "mvijnlfiegwohmsm");
-
-                smtp.Send(mail);
-                Console.WriteLine($"✅ Correo enviado a {correo} con éxito.");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"⚠️ Error al enviar el correo a {correo}: {ex.Message}");
-            }
+            return RedirectToAction("Index");
         }
 
     }
