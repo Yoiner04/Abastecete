@@ -1,18 +1,74 @@
 ﻿@model List<BusinessLogic.Models.Categoria>
+@{
+    var totalCategorias = Model?.Where(c => c.Estado != 0).Count() ?? 0;
+    ViewData["Title"] = "Categorías de Productos - Abastecete";
+    ViewData["Description"] = $"Explora {totalCategorias} categorías de productos y proveedores locales en Abastecete. Encuentra todo lo que necesitas cerca de ti.";
+}
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Categorías - Abastecete</title>
+    <title>@ViewData["Title"]</title>
+    <meta name="description" content="@ViewData["Description"]" />
+
+    <!-- SEO Meta Tags -->
+    <meta name="keywords" content="categorías, productos, proveedores, Florencia, Caquetá, comercio local" />
+    <meta name="author" content="Abastecete" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="@Context.Request.Scheme://@Context.Request.Host/Categorias/Listar" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="@Context.Request.Scheme://@Context.Request.Host/Categorias/Listar" />
+    <meta property="og:title" content="@ViewData["Title"]" />
+    <meta property="og:description" content="@ViewData["Description"]" />
+    <meta property="og:image" content="@Context.Request.Scheme://@Context.Request.Host/images/og-image.webp" />
+    <meta property="og:site_name" content="Abastecete" />
+    <meta property="og:locale" content="es_CO" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="@ViewData["Title"]" />
+    <meta name="twitter:description" content="@ViewData["Description"]" />
+    <meta name="twitter:image" content="@Context.Request.Scheme://@Context.Request.Host/images/og-image.webp" />
+
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <link rel="icon" type="image/x-icon" href="~/images/Logo A naranja.png" />
-    <link rel="stylesheet" href="styles.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <link rel="stylesheet" href="~/css/styles.css" asp-append-version="true" />
 </head>
 
 <body class="bg-gradient-to-b from-[#F4F1E9] to-gray-100 min-h-screen">
+    <!-- Skeleton Loader -->
+    <div id="skeleton-categorias" class="animate-pulse py-8 px-4 sm:px-6 lg:px-10">
+        <div class="mx-auto max-w-7xl">
+            <!-- Skeleton Header -->
+            <div class="mb-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="h-12 w-12 rounded-xl bg-gray-300"></div>
+                    <div>
+                        <div class="h-6 w-48 bg-gray-300 rounded mb-2"></div>
+                        <div class="h-4 w-32 bg-gray-200 rounded"></div>
+                    </div>
+                </div>
+                <div class="h-10 w-36 bg-gray-300 rounded-full"></div>
+            </div>
+            <!-- Skeleton Grid -->
+            <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 sm:gap-6">
+                @for(int i = 0; i < 12; i++)
+                {
+                    <div class="flex flex-col items-center">
+                        <div class="aspect-square w-full rounded-2xl bg-gray-300 mb-3"></div>
+                        <div class="h-4 w-20 bg-gray-200 rounded"></div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Contenido Principal -->
+    <div id="content-categorias" class="hidden">
     <!-- Header de sección -->
     <section class="py-8 px-4 sm:px-6 lg:px-10">
         <div class="mx-auto max-w-7xl">
@@ -78,4 +134,14 @@
             </div>
         </div>
     </section>
+    </div><!-- Fin content-categorias -->
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                document.getElementById('skeleton-categorias').classList.add('hidden');
+                document.getElementById('content-categorias').classList.remove('hidden');
+            }, 300);
+        });
+    </script>
 </body>

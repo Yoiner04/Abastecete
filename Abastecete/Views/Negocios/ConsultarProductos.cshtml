@@ -16,17 +16,36 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@ViewData["Title"]</title>
     <meta name="description" content="@ViewData["Description"]">
-    <meta name="keywords" content="@negocio?.Nombre, productos, @(categoryCount) categorías, proveedor, Abastécete">
+    <meta name="keywords" content="@negocio?.Nombre, productos, @(categoryCount) categorías, proveedor, Abastécete, Florencia, Caquetá">
+    <meta name="author" content="Abastecete" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="@Context.Request.Scheme://@Context.Request.Host/Negocios/ConsultarProductos?idLocal=@negocio?.Id" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="business.business" />
+    <meta property="og:url" content="@Context.Request.Scheme://@Context.Request.Host/Negocios/ConsultarProductos?idLocal=@negocio?.Id" />
     <meta property="og:title" content="@ViewData["Title"]">
     <meta property="og:description" content="@ViewData["Description"]">
-    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Abastecete" />
+    <meta property="og:locale" content="es_CO" />
     @if (!string.IsNullOrWhiteSpace(negocio?.imagen?.Base64))
     {
         <meta property="og:image" content="@negocio.imagen.Base64">
     }
+    else
+    {
+        <meta property="og:image" content="@Context.Request.Scheme://@Context.Request.Host/images/og-image.webp" />
+    }
+
+    <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="@Context.Request.Scheme://@Context.Request.Host/Negocios/ConsultarProductos?idLocal=@negocio?.Id" />
     <meta name="twitter:title" content="@ViewData["Title"]">
     <meta name="twitter:description" content="@ViewData["Description"]">
+    @if (!string.IsNullOrWhiteSpace(negocio?.imagen?.Base64))
+    {
+        <meta name="twitter:image" content="@negocio.imagen.Base64">
+    }
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <style>
@@ -492,6 +511,8 @@
 
                             var mensaje = Uri.EscapeDataString($"Hola {negocio?.Nombre}, me gustaría obtener más información.");
                             var waUrl = $"https://wa.me/57{whatsappNum}?text={mensaje}";
+                            var urlCompartir = $"{Context.Request.Scheme}://{Context.Request.Host}/Negocios/ConsultarProductos?idLocal={negocio?.Id}";
+                            var textoCompartir = $"¡Mira los productos de {negocio?.Nombre} en Abastecete!";
                         }
                         <a href="@waUrl"
                            target="_blank" rel="noopener"
@@ -500,6 +521,37 @@
                             <i class="fab fa-whatsapp text-xl"></i>
                             <span>WhatsApp</span>
                         </a>
+                        <!-- Botón de compartir -->
+                        <div class="relative" id="shareDropdownContainer">
+                            <button id="shareButton"
+                                    class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-orange-500 text-white font-semibold hover:bg-orange-600 transition-colors shadow-lg shadow-orange-500/30">
+                                <i class="fas fa-share-alt"></i>
+                                <span>Compartir</span>
+                            </button>
+                            <div id="shareDropdown" class="hidden absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-50">
+                                <button onclick="AbasteceteTracking.compartirFacebook(@(negocio?.Id ?? 0), null, '@urlCompartir')"
+                                        class="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors">
+                                    <i class="fab fa-facebook text-xl text-blue-600"></i>
+                                    <span class="text-gray-700">Facebook</span>
+                                </button>
+                                <button onclick="AbasteceteTracking.compartirTwitter(@(negocio?.Id ?? 0), null, '@urlCompartir', '@textoCompartir')"
+                                        class="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors">
+                                    <i class="fab fa-x-twitter text-xl text-gray-800"></i>
+                                    <span class="text-gray-700">X (Twitter)</span>
+                                </button>
+                                <button onclick="AbasteceteTracking.compartirWhatsapp(@(negocio?.Id ?? 0), null, '@urlCompartir', '@textoCompartir')"
+                                        class="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors">
+                                    <i class="fab fa-whatsapp text-xl text-green-500"></i>
+                                    <span class="text-gray-700">WhatsApp</span>
+                                </button>
+                                <hr class="my-2 border-gray-100">
+                                <button onclick="AbasteceteTracking.copiarEnlace(@(negocio?.Id ?? 0), null, '@urlCompartir')"
+                                        class="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors">
+                                    <i class="fas fa-link text-xl text-gray-500"></i>
+                                    <span class="text-gray-700">Copiar enlace</span>
+                                </button>
+                            </div>
+                        </div>
                         <button id="toggleInfoPanel"
                                 class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gray-100 text-gray-700 font-semibold hover:bg-gray-200 transition-colors">
                             <i class="fas fa-info-circle"></i>
@@ -1273,6 +1325,19 @@
                     setTimeout(function() {
                         initMiniMap();
                     }, 400);
+                }
+            });
+
+            // --- Dropdown de compartir ---
+            $('#shareButton').on('click', function(e) {
+                e.stopPropagation();
+                $('#shareDropdown').toggleClass('hidden');
+            });
+
+            // Cerrar dropdown al hacer clic fuera
+            $(document).on('click', function(e) {
+                if (!$(e.target).closest('#shareDropdownContainer').length) {
+                    $('#shareDropdown').addClass('hidden');
                 }
             });
         });

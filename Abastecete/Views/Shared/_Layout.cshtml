@@ -8,7 +8,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Abastecete</title>
+    <title>@(ViewData["Title"] ?? "Abastecete - Proveedores Locales")</title>
+    <meta name="description" content="@(ViewData["Description"] ?? "Conecta con proveedores locales en Florencia, Caquetá. Encuentra negocios, productos y servicios cerca de ti.")" />
+
+    <!-- SEO Meta Tags Base -->
+    <meta name="keywords" content="proveedores, negocios locales, productos, Florencia, Caquetá, Abastecete" />
+    <meta name="author" content="Abastecete" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="@Context.Request.Scheme://@Context.Request.Host@Context.Request.Path" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="@Context.Request.Scheme://@Context.Request.Host@Context.Request.Path" />
+    <meta property="og:title" content="@(ViewData["Title"] ?? "Abastecete - Proveedores Locales")" />
+    <meta property="og:description" content="@(ViewData["Description"] ?? "Conecta con proveedores locales en Florencia, Caquetá.")" />
+    <meta property="og:image" content="@Context.Request.Scheme://@Context.Request.Host/images/og-image.webp" />
+    <meta property="og:site_name" content="Abastecete" />
+    <meta property="og:locale" content="es_CO" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="@Context.Request.Scheme://@Context.Request.Host@Context.Request.Path" />
+    <meta name="twitter:title" content="@(ViewData["Title"] ?? "Abastecete - Proveedores Locales")" />
+    <meta name="twitter:description" content="@(ViewData["Description"] ?? "Conecta con proveedores locales en Florencia, Caquetá.")" />
+    <meta name="twitter:image" content="@Context.Request.Scheme://@Context.Request.Host/images/og-image.webp" />
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="icon" type="image/x-icon" href="~/images/Logo A naranja.png">

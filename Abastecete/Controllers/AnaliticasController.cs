@@ -258,6 +258,7 @@ namespace Abastecete.Controllers
             public int IdLocal { get; set; }
             public int? IdProducto { get; set; }
             public string TipoEvento { get; set; } = "";
+            public string? Plataforma { get; set; } // facebook, twitter, whatsapp, copy_link
         }
     }
 }

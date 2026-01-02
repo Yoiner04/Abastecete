@@ -243,6 +243,41 @@
         </div>
     </div>
 
+    <!-- Segunda fila de estadísticas -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <!-- Compartidos -->
+        <div class="bg-white rounded-xl shadow-sm p-5 border border-gray-100">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500 mb-1">Veces compartido</p>
+                    <p class="text-2xl font-bold text-gray-900" id="stat-compartidos">@Model.Estadisticas.TotalCompartidos.ToString("N0")</p>
+                </div>
+                <div class="w-12 h-12 rounded-full bg-pink-100 flex items-center justify-center">
+                    <i class="fas fa-share-alt text-pink-600"></i>
+                </div>
+            </div>
+            <div class="mt-3 text-sm text-gray-400">
+                En Facebook, Twitter, WhatsApp
+            </div>
+        </div>
+
+        <!-- Clics en teléfono -->
+        <div class="bg-white rounded-xl shadow-sm p-5 border border-gray-100">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500 mb-1">Clics en teléfono</p>
+                    <p class="text-2xl font-bold text-gray-900" id="stat-telefono">@Model.Estadisticas.TotalClicsTelefono.ToString("N0")</p>
+                </div>
+                <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+                    <i class="fas fa-phone text-blue-600"></i>
+                </div>
+            </div>
+            <div class="mt-3 text-sm text-gray-400">
+                Llamadas desde tu perfil
+            </div>
+        </div>
+    </div>
+
     <!-- Gráfico y productos más vistos -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Gráfico de visitas -->
@@ -444,7 +479,7 @@
 
             // Dimensiones compactas tipo card (495x195 como GitHub stats)
             canvas.width = 500;
-            canvas.height = 220;
+            canvas.height = 250;
 
             // Fondo oscuro con gradiente sutil
             const bgGrad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
@@ -514,7 +549,8 @@
                 { icon: '👁️', label: 'Visitas al perfil:', value: '@Model.Estadisticas.TotalVisitas.ToString("N0")', color: '#3b82f6' },
                 { icon: '💬', label: 'Clics en WhatsApp:', value: '@Model.Estadisticas.TotalClicsWhatsapp.ToString("N0")', color: '#22c55e' },
                 { icon: '📦', label: 'Vistas de productos:', value: '@Model.Estadisticas.TotalVisitasProductos.ToString("N0")', color: '#a855f7' },
-                { icon: '🔍', label: 'Apariciones en búsqueda:', value: '@Model.Estadisticas.TotalAparicionesBusqueda.ToString("N0")', color: '#f59e0b' }
+                { icon: '🔍', label: 'Apariciones en búsqueda:', value: '@Model.Estadisticas.TotalAparicionesBusqueda.ToString("N0")', color: '#f59e0b' },
+                { icon: '🔗', label: 'Veces compartido:', value: '@Model.Estadisticas.TotalCompartidos.ToString("N0")', color: '#ec4899' }
             ];
 
             const lineHeight = 28;
@@ -548,7 +584,7 @@
             const ringWidth = 6;
 
             // Calcular total para el ring
-            const total = @Model.Estadisticas.TotalVisitas + @Model.Estadisticas.TotalClicsWhatsapp + @Model.Estadisticas.TotalVisitasProductos + @Model.Estadisticas.TotalAparicionesBusqueda;
+            const total = @Model.Estadisticas.TotalVisitas + @Model.Estadisticas.TotalClicsWhatsapp + @Model.Estadisticas.TotalVisitasProductos + @Model.Estadisticas.TotalAparicionesBusqueda + @Model.Estadisticas.TotalCompartidos;
             const maxRing = Math.max(total, 100);
 
             // Fondo del ring
@@ -615,7 +651,9 @@
                 ['Visitas al perfil', '@Model.Estadisticas.TotalVisitas'],
                 ['Clics en WhatsApp', '@Model.Estadisticas.TotalClicsWhatsapp'],
                 ['Vistas de productos', '@Model.Estadisticas.TotalVisitasProductos'],
-                ['Apariciones en búsqueda', '@Model.Estadisticas.TotalAparicionesBusqueda']
+                ['Apariciones en búsqueda', '@Model.Estadisticas.TotalAparicionesBusqueda'],
+                ['Veces compartido', '@Model.Estadisticas.TotalCompartidos'],
+                ['Clics en teléfono', '@Model.Estadisticas.TotalClicsTelefono']
             ];
 
             // Datos diarios del gráfico

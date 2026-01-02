@@ -2,6 +2,8 @@
 
 @{
     Layout = null;
+    ViewData["Title"] = "Iniciar Sesión - Abastecete";
+    ViewData["Description"] = "Inicia sesión en Abastecete para acceder a tu cuenta, gestionar tu negocio y conectar con proveedores locales.";
 }
 
 <!DOCTYPE html>
@@ -9,7 +11,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Iniciar Sesión - Abastecete</title>
+    <title>@ViewData["Title"]</title>
+    <meta name="description" content="@ViewData["Description"]" />
+
+    <!-- SEO Meta Tags -->
+    <meta name="keywords" content="iniciar sesión, login, cuenta, Abastecete, proveedores" />
+    <meta name="author" content="Abastecete" />
+    <meta name="robots" content="noindex, nofollow" />
+    <link rel="canonical" href="@Context.Request.Scheme://@Context.Request.Host/Login" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="@Context.Request.Scheme://@Context.Request.Host/Login" />
+    <meta property="og:title" content="@ViewData["Title"]" />
+    <meta property="og:description" content="@ViewData["Description"]" />
+    <meta property="og:image" content="@Context.Request.Scheme://@Context.Request.Host/images/og-image.webp" />
+    <meta property="og:site_name" content="Abastecete" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="@ViewData["Title"]" />
+    <meta name="twitter:description" content="@ViewData["Description"]" />
+
     <link rel="icon" type="image/png" href="~/images/LOGO%20FINAL.png" />
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/login.css" asp-append-version="true" />

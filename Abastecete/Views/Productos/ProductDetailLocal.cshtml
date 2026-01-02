@@ -11,6 +11,44 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@producto?.Nombre - @Model?.Nombre | Abastecete</title>
+    <meta name="description" content="@producto?.Nombre a $@producto?.Precio en @Model?.Nombre. @(Model?.Descripcion ?? "Compra en Abastecete, tu marketplace de proveedores locales en Florencia, Caquetá.")" />
+    <meta name="keywords" content="@producto?.Nombre, @Model?.Nombre, productos, proveedor, Abastecete, Florencia, Caquetá" />
+    <meta name="author" content="Abastecete" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="@Context.Request.Scheme://@Context.Request.Host/Productos/ProductDetailLocal?idlocal=@Model?.Id&idProducto=@producto?.Id" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="product" />
+    <meta property="og:url" content="@Context.Request.Scheme://@Context.Request.Host/Productos/ProductDetailLocal?idlocal=@Model?.Id&idProducto=@producto?.Id" />
+    <meta property="og:title" content="@producto?.Nombre - @Model?.Nombre | Abastecete" />
+    <meta property="og:description" content="@producto?.Nombre a $@producto?.Precio. @(Model?.Descripcion ?? "Compra en Abastecete")" />
+    <meta property="og:site_name" content="Abastecete" />
+    <meta property="og:locale" content="es_CO" />
+    @if (!string.IsNullOrEmpty(producto?.ImagenUrl))
+    {
+        <meta property="og:image" content="@producto.ImagenUrl" />
+    }
+    else if (!string.IsNullOrWhiteSpace(Model?.imagen?.Base64))
+    {
+        <meta property="og:image" content="@Model.imagen.Base64" />
+    }
+    else
+    {
+        <meta property="og:image" content="@Context.Request.Scheme://@Context.Request.Host/images/og-image.webp" />
+    }
+    <meta property="product:price:amount" content="@producto?.Precio" />
+    <meta property="product:price:currency" content="COP" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="@Context.Request.Scheme://@Context.Request.Host/Productos/ProductDetailLocal?idlocal=@Model?.Id&idProducto=@producto?.Id" />
+    <meta name="twitter:title" content="@producto?.Nombre - @Model?.Nombre" />
+    <meta name="twitter:description" content="@producto?.Nombre a $@producto?.Precio. @(Model?.Descripcion ?? "Compra en Abastecete")" />
+    @if (!string.IsNullOrEmpty(producto?.ImagenUrl))
+    {
+        <meta name="twitter:image" content="@producto.ImagenUrl" />
+    }
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <style>
@@ -62,6 +100,40 @@
 
                 <!-- Acciones rápidas -->
                 <div class="flex items-center gap-2">
+                    @{
+                        var urlCompartirProducto = $"{Context.Request.Scheme}://{Context.Request.Host}/Productos/ProductDetailLocal?idlocal={Model?.Id}&idProducto={producto?.Id}";
+                        var textoCompartirProducto = $"¡Mira {producto?.Nombre} en {Model?.Nombre}! ${producto?.Precio}";
+                    }
+                    <!-- Botón compartir -->
+                    <div class="relative" id="shareProductDropdownContainer">
+                        <button id="shareProductButton"
+                                class="w-10 h-10 rounded-full bg-orange-500 text-white flex items-center justify-center hover:bg-orange-600 transition-colors shadow-lg">
+                            <i class="fas fa-share-alt text-lg"></i>
+                        </button>
+                        <div id="shareProductDropdown" class="hidden absolute right-0 mt-2 w-52 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-50">
+                            <button onclick="AbasteceteTracking.compartirFacebook(@(Model?.Id ?? 0), @(producto?.Id ?? 0), '@urlCompartirProducto')"
+                                    class="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-gray-50 transition-colors">
+                                <i class="fab fa-facebook text-lg text-blue-600"></i>
+                                <span class="text-gray-700 text-sm">Facebook</span>
+                            </button>
+                            <button onclick="AbasteceteTracking.compartirTwitter(@(Model?.Id ?? 0), @(producto?.Id ?? 0), '@urlCompartirProducto', '@textoCompartirProducto')"
+                                    class="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-gray-50 transition-colors">
+                                <i class="fab fa-x-twitter text-lg text-gray-800"></i>
+                                <span class="text-gray-700 text-sm">X (Twitter)</span>
+                            </button>
+                            <button onclick="AbasteceteTracking.compartirWhatsapp(@(Model?.Id ?? 0), @(producto?.Id ?? 0), '@urlCompartirProducto', '@textoCompartirProducto')"
+                                    class="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-gray-50 transition-colors">
+                                <i class="fab fa-whatsapp text-lg text-green-500"></i>
+                                <span class="text-gray-700 text-sm">WhatsApp</span>
+                            </button>
+                            <hr class="my-2 border-gray-100">
+                            <button onclick="AbasteceteTracking.copiarEnlace(@(Model?.Id ?? 0), @(producto?.Id ?? 0), '@urlCompartirProducto')"
+                                    class="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-gray-50 transition-colors">
+                                <i class="fas fa-link text-lg text-gray-500"></i>
+                                <span class="text-gray-700 text-sm">Copiar enlace</span>
+                            </button>
+                        </div>
+                    </div>
                     @if (!string.IsNullOrEmpty(Model?.Whatsapp))
                     {
                         <a href="https://wa.me/57@Model.Whatsapp?text=Hola, me interesa el producto: @producto?.Nombre"
@@ -82,12 +154,12 @@
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-0">
 
                 <!-- Galería de producto -->
-                <div class="relative bg-gradient-to-br from-gray-50 to-gray-100 p-6 lg:p-10">
-                    <div class="aspect-square rounded-2xl overflow-hidden bg-white shadow-inner flex items-center justify-center animate-scaleIn">
+                <div class="relative bg-gradient-to-br from-gray-50 to-gray-100">
+                    <div class="aspect-square overflow-hidden bg-white animate-scaleIn">
                         <img id="main-img"
                              src="@producto?.ImagenUrl"
                              alt="@producto?.Nombre"
-                             class="max-w-full max-h-full object-contain p-4" />
+                             class="w-full h-full object-cover" />
                     </div>
                     <!-- Badge del local -->
                     <div class="absolute top-8 left-8 lg:top-12 lg:left-12">
@@ -372,6 +444,23 @@
         document.addEventListener('DOMContentLoaded', function() {
             if (window.AbasteceteTracking) {
                 AbasteceteTracking.registrarVisitaProducto(@(Model?.Id ?? 0), @(producto?.Id ?? 0));
+            }
+
+            // Dropdown de compartir producto
+            var shareBtn = document.getElementById('shareProductButton');
+            var shareDropdown = document.getElementById('shareProductDropdown');
+
+            if (shareBtn && shareDropdown) {
+                shareBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    shareDropdown.classList.toggle('hidden');
+                });
+
+                document.addEventListener('click', function(e) {
+                    if (!e.target.closest('#shareProductDropdownContainer')) {
+                        shareDropdown.classList.add('hidden');
+                    }
+                });
             }
         });
     </script>
