@@ -238,7 +238,7 @@
     <!-- Skeleton Loader Moderno -->
     <div id="skeleton-principal">
         <div class="flex h-screen">
-            <div class="w-full lg:w-[58%] p-6 space-y-8 overflow-hidden">
+            <div class="w-full xl:w-[58%] p-4 sm:p-6 space-y-6 sm:space-y-8 overflow-hidden">
                 <!-- Categorías skeleton -->
                 <div class="flex gap-4 overflow-hidden">
                     @for(int i = 0; i < 8; i++)
@@ -263,7 +263,7 @@
                     }
                 </div>
             </div>
-            <div class="hidden lg:block lg:w-[42%] shimmer"></div>
+            <div class="hidden xl:block xl:w-[42%] shimmer"></div>
         </div>
     </div>
 
@@ -283,7 +283,7 @@
         <div class="flex min-h-screen">
 
             <!-- Panel Izquierdo: Contenido (58%) -->
-            <div id="content-panel" class="w-full lg:w-[58%] overflow-y-auto bg-[#f7f7f7]">
+            <div id="content-panel" class="w-full xl:w-[58%] overflow-y-auto bg-[#f7f7f7]">
 
                 <!-- Barra de Categorías Sticky -->
                 <div class="sticky top-0 z-20 bg-white border-b border-gray-100">
@@ -293,11 +293,11 @@
                             {
                                 <form method="post" action="@Url.Action("Consultar", "Negocios")" class="flex-shrink-0">
                                     <input type="hidden" name="idCategoria" value="@categoria.Id" />
-                                    <button type="submit" class="group flex flex-col items-center gap-1 px-1 py-2 border-b-2 border-transparent hover:border-gray-900 transition-all">
-                                        <div class="w-6 h-6 flex items-center justify-center opacity-60 group-hover:opacity-100 transition-opacity">
+                                    <button type="submit" class="group flex flex-col items-center gap-1 px-2 py-2 border-b-2 border-transparent hover:border-gray-900 transition-all min-w-[48px]">
+                                        <div class="w-7 h-7 sm:w-6 sm:h-6 flex items-center justify-center opacity-60 group-hover:opacity-100 transition-opacity">
                                             <img src="@(categoria.Imagen?.Base64 ?? "/images/default.webp")" alt="@categoria.Nombre" class="w-full h-full object-contain">
                                         </div>
-                                        <span class="text-[11px] font-medium text-gray-500 group-hover:text-gray-900 whitespace-nowrap transition-colors">@categoria.Nombre</span>
+                                        <span class="text-[10px] sm:text-[11px] font-medium text-gray-500 group-hover:text-gray-900 whitespace-nowrap transition-colors">@categoria.Nombre</span>
                                     </button>
                                 </form>
                             }
@@ -323,7 +323,7 @@
 
                 <!-- Grid de Negocios Estilo Airbnb -->
                 <div class="max-w-5xl mx-auto px-4 pb-8">
-                    <div id="negocios-grid" class="grid grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div id="negocios-grid" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4">
                         <!-- Se llena dinámicamente -->
                     </div>
 
@@ -364,12 +364,12 @@
                             </a>
                         </div>
 
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                             @foreach (var oferta in ofertas)
                             {
                                 <a href="@Url.Action("ConsultarProductos", "Negocios", new { idLocal = oferta.IdLocal })" class="group block">
                                     <div class="bg-white rounded-2xl overflow-hidden shadow-sm card-hover">
-                                        <div class="relative aspect-[16/9] overflow-hidden">
+                                        <div class="relative aspect-video sm:aspect-[16/9] overflow-hidden">
                                             <img src="@oferta.ImagenProductoOfertaFlash" alt="Oferta" class="w-full h-full object-cover img-zoom">
                                             <div class="absolute inset-0 gradient-overlay"></div>
                                             <div class="absolute bottom-3 left-3 right-3">
@@ -411,7 +411,7 @@
                                 </a>
                             </div>
                             <div class="lg:w-80">
-                                <img src="/images/mujer.png" alt="Únete" class="max-h-64 object-contain drop-shadow-2xl">
+                                <img src="/images/mujer.png" alt="Únete" class="max-h-40 sm:max-h-48 lg:max-h-64 object-contain drop-shadow-2xl">
                             </div>
                         </div>
                     </div>
@@ -429,13 +429,13 @@
                 </section>
 
                 <!-- Footer espaciado -->
-                <div class="h-20 lg:hidden"></div>
+                <div class="h-20 xl:hidden"></div>
 
             </div>
             <!-- Fin Panel Izquierdo -->
 
             <!-- Panel Derecho: Mapa (42%) -->
-            <div id="map-panel" class="hidden lg:block lg:w-[42%] fixed right-0 pr-4 transition-all duration-200">
+            <div id="map-panel" class="hidden xl:block xl:w-[42%] fixed right-0 pr-4 transition-all duration-200">
                 <div class="map-container relative w-full h-full shadow-xl border border-gray-200 bg-white">
                     <div id="map" class="w-full h-full"></div>
 
@@ -491,7 +491,7 @@
 
             <!-- Botón Mapa Móvil -->
             <button id="btn-ver-mapa-mobile" onclick="abrirMapaModal()"
-                class="lg:hidden fixed bottom-6 left-1/2 -translate-x-1/2 bg-gray-900 text-white rounded-full px-6 py-3 shadow-2xl z-50 flex items-center gap-2 hover:bg-gray-800 transition-all">
+                class="xl:hidden fixed bottom-6 left-1/2 -translate-x-1/2 bg-gray-900 text-white rounded-full px-5 py-2.5 sm:px-6 sm:py-3 shadow-2xl z-50 flex items-center gap-2 hover:bg-gray-800 transition-all text-sm sm:text-base">
                 <i class="fas fa-map"></i>
                 <span class="font-medium">Mapa</span>
             </button>
@@ -499,7 +499,7 @@
         </div>
 
         <!-- Modal Mapa Móvil -->
-        <div id="modal-mapa" class="fixed inset-0 z-[9999] hidden lg:hidden">
+        <div id="modal-mapa" class="fixed inset-0 z-[9999] hidden xl:hidden">
             <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="cerrarMapaModal()"></div>
             <div class="absolute inset-x-0 bottom-0 h-[85vh] bg-white rounded-t-3xl overflow-hidden shadow-2xl flex flex-col animate-slide-up">
                 <div class="flex items-center justify-between p-4 border-b">

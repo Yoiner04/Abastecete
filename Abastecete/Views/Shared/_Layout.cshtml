@@ -68,7 +68,7 @@
                     <img src="~/images/logo-final.png" alt="Abastecete Logo"
                          class="h-12 lg:h-14 w-auto transition-transform duration-300 group-hover:scale-105">
                 </a>
-                <button id="menu-toggle" class="lg:hidden flex items-center justify-center w-10 h-10 rounded-lg hover:bg-[#23916A]/10 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#23916A]">
+                <button id="menu-toggle" class="lg:hidden flex items-center justify-center w-11 h-11 sm:w-10 sm:h-10 rounded-lg hover:bg-[#23916A]/10 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#23916A]">
                     <i class="fas fa-bars text-xl text-gray-700"></i>
                 </button>
             </div>
@@ -76,7 +76,7 @@
             <!-- Contenedor del menú -->
             <div id="menu-container" class="hidden lg:flex w-full flex-col lg:flex-row items-center gap-4 lg:gap-6">
                 <!-- Barra de búsqueda con autocompletado -->
-                <form id="search-form-md" action="@Url.Action("Index", "Buscador")" method="get" class="w-full lg:w-auto lg:flex-1 lg:max-w-md order-1">
+                <form id="search-form-md" action="@Url.Action("Index", "Buscador")" method="get" class="w-full sm:w-5/6 md:w-auto lg:flex-1 lg:max-w-md order-1 mx-auto lg:mx-0">
                     <div class="relative group">
                         <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
                             <i class="fa fa-search text-gray-400 group-focus-within:text-[#23916A] transition-colors duration-200"></i>
