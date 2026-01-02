@@ -6,8 +6,16 @@ using BusinessLogic.Models;
 using DataAccess;
 using MongoDB.Driver;
 using DataAccess.Interface;
+using Microsoft.AspNetCore.DataProtection;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Configurar Data Protection para persistir las claves
+var keysDirectory = Path.Combine(builder.Environment.ContentRootPath, "keys");
+builder.Services.AddDataProtection()
+    .PersistKeysToFileSystem(new DirectoryInfo(keysDirectory))
+    .SetApplicationName("Abastecete");
+
 builder.Services.AddDistributedMemoryCache();
 
 

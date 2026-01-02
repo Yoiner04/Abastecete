@@ -7,47 +7,8 @@
     ViewData["Title"] = $"{negocio?.Nombre} - Productos en Abastécete";
     ViewData["Description"] = $"Descubre {productCount} productos de {negocio?.Nombre}. {negocio?.Descripcion ?? "Tu proveedor de confianza en Abastécete"}";
 }
-<partial name="_ContactModal" />
-<!DOCTYPE html>
-<html lang="es">
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@ViewData["Title"]</title>
-    <meta name="description" content="@ViewData["Description"]">
-    <meta name="keywords" content="@negocio?.Nombre, productos, @(categoryCount) categorías, proveedor, Abastécete, Florencia, Caquetá">
-    <meta name="author" content="Abastecete" />
-    <meta name="robots" content="index, follow" />
-    <link rel="canonical" href="@Context.Request.Scheme://@Context.Request.Host/Negocios/ConsultarProductos?idLocal=@negocio?.Id" />
-
-    <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="business.business" />
-    <meta property="og:url" content="@Context.Request.Scheme://@Context.Request.Host/Negocios/ConsultarProductos?idLocal=@negocio?.Id" />
-    <meta property="og:title" content="@ViewData["Title"]">
-    <meta property="og:description" content="@ViewData["Description"]">
-    <meta property="og:site_name" content="Abastecete" />
-    <meta property="og:locale" content="es_CO" />
-    @if (!string.IsNullOrWhiteSpace(negocio?.imagen?.Base64))
-    {
-        <meta property="og:image" content="@negocio.imagen.Base64">
-    }
-    else
-    {
-        <meta property="og:image" content="@Context.Request.Scheme://@Context.Request.Host/images/og-image.webp" />
-    }
-
-    <!-- Twitter Card -->
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:url" content="@Context.Request.Scheme://@Context.Request.Host/Negocios/ConsultarProductos?idLocal=@negocio?.Id" />
-    <meta name="twitter:title" content="@ViewData["Title"]">
-    <meta name="twitter:description" content="@ViewData["Description"]">
-    @if (!string.IsNullOrWhiteSpace(negocio?.imagen?.Base64))
-    {
-        <meta name="twitter:image" content="@negocio.imagen.Base64">
-    }
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+@section Styles {
     <style>
         /* Animaciones personalizadas */
         @@keyframes fadeInUp {
@@ -303,11 +264,36 @@
             padding-top: 1.5rem;
             padding-bottom: 1.5rem;
         }
-    </style>
-</head>
 
-<body class="bg-gradient-to-br from-gray-50 via-white to-gray-100 min-h-screen">
-    <!-- SKELETON LOADER -->
+        /* Panel opiniones colapsable */
+        .opiniones-panel {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease-out;
+        }
+        .opiniones-panel.expanded {
+            max-height: 2000px;
+        }
+
+        /* Modal mapa - animación slide desde abajo */
+        .modal-mapa-content {
+            transform: translateY(100%);
+            transition: transform 0.3s ease-out;
+        }
+        .modal-mapa-content.show {
+            transform: translateY(0);
+        }
+        .modal-mapa-overlay {
+            opacity: 0;
+            transition: opacity 0.3s ease-out;
+        }
+        .modal-mapa-overlay.show {
+            opacity: 1;
+        }
+    </style>
+}
+
+<!-- SKELETON LOADER -->
     <div id="skeleton-productos" class="animate-pulse">
         <!-- Header Skeleton -->
         <div class="relative w-full overflow-hidden">
@@ -736,6 +722,31 @@
                         }
                     </div>
 
+                    <!-- Mapa - Solo escritorio -->
+                    @if (!string.IsNullOrEmpty(negocio?.Localizacion))
+                    {
+                        <div class="hidden md:block mt-6 pt-6 border-t border-gray-100">
+                            <h4 class="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                                <i class="fas fa-map-marked-alt text-green-500"></i> Ubicación en el mapa
+                            </h4>
+                            <div class="rounded-xl overflow-hidden shadow-sm border border-gray-200">
+                                <div id="desktopMap" class="w-full h-64 bg-gray-100"></div>
+                                <div class="p-3 bg-gray-50 flex items-center justify-between">
+                                    <div class="flex items-center gap-2 text-sm text-gray-600">
+                                        <i class="fas fa-map-marker-alt text-red-500"></i>
+                                        <span>@(negocio?.Direccion ?? "Florencia, Caquetá")</span>
+                                    </div>
+                                    <a href="https://www.google.com/maps/dir/?api=1&destination=@negocio?.Localizacion"
+                                       target="_blank"
+                                       class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-green-600 text-white text-sm font-medium hover:bg-green-700 transition-colors">
+                                        <i class="fas fa-directions"></i>
+                                        Cómo llegar
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    }
+
                     <!-- Galería -->
                     @{
                         var galeria = negocio?.Galeria ?? new List<BusinessLogic.Models.GaleriaLocal>();
@@ -767,37 +778,9 @@
                         </div>
                     }
 
-                    <!-- Mini mapa - Mostrar primero si hay ubicación -->
-                    @if (!string.IsNullOrEmpty(negocio?.Localizacion))
-                    {
-                        <div class="mt-6">
-                            <h4 class="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                                <i class="fas fa-map-marked-alt text-green-500"></i> Ubicación en el mapa
-                            </h4>
-                            <div class="rounded-2xl overflow-hidden border border-gray-200 shadow-sm">
-                                <div id="miniMap" class="h-64 w-full bg-gray-100"></div>
-                                <div class="bg-gray-50 px-4 py-3 flex items-center justify-between">
-                                    <span class="text-sm text-gray-600">
-                                        <i class="fas fa-map-marker-alt text-red-500 mr-1"></i>
-                                        @(negocio?.Direccion ?? "Ver ubicación")
-                                    </span>
-                                    <a href="https://www.google.com/maps?q=@negocio?.Localizacion"
-                                       target="_blank"
-                                       class="inline-flex items-center gap-1 text-sm font-medium text-green-600 hover:text-green-700">
-                                        <i class="fas fa-external-link-alt"></i> Abrir en Google Maps
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    }
-
                 </div>
             </div>
 
-            <!-- Opiniones y Reseñas - Fuera del panel expandible para que siempre sea visible -->
-            <div class="bg-white rounded-2xl shadow-xl p-6 sm:p-8 border border-gray-100 mt-6">
-                @await Html.PartialAsync("_OpinionesLocal", negocio?.Id ?? 0)
-            </div>
         </div>
     </header>
 
@@ -1028,6 +1011,32 @@
                 </div>
             </section>
         </div>
+
+
+        <!-- Opiniones y Reseñas - Colapsable -->
+        <div class="mt-8 animate-fadeInUp">
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                <!-- Header colapsable -->
+                <button id="toggleOpiniones" class="w-full p-4 sm:p-6 flex items-center justify-between hover:bg-gray-50 transition-colors">
+                    <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center shadow-lg shadow-orange-500/30">
+                            <i class="fas fa-star text-white text-xl"></i>
+                        </div>
+                        <div class="text-left">
+                            <h3 class="text-lg font-bold text-gray-900">Opiniones y Reseñas</h3>
+                            <p class="text-sm text-gray-500">Conoce lo que dicen nuestros clientes</p>
+                        </div>
+                    </div>
+                    <i class="fas fa-chevron-down text-gray-400 text-lg transition-transform duration-300" id="toggleOpinionesIcon"></i>
+                </button>
+                <!-- Contenido colapsable -->
+                <div id="opinionesPanel" class="opiniones-panel">
+                    <div class="px-4 sm:px-6 pb-6">
+                        @await Html.PartialAsync("_OpinionesLocal", negocio?.Id ?? 0)
+                    </div>
+                </div>
+            </div>
+        </div>
     </main>
 
     <!-- Botón flotante de WhatsApp -->
@@ -1056,6 +1065,54 @@
             <i class="fab fa-whatsapp text-3xl relative z-10"></i>
         </a>
     </div>
+
+    <!-- Botón flotante Cómo Llegar - Solo móvil -->
+    @if (!string.IsNullOrEmpty(negocio?.Localizacion))
+    {
+        <button id="btn-como-llegar" onclick="abrirMapaModal()"
+                class="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 bg-gray-900 text-white rounded-full px-6 py-3 shadow-2xl z-[9998] flex items-center gap-2 hover:bg-gray-800 transition-all hover:scale-105">
+            <i class="fas fa-map-marker-alt"></i>
+            <span class="font-medium">Cómo llegar</span>
+        </button>
+
+        <!-- Modal Mapa - Desplegable desde abajo con animación -->
+        <div id="modal-mapa" class="fixed inset-0 z-[9999] hidden">
+            <div id="modal-mapa-overlay" class="modal-mapa-overlay absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="cerrarMapaModal()"></div>
+            <div id="modal-mapa-content" class="modal-mapa-content absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl overflow-hidden" style="max-height: 85vh;">
+                <!-- Handle para arrastrar -->
+                <div class="flex justify-center pt-3 pb-2">
+                    <div class="w-12 h-1.5 bg-gray-300 rounded-full"></div>
+                </div>
+                <!-- Header del modal -->
+                <div class="flex items-center justify-between px-4 pb-3">
+                    <h3 class="font-bold text-lg">Cómo llegar</h3>
+                    <button onclick="cerrarMapaModal()" class="w-10 h-10 rounded-full hover:bg-gray-100 flex items-center justify-center transition-colors">
+                        <i class="fas fa-times text-xl text-gray-500"></i>
+                    </button>
+                </div>
+                <!-- Mapa -->
+                <div id="miniMap" class="w-full bg-gray-100" style="height: 50vh;"></div>
+                <!-- Footer con info y botón -->
+                <div class="p-4 border-t border-gray-200 bg-white">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center flex-shrink-0">
+                            <i class="fas fa-map-marker-alt text-white"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <h4 class="font-semibold text-gray-900 truncate">@negocio?.Nombre</h4>
+                            <p class="text-sm text-gray-500 truncate">@(negocio?.Direccion ?? "Florencia, Caquetá")</p>
+                        </div>
+                    </div>
+                    <a href="https://www.google.com/maps/dir/?api=1&destination=@negocio?.Localizacion"
+                       target="_blank"
+                       class="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300">
+                        <i class="fas fa-directions"></i>
+                        <span>Abrir en Google Maps</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    }
 
     <!-- Lightbox para galería -->
     <div id="lightbox" class="fixed inset-0 z-[60] hidden bg-black/90 items-center justify-center" onclick="cerrarLightbox(event)">
@@ -1091,6 +1148,7 @@
         </div>
     }
 
+@section Scripts {
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
         $(document).ready(function () {
@@ -1320,12 +1378,20 @@
                 panel.toggleClass('expanded');
                 icon.toggleClass('rotate-180');
 
-                // Inicializar mapa si se expande por primera vez (con delay para que el contenedor tenga dimensiones)
-                if (panel.hasClass('expanded') && !window.miniMapInitialized) {
+                // Inicializar mapa de escritorio si el panel se expande y no está inicializado
+                if (panel.hasClass('expanded') && !window.desktopMapInitialized) {
                     setTimeout(function() {
-                        initMiniMap();
-                    }, 400);
+                        initDesktopMap();
+                    }, 300);
                 }
+            });
+
+            // --- Panel de opiniones colapsable ---
+            $('#toggleOpiniones').on('click', function() {
+                const panel = $('#opinionesPanel');
+                const icon = $('#toggleOpinionesIcon');
+                panel.toggleClass('expanded');
+                icon.toggleClass('rotate-180');
             });
 
             // --- Dropdown de compartir ---
@@ -1342,20 +1408,21 @@
             });
         });
 
-        // --- Mini Mapa ---
+        // --- Mapas ---
         window.miniMapInitialized = false;
+        window.desktopMapInitialized = false;
 
-        function initMiniMap() {
-            const mapElement = document.getElementById('miniMap');
+        function initMap(elementId, onSuccess) {
+            const mapElement = document.getElementById(elementId);
             if (!mapElement) {
-                console.log('[MAPA] Elemento miniMap no encontrado');
+                console.log('[MAPA] Elemento ' + elementId + ' no encontrado');
                 return;
             }
 
             // Verificar si Google Maps está cargado
             if (typeof google === 'undefined' || typeof google.maps === 'undefined') {
                 console.log('[MAPA] Google Maps no está cargado, reintentando en 500ms...');
-                setTimeout(initMiniMap, 500);
+                setTimeout(function() { initMap(elementId, onSuccess); }, 500);
                 return;
             }
 
@@ -1406,21 +1473,30 @@
                     }
                 });
 
-                window.miniMapInitialized = true;
-                console.log('[MAPA] Mapa inicializado correctamente');
+                if (onSuccess) onSuccess();
+                console.log('[MAPA] Mapa ' + elementId + ' inicializado correctamente');
             } catch (error) {
                 console.error('[MAPA] Error al inicializar:', error);
                 mapElement.innerHTML = '<div class="flex items-center justify-center h-full text-gray-500"><i class="fas fa-exclamation-triangle mr-2"></i>Error al cargar el mapa</div>';
             }
         }
 
+        function initMiniMap() {
+            initMap('miniMap', function() {
+                window.miniMapInitialized = true;
+            });
+        }
+
+        function initDesktopMap() {
+            initMap('desktopMap', function() {
+                window.desktopMapInitialized = true;
+            });
+        }
+
         // Callback para cuando Google Maps termine de cargar
         window.initGoogleMapsCallback = function() {
             console.log('[MAPA] Google Maps API cargada');
-            // Si el panel ya está expandido, inicializar el mapa
-            if ($('#infoPanel').hasClass('expanded') && !window.miniMapInitialized) {
-                initMiniMap();
-            }
+            // El mapa se inicializará cuando se abra el panel o modal
         };
 
         // --- Funciones de Galería ---
@@ -1462,8 +1538,52 @@
             if (e.key === 'Escape') {
                 cerrarLightbox();
                 cerrarModalGaleria();
+                cerrarMapaModal();
             }
         });
+
+        // --- Modal Mapa con animación ---
+        function abrirMapaModal() {
+            const modal = document.getElementById('modal-mapa');
+            const overlay = document.getElementById('modal-mapa-overlay');
+            const content = document.getElementById('modal-mapa-content');
+
+            if (modal) {
+                modal.classList.remove('hidden');
+                document.body.classList.add('overflow-hidden');
+
+                // Trigger animation after display
+                setTimeout(function() {
+                    overlay.classList.add('show');
+                    content.classList.add('show');
+                }, 10);
+
+                // Inicializar mapa si no está inicializado
+                setTimeout(function() {
+                    if (!window.miniMapInitialized) {
+                        initMiniMap();
+                    }
+                }, 150);
+            }
+        }
+
+        function cerrarMapaModal() {
+            const modal = document.getElementById('modal-mapa');
+            const overlay = document.getElementById('modal-mapa-overlay');
+            const content = document.getElementById('modal-mapa-content');
+
+            if (modal) {
+                // Remove animation classes first
+                overlay.classList.remove('show');
+                content.classList.remove('show');
+
+                // Hide modal after animation completes
+                setTimeout(function() {
+                    modal.classList.add('hidden');
+                    document.body.classList.remove('overflow-hidden');
+                }, 300);
+            }
+        }
     </script>
     @if (!string.IsNullOrEmpty(negocio?.Localizacion))
     {
@@ -1502,6 +1622,4 @@
             }
         });
     </script>
-</body>
-
-</html>
+}
