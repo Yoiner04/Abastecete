@@ -89,13 +89,79 @@
         .gradient-overlay {
             background: linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.6) 100%);
         }
-        /* Mapa con borde redondeado interior */
-        #map {
-            border-radius: 0;
+        /* Mapa con borde redondeado - forzar en todos los elementos internos */
+        #map, #map > div, #map iframe, #map .gm-style > div:first-child {
+            border-radius: 16px !important;
+        }
+        /* Contenedor del mapa con clip para forzar bordes */
+        .map-container {
+            border-radius: 16px;
+            overflow: hidden;
+            -webkit-mask-image: -webkit-radial-gradient(white, black);
+            mask-image: radial-gradient(white, black);
+        }
+        /* Loader de filtrado */
+        .filter-loader {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 16px 24px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 100;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            pointer-events: none;
+        }
+        .filter-loader.visible {
+            opacity: 1;
+        }
+        .filter-loader .spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f0f0f0;
+            border-top-color: #F66623;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @@keyframes spin {
+            to { transform: rotate(360deg); }
         }
         /* Card seleccionada */
         .card-selected {
             box-shadow: 0 0 0 2px #F66623, 0 12px 40px rgba(246,102,35,0.2) !important;
+        }
+        /* Animación de entrada para cards */
+        .negocio-card {
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.4s ease-out forwards;
+        }
+        @@keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        /* Delay escalonado para cada card */
+        .negocio-card:nth-child(1) { animation-delay: 0.05s; }
+        .negocio-card:nth-child(2) { animation-delay: 0.1s; }
+        .negocio-card:nth-child(3) { animation-delay: 0.15s; }
+        .negocio-card:nth-child(4) { animation-delay: 0.2s; }
+        .negocio-card:nth-child(5) { animation-delay: 0.25s; }
+        .negocio-card:nth-child(6) { animation-delay: 0.3s; }
+        /* Transición suave del grid */
+        #negocios-grid {
+            transition: opacity 0.3s ease;
+        }
+        /* Contador con animación */
+        #contador-negocios {
+            transition: all 0.3s ease;
         }
     </style>
 </head>
@@ -302,12 +368,15 @@
             <!-- Fin Panel Izquierdo -->
 
             <!-- Panel Derecho: Mapa (42%) -->
-            <div id="map-panel" class="hidden lg:block lg:w-[42%] fixed right-0 top-4 bottom-4 pr-4">
-                <div class="relative w-full h-full rounded-2xl overflow-hidden shadow-xl border border-gray-200 bg-white">
+            <div id="map-panel" class="hidden lg:block lg:w-[42%] fixed right-0 pr-4 transition-all duration-200">
+                <div class="map-container relative w-full h-full shadow-xl border border-gray-200 bg-white">
                     <div id="map" class="w-full h-full"></div>
 
-                    <!-- Overlay superior con gradiente -->
-                    <div class="absolute top-0 left-0 right-0 h-20 bg-gradient-to-b from-black/20 to-transparent pointer-events-none rounded-t-2xl"></div>
+                    <!-- Loader de filtrado -->
+                    <div id="filter-loader" class="filter-loader">
+                        <div class="spinner"></div>
+                        <span class="text-sm font-medium text-gray-700">Actualizando...</span>
+                    </div>
 
                     <!-- Contador de negocios en el mapa -->
                     <div class="absolute top-4 left-4 bg-white/95 backdrop-blur-sm rounded-full px-4 py-2 shadow-lg flex items-center gap-2">
@@ -409,8 +478,57 @@
                 document.getElementById('content-principal').classList.remove('hidden');
                 renderizarNegocios(negocios);
                 inicializarProveedores();
+                ajustarPosicionMapa(); // Posicionar mapa inicialmente
             }, 400);
+
+            // Escuchar scroll para ajustar mapa antes del footer
+            window.addEventListener('scroll', ajustarPosicionMapa);
+            window.addEventListener('resize', ajustarPosicionMapa);
         });
+
+        // Ajustar posición del mapa para que no pase del header ni del footer
+        function ajustarPosicionMapa() {
+            const mapPanel = document.getElementById('map-panel');
+            if (!mapPanel || window.innerWidth < 1024) return;
+
+            // Obtener el header
+            const header = document.querySelector('header#header, header, nav.fixed');
+            const headerHeight = header ? header.getBoundingClientRect().bottom : 90;
+
+            // Buscar el footer (bg-gray-900 es la clase del footer)
+            const footer = document.querySelector('footer.bg-gray-900, footer, .mt-10.bg-gray-900');
+
+            const viewportHeight = window.innerHeight;
+
+            // El mapa empieza después del header con margen
+            const mapTop = Math.max(headerHeight + 12, 100);
+
+            // Calcular bottom basado en si el footer es visible
+            let mapBottom = 20; // Por defecto 20px del borde inferior
+
+            if (footer) {
+                const footerRect = footer.getBoundingClientRect();
+                // Si el footer está visible en el viewport
+                if (footerRect.top < viewportHeight) {
+                    // El mapa debe terminar antes del footer
+                    mapBottom = viewportHeight - footerRect.top + 20;
+                }
+            }
+
+            // Aplicar estilos
+            mapPanel.style.top = mapTop + 'px';
+            mapPanel.style.bottom = mapBottom + 'px';
+
+            // Verificar que el mapa tenga altura mínima razonable
+            const mapHeight = viewportHeight - mapTop - mapBottom;
+            if (mapHeight < 200) {
+                mapPanel.style.opacity = '0';
+                mapPanel.style.pointerEvents = 'none';
+            } else {
+                mapPanel.style.opacity = '1';
+                mapPanel.style.pointerEvents = 'auto';
+            }
+        }
 
         // Google Maps
         function initMap() {
@@ -428,7 +546,7 @@
 
             infoWindow = new google.maps.InfoWindow();
             agregarMarcadores(map, markers);
-            map.addListener('idle', () => filtrarPorAreaVisible(map));
+            map.addListener('idle', () => filtrarConDebounce(map));
 
             if (negocios.length > 0) {
                 ajustarZoom(map);
@@ -448,7 +566,25 @@
             });
 
             agregarMarcadores(mapMobile, markersMobile);
-            mapMobile.addListener('idle', () => filtrarPorAreaVisible(mapMobile));
+            mapMobile.addListener('idle', () => filtrarConDebounce(mapMobile));
+        }
+
+        // Debounce para suavizar el filtrado
+        let filtroTimeout = null;
+        function filtrarConDebounce(mapInstance) {
+            if (filtroTimeout) clearTimeout(filtroTimeout);
+
+            // Mostrar loader
+            const loader = document.getElementById('filter-loader');
+            if (loader) loader.classList.add('visible');
+
+            filtroTimeout = setTimeout(() => {
+                filtrarPorAreaVisible(mapInstance);
+                // Ocultar loader después de un momento
+                setTimeout(() => {
+                    if (loader) loader.classList.remove('visible');
+                }, 300);
+            }, 200);
         }
 
         function getMapStyles() {
@@ -636,24 +772,35 @@
             return ubicacion;
         }
 
-        // Renderizar cards estilo Airbnb
+        // Renderizar cards estilo Airbnb con transición suave
         function renderizarNegocios(lista) {
             const grid = document.getElementById('negocios-grid');
             const noMsg = document.getElementById('no-negocios-msg');
             const contador = document.getElementById('contador-negocios');
 
+            // Animar el contador
             contador.textContent = lista.length;
 
             if (lista.length === 0) {
-                grid.classList.add('hidden');
-                noMsg.classList.remove('hidden');
+                // Fade out del grid antes de ocultarlo
+                grid.style.opacity = '0';
+                setTimeout(() => {
+                    grid.classList.add('hidden');
+                    noMsg.classList.remove('hidden');
+                    noMsg.style.opacity = '0';
+                    setTimeout(() => noMsg.style.opacity = '1', 50);
+                }, 200);
                 return;
             }
 
-            grid.classList.remove('hidden');
             noMsg.classList.add('hidden');
+            grid.classList.remove('hidden');
 
-            grid.innerHTML = lista.map(negocio => `
+            // Fade out -> actualizar -> fade in
+            grid.style.opacity = '0.3';
+
+            setTimeout(() => {
+                grid.innerHTML = lista.map(negocio => `
                 <div id="negocio-${negocio.Id}"
                      class="negocio-card group cursor-pointer card-hover"
                      onclick="verNegocio(${negocio.Id})"
@@ -697,6 +844,12 @@
                     </div>
                 </div>
             `).join('');
+
+                // Fade in después de actualizar
+                requestAnimationFrame(() => {
+                    grid.style.opacity = '1';
+                });
+            }, 100);
         }
 
         function resaltarNegocio(id) {
