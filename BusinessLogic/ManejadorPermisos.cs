@@ -36,6 +36,47 @@ namespace BusinessLogic
         }
 
         /// <summary>
+        /// Obtiene los permisos de múltiples membresías en una sola consulta (optimización N+1)
+        /// </summary>
+        public Dictionary<int, List<PermisoSistema>> ObtenerPermisosMembresiaBulk(List<int> idsTipoMembresia)
+        {
+            var resultado = new Dictionary<int, List<PermisoSistema>>();
+
+            if (idsTipoMembresia == null || idsTipoMembresia.Count == 0)
+                return resultado;
+
+            string idsString = string.Join(",", idsTipoMembresia);
+            List<Parametro> parametros = new List<Parametro>()
+            {
+                new Parametro("p_ids_membresias", idsString)
+            };
+
+            DataTable data = conexion.EjecutarConsulta("obtener_permisos_membresias_bulk", parametros);
+
+            foreach (DataRow row in data.AsEnumerable())
+            {
+                int idMembresia = Convert.ToInt32(row["FK_ID_TIPO_MEMBRESIA"]);
+
+                if (!resultado.ContainsKey(idMembresia))
+                    resultado[idMembresia] = new List<PermisoSistema>();
+
+                resultado[idMembresia].Add(new PermisoSistema()
+                {
+                    Id = Convert.ToInt32(row["PK_ID_PERMISO"]),
+                    Codigo = row["CODIGO"]?.ToString() ?? "",
+                    Nombre = row["NOMBRE"]?.ToString() ?? "",
+                    Descripcion = row["DESCRIPCION"]?.ToString() ?? "",
+                    Icono = row["ICONO"]?.ToString() ?? "fa-check",
+                    Categoria = row["CATEGORIA"]?.ToString() ?? "",
+                    Orden = Convert.ToInt32(row["ORDEN"]),
+                    Estado = true
+                });
+            }
+
+            return resultado;
+        }
+
+        /// <summary>
         /// Obtiene los permisos efectivos de un usuario
         /// </summary>
         public List<PermisoSistema> ObtenerPermisosUsuario(int idUsuario)

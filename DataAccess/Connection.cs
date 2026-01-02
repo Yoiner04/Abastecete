@@ -229,6 +229,147 @@ namespace DataAccess
             }
         }
 
+        /// <summary>
+        /// Ejecuta un SP con parámetros OUTPUT para resultado y mensaje
+        /// </summary>
+        public (int Id, string Mensaje) EjecutarConOutput(string procedimiento, List<Parametro>? parametros = null)
+        {
+            using (var connection = CrearConexion())
+            {
+                try
+                {
+                    connection.Open();
+                    using (var comando = new MySqlCommand(procedimiento, connection))
+                    {
+                        comando.CommandType = CommandType.StoredProcedure;
+
+                        if (parametros != null)
+                        {
+                            foreach (var param in parametros)
+                            {
+                                if (param.Nombre == "mensaje")
+                                {
+                                    var pMensaje = new MySqlParameter("mensaje", MySqlDbType.VarChar, 255)
+                                    {
+                                        Direction = ParameterDirection.Output
+                                    };
+                                    comando.Parameters.Add(pMensaje);
+                                }
+                                else if (param.Nombre == "resultado")
+                                {
+                                    var pResultado = new MySqlParameter("resultado", MySqlDbType.Int32)
+                                    {
+                                        Direction = ParameterDirection.Output
+                                    };
+                                    comando.Parameters.Add(pResultado);
+                                }
+                                else if (param.Nombre == "public_id")
+                                {
+                                    var pPublicId = new MySqlParameter("public_id", MySqlDbType.VarChar, 255)
+                                    {
+                                        Direction = ParameterDirection.Output
+                                    };
+                                    comando.Parameters.Add(pPublicId);
+                                }
+                                else
+                                {
+                                    comando.Parameters.AddWithValue(param.Nombre, param.Valor ?? DBNull.Value);
+                                }
+                            }
+                        }
+
+                        comando.ExecuteNonQuery();
+
+                        var mensaje = comando.Parameters.Contains("mensaje")
+                            ? comando.Parameters["mensaje"].Value?.ToString() ?? ""
+                            : "";
+                        var id = comando.Parameters.Contains("resultado")
+                            ? Convert.ToInt32(comando.Parameters["resultado"].Value ?? 0)
+                            : 0;
+
+                        return (id, mensaje);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error en EjecutarConOutput: {ex.Message}");
+                    return (0, $"Error: {ex.Message}");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Ejecuta un SP con parámetros OUTPUT incluyendo public_id (para eliminar banners)
+        /// </summary>
+        public (int Resultado, string Mensaje, string? PublicId) EjecutarConOutputPublicId(string procedimiento, List<Parametro>? parametros = null)
+        {
+            using (var connection = CrearConexion())
+            {
+                try
+                {
+                    connection.Open();
+                    using (var comando = new MySqlCommand(procedimiento, connection))
+                    {
+                        comando.CommandType = CommandType.StoredProcedure;
+
+                        if (parametros != null)
+                        {
+                            foreach (var param in parametros)
+                            {
+                                if (param.Nombre == "mensaje")
+                                {
+                                    var pMensaje = new MySqlParameter("mensaje", MySqlDbType.VarChar, 255)
+                                    {
+                                        Direction = ParameterDirection.Output
+                                    };
+                                    comando.Parameters.Add(pMensaje);
+                                }
+                                else if (param.Nombre == "resultado")
+                                {
+                                    var pResultado = new MySqlParameter("resultado", MySqlDbType.Int32)
+                                    {
+                                        Direction = ParameterDirection.Output
+                                    };
+                                    comando.Parameters.Add(pResultado);
+                                }
+                                else if (param.Nombre == "public_id")
+                                {
+                                    var pPublicId = new MySqlParameter("public_id", MySqlDbType.VarChar, 255)
+                                    {
+                                        Direction = ParameterDirection.Output
+                                    };
+                                    comando.Parameters.Add(pPublicId);
+                                }
+                                else
+                                {
+                                    comando.Parameters.AddWithValue(param.Nombre, param.Valor ?? DBNull.Value);
+                                }
+                            }
+                        }
+
+                        comando.ExecuteNonQuery();
+
+                        var mensaje = comando.Parameters.Contains("mensaje")
+                            ? comando.Parameters["mensaje"].Value?.ToString() ?? ""
+                            : "";
+                        var resultado = comando.Parameters.Contains("resultado")
+                            ? Convert.ToInt32(comando.Parameters["resultado"].Value ?? 0)
+                            : 0;
+                        var publicId = comando.Parameters.Contains("public_id")
+                            ? comando.Parameters["public_id"].Value?.ToString()
+                            : null;
+
+                        return (resultado, mensaje, publicId);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error en EjecutarConOutputPublicId: {ex.Message}");
+                    return (0, $"Error: {ex.Message}", null);
+                }
+            }
+        }
+
         public bool EjecutarTransacciones(List<Transaccion> transacciones)
         {
             if (transacciones == null || transacciones.Count == 0)

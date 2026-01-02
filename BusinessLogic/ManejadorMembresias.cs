@@ -214,14 +214,21 @@ namespace BusinessLogic
         }
 
         /// <summary>
-        /// Obtiene todas las membresías con sus permisos completos
+        /// Obtiene todas las membresías con sus permisos completos (optimizado - 1 sola consulta)
         /// </summary>
         public List<Membresia> ObtenerMembresiasConPermisos()
         {
             var membresias = ObtenerTodasMembresias();
+
+            // Obtener todos los permisos en una sola consulta (evita N+1)
+            var idsMembresias = membresias.Select(m => m.Id).ToList();
+            var permisosPorMembresia = manejadorPermisos.ObtenerPermisosMembresiaBulk(idsMembresias);
+
             foreach (var membresia in membresias)
             {
-                membresia.Permisos = manejadorPermisos.ObtenerPermisosMembresia(membresia.Id);
+                membresia.Permisos = permisosPorMembresia.TryGetValue(membresia.Id, out var permisos)
+                    ? permisos
+                    : new List<PermisoSistema>();
                 membresia.TotalPermisos = membresia.Permisos.Count;
             }
             return membresias;

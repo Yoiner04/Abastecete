@@ -50,8 +50,14 @@ namespace Abastecete.Controllers
             if (!string.IsNullOrEmpty(nombre))
             {
                 // Sistema antiguo: filtrar por nombre de categoría
-                membresias = manejadorMembresias.ConsultarMembresias(nombre);
-                ViewBag.nombre = "/images/" + nombre + ".png";
+                // Sanitizar nombre para prevenir path traversal
+                var nombreSanitizado = System.IO.Path.GetFileName(nombre);
+                if (nombreSanitizado != nombre || nombre.Contains(".."))
+                {
+                    return BadRequest("Nombre inválido");
+                }
+                membresias = manejadorMembresias.ConsultarMembresias(nombreSanitizado);
+                ViewBag.nombre = "/images/" + nombreSanitizado + ".png";
             }
             else
             {

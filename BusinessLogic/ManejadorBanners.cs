@@ -122,59 +122,7 @@ namespace BusinessLogic
                 new Parametro("resultado", DBNull.Value)
             };
 
-            // Necesitamos un método que retorne los valores de salida
-            return EjecutarCrearBanner(parametros);
-        }
-
-        private (int Id, string Mensaje) EjecutarCrearBanner(List<Parametro> parametros)
-        {
-            using (var connection = new MySql.Data.MySqlClient.MySqlConnection("server=167.71.91.199; database=abastecete; user=bd_abastecete; password=root_abastecete; port=3306"))
-            {
-                try
-                {
-                    connection.Open();
-                    using (var comando = new MySql.Data.MySqlClient.MySqlCommand("crear_banner", connection))
-                    {
-                        comando.CommandType = CommandType.StoredProcedure;
-
-                        foreach (var param in parametros)
-                        {
-                            if (param.Nombre == "mensaje")
-                            {
-                                var pMensaje = new MySql.Data.MySqlClient.MySqlParameter("mensaje", MySql.Data.MySqlClient.MySqlDbType.VarChar, 255)
-                                {
-                                    Direction = ParameterDirection.Output
-                                };
-                                comando.Parameters.Add(pMensaje);
-                            }
-                            else if (param.Nombre == "resultado")
-                            {
-                                var pResultado = new MySql.Data.MySqlClient.MySqlParameter("resultado", MySql.Data.MySqlClient.MySqlDbType.Int32)
-                                {
-                                    Direction = ParameterDirection.Output
-                                };
-                                comando.Parameters.Add(pResultado);
-                            }
-                            else
-                            {
-                                comando.Parameters.AddWithValue(param.Nombre, param.Valor);
-                            }
-                        }
-
-                        comando.ExecuteNonQuery();
-
-                        var mensaje = comando.Parameters["mensaje"].Value?.ToString() ?? "";
-                        var id = Convert.ToInt32(comando.Parameters["resultado"].Value ?? 0);
-
-                        return (id, mensaje);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"❌ Error creando banner: {ex.Message}");
-                    return (0, $"Error: {ex.Message}");
-                }
-            }
+            return conexion.EjecutarConOutput("crear_banner", parametros);
         }
 
         /// <summary>
@@ -182,45 +130,17 @@ namespace BusinessLogic
         /// </summary>
         public (bool Success, string Mensaje) ActualizarBanner(int id, string cloudinaryUrl, string cloudinaryPublicId)
         {
-            using (var connection = new MySql.Data.MySqlClient.MySqlConnection("server=167.71.91.199; database=abastecete; user=bd_abastecete; password=root_abastecete; port=3306"))
+            var parametros = new List<Parametro>
             {
-                try
-                {
-                    connection.Open();
-                    using (var comando = new MySql.Data.MySqlClient.MySqlCommand("actualizar_banner", connection))
-                    {
-                        comando.CommandType = CommandType.StoredProcedure;
+                new Parametro("p_id", id),
+                new Parametro("p_cloudinary_url", cloudinaryUrl),
+                new Parametro("p_cloudinary_public_id", cloudinaryPublicId),
+                new Parametro("mensaje", DBNull.Value),
+                new Parametro("resultado", DBNull.Value)
+            };
 
-                        comando.Parameters.AddWithValue("p_id", id);
-                        comando.Parameters.AddWithValue("p_cloudinary_url", cloudinaryUrl);
-                        comando.Parameters.AddWithValue("p_cloudinary_public_id", cloudinaryPublicId);
-
-                        var pMensaje = new MySql.Data.MySqlClient.MySqlParameter("mensaje", MySql.Data.MySqlClient.MySqlDbType.VarChar, 255)
-                        {
-                            Direction = ParameterDirection.Output
-                        };
-                        comando.Parameters.Add(pMensaje);
-
-                        var pResultado = new MySql.Data.MySqlClient.MySqlParameter("resultado", MySql.Data.MySqlClient.MySqlDbType.Int32)
-                        {
-                            Direction = ParameterDirection.Output
-                        };
-                        comando.Parameters.Add(pResultado);
-
-                        comando.ExecuteNonQuery();
-
-                        var mensaje = comando.Parameters["mensaje"].Value?.ToString() ?? "";
-                        var resultado = Convert.ToInt32(comando.Parameters["resultado"].Value ?? 0);
-
-                        return (resultado == 1, mensaje);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"❌ Error actualizando banner: {ex.Message}");
-                    return (false, $"Error: {ex.Message}");
-                }
-            }
+            var (resultado, mensaje) = conexion.EjecutarConOutput("actualizar_banner", parametros);
+            return (resultado == 1, mensaje);
         }
 
         /// <summary>
@@ -228,50 +148,16 @@ namespace BusinessLogic
         /// </summary>
         public (bool Success, string Mensaje, string? PublicId) EliminarBanner(int id)
         {
-            using (var connection = new MySql.Data.MySqlClient.MySqlConnection("server=167.71.91.199; database=abastecete; user=bd_abastecete; password=root_abastecete; port=3306"))
+            var parametros = new List<Parametro>
             {
-                try
-                {
-                    connection.Open();
-                    using (var comando = new MySql.Data.MySqlClient.MySqlCommand("eliminar_banner", connection))
-                    {
-                        comando.CommandType = CommandType.StoredProcedure;
+                new Parametro("p_id", id),
+                new Parametro("mensaje", DBNull.Value),
+                new Parametro("resultado", DBNull.Value),
+                new Parametro("public_id", DBNull.Value)
+            };
 
-                        comando.Parameters.AddWithValue("p_id", id);
-
-                        var pMensaje = new MySql.Data.MySqlClient.MySqlParameter("mensaje", MySql.Data.MySqlClient.MySqlDbType.VarChar, 255)
-                        {
-                            Direction = ParameterDirection.Output
-                        };
-                        comando.Parameters.Add(pMensaje);
-
-                        var pResultado = new MySql.Data.MySqlClient.MySqlParameter("resultado", MySql.Data.MySqlClient.MySqlDbType.Int32)
-                        {
-                            Direction = ParameterDirection.Output
-                        };
-                        comando.Parameters.Add(pResultado);
-
-                        var pPublicId = new MySql.Data.MySqlClient.MySqlParameter("public_id", MySql.Data.MySqlClient.MySqlDbType.VarChar, 255)
-                        {
-                            Direction = ParameterDirection.Output
-                        };
-                        comando.Parameters.Add(pPublicId);
-
-                        comando.ExecuteNonQuery();
-
-                        var mensaje = comando.Parameters["mensaje"].Value?.ToString() ?? "";
-                        var resultado = Convert.ToInt32(comando.Parameters["resultado"].Value ?? 0);
-                        var publicId = comando.Parameters["public_id"].Value?.ToString();
-
-                        return (resultado == 1, mensaje, publicId);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"❌ Error eliminando banner: {ex.Message}");
-                    return (false, $"Error: {ex.Message}", null);
-                }
-            }
+            var (resultado, mensaje, publicId) = conexion.EjecutarConOutputPublicId("eliminar_banner", parametros);
+            return (resultado == 1, mensaje, publicId);
         }
 
         /// <summary>
