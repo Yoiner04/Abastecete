@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using BusinessLogic;
 using BusinessLogic.Models;
+using BusinessLogic.Utilidades;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -40,6 +41,30 @@ namespace Abastecete.Controllers
             ViewBag.Productos = productos;
             ViewBag.Locales = locales;
             ViewBag.TotalResultados = ofertas.Count + productos.Count + locales.Count;
+
+            // Si hay pocos o ningún resultado, buscar sugerencias ortográficas
+            var totalResultados = ofertas.Count + productos.Count + locales.Count;
+            if (totalResultados < 3 && query.Length >= 3)
+            {
+                try
+                {
+                    var sugerencias = _manejadorBuscador.ObtenerSugerenciasOrtograficas(query);
+                    ViewBag.Sugerencias = sugerencias;
+                    Console.WriteLine($"[SUGERENCIAS] Query: '{query}', Encontradas: {sugerencias.Count}");
+                    foreach (var s in sugerencias)
+                        Console.WriteLine($"  - {s.Termino} ({s.Similitud:F1}%)");
+                }
+                catch (Exception ex)
+                {
+                    // Si falla, simplemente no mostrar sugerencias
+                    Console.WriteLine($"[SUGERENCIAS] Error: {ex.Message}");
+                    ViewBag.Sugerencias = new List<SugerenciaBusqueda>();
+                }
+            }
+            else
+            {
+                ViewBag.Sugerencias = new List<SugerenciaBusqueda>();
+            }
 
             return View();
         }
@@ -134,7 +159,8 @@ namespace Abastecete.Controllers
                 {
                     locales = new List<object>(),
                     productos = new List<object>(),
-                    ofertas = new List<object>()
+                    ofertas = new List<object>(),
+                    quizasQuisistDecir = new List<object>()
                 });
             }
 
@@ -142,12 +168,34 @@ namespace Abastecete.Controllers
             var productos = _manejadorBuscador.ConsultarProductosSugerencias(query, 5);
             var ofertas = _manejadorBuscador.ConsultarOfertasSugerencias(query, 3);
 
+            var totalResultados = locales.Count + productos.Count + ofertas.Count;
+
+            // Si hay pocos resultados, buscar sugerencias ortográficas
+            var quizasQuisistDecir = new List<object>();
+            if (totalResultados < 3 && query.Length >= 3)
+            {
+                try
+                {
+                    var sugerencias = _manejadorBuscador.ObtenerSugerenciasOrtograficas(query);
+                    quizasQuisistDecir = sugerencias.Select(s => new
+                    {
+                        termino = s.Termino,
+                        similitud = s.Similitud
+                    }).Cast<object>().ToList();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[SUGERENCIAS API] Error: {ex.Message}");
+                }
+            }
+
             return Json(new
             {
                 locales,
                 productos,
                 ofertas,
-                totalResultados = locales.Count + productos.Count + ofertas.Count
+                totalResultados,
+                quizasQuisistDecir
             });
         }
     }

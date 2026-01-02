@@ -4132,7 +4132,7 @@ CREATE TABLE IF NOT EXISTS `evento_analitica` (
   KEY `idx_ea_tipo` (`TIPO_EVENTO`),
   CONSTRAINT `fk_evento_local` FOREIGN KEY (`FK_ID_LOCAL`) REFERENCES `local` (`PK_ID_LOCAL`) ON DELETE CASCADE,
   CONSTRAINT `fk_evento_producto` FOREIGN KEY (`FK_ID_PRODUCTO`) REFERENCES `producto` (`PK_ID_PRODUCTO`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=65 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=129 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Volcando datos para la tabla abastecete.evento_analitica: ~35 rows (aproximadamente)
 INSERT INTO `evento_analitica` (`PK_ID_EVENTO`, `FK_ID_LOCAL`, `FK_ID_PRODUCTO`, `TIPO_EVENTO`, `IP_VISITANTE`, `USER_AGENT`, `REFERRER`, `FECHA_EVENTO`) VALUES
@@ -4170,7 +4170,71 @@ INSERT INTO `evento_analitica` (`PK_ID_EVENTO`, `FK_ID_LOCAL`, `FK_ID_PRODUCTO`,
 	(61, 1, NULL, '', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36 OPR/125.0.0.0', 'https://localhost:7076/Home/Principal', '2025-12-31 18:20:22'),
 	(62, 1, NULL, 'VISITA_LOCAL', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36 OPR/125.0.0.0', 'https://localhost:7076/Negocios/ConsultarProductos?idLocal=1', '2025-12-31 18:20:24'),
 	(63, 1, NULL, '', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36 OPR/125.0.0.0', 'https://localhost:7076/Home/Principal', '2025-12-31 18:39:30'),
-	(64, 1, NULL, 'VISITA_LOCAL', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36 OPR/125.0.0.0', 'https://localhost:7076/Negocios/ConsultarProductos?idLocal=1', '2025-12-31 18:39:33');
+	(64, 1, NULL, 'VISITA_LOCAL', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36 OPR/125.0.0.0', 'https://localhost:7076/Negocios/ConsultarProductos?idLocal=1', '2025-12-31 18:39:33'),
+	(65, 1, NULL, 'VISITA_LOCAL', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36 OPR/125.0.0.0', 'https://localhost:7076/Negocios/ConsultarProductos?idLocal=1', '2026-01-02 17:18:54'),
+	(66, 1, NULL, 'COMPARTIR', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36 OPR/125.0.0.0', 'https://localhost:7076/Negocios/ConsultarProductos?idLocal=1', '2026-01-02 17:19:10'),
+	(67, 1, 41, 'VISITA_PRODUCTO', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36 OPR/125.0.0.0', 'https://localhost:7076/Negocios/ConsultarProductos?idLocal=1', '2026-01-02 17:19:25'),
+	(68, 1, NULL, 'VISITA_PRODUCTO', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36 OPR/125.0.0.0', 'https://localhost:7076/Productos/ProductDetailLocal?idlocal=1&idProducto=41', '2026-01-02 17:19:27'),
+	(69, 1, NULL, 'COMPARTIR', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36 OPR/125.0.0.0', 'https://localhost:7076/Productos/ProductDetailLocal?idlocal=1&idProducto=41', '2026-01-02 17:19:36'),
+	(70, 1, NULL, 'COMPARTIR', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36 OPR/125.0.0.0', 'https://localhost:7076/Productos/ProductDetailLocal?idlocal=1&idProducto=41', '2026-01-02 17:19:56'),
+	(71, 1, NULL, 'COMPARTIR', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36 OPR/125.0.0.0', 'https://localhost:7076/Productos/ProductDetailLocal?idlocal=1&idProducto=41', '2026-01-02 17:20:01'),
+	(72, 1, NULL, 'VISITA_LOCAL', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'https://localhost:7076/Negocios/ConsultarProductos?idLocal=1', '2026-01-02 17:23:15'),
+	(73, 1, 41, 'VISITA_PRODUCTO', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'https://localhost:7076/Negocios/ConsultarProductos?idLocal=1', '2026-01-02 17:23:27'),
+	(74, 1, NULL, 'VISITA_PRODUCTO', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'https://localhost:7076/Productos/ProductDetailLocal?idlocal=1&idProducto=41', '2026-01-02 17:23:29'),
+	(75, 1, NULL, 'COMPARTIR', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'https://localhost:7076/Productos/ProductDetailLocal?idlocal=1&idProducto=41', '2026-01-02 17:23:56'),
+	(76, 1, NULL, 'CLIC_WHATSAPP', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'https://localhost:7076/Productos/ProductDetailLocal?idlocal=1&idProducto=41', '2026-01-02 17:24:19'),
+	(77, 1, NULL, 'VISITA_PRODUCTO', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'https://localhost:7076/Productos/ProductDetailLocal?idlocal=1&idProducto=41', '2026-01-02 17:28:19'),
+	(78, 1, NULL, 'VISITA_LOCAL', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'https://localhost:7076/Negocios/ConsultarProductos?idLocal=1', '2026-01-02 17:28:33'),
+	(79, 1, NULL, 'VISITA_LOCAL', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36 OPR/125.0.0.0', 'https://localhost:7076/Negocios/ConsultarProductos?idLocal=1', '2026-01-02 18:04:39'),
+	(80, 1, NULL, '', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'https://localhost:7076/Analiticas/Index', '2026-01-02 18:07:09'),
+	(81, 1, NULL, 'VISITA_LOCAL', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'https://localhost:7076/Negocios/ConsultarProductos?idLocal=1', '2026-01-02 18:07:12'),
+	(82, 1, NULL, '', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'https://localhost:7076/Analiticas/Index', '2026-01-02 18:07:54'),
+	(83, 1, NULL, 'VISITA_LOCAL', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'https://localhost:7076/Negocios/ConsultarProductos?idLocal=1', '2026-01-02 18:07:56'),
+	(84, 1, NULL, 'COMPARTIR', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'https://localhost:7076/Negocios/ConsultarProductos?idLocal=1', '2026-01-02 18:08:01'),
+	(85, 1, NULL, 'COMPARTIR', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'https://localhost:7076/Negocios/ConsultarProductos?idLocal=1', '2026-01-02 18:08:23'),
+	(86, 1, 41, 'VISITA_PRODUCTO', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'https://localhost:7076/Negocios/ConsultarProductos?idLocal=1', '2026-01-02 18:08:56'),
+	(87, 1, NULL, 'VISITA_PRODUCTO', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'https://localhost:7076/Productos/ProductDetailLocal?idlocal=1&idProducto=41', '2026-01-02 18:08:58'),
+	(88, 1, NULL, 'VISITA_LOCAL', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'https://localhost:7076/Negocios/ConsultarProductos?idLocal=1', '2026-01-02 18:09:02'),
+	(89, 1, NULL, '', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'https://localhost:7076/Usuarios/Actualizar', '2026-01-02 18:14:39'),
+	(90, 1, NULL, 'VISITA_LOCAL', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'https://localhost:7076/Negocios/ConsultarProductos?idLocal=1', '2026-01-02 18:14:41'),
+	(91, 1, NULL, 'VISITA_LOCAL', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'https://localhost:7076/Negocios/ConsultarProductos?idLocal=1', '2026-01-02 18:15:46'),
+	(92, 1, NULL, 'BUSQUEDA_APARICION', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'https://localhost:7076/', '2026-01-02 18:16:32'),
+	(93, 1, NULL, 'VISITA_LOCAL', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'https://localhost:7076/Negocios/ConsultarProductos?idLocal=1', '2026-01-02 18:16:40'),
+	(94, 1, NULL, '', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'https://localhost:7076/Productos/Index', '2026-01-02 18:23:59'),
+	(95, 1, NULL, 'VISITA_LOCAL', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'https://localhost:7076/Negocios/ConsultarProductos?idLocal=1', '2026-01-02 18:24:04'),
+	(96, 1, NULL, 'BUSQUEDA_APARICION', '::1', 'Mozilla/5.0 (Linux; Android 13; SM-G981B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Mobile Safari/537.36 Edg/143.0.0.0', 'https://localhost:7076/Productos/Index', '2026-01-02 18:26:57'),
+	(97, 1, NULL, 'VISITA_LOCAL', '::1', 'Mozilla/5.0 (Linux; Android 13; SM-G981B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Mobile Safari/537.36 Edg/143.0.0.0', 'https://localhost:7076/Negocios/ConsultarProductos?idLocal=1', '2026-01-02 18:27:04'),
+	(98, 1, NULL, 'VISITA_LOCAL', '::1', 'Mozilla/5.0 (Linux; Android 13; SM-G981B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Mobile Safari/537.36 Edg/143.0.0.0', 'https://localhost:7076/Negocios/ConsultarProductos?idLocal=1', '2026-01-02 18:29:25'),
+	(99, 1, NULL, '', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'https://localhost:7076/Productos/Index', '2026-01-02 18:30:24'),
+	(100, 1, NULL, 'VISITA_LOCAL', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'https://localhost:7076/Negocios/ConsultarProductos?idLocal=1', '2026-01-02 18:30:28'),
+	(101, 1, 41, 'VISITA_PRODUCTO', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'https://localhost:7076/Negocios/ConsultarProductos?idLocal=1', '2026-01-02 18:30:33'),
+	(102, 1, NULL, 'VISITA_PRODUCTO', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'https://localhost:7076/Productos/ProductDetailLocal?idlocal=1&idProducto=41', '2026-01-02 18:30:34'),
+	(103, 1, NULL, 'VISITA_LOCAL', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'https://localhost:7076/Negocios/ConsultarProductos?idLocal=1', '2026-01-02 18:30:41'),
+	(104, 1, NULL, 'VISITA_LOCAL', '::1', 'Mozilla/5.0 (Linux; Android 13; SM-G981B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Mobile Safari/537.36 Edg/143.0.0.0', 'https://localhost:7076/Negocios/ConsultarProductos?idLocal=1', '2026-01-02 18:30:57'),
+	(105, 1, NULL, 'VISITA_LOCAL', '::1', 'Mozilla/5.0 (Linux; Android 13; SM-G981B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Mobile Safari/537.36 Edg/143.0.0.0', 'https://localhost:7076/Negocios/ConsultarProductos?idLocal=1', '2026-01-02 18:31:21'),
+	(106, 1, NULL, 'VISITA_LOCAL', '::1', 'Mozilla/5.0 (Linux; Android 13; SM-G981B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Mobile Safari/537.36 Edg/143.0.0.0', 'https://localhost:7076/Negocios/ConsultarProductos?idLocal=1', '2026-01-02 18:32:09'),
+	(107, 1, NULL, 'VISITA_LOCAL', '127.0.0.1', 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/143.0.7499.151 Mobile/15E148 Safari/604.1', 'http://167.71.91.199/Negocios/ConsultarProductos?idLocal=1', '2026-01-02 19:59:48'),
+	(108, 1, NULL, 'VISITA_PRODUCTO', '::1', 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/143.0.7499.151 Mobile/15E148 Safari/604.1', 'http://167.71.91.199/Productos/ProductDetailLocal?idlocal=1&idProducto=41', '2026-01-02 20:00:39'),
+	(109, 1, NULL, 'VISITA_LOCAL', '::1', 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_6_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/143.0.7499.151 Mobile/15E148 Safari/604.1', 'http://167.71.91.199/Negocios/ConsultarProductos?idLocal=1', '2026-01-02 20:00:47'),
+	(110, 1, NULL, 'VISITA_LOCAL', '127.0.0.1', 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_1_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.1.1 Mobile/15E148 Safari/604.1', 'http://167.71.91.199/Negocios/ConsultarProductos?idLocal=1', '2026-01-02 20:19:14'),
+	(111, 1, NULL, 'BUSQUEDA_APARICION', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Mobile Safari/537.36 Edg/143.0.0.0', 'https://localhost:7076/', '2026-01-02 20:52:06'),
+	(112, 1, NULL, 'VISITA_LOCAL', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Mobile Safari/537.36 Edg/143.0.0.0', 'https://localhost:7076/Negocios/ConsultarProductos?idLocal=1', '2026-01-02 20:52:11'),
+	(113, 1, NULL, 'VISITA_LOCAL', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Mobile Safari/537.36 Edg/143.0.0.0', 'https://localhost:7076/Negocios/ConsultarProductos?idLocal=1', '2026-01-02 20:53:15'),
+	(114, 1, NULL, 'VISITA_LOCAL', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Mobile Safari/537.36 Edg/143.0.0.0', 'https://localhost:7076/Negocios/ConsultarProductos?idLocal=1', '2026-01-02 21:03:08'),
+	(115, 1, NULL, 'VISITA_LOCAL', '::1', 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Mobile Safari/537.36 Edg/143.0.0.0', 'https://localhost:7076/Negocios/ConsultarProductos?idLocal=1', '2026-01-02 21:07:40'),
+	(116, 1, NULL, 'VISITA_LOCAL', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'http://localhost:5235/Negocios/ConsultarProductos?idLocal=1', '2026-01-02 21:20:18'),
+	(117, 1, NULL, 'VISITA_LOCAL', '::1', 'Mozilla/5.0 (Linux; Android 13; SM-G981B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Mobile Safari/537.36 Edg/143.0.0.0', 'http://localhost:5235/Negocios/ConsultarProductos?idLocal=1', '2026-01-02 21:21:03'),
+	(118, 1, NULL, 'VISITA_LOCAL', '::1', 'Mozilla/5.0 (Linux; Android 13; SM-G981B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Mobile Safari/537.36 Edg/143.0.0.0', 'http://localhost:5235/Negocios/ConsultarProductos?idLocal=1', '2026-01-02 21:22:28'),
+	(119, 1, NULL, 'VISITA_LOCAL', '::1', 'Mozilla/5.0 (Linux; Android 13; SM-G981B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Mobile Safari/537.36 Edg/143.0.0.0', 'http://localhost:5235/Negocios/ConsultarProductos?idLocal=1', '2026-01-02 21:22:47'),
+	(120, 1, NULL, 'VISITA_LOCAL', '::1', 'Mozilla/5.0 (Linux; Android 13; SM-G981B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Mobile Safari/537.36 Edg/143.0.0.0', 'http://localhost:5235/Negocios/ConsultarProductos?idLocal=1', '2026-01-02 21:23:02'),
+	(121, 1, NULL, 'VISITA_LOCAL', '::1', 'Mozilla/5.0 (Linux; Android 13; SM-G981B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Mobile Safari/537.36 Edg/143.0.0.0', 'http://localhost:5235/Negocios/ConsultarProductos?idLocal=1', '2026-01-02 21:23:15'),
+	(122, 1, NULL, 'VISITA_LOCAL', '::1', 'Mozilla/5.0 (Linux; Android 13; SM-G981B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Mobile Safari/537.36 Edg/143.0.0.0', 'http://localhost:5235/Negocios/ConsultarProductos?idLocal=1', '2026-01-02 21:23:39'),
+	(123, 1, NULL, 'VISITA_LOCAL', '::1', 'Mozilla/5.0 (Linux; Android 13; SM-G981B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Mobile Safari/537.36 Edg/143.0.0.0', 'http://localhost:5235/Negocios/ConsultarProductos?idLocal=1', '2026-01-02 21:25:23'),
+	(124, 1, NULL, 'VISITA_LOCAL', '::1', 'Mozilla/5.0 (Linux; Android 13; SM-G981B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Mobile Safari/537.36 Edg/143.0.0.0', 'http://localhost:5235/Negocios/ConsultarProductos?idLocal=1', '2026-01-02 21:29:56'),
+	(125, 1, NULL, 'VISITA_LOCAL', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'http://localhost:5235/Negocios/ConsultarProductos?idLocal=1', '2026-01-02 21:31:30'),
+	(126, 1, NULL, 'VISITA_LOCAL', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'http://localhost:5235/Negocios/ConsultarProductos?idLocal=1', '2026-01-02 21:31:43'),
+	(127, 1, NULL, 'VISITA_LOCAL', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'http://localhost:5235/Negocios/ConsultarProductos?idLocal=1', '2026-01-02 21:32:13'),
+	(128, 1, NULL, 'VISITA_LOCAL', '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', 'http://localhost:5235/Negocios/ConsultarProductos?idLocal=1', '2026-01-02 21:32:25');
 
 -- Volcando estructura para evento abastecete.expirar_ofertas_flash
 DELIMITER //
@@ -4558,27 +4622,8 @@ CREATE TABLE IF NOT EXISTS `localcategoria` (
   CONSTRAINT `FK2` FOREIGN KEY (`FK_ID_CATEGORIA`) REFERENCES `categoria` (`PK_ID_CATEGORIA`)
 ) ENGINE=InnoDB AUTO_INCREMENT=42 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- Volcando datos para la tabla abastecete.localcategoria: ~20 rows (aproximadamente)
+-- Volcando datos para la tabla abastecete.localcategoria: ~1 rows (aproximadamente)
 INSERT INTO `localcategoria` (`PK_ID_LOCALCATEGORIA`, `FK_ID_LOCAL`, `FK_ID_CATEGORIA`) VALUES
-	(22, 28, 4),
-	(23, 34, 7),
-	(24, 35, 7),
-	(25, 35, 4),
-	(26, 35, 13),
-	(27, 35, 14),
-	(28, 35, 5),
-	(29, 36, 5),
-	(30, 36, 6),
-	(31, 36, 7),
-	(32, 36, 10),
-	(33, 36, 8),
-	(34, 27, 5),
-	(35, 27, 10),
-	(36, 27, 12),
-	(37, 27, 16),
-	(38, 28, 6),
-	(39, 28, 10),
-	(40, 1, 11),
 	(41, 1, 4);
 
 -- Volcando estructura para procedimiento abastecete.login_google
@@ -4744,7 +4789,7 @@ CREATE TABLE IF NOT EXISTS `logs_sistema` (
   KEY `IDX_logs_tipo_accion` (`TIPO_ACCION`),
   KEY `IDX_logs_entidad` (`MODULO`,`ENTIDAD_ID`),
   CONSTRAINT `FK_logs_usuario` FOREIGN KEY (`FK_ID_USUARIO`) REFERENCES `usuario` (`PK_ID_USUARIO`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=165 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=188 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Volcando datos para la tabla abastecete.logs_sistema: ~162 rows (aproximadamente)
 INSERT INTO `logs_sistema` (`PK_ID_LOG`, `FK_ID_USUARIO`, `NOMBRE_USUARIO`, `MODULO`, `TIPO_ACCION`, `ENTIDAD_ID`, `ENTIDAD_DESCRIPCION`, `DATOS_ANTERIORES`, `DATOS_NUEVOS`, `IP_CLIENTE`, `USER_AGENT`, `FECHA_REGISTRO`, `RESULTADO`, `MENSAJE_ERROR`, `CONTROLLER`, `ACTION`) VALUES
@@ -4910,7 +4955,30 @@ INSERT INTO `logs_sistema` (`PK_ID_LOG`, `FK_ID_USUARIO`, `NOMBRE_USUARIO`, `MOD
 	(161, 2, 'johans.ramirez@udla.edu.co', 'AUTENTICACION', 'LOGIN', 2, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36 OPR/125.0.0.0', '2025-12-31 18:51:47', 'EXITO', '', 'Login', 'Login'),
 	(162, 2, 'johans.ramirez@udla.edu.co', 'AUTENTICACION', 'LOGIN', 2, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36 OPR/125.0.0.0', '2026-01-01 00:52:59', 'EXITO', '', 'Login', 'Login'),
 	(163, 2, 'johans.ramirez@udla.edu.co', 'AUTENTICACION', 'LOGIN', 2, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36 OPR/125.0.0.0', '2026-01-01 00:58:50', 'EXITO', '', 'Login', 'Login'),
-	(164, 2, 'johans.ramirez@udla.edu.co', 'AUTENTICACION', 'LOGIN', 2, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36 OPR/125.0.0.0', '2026-01-01 23:42:44', 'EXITO', '', 'Login', 'Login');
+	(164, 2, 'johans.ramirez@udla.edu.co', 'AUTENTICACION', 'LOGIN', 2, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36 OPR/125.0.0.0', '2026-01-01 23:42:44', 'EXITO', '', 'Login', 'Login'),
+	(165, 2, 'johans.ramirez@udla.edu.co', 'AUTENTICACION', 'LOGIN', 2, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36 OPR/125.0.0.0', '2026-01-02 02:34:55', 'EXITO', '', 'Login', 'Login'),
+	(166, 2, 'johans.ramirez@udla.edu.co', 'AUTENTICACION', 'LOGIN', 2, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36 OPR/125.0.0.0', '2026-01-02 03:02:21', 'EXITO', '', 'Login', 'Login'),
+	(167, 2, 'johans.ramirez@udla.edu.co', 'AUTENTICACION', 'LOGIN', 2, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2026-01-02 17:29:09', 'EXITO', '', 'Login', 'Login'),
+	(168, 2, 'johans.ramirez@udla.edu.co', 'AUTENTICACION', 'LOGIN', 2, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36 OPR/125.0.0.0', '2026-01-02 17:48:12', 'EXITO', '', 'Login', 'Login'),
+	(169, 2, 'johans.ramirez@udla.edu.co', 'AUTENTICACION', 'LOGIN', 2, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2026-01-02 18:06:15', 'EXITO', '', 'Login', 'Login'),
+	(170, 2, 'Usuario', 'AUTENTICACION', 'LOGOUT', 2, 'Cierre de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2026-01-02 18:09:37', 'EXITO', '', 'Login', 'Logout'),
+	(171, 1, 'admin@abastecete.com', 'AUTENTICACION', 'LOGIN', 1, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36 OPR/125.0.0.0', '2026-01-02 18:10:09', 'EXITO', '', 'Login', 'Login'),
+	(172, 1, 'admin@abastecete.com', 'AUTENTICACION', 'LOGIN', 1, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2026-01-02 18:10:36', 'EXITO', '', 'Login', 'Login'),
+	(173, 1, 'Usuario', 'AUTENTICACION', 'LOGOUT', 1, 'Cierre de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2026-01-02 18:11:52', 'EXITO', '', 'Login', 'Logout'),
+	(174, 2, 'johans.ramirez@udla.edu.co', 'AUTENTICACION', 'LOGIN', 2, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2026-01-02 18:11:57', 'EXITO', '', 'Login', 'Login'),
+	(175, 2, 'Usuario', 'AUTENTICACION', 'LOGOUT', 2, 'Cierre de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2026-01-02 18:14:13', 'EXITO', '', 'Login', 'Logout'),
+	(176, 6, 'Usuario', 'AUTENTICACION', 'LOGOUT', 6, 'Cierre de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2026-01-02 18:15:47', 'EXITO', '', 'Login', 'Logout'),
+	(177, 1, 'admin@abastecete.com', 'AUTENTICACION', 'LOGIN', 1, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2026-01-02 18:15:55', 'EXITO', '', 'Login', 'Login'),
+	(178, 1, 'Usuario', 'AUTENTICACION', 'LOGOUT', 1, 'Cierre de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2026-01-02 18:18:32', 'EXITO', '', 'Login', 'Logout'),
+	(179, 2, 'johans.ramirez@udla.edu.co', 'AUTENTICACION', 'LOGIN', 2, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2026-01-02 18:18:36', 'EXITO', '', 'Login', 'Login'),
+	(180, 2, 'Usuario', 'AUTENTICACION', 'LOGOUT', 2, 'Cierre de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2026-01-02 18:34:29', 'EXITO', '', 'Login', 'Logout'),
+	(181, 1, 'admin@abastecete.com', 'AUTENTICACION', 'LOGIN', 1, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2026-01-02 18:34:32', 'EXITO', '', 'Login', 'Login'),
+	(182, 1, 'Usuario', 'AUTENTICACION', 'LOGOUT', 1, 'Cierre de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2026-01-02 18:39:28', 'EXITO', '', 'Login', 'Logout'),
+	(183, 2, 'johans.ramirez@udla.edu.co', 'AUTENTICACION', 'LOGIN', 2, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2026-01-02 18:39:33', 'EXITO', '', 'Login', 'Login'),
+	(184, 2, 'Usuario', 'AUTENTICACION', 'LOGOUT', 2, 'Cierre de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2026-01-02 18:43:38', 'EXITO', '', 'Login', 'Logout'),
+	(185, 6, 'Usuario ID: 6', 'NEGOCIOS', 'CREATE', 0, 'Local12', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2026-01-02 18:44:25', 'EXITO', '', 'Negocios', 'GuardarDatosNegocio'),
+	(186, 2, 'johans.ramirez@udla.edu.co', 'AUTENTICACION', 'LOGIN', 2, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2026-01-02 20:45:40', 'EXITO', '', 'Login', 'Login'),
+	(187, 2, 'johans.ramirez@udla.edu.co', 'AUTENTICACION', 'LOGIN', 2, 'Inicio de sesion', NULL, NULL, '::1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 Edg/143.0.0.0', '2026-01-02 20:50:01', 'EXITO', '', 'Login', 'Login');
 
 -- Volcando estructura para tabla abastecete.marca
 CREATE TABLE IF NOT EXISTS `marca` (
@@ -5355,6 +5423,29 @@ BEGIN
 END//
 DELIMITER ;
 
+-- Volcando estructura para procedimiento abastecete.obtener_permisos_membresias_bulk
+DELIMITER //
+CREATE PROCEDURE `obtener_permisos_membresias_bulk`(
+    IN p_ids_membresias TEXT
+)
+BEGIN
+    SELECT
+        mp.FK_ID_TIPO_MEMBRESIA,
+        p.PK_ID_PERMISO,
+        p.CODIGO,
+        p.NOMBRE,
+        p.DESCRIPCION,
+        p.ICONO,
+        p.CATEGORIA,
+        p.ORDEN
+    FROM membresia_permiso mp
+    INNER JOIN permiso_sistema p ON mp.FK_ID_PERMISO = p.PK_ID_PERMISO
+    WHERE FIND_IN_SET(mp.FK_ID_TIPO_MEMBRESIA, p_ids_membresias) > 0
+      AND mp.ESTADO = 1
+    ORDER BY mp.FK_ID_TIPO_MEMBRESIA, p.ORDEN ASC;
+END//
+DELIMITER ;
+
 -- Volcando estructura para procedimiento abastecete.obtener_permisos_sistema
 DELIMITER //
 CREATE PROCEDURE `obtener_permisos_sistema`()
@@ -5669,7 +5760,7 @@ CREATE TABLE IF NOT EXISTS `opinion` (
 
 -- Volcando datos para la tabla abastecete.opinion: ~1 rows (aproximadamente)
 INSERT INTO `opinion` (`PK_ID_OPINION`, `FK_ID_LOCAL`, `FK_ID_USUARIO`, `FK_ID_OPINION_PADRE`, `CALIFICACION`, `COMENTARIO`, `RESPUESTA_DUENO`, `FECHA_RESPUESTA`, `ESTADO`, `FECHA_OPINION`) VALUES
-	(1, 1, 6, NULL, 5, 'Buenos productos', NULL, NULL, 1, '2025-12-31 18:39:58');
+	(1, 1, 6, NULL, 5, 'Buenos productos', 'Muchas gracias', '2026-01-02 03:02:45', 1, '2025-12-31 18:39:58');
 
 -- Volcando estructura para tabla abastecete.pagos
 CREATE TABLE IF NOT EXISTS `pagos` (
@@ -7452,7 +7543,7 @@ CREATE TABLE IF NOT EXISTS `resumen_analitica_diario` (
   KEY `idx_rad_fecha` (`FECHA`),
   KEY `idx_rad_local_fecha` (`FK_ID_LOCAL`,`FECHA`),
   CONSTRAINT `fk_resumen_local` FOREIGN KEY (`FK_ID_LOCAL`) REFERENCES `local` (`PK_ID_LOCAL`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=62 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=126 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Volcando datos para la tabla abastecete.resumen_analitica_diario: ~11 rows (aproximadamente)
 INSERT INTO `resumen_analitica_diario` (`PK_ID_RESUMEN`, `FK_ID_LOCAL`, `FECHA`, `VISITAS_LOCAL`, `VISITAS_PRODUCTOS`, `CLICS_WHATSAPP`, `CLICS_TELEFONO`, `APARICIONES_BUSQUEDA`, `COMPARTIDOS`) VALUES
@@ -7466,7 +7557,8 @@ INSERT INTO `resumen_analitica_diario` (`PK_ID_RESUMEN`, `FK_ID_LOCAL`, `FECHA`,
 	(26, 27, '2025-12-27', 0, 0, 0, 0, 1, 0),
 	(27, 1, '2025-12-29', 1, 0, 0, 0, 1, 0),
 	(29, 1, '2025-12-30', 9, 2, 1, 0, 2, 0),
-	(44, 1, '2025-12-31', 8, 4, 0, 0, 2, 0);
+	(44, 1, '2025-12-31', 8, 4, 0, 0, 2, 0),
+	(62, 1, '2026-01-02', 38, 10, 1, 0, 3, 7);
 
 -- Volcando estructura para tabla abastecete.resumen_producto_vistas
 CREATE TABLE IF NOT EXISTS `resumen_producto_vistas` (
@@ -7483,13 +7575,14 @@ CREATE TABLE IF NOT EXISTS `resumen_producto_vistas` (
   KEY `idx_rpv_producto` (`FK_ID_PRODUCTO`),
   CONSTRAINT `fk_resumen_producto` FOREIGN KEY (`FK_ID_PRODUCTO`) REFERENCES `producto` (`PK_ID_PRODUCTO`) ON DELETE CASCADE,
   CONSTRAINT `fk_resumen_producto_local` FOREIGN KEY (`FK_ID_LOCAL`) REFERENCES `local` (`PK_ID_LOCAL`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- Volcando datos para la tabla abastecete.resumen_producto_vistas: ~3 rows (aproximadamente)
 INSERT INTO `resumen_producto_vistas` (`PK_ID_RESUMEN`, `FK_ID_PRODUCTO`, `FK_ID_LOCAL`, `FECHA`, `VISTAS`) VALUES
 	(1, 10, 1, '2025-12-30', 1),
 	(2, 387, 1, '2025-12-31', 1),
-	(3, 41, 1, '2025-12-31', 1);
+	(3, 41, 1, '2025-12-31', 1),
+	(4, 41, 1, '2026-01-02', 4);
 
 -- Volcando estructura para procedimiento abastecete.revisar_imagen_galeria
 DELIMITER //

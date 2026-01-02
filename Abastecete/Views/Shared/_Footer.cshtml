@@ -1,155 +1,138 @@
 <!-- Footer Premium -->
-<footer class="relative mt-16 overflow-hidden">
-    <!-- Onda decorativa superior -->
-    <div class="absolute top-0 left-0 right-0">
-        <svg viewBox="0 0 1440 120" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full h-auto">
-            <path d="M0 120L60 105C120 90 240 60 360 45C480 30 600 30 720 37.5C840 45 960 60 1080 67.5C1200 75 1320 75 1380 75L1440 75V120H1380C1320 120 1200 120 1080 120C960 120 840 120 720 120C600 120 480 120 360 120C240 120 120 120 60 120H0Z" fill="#111827"/>
-        </svg>
-    </div>
-
+<footer class="mt-16 bg-gray-900">
     <!-- Contenido principal -->
-    <div class="bg-gray-900 pt-20 pb-8">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="pt-12 pb-8">
+        <div class="max-w-7xl mx-auto px-4">
 
             <!-- Grid principal -->
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 mb-12">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 mb-10 sm:mb-12">
 
                 <!-- Logo y descripción -->
-                <div class="lg:col-span-4">
+                <div>
                     <a href="@Url.Action("Principal", "Home")" class="inline-block mb-6">
-                        <img src="~/images/LOGO FINAL.png" alt="Abastecete" class="h-12 w-auto brightness-0 invert" />
+                        <img src="~/images/logo-final.png" alt="Abastecete" class="h-12 w-auto" style="filter: brightness(0) invert(1);" />
                     </a>
                     <p class="text-gray-400 text-sm leading-relaxed mb-6">
-                        Tu marketplace de proveedores locales en Florencia, Caquetá. Conectamos negocios con clientes, impulsando el comercio local.
+                        Tu marketplace de proveedores locales en Florencia, Caqueta. Conectamos negocios con clientes, impulsando el comercio local.
                     </p>
 
                     <!-- Redes sociales con iconos circulares -->
                     <div class="flex items-center gap-3">
                         <a href="https://web.facebook.com/people/Websen/61571549591292/" target="_blank" rel="noopener noreferrer"
-                           class="w-10 h-10 rounded-full bg-gray-800 hover:bg-[#1877F2] flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-lg hover:shadow-blue-500/25">
-                            <i class="fab fa-facebook-f text-gray-400 hover:text-white transition-colors"></i>
+                           class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center transition-all duration-300 hover:scale-110" style="--hover-bg: #1877F2;">
+                            <i class="fab fa-facebook-f text-gray-400"></i>
                         </a>
                         <a href="https://www.instagram.com/websencol/" target="_blank" rel="noopener noreferrer"
-                           class="w-10 h-10 rounded-full bg-gray-800 hover:bg-gradient-to-br hover:from-purple-600 hover:to-pink-500 flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-lg hover:shadow-pink-500/25">
-                            <i class="fab fa-instagram text-gray-400 hover:text-white transition-colors"></i>
+                           class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center transition-all duration-300 hover:scale-110">
+                            <i class="fab fa-instagram text-gray-400"></i>
                         </a>
                         <a href="https://www.linkedin.com/in/websen-col-99459733b/" target="_blank" rel="noopener noreferrer"
-                           class="w-10 h-10 rounded-full bg-gray-800 hover:bg-[#0A66C2] flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-lg hover:shadow-blue-500/25">
-                            <i class="fab fa-linkedin-in text-gray-400 hover:text-white transition-colors"></i>
+                           class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center transition-all duration-300 hover:scale-110">
+                            <i class="fab fa-linkedin-in text-gray-400"></i>
                         </a>
                         <a href="https://wa.me/573103348519" target="_blank" rel="noopener noreferrer"
-                           class="w-10 h-10 rounded-full bg-gray-800 hover:bg-[#25D366] flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-lg hover:shadow-green-500/25">
-                            <i class="fab fa-whatsapp text-gray-400 hover:text-white transition-colors"></i>
+                           class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center transition-all duration-300 hover:scale-110">
+                            <i class="fab fa-whatsapp text-gray-400"></i>
                         </a>
                     </div>
                 </div>
 
-                <!-- Enlaces -->
-                <div class="lg:col-span-2">
-                    <h3 class="text-white font-semibold text-sm uppercase tracking-wider mb-4">Explorar</h3>
-                    <ul class="space-y-3">
-                        <li>
-                            <a href="@Url.Action("Principal", "Home")" class="text-gray-400 hover:text-[#23916A] transition-colors text-sm flex items-center gap-2 group">
-                                <i class="fas fa-home text-xs opacity-0 group-hover:opacity-100 transition-opacity text-[#23916A]"></i>
-                                Inicio
-                            </a>
-                        </li>
-                        <li>
-                            <a href="@Url.Action("Listar", "Categorias")" class="text-gray-400 hover:text-[#23916A] transition-colors text-sm flex items-center gap-2 group">
-                                <i class="fas fa-th-large text-xs opacity-0 group-hover:opacity-100 transition-opacity text-[#23916A]"></i>
-                                Categorías
-                            </a>
-                        </li>
-                        <li>
-                            <a href="#proveedores-container" class="text-gray-400 hover:text-[#23916A] transition-colors text-sm flex items-center gap-2 group">
-                                <i class="fas fa-store text-xs opacity-0 group-hover:opacity-100 transition-opacity text-[#23916A]"></i>
-                                Proveedores
-                            </a>
-                        </li>
-                        <li>
-                            <a href="#ofertas-container" class="text-gray-400 hover:text-[#F66623] transition-colors text-sm flex items-center gap-2 group">
-                                <i class="fas fa-bolt text-xs opacity-0 group-hover:opacity-100 transition-opacity text-[#F66623]"></i>
-                                Ofertas
-                            </a>
-                        </li>
-                    </ul>
-                </div>
+                <!-- Enlaces en dos columnas -->
+                <div class="grid grid-cols-2 gap-8">
+                    <!-- Explorar -->
+                    <div>
+                        <h3 class="text-white font-semibold text-sm mb-4" style="text-transform: uppercase; letter-spacing: 0.05em;">Explorar</h3>
+                        <ul class="space-y-3">
+                            <li>
+                                <a href="@Url.Action("Principal", "Home")" class="text-gray-400 hover:text-white transition-colors text-sm">
+                                    Inicio
+                                </a>
+                            </li>
+                            <li>
+                                <a href="@Url.Action("Listar", "Categorias")" class="text-gray-400 hover:text-white transition-colors text-sm">
+                                    Categorias
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#proveedores-container" class="text-gray-400 hover:text-white transition-colors text-sm">
+                                    Proveedores
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#ofertas-container" class="text-gray-400 hover:text-white transition-colors text-sm">
+                                    Ofertas
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
 
-                <!-- Para negocios -->
-                <div class="lg:col-span-2">
-                    <h3 class="text-white font-semibold text-sm uppercase tracking-wider mb-4">Negocios</h3>
-                    <ul class="space-y-3">
-                        <li>
-                            <a href="@Url.Action("Index", "Login")" class="text-gray-400 hover:text-[#23916A] transition-colors text-sm flex items-center gap-2 group">
-                                <i class="fas fa-sign-in-alt text-xs opacity-0 group-hover:opacity-100 transition-opacity text-[#23916A]"></i>
-                                Iniciar sesión
-                            </a>
-                        </li>
-                        <li>
-                            <a href="@Url.Action("Registrar", "Usuarios")" class="text-gray-400 hover:text-[#23916A] transition-colors text-sm flex items-center gap-2 group">
-                                <i class="fas fa-user-plus text-xs opacity-0 group-hover:opacity-100 transition-opacity text-[#23916A]"></i>
-                                Registrarse
-                            </a>
-                        </li>
-                        <li>
-                            <a href="@Url.Action("Tipos", "Membresias")" class="text-gray-400 hover:text-[#F66623] transition-colors text-sm flex items-center gap-2 group">
-                                <i class="fas fa-crown text-xs opacity-0 group-hover:opacity-100 transition-opacity text-[#F66623]"></i>
-                                Membresías
-                            </a>
-                        </li>
-                        <li>
-                            <a href="@Url.Action("Index", "Analiticas")" class="text-gray-400 hover:text-[#23916A] transition-colors text-sm flex items-center gap-2 group">
-                                <i class="fas fa-chart-line text-xs opacity-0 group-hover:opacity-100 transition-opacity text-[#23916A]"></i>
-                                Analíticas
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-
-                <!-- Formulario de contacto compacto -->
-                <div class="lg:col-span-4">
-                    <h3 class="text-white font-semibold text-sm uppercase tracking-wider mb-4">Contáctanos</h3>
-
-                    <form id="dejanos-tu-resenia" class="space-y-3">
-                        <div class="grid grid-cols-2 gap-3">
-                            <input type="text" name="nombre" placeholder="Nombre"
-                                class="rounded-lg bg-gray-800 border border-gray-700 py-2.5 px-3 text-sm text-white placeholder-gray-500 focus:border-[#23916A] focus:ring-1 focus:ring-[#23916A] focus:outline-none transition-all" required />
-                            <input type="email" name="correo" placeholder="Email"
-                                class="rounded-lg bg-gray-800 border border-gray-700 py-2.5 px-3 text-sm text-white placeholder-gray-500 focus:border-[#23916A] focus:ring-1 focus:ring-[#23916A] focus:outline-none transition-all" required />
-                        </div>
-                        <input type="tel" name="telefono" placeholder="Teléfono (opcional)"
-                            class="w-full rounded-lg bg-gray-800 border border-gray-700 py-2.5 px-3 text-sm text-white placeholder-gray-500 focus:border-[#23916A] focus:ring-1 focus:ring-[#23916A] focus:outline-none transition-all" />
-                        <textarea name="mensaje" placeholder="Tu mensaje..." rows="2"
-                            class="w-full rounded-lg bg-gray-800 border border-gray-700 py-2.5 px-3 text-sm text-white placeholder-gray-500 resize-none focus:border-[#23916A] focus:ring-1 focus:ring-[#23916A] focus:outline-none transition-all" required></textarea>
-                        <button type="submit"
-                            class="w-full rounded-lg bg-gradient-to-r from-[#23916A] to-[#1d7a59] py-2.5 text-sm font-semibold text-white hover:from-[#1d7a59] hover:to-[#176349] shadow-lg hover:shadow-xl hover:shadow-green-900/20 transition-all duration-300 flex items-center justify-center gap-2">
-                            <i class="fas fa-paper-plane text-xs"></i>
-                            Enviar mensaje
-                        </button>
-                    </form>
-                    <p id="footer-opinion-success" class="mt-2 hidden text-xs text-[#23916A] font-medium items-center gap-1">
-                        <i class="fas fa-check-circle"></i>
-                        ¡Mensaje enviado correctamente!
-                    </p>
+                    <!-- Negocios -->
+                    <div>
+                        <h3 class="text-white font-semibold text-sm mb-4" style="text-transform: uppercase; letter-spacing: 0.05em;">Negocios</h3>
+                        <ul class="space-y-3">
+                            <li>
+                                <a href="@Url.Action("Index", "Login")" class="text-gray-400 hover:text-white transition-colors text-sm">
+                                    Iniciar sesion
+                                </a>
+                            </li>
+                            <li>
+                                <a href="@Url.Action("Registrar", "Usuarios")" class="text-gray-400 hover:text-white transition-colors text-sm">
+                                    Registrarse
+                                </a>
+                            </li>
+                            <li>
+                                <a href="@Url.Action("Tipos", "Membresias")" class="text-gray-400 hover:text-white transition-colors text-sm">
+                                    Membresias
+                                </a>
+                            </li>
+                            <li>
+                                <a href="@Url.Action("Index", "Analiticas")" class="text-gray-400 hover:text-white transition-colors text-sm">
+                                    Analiticas
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
             </div>
 
-            <!-- Separador con gradiente -->
-            <div class="h-px bg-gradient-to-r from-transparent via-gray-700 to-transparent mb-8"></div>
+            <!-- Formulario de contacto -->
+            <div class="mb-8">
+                <h3 class="text-white font-semibold text-sm mb-4" style="text-transform: uppercase; letter-spacing: 0.05em;">Contactanos</h3>
+                <form id="dejanos-tu-resenia" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3">
+                    <input type="text" name="nombre" placeholder="Nombre"
+                        class="rounded-lg bg-gray-800 border border-gray-700 py-2.5 px-3 text-sm text-white placeholder-gray-500 focus:outline-none" required />
+                    <input type="email" name="correo" placeholder="Email"
+                        class="rounded-lg bg-gray-800 border border-gray-700 py-2.5 px-3 text-sm text-white placeholder-gray-500 focus:outline-none" required />
+                    <input type="text" name="mensaje" placeholder="Tu mensaje..."
+                        class="rounded-lg bg-gray-800 border border-gray-700 py-2.5 px-3 text-sm text-white placeholder-gray-500 focus:outline-none" required />
+                    <button type="submit"
+                        class="rounded-lg py-2.5 text-sm font-semibold text-white flex items-center justify-center gap-2" style="background: linear-gradient(to right, #23916A, #1d7a59);">
+                        <i class="fas fa-paper-plane text-xs"></i>
+                        Enviar
+                    </button>
+                </form>
+                <p id="footer-opinion-success" class="mt-2 hidden text-xs font-medium items-center gap-1" style="color: #23916A;">
+                    <i class="fas fa-check-circle"></i>
+                    Mensaje enviado correctamente!
+                </p>
+            </div>
+
+            <!-- Separador -->
+            <div class="h-px bg-gray-700 mb-8"></div>
 
             <!-- Barra inferior -->
             <div class="flex flex-col md:flex-row items-center justify-between gap-4">
                 <!-- Contacto directo -->
-                <div class="flex flex-wrap items-center justify-center gap-6 text-sm">
-                    <a href="tel:3103348519" class="flex items-center gap-2 text-gray-400 hover:text-white transition-colors group">
-                        <span class="w-8 h-8 rounded-full bg-gray-800 group-hover:bg-[#23916A] flex items-center justify-center transition-colors">
-                            <i class="fas fa-phone text-xs text-[#23916A] group-hover:text-white transition-colors"></i>
+                <div class="flex flex-wrap items-center justify-center gap-3 sm:gap-6 text-xs sm:text-sm">
+                    <a href="tel:3103348519" class="flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
+                        <span class="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center">
+                            <i class="fas fa-phone text-xs" style="color: #23916A;"></i>
                         </span>
                         310 3348519
                     </a>
-                    <a href="mailto:abastecetecol@gmail.com" class="flex items-center gap-2 text-gray-400 hover:text-white transition-colors group">
-                        <span class="w-8 h-8 rounded-full bg-gray-800 group-hover:bg-[#F66623] flex items-center justify-center transition-colors">
-                            <i class="fas fa-envelope text-xs text-[#F66623] group-hover:text-white transition-colors"></i>
+                    <a href="mailto:abastecetecol@gmail.com" class="flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
+                        <span class="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center">
+                            <i class="fas fa-envelope text-xs" style="color: #F66623;"></i>
                         </span>
                         abastecetecol@gmail.com
                     </a>
@@ -157,13 +140,13 @@
                         <span class="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center">
                             <i class="fas fa-map-marker-alt text-xs text-gray-500"></i>
                         </span>
-                        Florencia, Caquetá
+                        Florencia, Caqueta
                     </span>
                 </div>
 
                 <!-- Copyright -->
                 <p class="text-sm text-gray-500">
-                    © @DateTime.Now.Year <span class="text-[#23916A] font-medium">Abastecete</span>. Todos los derechos reservados.
+                    © @DateTime.Now.Year <span style="color: #23916A;" class="font-medium">Abastecete</span>. Todos los derechos reservados.
                 </p>
             </div>
         </div>
@@ -195,11 +178,11 @@
 
                 if (result.success) {
                     successMsg.classList.remove("hidden");
-                    successMsg.classList.add("flex");
+                    successMsg.style.display = "flex";
                     form.reset();
                     setTimeout(() => {
                         successMsg.classList.add("hidden");
-                        successMsg.classList.remove("flex");
+                        successMsg.style.display = "none";
                     }, 5000);
                 } else {
                     alert("Error al enviar tu mensaje.");
