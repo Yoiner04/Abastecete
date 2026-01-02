@@ -505,15 +505,42 @@
 
             // Renderizar sugerencias
             function renderSugerencias(data, query) {
-                const { locales, productos, ofertas, totalResultados } = data;
+                const { locales, productos, ofertas, totalResultados, quizasQuisistDecir } = data;
 
                 if (totalResultados === 0) {
-                    suggestionsContent.innerHTML = `
+                    let noResultsHtml = `
                         <div class="p-4 text-center text-gray-500">
                             <i class="fas fa-search text-2xl mb-2 opacity-50"></i>
                             <p class="text-sm">No se encontraron resultados para "<strong>${escapeHtml(query)}</strong>"</p>
                         </div>
                     `;
+
+                    // Mostrar "Quizás quisiste decir" si hay sugerencias
+                    if (quizasQuisistDecir && quizasQuisistDecir.length > 0) {
+                        noResultsHtml += `
+                            <div class="px-4 pb-4">
+                                <p class="text-xs text-gray-500 mb-2">
+                                    <i class="fas fa-lightbulb text-yellow-500 mr-1"></i>Quizás quisiste decir:
+                                </p>
+                                <div class="flex flex-wrap gap-2">
+                        `;
+                        quizasQuisistDecir.forEach(s => {
+                            noResultsHtml += `
+                                <a href="/Buscador?query=${encodeURIComponent(s.termino)}"
+                                   class="inline-flex items-center gap-1 px-3 py-1.5 bg-[#23916A]/10 hover:bg-[#23916A]/20 text-[#23916A] rounded-full text-sm font-medium transition-colors"
+                                   onclick="document.getElementById('search-input-md').value='${escapeHtml(s.termino)}'">
+                                    <i class="fas fa-search text-xs"></i>
+                                    ${escapeHtml(s.termino)}
+                                </a>
+                            `;
+                        });
+                        noResultsHtml += `
+                                </div>
+                            </div>
+                        `;
+                    }
+
+                    suggestionsContent.innerHTML = noResultsHtml;
                     return;
                 }
 
