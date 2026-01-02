@@ -477,9 +477,9 @@
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
 
-            // Dimensiones compactas tipo card (495x195 como GitHub stats)
-            canvas.width = 500;
-            canvas.height = 250;
+            // Dimensiones compactas tipo card
+            canvas.width = 450;
+            canvas.height = 280;
 
             // Fondo oscuro con gradiente sutil
             const bgGrad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
@@ -495,141 +495,120 @@
             roundRect(ctx, 0.5, 0.5, canvas.width - 1, canvas.height - 1, 10);
             ctx.stroke();
 
-            // Cargar logo
-            const logo = new Image();
-            logo.crossOrigin = 'anonymous';
-            logo.onload = function() {
-                generarCardCompacta(ctx, canvas, logo);
-            };
-            logo.onerror = function() {
+            // Cargar logo del local (URL de Cloudinary)
+            const logoUrl = '@(local?.LogotipoId ?? "")';
+            if (logoUrl && logoUrl.length > 0) {
+                const logo = new Image();
+                logo.crossOrigin = 'anonymous';
+                logo.onload = function() {
+                    generarCardCompacta(ctx, canvas, logo);
+                };
+                logo.onerror = function() {
+                    generarCardCompacta(ctx, canvas, null);
+                };
+                logo.src = logoUrl;
+            } else {
                 generarCardCompacta(ctx, canvas, null);
-            };
-            logo.src = '/images/LOGO%20FINAL.png';
+            }
         }
 
         function generarCardCompacta(ctx, canvas, logo) {
             // ========== HEADER ==========
             let startX = 25;
-            let currentY = 25;
+            let currentY = 28;
 
-            // Logo pequeño
+            // Logo del local (circular)
             if (logo) {
-                const logoSize = 22;
+                const logoSize = 36;
                 ctx.save();
                 ctx.beginPath();
-                ctx.arc(startX + logoSize/2, currentY + logoSize/2 - 3, logoSize/2, 0, Math.PI * 2);
+                ctx.arc(startX + logoSize/2, currentY + logoSize/2 - 8, logoSize/2, 0, Math.PI * 2);
                 ctx.fillStyle = '#ffffff';
                 ctx.fill();
                 ctx.clip();
-                const scale = Math.min(logoSize / logo.width, logoSize / logo.height);
+                const scale = Math.max(logoSize / logo.width, logoSize / logo.height);
                 const w = logo.width * scale;
                 const h = logo.height * scale;
-                ctx.drawImage(logo, startX + logoSize/2 - w/2, currentY + logoSize/2 - 3 - h/2, w, h);
+                ctx.drawImage(logo, startX + logoSize/2 - w/2, currentY + logoSize/2 - 8 - h/2, w, h);
                 ctx.restore();
-                startX += logoSize + 10;
+                startX += logoSize + 12;
             }
 
-            // Título: Nombre del local + Stats
+            // Título: Nombre del local
             ctx.fillStyle = '#ffffff';
-            ctx.font = 'bold 16px "Segoe UI", system-ui, sans-serif';
+            ctx.font = 'bold 18px "Segoe UI", system-ui, sans-serif';
             ctx.textAlign = 'left';
-            ctx.fillText('@(local?.Nombre?.Replace("'", "\\'") ?? "Mi Local")\'s Stats', startX, currentY + 12);
+            ctx.fillText('@(local?.Nombre?.Replace("'", "\\'") ?? "Mi Local")', startX, currentY + 8);
+
+            // Subtítulo
+            ctx.fillStyle = '#8b949e';
+            ctx.font = '12px "Segoe UI", system-ui, sans-serif';
+            ctx.fillText('Estadísticas', startX, currentY + 26);
 
             // Badge período (derecha)
-            const periodo = '@periodoSeleccionado';
+            const periodoTextos = {
+                'today': 'Hoy',
+                '7d': '7 días',
+                '30d': '30 días',
+                '90d': '90 días',
+                'year': 'Este año'
+            };
+            const periodo = periodoTextos['@periodoSeleccionado'] || '@periodoSeleccionado';
             ctx.font = '11px "Segoe UI", system-ui, sans-serif';
-            ctx.fillStyle = '#8b949e';
+            ctx.fillStyle = '#23916A';
             ctx.textAlign = 'right';
-            ctx.fillText(periodo, canvas.width - 25, currentY + 12);
+            ctx.fillText(periodo, canvas.width - 25, currentY + 8);
 
-            currentY += 35;
+            currentY += 55;
+
+            // Línea separadora
+            ctx.fillStyle = '#30363d';
+            ctx.fillRect(25, currentY - 10, canvas.width - 50, 1);
 
             // ========== MÉTRICAS EN LISTA ==========
             const stats = [
-                { icon: '👁️', label: 'Visitas al perfil:', value: '@Model.Estadisticas.TotalVisitas.ToString("N0")', color: '#3b82f6' },
-                { icon: '💬', label: 'Clics en WhatsApp:', value: '@Model.Estadisticas.TotalClicsWhatsapp.ToString("N0")', color: '#22c55e' },
-                { icon: '📦', label: 'Vistas de productos:', value: '@Model.Estadisticas.TotalVisitasProductos.ToString("N0")', color: '#a855f7' },
-                { icon: '🔍', label: 'Apariciones en búsqueda:', value: '@Model.Estadisticas.TotalAparicionesBusqueda.ToString("N0")', color: '#f59e0b' },
-                { icon: '🔗', label: 'Veces compartido:', value: '@Model.Estadisticas.TotalCompartidos.ToString("N0")', color: '#ec4899' }
+                { color: '#3b82f6', label: 'Visitas al perfil', value: '@Model.Estadisticas.TotalVisitas.ToString("N0")' },
+                { color: '#22c55e', label: 'Clics en WhatsApp', value: '@Model.Estadisticas.TotalClicsWhatsapp.ToString("N0")' },
+                { color: '#a855f7', label: 'Vistas de productos', value: '@Model.Estadisticas.TotalVisitasProductos.ToString("N0")' },
+                { color: '#f59e0b', label: 'Apariciones en búsqueda', value: '@Model.Estadisticas.TotalAparicionesBusqueda.ToString("N0")' },
+                { color: '#ec4899', label: 'Veces compartido', value: '@Model.Estadisticas.TotalCompartidos.ToString("N0")' },
+                { color: '#06b6d4', label: 'Clics en teléfono', value: '@Model.Estadisticas.TotalClicsTelefono.ToString("N0")' }
             ];
 
             const lineHeight = 28;
             stats.forEach((stat, i) => {
                 const y = currentY + i * lineHeight;
 
-                // Icono
-                ctx.font = '14px Arial';
-                ctx.textAlign = 'left';
-                ctx.fillText(stat.icon, 25, y + 5);
+                // Círculo de color como icono
+                ctx.beginPath();
+                ctx.arc(35, y + 2, 5, 0, Math.PI * 2);
+                ctx.fillStyle = stat.color;
+                ctx.fill();
 
                 // Label
-                ctx.fillStyle = '#8b949e';
+                ctx.fillStyle = '#c9d1d9';
                 ctx.font = '13px "Segoe UI", system-ui, sans-serif';
-                ctx.fillText(stat.label, 50, y + 4);
+                ctx.textAlign = 'left';
+                ctx.fillText(stat.label, 50, y + 6);
 
                 // Valor (derecha)
-                ctx.fillStyle = stat.color;
+                ctx.fillStyle = '#ffffff';
                 ctx.font = 'bold 14px "Segoe UI", system-ui, sans-serif';
                 ctx.textAlign = 'right';
-                ctx.fillText(stat.value, canvas.width - 25, y + 4);
+                ctx.fillText(stat.value, canvas.width - 25, y + 6);
             });
-
-            currentY += stats.length * lineHeight + 10;
-
-            // ========== MINI GRÁFICO CIRCULAR (estilo ring) ==========
-            // Ring de progreso en la esquina derecha
-            const ringX = canvas.width - 70;
-            const ringY = 110;
-            const ringRadius = 35;
-            const ringWidth = 6;
-
-            // Calcular total para el ring
-            const total = @Model.Estadisticas.TotalVisitas + @Model.Estadisticas.TotalClicsWhatsapp + @Model.Estadisticas.TotalVisitasProductos + @Model.Estadisticas.TotalAparicionesBusqueda + @Model.Estadisticas.TotalCompartidos;
-            const maxRing = Math.max(total, 100);
-
-            // Fondo del ring
-            ctx.beginPath();
-            ctx.arc(ringX, ringY, ringRadius, 0, Math.PI * 2);
-            ctx.strokeStyle = '#21262d';
-            ctx.lineWidth = ringWidth;
-            ctx.stroke();
-
-            // Ring de progreso con gradiente
-            const progress = Math.min(total / maxRing, 1);
-            const startAngle = -Math.PI / 2;
-            const endAngle = startAngle + (progress * Math.PI * 2);
-
-            ctx.beginPath();
-            ctx.arc(ringX, ringY, ringRadius, startAngle, endAngle);
-            const ringGrad = ctx.createLinearGradient(ringX - ringRadius, ringY, ringX + ringRadius, ringY);
-            ringGrad.addColorStop(0, '#23916A');
-            ringGrad.addColorStop(1, '#10b981');
-            ctx.strokeStyle = ringGrad;
-            ctx.lineWidth = ringWidth;
-            ctx.lineCap = 'round';
-            ctx.stroke();
-
-            // Texto central del ring
-            ctx.fillStyle = '#ffffff';
-            ctx.font = 'bold 16px "Segoe UI", system-ui, sans-serif';
-            ctx.textAlign = 'center';
-            ctx.fillText(total.toLocaleString('es-CO'), ringX, ringY + 5);
-
-            ctx.fillStyle = '#8b949e';
-            ctx.font = '9px "Segoe UI", system-ui, sans-serif';
-            ctx.fillText('Total', ringX, ringY + 18);
 
             // ========== FOOTER ==========
             ctx.fillStyle = '#30363d';
-            ctx.fillRect(0, canvas.height - 30, canvas.width, 1);
+            ctx.fillRect(0, canvas.height - 35, canvas.width, 1);
 
             ctx.fillStyle = '#8b949e';
             ctx.font = '11px "Segoe UI", system-ui, sans-serif';
             ctx.textAlign = 'left';
-            ctx.fillText('Generado con Abastecete', 25, canvas.height - 10);
+            ctx.fillText('Generado con Abastecete', 25, canvas.height - 12);
 
             ctx.textAlign = 'right';
-            ctx.fillText(new Date().toLocaleDateString('es-CO'), canvas.width - 25, canvas.height - 10);
+            ctx.fillText(new Date().toLocaleDateString('es-CO'), canvas.width - 25, canvas.height - 12);
 
             // Descargar
             const link = document.createElement('a');
