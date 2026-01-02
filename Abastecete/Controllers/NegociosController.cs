@@ -55,7 +55,7 @@ namespace Abastecete.Controllers
             // Si no se especifica categoría, usar la primera disponible
             int categoriaId = idCategoria ?? (categorias.FirstOrDefault()?.Id ?? 0);
 
-            Categoria categoriaActual = _manejadorCategorias.ObtenerCategoria(categoriaId);
+            Categoria? categoriaActual = _manejadorCategorias.ObtenerCategoria(categoriaId);
             List<Negocio> negocios = _manejadorNegocios.ConsultarNegocioCategoria(categoriaId, "");
 
             ViewBag.categorias = categorias;
@@ -98,7 +98,7 @@ namespace Abastecete.Controllers
         public IActionResult ConsultarProductos(int idLocal)
         {
             List<Producto> productos = _manejadorProductos.ConsultarProductosLocal(idLocal);
-            Negocio neg = _manejadorNegocios.ConsultarNegocioPoId(idLocal);
+            Negocio? neg = _manejadorNegocios.ConsultarNegocioPoId(idLocal);
             List<Categoria> cat = _manejadorNegocios.ConsultarCategoriasLocal(idLocal);
 
             // Cargar galería del local
@@ -138,7 +138,7 @@ namespace Abastecete.Controllers
                 return RedirectToAction("Index", "Login");
             }
 
-            Negocio ne = _manejadorNegocios.ConsultarNegocioPorUsuario(usuarioId.Value);
+            Negocio? ne = _manejadorNegocios.ConsultarNegocioPorUsuario(usuarioId.Value);
             if (ne == null)
             {
                 return RedirectToAction("Crear");
@@ -168,7 +168,7 @@ namespace Abastecete.Controllers
                 return RedirectToAction("Index", "Login");
             }
 
-            Negocio actual = _manejadorNegocios.ConsultarNegocioPorUsuario(usuarioId.Value);
+            Negocio? actual = _manejadorNegocios.ConsultarNegocioPorUsuario(usuarioId.Value);
             if (actual == null)
             {
                 return RedirectToAction("Crear");
@@ -324,13 +324,21 @@ namespace Abastecete.Controllers
                 return RedirectToAction("Crear");
             }
 
-            Negocio negocio = JsonConvert.DeserializeObject<Negocio>(negocioJson);
+            Negocio? negocio = JsonConvert.DeserializeObject<Negocio>(negocioJson);
+            if (negocio == null)
+            {
+                return RedirectToAction("Crear");
+            }
 
             bool registrado = _manejadorNegocios.CrearNegocio(negocio, tipoMembresiaId);
 
             HttpContext.Session.Remove("NegocioTemporal");
 
             var usuarioId = HttpContext.Session.GetInt32("idUsuario");
+            if (!usuarioId.HasValue)
+            {
+                return RedirectToAction("Index", "Login");
+            }
 
             if (registrado)
             {
@@ -399,7 +407,7 @@ namespace Abastecete.Controllers
                 return RedirectToAction("Index", "Login");
             }
 
-            Negocio negocio = _manejadorNegocios.ConsultarNegocioPorUsuario(usuarioId.Value);
+            Negocio? negocio = _manejadorNegocios.ConsultarNegocioPorUsuario(usuarioId.Value);
             if (negocio == null)
             {
                 return RedirectToAction("Crear");
@@ -439,7 +447,7 @@ namespace Abastecete.Controllers
                 return RedirectToAction("Index", "Login");
             }
 
-            Negocio negocio = _manejadorNegocios.ConsultarNegocioPorUsuario(usuarioId.Value);
+            Negocio? negocio = _manejadorNegocios.ConsultarNegocioPorUsuario(usuarioId.Value);
             if (negocio == null)
             {
                 return RedirectToAction("Crear");
@@ -511,7 +519,7 @@ namespace Abastecete.Controllers
                 return RedirectToAction("Index", "Login");
             }
 
-            Negocio negocio = _manejadorNegocios.ConsultarNegocioPorUsuario(usuarioId.Value);
+            Negocio? negocio = _manejadorNegocios.ConsultarNegocioPorUsuario(usuarioId.Value);
             if (negocio == null)
             {
                 return RedirectToAction("Crear");

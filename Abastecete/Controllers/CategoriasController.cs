@@ -83,12 +83,16 @@ namespace Abastecete.Controllers
         [Auditar(ModulosAuditoria.CATEGORIAS, TiposAccionAuditoria.UPDATE, ParametroId = "Id", ParametroDescripcion = "Nombre")]
         public IActionResult EditarCategoria(int Id, IFormFile Imagen, string Nombre, int Estado, IFormFile Banner)
         {
-            Categoria categoriaActual = manejadorCategorias.ObtenerCategoria(Id);
+            Categoria? categoriaActual = manejadorCategorias.ObtenerCategoria(Id);
+            if (categoriaActual == null)
+            {
+                return NotFound(new { mensaje = "Categoría no encontrada" });
+            }
 
-            string imagenUrl = categoriaActual.ImagenId;
-            string cloudinaryPublicIdImagen = categoriaActual.CloudinaryPublicIdImagen;
-            string bannerUrl = categoriaActual.BannerId;
-            string cloudinaryPublicIdBanner = categoriaActual.CloudinaryPublicIdBanner;
+            string? imagenUrl = categoriaActual.ImagenId;
+            string? cloudinaryPublicIdImagen = categoriaActual.CloudinaryPublicIdImagen;
+            string? bannerUrl = categoriaActual.BannerId;
+            string? cloudinaryPublicIdBanner = categoriaActual.CloudinaryPublicIdBanner;
 
             // Si hay nueva imagen, eliminar la anterior de Cloudinary y subir la nueva
             if (Imagen != null && Imagen.Length > 0)
@@ -148,7 +152,7 @@ namespace Abastecete.Controllers
         [Route("Categorias/ObtenerCategoria")]
         public IActionResult ObtenerCategoria([FromQuery] int id)
         {
-            Categoria categoria = manejadorCategorias.ObtenerCategoria(id);
+            Categoria? categoria = manejadorCategorias.ObtenerCategoria(id);
             if (categoria != null)
             {
                 return Json(categoria);

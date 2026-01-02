@@ -371,7 +371,7 @@
         // Registrar visita al producto al cargar la página
         document.addEventListener('DOMContentLoaded', function() {
             if (window.AbasteceteTracking) {
-                AbasteceteTracking.registrarVisitaProducto(@Model.Id, @(producto?.Id ?? 0));
+                AbasteceteTracking.registrarVisitaProducto(@(Model?.Id ?? 0), @(producto?.Id ?? 0));
             }
         });
     </script>

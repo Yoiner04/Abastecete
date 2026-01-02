@@ -58,7 +58,7 @@ namespace Abastecete.Controllers
                 return RedirectToAction("Index", "Login");
             }
 
-            Negocio negocio = manejadorNegocios.ConsultarNegocioPorUsuario(usuarioId.Value);
+            Negocio? negocio = manejadorNegocios.ConsultarNegocioPorUsuario(usuarioId.Value);
             if (negocio == null)
             {
                 return View("ErrorNegocioNoEncontrado");
@@ -106,14 +106,14 @@ namespace Abastecete.Controllers
 
         public IActionResult ProductDetailLocal(int idlocal, int idProducto)
         {
-            Negocio neg = manejadorNegocios.ConsultarNegocioPoId(idlocal);
+            Negocio? neg = manejadorNegocios.ConsultarNegocioPoId(idlocal);
 
             if (neg == null)
             {
                 return View("ErrorNegocioNoEncontrado");
             }
 
-            Producto producto = manejadorNegocios.ConsultarProductoNegocio(idProducto, neg.Id);
+            Producto? producto = manejadorNegocios.ConsultarProductoNegocio(idProducto, neg.Id);
             ViewBag.SelectedProduct = producto;
 
             // Obtener productos relacionados (otros productos del mismo local)
@@ -143,7 +143,7 @@ namespace Abastecete.Controllers
                 return RedirectToAction("Index", "Login");
             }
 
-            Negocio negocio = manejadorNegocios.ConsultarNegocioPorUsuario(usuarioId.Value);
+            Negocio? negocio = manejadorNegocios.ConsultarNegocioPorUsuario(usuarioId.Value);
             if (negocio == null)
             {
                 return RedirectToAction("Crear", "Negocios");
@@ -203,7 +203,12 @@ namespace Abastecete.Controllers
                     return Json(new { success = false, mensaje = "No se encontró tu negocio." });
                 }
 
-                var productos = JsonConvert.DeserializeObject<List<ProductoLocal>>(productosJson);
+                var productos = JsonConvert.DeserializeObject<List<ProductoLocal>>(productosJson) ?? new List<ProductoLocal>();
+
+                if (productos.Count == 0)
+                {
+                    return Json(new { success = false, mensaje = "No se recibieron productos para registrar." });
+                }
 
                 // Validar límites de membresía antes de agregar
                 var limites = manejadorSuscripciones.ObtenerLimitesMembresia(negocio.Id);
@@ -259,11 +264,11 @@ namespace Abastecete.Controllers
         }
 
         [HttpPost]
-        public IActionResult EditarProducto(int Id, IFormFile Imagen, int IdSubCategoria, string Nombre, string Precio)
+        public IActionResult EditarProducto(int Id, IFormFile? Imagen, int IdSubCategoria, string Nombre, string Precio)
         {
-            string imagenUrl = Imagen != null ? GuardarImagen(Imagen) : manejadorProductos.ConsultarProductos().FirstOrDefault(p => p.Id == Id)?.ImagenUrl;
+            string? imagenUrl = Imagen != null ? GuardarImagen(Imagen) : manejadorProductos.ConsultarProductos().FirstOrDefault(p => p.Id == Id)?.ImagenUrl;
 
-            var producto = new Producto { Id = Id, IdSubCategoria = IdSubCategoria, Nombre = Nombre, Precio = Precio, ImagenUrl = imagenUrl };
+            var producto = new Producto { Id = Id, IdSubCategoria = IdSubCategoria, Nombre = Nombre, Precio = Precio, ImagenUrl = imagenUrl ?? "" };
             var (success, mensaje) = manejadorProductos.EditarProducto(producto);
             return Json(new { mensaje, success });
         }
@@ -372,11 +377,8 @@ namespace Abastecete.Controllers
         [HttpPost]
         [RequierePermiso("ADMIN_PRODUCTOS")]
         [Auditar(ModulosAuditoria.PRODUCTOS, TiposAccionAuditoria.CREATE, ParametroDescripcion = "nombre")]
-        public IActionResult CrearProductoAdmin(string nombre, string descripcion, string sku, int idSubCategoria, int idMarca, int? idTipoUnidad, IFormFile imagen, string marcasIds = null)
+        public IActionResult CrearProductoAdmin(string nombre, string descripcion, string sku, int idSubCategoria, int idMarca, int? idTipoUnidad, IFormFile? imagen, string? marcasIds = null)
         {
-            Console.WriteLine($"=== CrearProductoAdmin ===");
-            Console.WriteLine($"Nombre: {nombre}, SubCat: {idSubCategoria}, Marca: {idMarca}, MarcasIds: {marcasIds}, TipoUnidad: {idTipoUnidad}");
-            Console.WriteLine($"Imagen: {imagen?.FileName}, Size: {imagen?.Length}");
 
             if (string.IsNullOrWhiteSpace(nombre))
                 return BadRequest(new { success = false, mensaje = "El nombre es requerido" });
@@ -386,8 +388,8 @@ namespace Abastecete.Controllers
 
             try
             {
-                string imagenUrl = null;
-                string cloudinaryPublicId = null;
+                string? imagenUrl = null;
+                string? cloudinaryPublicId = null;
 
                 // Subir imagen a Cloudinary si se proporciono
                 if (imagen != null && imagen.Length > 0)
@@ -412,12 +414,12 @@ namespace Abastecete.Controllers
                 var producto = new Producto
                 {
                     Nombre = nombre,
-                    Descripcion = descripcion,
-                    SKU = sku,
+                    Descripcion = descripcion ?? "",
+                    SKU = sku ?? "",
                     IdSubCategoria = idSubCategoria,
                     IdMarca = idMarca > 0 ? idMarca : 1,
                     IdTipoUnidad = idTipoUnidad,
-                    ImagenUrl = imagenUrl,
+                    ImagenUrl = imagenUrl ?? "",
                     CloudinaryPublicId = cloudinaryPublicId
                 };
 
@@ -462,7 +464,7 @@ namespace Abastecete.Controllers
         [HttpPost]
         [RequierePermiso("ADMIN_PRODUCTOS")]
         [Auditar(ModulosAuditoria.PRODUCTOS, TiposAccionAuditoria.UPDATE, ParametroId = "id", ParametroDescripcion = "nombre")]
-        public IActionResult EditarProductoAdmin(int id, string nombre, string descripcion, string sku, int idSubCategoria, int idMarca, int? idTipoUnidad, IFormFile imagen, string cloudinaryPublicId, string marcasIds = null)
+        public IActionResult EditarProductoAdmin(int id, string nombre, string descripcion, string sku, int idSubCategoria, int idMarca, int? idTipoUnidad, IFormFile? imagen, string? cloudinaryPublicId, string? marcasIds = null)
         {
             if (id <= 0)
                 return BadRequest(new { success = false, mensaje = "ID invalido" });
@@ -476,8 +478,8 @@ namespace Abastecete.Controllers
                 if (productoActual == null)
                     return NotFound(new { success = false, mensaje = "Producto no encontrado" });
 
-                string imagenUrl = productoActual.ImagenUrl;
-                string nuevoCloudinaryPublicId = productoActual.CloudinaryPublicId;
+                string? imagenUrl = productoActual.ImagenUrl;
+                string? nuevoCloudinaryPublicId = productoActual.CloudinaryPublicId;
 
                 // Subir nueva imagen si se proporciono
                 if (imagen != null && imagen.Length > 0)

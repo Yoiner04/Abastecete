@@ -198,7 +198,7 @@
     <!-- Contenido Principal -->
     <div id="content-principal" class="hidden">
         @{
-            string permisos = HttpContextAccessor.HttpContext.Session.GetString("permisos");
+            string? permisos = HttpContextAccessor.HttpContext?.Session.GetString("permisos");
 
             var bannerInicio = ViewBag.BannerInicio as IEnumerable<dynamic> ?? new List<object>();
 
@@ -465,21 +465,21 @@
                                 <div class="absolute top-3 left-3 h-16 w-16 overflow-hidden rounded-xl border-2 border-white bg-white shadow-lg">
                                     @if (!string.IsNullOrWhiteSpace(oferta?.ImagenLocal?.Base64))
                                     {
-                                        <img src="@oferta.ImagenLocal.Base64" alt="Local" class="h-full w-full object-cover">
+                                        <img src="@oferta?.ImagenLocal?.Base64" alt="Local" class="h-full w-full object-cover">
                                     }
                                 </div>
 
                                 <!-- Información de la oferta -->
                                 <div class="p-5">
                                     <h3 class="text-lg font-bold text-gray-800 line-clamp-1">
-                                        @oferta.Titulo
+                                        @oferta?.Titulo
                                     </h3>
-                                    <p class="mt-1 text-sm text-[#F66623] font-semibold">@oferta.ProductoOfertaFlash</p>
-                                    <p class="mt-2 text-sm text-gray-600 line-clamp-2">@oferta.Descripcion</p>
+                                    <p class="mt-1 text-sm text-[#F66623] font-semibold">@oferta?.ProductoOfertaFlash</p>
+                                    <p class="mt-2 text-sm text-gray-600 line-clamp-2">@oferta?.Descripcion</p>
 
                                     <div class="mt-3 flex items-center gap-2 text-sm text-gray-500">
                                         <i class="fas fa-map-marker-alt text-[#23916A]"></i>
-                                        <span>@oferta.NombreLocal</span>
+                                        <span>@oferta?.NombreLocal</span>
                                     </div>
 
                                     <!-- Temporizador -->
@@ -489,7 +489,7 @@
                                             <span class="text-sm font-semibold text-red-600">Expira en</span>
                                         </div>
                                         <span class="countdown-timer font-bold text-red-600"
-                                            data-expiration="@oferta.TiempoOferta?.ToString("yyyy-MM-ddTHH:mm:ss")"></span>
+                                            data-expiration="@oferta?.TiempoOferta?.ToString("yyyy-MM-ddTHH:mm:ss")"></span>
                                     </div>
                                 </div>
                             </div>

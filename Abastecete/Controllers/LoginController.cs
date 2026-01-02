@@ -34,7 +34,7 @@ namespace Abastecete.Controllers
         /// <summary>
         /// Registra log de autenticación de forma asíncrona (fire-and-forget) para no bloquear el login
         /// </summary>
-        private void RegistrarLogAutenticacion(int? usuarioId, string nombreUsuario, string tipoAccion, string resultado, string mensajeError = null)
+        private void RegistrarLogAutenticacion(int? usuarioId, string nombreUsuario, string tipoAccion, string resultado, string? mensajeError = null)
         {
             // Capturar datos del contexto antes del Task (HttpContext no es thread-safe)
             var ipCliente = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
@@ -281,10 +281,10 @@ namespace Abastecete.Controllers
                     }
                 }
 
-                string email = claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value;
-                string name = claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value;
+                string? email = claims?.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value;
+                string name = claims?.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value ?? "";
                 // Obtener foto de perfil de Google - buscar en varios tipos de claim
-                string pictureUrl = claims.FirstOrDefault(c =>
+                string pictureUrl = claims?.FirstOrDefault(c =>
                     c.Type == "picture" ||
                     c.Type == "image" ||
                     c.Type == "urn:google:picture" ||
@@ -295,7 +295,7 @@ namespace Abastecete.Controllers
 
                 Console.WriteLine($"[GOOGLE AUTH] Foto URL capturada: '{pictureUrl}'");
 
-                if (!EsCorreoValido(email))
+                if (string.IsNullOrEmpty(email) || !EsCorreoValido(email))
                 {
                     TempData["Error"] = "El correo proporcionado no es válido.";
                     return RedirectToAction("Index");
@@ -340,7 +340,7 @@ namespace Abastecete.Controllers
                     var membresiaValue = data.Rows[0]["FK_ID_TIPOMEMBRESIA"];
                     if (membresiaValue != DBNull.Value && membresiaValue != null)
                     {
-                        string membresiaStr = membresiaValue.ToString();
+                        string? membresiaStr = membresiaValue.ToString();
                         if (!string.IsNullOrWhiteSpace(membresiaStr))
                         {
                             membresia = membresiaStr;
@@ -358,7 +358,7 @@ namespace Abastecete.Controllers
                     }
                 }
 
-                HttpContext.Session.SetString("userEmail", email);
+                HttpContext.Session.SetString("userEmail", email ?? "");
                 HttpContext.Session.SetString("userName", name);
 
                 // Cargar permisos (unificado)
@@ -409,7 +409,7 @@ namespace Abastecete.Controllers
             int userId = Convert.ToInt32(data.Rows[0]["PK_ID_USUARIO"]);
 
             _manejadorUsuario.GenerarTokenRecuperacion(userId);
-            string token = _manejadorUsuario.ObtenerTokenRecuperacion(userId);
+            string? token = _manejadorUsuario.ObtenerTokenRecuperacion(userId);
 
             if (string.IsNullOrEmpty(token))
             {

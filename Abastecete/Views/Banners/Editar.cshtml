@@ -3,7 +3,7 @@
 @model List<BusinessLogic.Models.Categoria>
 @{
     ViewData["Title"] = "Gestión de Banners";
-    string permisos = HttpContextAccessor.HttpContext.Session.GetString("permisosSistema") ?? "";
+    string permisos = HttpContextAccessor.HttpContext?.Session.GetString("permisosSistema") ?? "";
     var puedeAdministrar = RolPermisos.TienePermiso("ADMIN_BANNERS", permisos);
 }
 
@@ -282,9 +282,9 @@ else
 </div> <!-- Cierre del contenedor principal -->
 
 <!-- Inclusión de modales -->
-@Html.Partial("BannerModal")
-@Html.Partial("CategoryBannerModal")
-@Html.Partial("BannerProveedoresModal")
-@Html.Partial("BannerOfertasModal")
-@Html.Partial("BannerSesionModal")
-@Html.Partial("BannerBuscadorModal")
+<partial name="BannerModal" />
+<partial name="CategoryBannerModal" />
+<partial name="BannerProveedoresModal" />
+<partial name="BannerOfertasModal" />
+<partial name="BannerSesionModal" />
+<partial name="BannerBuscadorModal" />

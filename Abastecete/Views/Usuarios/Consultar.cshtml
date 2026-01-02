@@ -177,7 +177,7 @@
             <i class="fas fa-user-check text-green-600 text-xl"></i>
         </div>
         <div>
-            <p class="text-2xl font-bold text-gray-900">@Model.Items.Count(u => u.Usuario.Estado == 1)</p>
+            <p class="text-2xl font-bold text-gray-900">@Model.Items.Count(u => u.Usuario?.Estado == 1)</p>
             <p class="text-sm text-gray-500">Activos (página)</p>
         </div>
     </div>
@@ -283,19 +283,19 @@
                 @foreach (var item in Model.Items)
                 {
                     var usuario = item.Usuario;
-                    var nombreCompleto = $"{usuario.Nombres} {usuario.Apellidos}";
-                    var estado = usuario.Estado == 1 ? "Activo" : "Inactivo";
-                    var esActivo = usuario.Estado == 1;
+                    var nombreCompleto = $"{usuario?.Nombres} {usuario?.Apellidos}";
+                    var estado = usuario?.Estado == 1 ? "Activo" : "Inactivo";
+                    var esActivo = usuario?.Estado == 1;
 
                     <tr class="usuario-row hover:bg-gray-50 transition-colors">
                         <td class="px-4 py-4">
                             <div class="flex items-center gap-3">
                                 <div class="w-10 h-10 rounded-full bg-gradient-to-br from-[#23916A] to-[#1a6b4f] flex items-center justify-center text-white font-semibold text-sm">
-                                    @(usuario.Nombres?.Length > 0 ? usuario.Nombres.Substring(0, 1).ToUpper() : "?")@(usuario.Apellidos?.Length > 0 ? usuario.Apellidos.Substring(0, 1).ToUpper() : "")
+                                    @(usuario?.Nombres?.Length > 0 ? usuario.Nombres.Substring(0, 1).ToUpper() : "?")@(usuario?.Apellidos?.Length > 0 ? usuario.Apellidos.Substring(0, 1).ToUpper() : "")
                                 </div>
                                 <div>
                                     <p class="font-medium text-gray-900">@nombreCompleto</p>
-                                    <p class="text-sm text-gray-500">@usuario.Correo</p>
+                                    <p class="text-sm text-gray-500">@usuario?.Correo</p>
                                 </div>
                             </div>
                         </td>
@@ -305,7 +305,7 @@
                                 <div class="space-y-1">
                                     <p class="text-sm font-medium text-gray-900 flex items-center gap-2">
                                         <i class="fas fa-store text-purple-500 text-xs"></i>
-                                        @item.Local.Nombre
+                                        @item.Local?.Nombre
                                     </p>
                                 </div>
                             }
@@ -361,7 +361,7 @@
                             }
                         </td>
                         <td class="px-4 py-4 text-center">
-                            <span id="estado-badge-@usuario.Id"
+                            <span id="estado-badge-@usuario?.Id"
                                   class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium @(esActivo ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700")">
                                 <span class="w-1.5 h-1.5 rounded-full @(esActivo ? "bg-green-500" : "bg-red-500")"></span>
                                 @estado
@@ -371,13 +371,13 @@
                         {
                             <td class="px-4 py-4 text-center">
                                 <div class="flex items-center justify-center gap-2">
-                                    <button onclick="abrirModalPermisos(@usuario.Id, '@nombreCompleto')"
+                                    <button onclick="abrirModalPermisos(@usuario?.Id, '@nombreCompleto')"
                                             class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-purple-600 hover:bg-purple-50 transition-colors"
                                             title="Ver/Editar permisos">
                                         <i class="fas fa-key"></i>
                                         Permisos
                                     </button>
-                                    <button onclick="abrirModal(@usuario.Id, '@estado')"
+                                    <button onclick="abrirModal(@usuario?.Id, '@estado')"
                                             class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-blue-600 hover:bg-blue-50 transition-colors"
                                             title="Editar estado">
                                         <i class="fas fa-edit"></i>
@@ -385,7 +385,7 @@
                                     </button>
                                     @if (item.TieneSuscripcion)
                                     {
-                                        <button onclick="abrirModalExtender(@item.Local.Id, '@item.NombreMembresia', @item.DiasRestantes)"
+                                        <button onclick="abrirModalExtender(@(item.Local?.Id ?? 0), '@item.NombreMembresia', @item.DiasRestantes)"
                                                 class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-[#23916A] hover:bg-green-50 transition-colors"
                                                 title="Extender membresía">
                                             <i class="fas fa-clock"></i>

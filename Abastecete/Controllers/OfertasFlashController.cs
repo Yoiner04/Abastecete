@@ -121,7 +121,7 @@ namespace Abastecete.Controllers
                 return RedirectToAction("Crear");
             }
 
-            Negocio negocio = _manejadorNegocios.ConsultarNegocioPorUsuario(usuarioId.Value);
+            Negocio? negocio = _manejadorNegocios.ConsultarNegocioPorUsuario(usuarioId.Value);
             if (negocio == null)
             {
                 TempData["ErrorMessage"] = "No se encontró un negocio asociado a tu cuenta.";
@@ -186,7 +186,7 @@ namespace Abastecete.Controllers
             var usuarioId = HttpContext.Session.GetInt32("idUsuario");
             if (usuarioId == null) return null;
 
-            Negocio negocio = _manejadorNegocios.ConsultarNegocioPorUsuario(usuarioId.Value);
+            Negocio? negocio = _manejadorNegocios.ConsultarNegocioPorUsuario(usuarioId.Value);
             return negocio?.Id;
         }
 

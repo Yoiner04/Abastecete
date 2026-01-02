@@ -398,11 +398,11 @@
                                 </div>
                                 <!-- Info -->
                                 <div class="p-4">
-                                    <h3 class="font-bold text-gray-800 line-clamp-1">@oferta.Titulo</h3>
-                                    <p class="text-sm text-gray-500 line-clamp-1 mt-0.5">@oferta.ProductoOfertaFlash</p>
+                                    <h3 class="font-bold text-gray-800 line-clamp-1">@oferta?.Titulo</h3>
+                                    <p class="text-sm text-gray-500 line-clamp-1 mt-0.5">@oferta?.ProductoOfertaFlash</p>
                                     <p class="text-xs text-gray-400 mt-2 flex items-center gap-1">
                                         <i class="fas fa-map-marker-alt"></i>
-                                        @oferta.NombreLocal
+                                        @oferta?.NombreLocal
                                     </p>
                                 </div>
                             </a>
@@ -453,7 +453,7 @@
                                                 </div>
                                             }
                                         </div>
-                                        <span class="text-[10px] text-gray-500 truncate">@producto.NombreLocal</span>
+                                        <span class="text-[10px] text-gray-500 truncate">@producto?.NombreLocal</span>
                                     </div>
                                 </div>
                             </a>
@@ -496,20 +496,20 @@
                                 </div>
                                 <!-- Info -->
                                 <div class="flex-1 min-w-0">
-                                    <h3 class="font-bold text-gray-800 truncate">@local.Nombre</h3>
-                                    @if (!string.IsNullOrEmpty(local.Descripcion))
+                                    <h3 class="font-bold text-gray-800 truncate">@local?.Nombre</h3>
+                                    @if (!string.IsNullOrEmpty(local?.Descripcion))
                                     {
                                         <p class="text-sm text-gray-500 line-clamp-1 mt-0.5">@local.Descripcion</p>
                                     }
                                     <div class="flex items-center gap-3 mt-2 text-xs text-gray-400">
-                                        @if (!string.IsNullOrEmpty(local.Direccion))
+                                        @if (!string.IsNullOrEmpty(local?.Direccion))
                                         {
                                             <span class="flex items-center gap-1">
                                                 <i class="fas fa-map-marker-alt"></i>
                                                 <span class="truncate max-w-[120px]">@local.Direccion</span>
                                             </span>
                                         }
-                                        @if (local.Telefono > 0)
+                                        @if (local?.Telefono > 0)
                                         {
                                             <span class="flex items-center gap-1">
                                                 <i class="fas fa-phone"></i>

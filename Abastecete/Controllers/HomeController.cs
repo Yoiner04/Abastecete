@@ -46,15 +46,13 @@ namespace Abastecete.Controllers
 
         public IActionResult Principal()
         {
-            var swTotal = System.Diagnostics.Stopwatch.StartNew();
-
             // Ejecutar consultas principales en paralelo
-            List<Categoria> categorias = null;
-            List<Negocio> negocios = null;
-            List<Negocio> localesAleatorios = null;
-            List<OfertaFlash> ofertasFlash = null;
-            List<Banner> bannersInicio = null;
-            Dictionary<int, List<Banner>> todosBannersCategorias = null;
+            List<Categoria> categorias = new List<Categoria>();
+            List<Negocio> negocios = new List<Negocio>();
+            List<Negocio> localesAleatorios = new List<Negocio>();
+            List<OfertaFlash> ofertasFlash = new List<OfertaFlash>();
+            List<Banner> bannersInicio = new List<Banner>();
+            Dictionary<int, List<Banner>> todosBannersCategorias = new Dictionary<int, List<Banner>>();
 
             var tasks = new List<Task>
             {
@@ -67,8 +65,6 @@ namespace Abastecete.Controllers
             };
 
             Task.WaitAll(tasks.ToArray());
-
-            Console.WriteLine($"[PRINCIPAL TIMING] Consultas principales (paralelo): {swTotal.ElapsedMilliseconds}ms");
 
             // Banners de inicio
             if (bannersInicio != null && bannersInicio.Count > 0)
@@ -114,9 +110,7 @@ namespace Abastecete.Controllers
             ViewBag.OfertasFlash = ofertasFlash ?? new List<OfertaFlash>();
             ViewBag.BannersPorCategoria = bannersPorCategoria;
 
-            Console.WriteLine($"[PRINCIPAL TIMING] TOTAL: {swTotal.ElapsedMilliseconds}ms");
-
-            return View(categorias ?? new List<Categoria>());
+            return View(categorias);
         }
 
 

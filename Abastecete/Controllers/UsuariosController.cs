@@ -412,7 +412,7 @@ namespace Abastecete.Controllers
                 return RedirectToAction("Index", "Login"); // Redirigir al login si no hay usuario autenticado
             }
 
-            Usuario usuario = manejadorU.ObtenerUsuarios(idUsuario.Value).FirstOrDefault();
+            Usuario? usuario = manejadorU.ObtenerUsuarios(idUsuario.Value).FirstOrDefault();
 
             //if (usuario == null)
             //{

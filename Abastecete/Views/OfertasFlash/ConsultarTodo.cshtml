@@ -98,9 +98,7 @@
     <div id="offers-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         @foreach (var oferta in Model)
         {
-            var tiempoOfertaStr = oferta.TiempoOferta != null
-            ? oferta.TiempoOferta.ToString("yyyy-MM-ddTHH:mm:ss")
-            : string.Empty;
+            var tiempoOfertaStr = oferta.TiempoOferta.ToString("yyyy-MM-ddTHH:mm:ss");
             @if (oferta.Estado == 1) // ✅ Solo muestra ofertas aprobadas
             {
                 <div class="bg-white p-4 rounded-lg shadow-md flex flex-col relative">

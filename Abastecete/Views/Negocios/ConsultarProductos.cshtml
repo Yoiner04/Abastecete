@@ -7,7 +7,7 @@
     ViewData["Title"] = $"{negocio?.Nombre} - Productos en Abastécete";
     ViewData["Description"] = $"Descubre {productCount} productos de {negocio?.Nombre}. {negocio?.Descripcion ?? "Tu proveedor de confianza en Abastécete"}";
 }
-@Html.Partial("_ContactModal")
+<partial name="_ContactModal" />
 <!DOCTYPE html>
 <html lang="es">
 
@@ -495,7 +495,7 @@
                         }
                         <a href="@waUrl"
                            target="_blank" rel="noopener"
-                           onclick="if(window.AbasteceteTracking) AbasteceteTracking.registrarClicWhatsapp(@negocio.Id);"
+                           onclick="if(window.AbasteceteTracking) AbasteceteTracking.registrarClicWhatsapp(@(negocio?.Id ?? 0));"
                            class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 text-white font-semibold shadow-lg shadow-green-500/30 hover:shadow-xl hover:shadow-green-500/40 hover:-translate-y-0.5 transition-all duration-300">
                             <i class="fab fa-whatsapp text-xl"></i>
                             <span>WhatsApp</span>
@@ -571,7 +571,7 @@
                                 }
                                 @if (!string.IsNullOrEmpty(negocio?.Localizacion))
                                 {
-                                    <a href="https://www.google.com/maps?q=@negocio.Localizacion"
+                                    <a href="https://www.google.com/maps?q=@negocio?.Localizacion"
                                        target="_blank"
                                        class="inline-flex items-center gap-1 text-green-600 hover:text-green-700 font-medium">
                                         <i class="fas fa-directions"></i> Cómo llegar
@@ -729,7 +729,7 @@
                                         <i class="fas fa-map-marker-alt text-red-500 mr-1"></i>
                                         @(negocio?.Direccion ?? "Ver ubicación")
                                     </span>
-                                    <a href="https://www.google.com/maps?q=@negocio.Localizacion"
+                                    <a href="https://www.google.com/maps?q=@negocio?.Localizacion"
                                        target="_blank"
                                        class="inline-flex items-center gap-1 text-sm font-medium text-green-600 hover:text-green-700">
                                         <i class="fas fa-external-link-alt"></i> Abrir en Google Maps
@@ -880,7 +880,7 @@
             <section id="productosWrapper" class="flex-1 animate-fadeInUp animation-delay-200">
                 <div id="productosContainer" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6" data-view="grid">
                     @{ var index = 0; }
-                    @foreach (var producto in Model)
+                    @foreach (var producto in Model ?? new List<BusinessLogic.Models.Producto>())
                     {
                         <div id="producto-@producto.Id"
                              class="producto producto-card group bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 flex flex-col"
@@ -997,7 +997,7 @@
         <!-- Botón -->
         <a href="@waUrlFloat"
            target="_blank"
-           onclick="if(window.AbasteceteTracking) AbasteceteTracking.registrarClicWhatsapp(@negocio.Id);"
+           onclick="if(window.AbasteceteTracking) AbasteceteTracking.registrarClicWhatsapp(@(negocio?.Id ?? 0));"
            class="flex items-center justify-center w-16 h-16 rounded-full bg-[#25D366] text-white shadow-lg shadow-green-500/30 hover:shadow-xl hover:shadow-green-500/50 hover:scale-110 transition-all duration-300 relative">
             <!-- Ping animation -->
             <span class="absolute inset-0 rounded-full bg-[#25D366] animate-ping opacity-30"></span>
@@ -1423,14 +1423,14 @@
         // Registrar visita al local al cargar la página
         document.addEventListener('DOMContentLoaded', function() {
             if (window.AbasteceteTracking) {
-                AbasteceteTracking.registrarVisitaLocal(@negocio.Id);
+                AbasteceteTracking.registrarVisitaLocal(@(negocio?.Id ?? 0));
 
                 // Registrar vista de producto cuando hacen clic en "Ver más" o en el ojo
                 document.querySelectorAll('.producto-card').forEach(function(card) {
                     var productoId = card.id.replace('producto-', '');
                     card.querySelectorAll('a[href*="ProductDetailLocal"]').forEach(function(link) {
                         link.addEventListener('click', function() {
-                            AbasteceteTracking.registrarVisitaProducto(@negocio.Id, parseInt(productoId));
+                            AbasteceteTracking.registrarVisitaProducto(@(negocio?.Id ?? 0), parseInt(productoId));
                         });
                     });
                 });

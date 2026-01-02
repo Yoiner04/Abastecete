@@ -41,9 +41,9 @@ namespace Abastecete.Controllers
         /// El parámetro nombre es opcional para mantener compatibilidad con el sistema antiguo.
         /// </summary>
         [HttpGet]
-        public IActionResult Publicar(string nombre = null)
+        public IActionResult Publicar(string? nombre = null)
         {
-            string epaycoPublicKey = _configuration["Epayco:PublicKey"];
+            string? epaycoPublicKey = _configuration["Epayco:PublicKey"];
 
             List<Membresia> membresias;
 
@@ -97,7 +97,7 @@ namespace Abastecete.Controllers
         [Route("Membresias/ObtenerMembresia")]
         public IActionResult ObtenerMembresia([FromQuery] int id)
         {
-            Membresia membresia = manejadorMembresias.ObtenerMembresia(id);
+            Membresia? membresia = manejadorMembresias.ObtenerMembresia(id);
 
             if (membresia != null)
             {

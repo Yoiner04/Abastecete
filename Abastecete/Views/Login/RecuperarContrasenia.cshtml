@@ -1,7 +1,7 @@
 @{
     Layout = null;
     string correoIngresado = TempData["CorreoIngresado"] as string ?? "";
-    bool mostrarCodigo = TempData["MostrarCodigo"] != null && (bool)TempData["MostrarCodigo"];
+    bool mostrarCodigo = TempData["MostrarCodigo"] is bool valor && valor;
 }
 
 <!DOCTYPE html>

@@ -93,8 +93,8 @@ namespace Abastecete.Controllers
 
             try
             {
-                string logoUrl = null;
-                string cloudinaryPublicId = null;
+                string? logoUrl = null;
+                string? cloudinaryPublicId = null;
 
                 // Subir logo a Cloudinary si se proporcionó
                 if (logo != null && logo.Length > 0)
@@ -141,8 +141,8 @@ namespace Abastecete.Controllers
                 if (marcaActual == null)
                     return NotFound(new { mensaje = "Marca no encontrada" });
 
-                string logoUrl = marcaActual.LogoUrl;
-                string cloudinaryPublicId = marcaActual.CloudinaryPublicId;
+                string? logoUrl = marcaActual.LogoUrl;
+                string? cloudinaryPublicId = marcaActual.CloudinaryPublicId;
 
                 // Subir nuevo logo si se proporcionó
                 if (logo != null && logo.Length > 0)

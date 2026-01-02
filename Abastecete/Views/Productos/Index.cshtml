@@ -337,14 +337,14 @@
                 <h2 class="mt-2 text-center text-xl font-bold text-[#23916A]">Solicitud</h2>
 
                 <form id="mensaje-form" class="mt-4">
-                    <input type="email" id="email" name="email" value="@Model.Usuario.Correo"
+                    <input type="email" id="email" name="email" value="@Model?.Usuario?.Correo"
                         class="mb-3 w-full rounded-lg border border-gray-300 bg-gray-100 p-3 text-black" required>
 
                     <div class="mb-3 flex items-center space-x-2">
                         <span class="flex items-center rounded-lg border border-gray-300 bg-white px-4 py-3">
                             +57
                         </span>
-                        <input type="text" id="phone" name="phone" value="@Model.Negocio.Telefono"
+                        <input type="text" id="phone" name="phone" value="@Model?.Negocio?.Telefono"
                             class="w-full rounded-lg border border-gray-300 bg-gray-100 p-3 text-black" required>
                     </div>
 
@@ -1982,7 +1982,7 @@
         // ==========================================
         // MODAL DE GESTIÓN DE MARCAS
         // ==========================================
-        const idLocalActual = @Model.Negocio.Id;
+        const idLocalActual = @(Model?.Negocio?.Id ?? 0);
         let todasLasMarcas = [];
 
         async function cargarTodasLasMarcas() {

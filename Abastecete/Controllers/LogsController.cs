@@ -110,7 +110,7 @@ namespace Abastecete.Controllers
             return File(bytes, "text/csv", $"logs_sistema_{DateTime.Now:yyyyMMdd_HHmmss}.csv");
         }
 
-        private string EscaparCsv(string valor)
+        private string EscaparCsv(string? valor)
         {
             if (string.IsNullOrEmpty(valor))
                 return "";
