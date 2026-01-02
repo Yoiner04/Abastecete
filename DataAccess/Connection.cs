@@ -66,7 +66,12 @@ namespace DataAccess
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine("Error al ejecutar consulta: " + e.Message);
+                    Console.WriteLine($"[ERROR BD] Procedimiento: '{procedimiento}' - Error: {e.Message}");
+                    if (parametros != null)
+                    {
+                        foreach (var p in parametros)
+                            Console.WriteLine($"  Param: {p.Nombre} = {p.Valor}");
+                    }
                 }
             }
 

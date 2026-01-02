@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using BusinessLogic.Models;
+using BusinessLogic.Utilidades;
 using DataAccess;
 
 namespace BusinessLogic
@@ -167,7 +168,7 @@ namespace BusinessLogic
         {
             List<Parametro> parametros = new List<Parametro>
             {
-                new Parametro("p_busqueda", busqueda),
+                new Parametro("p_termino", busqueda),
                 new Parametro("p_limite", limite)
             };
             DataTable datos = conexion.EjecutarConsulta("buscador_productos_sugerencias", parametros);
@@ -249,6 +250,84 @@ namespace BusinessLogic
                 });
             }
             return resultado;
+        }
+
+        #endregion
+
+        #region Sugerencias "Quizás quisiste decir"
+
+        /// <summary>
+        /// Obtiene todos los nombres de productos para sugerencias ortográficas
+        /// </summary>
+        public List<string> ObtenerNombresProductos()
+        {
+            DataTable datos = conexion.EjecutarConsulta("obtener_nombres_productos_busqueda", new List<Parametro>());
+            var nombres = new List<string>();
+
+            if (datos != null)
+            {
+                foreach (DataRow row in datos.Rows)
+                {
+                    string? nombre = row["nombre"]?.ToString();
+                    if (!string.IsNullOrWhiteSpace(nombre))
+                        nombres.Add(nombre);
+                }
+            }
+            return nombres;
+        }
+
+        /// <summary>
+        /// Obtiene todos los nombres de negocios para sugerencias ortográficas
+        /// </summary>
+        public List<string> ObtenerNombresNegocios()
+        {
+            DataTable datos = conexion.EjecutarConsulta("obtener_nombres_negocios_busqueda", new List<Parametro>());
+            var nombres = new List<string>();
+
+            if (datos != null)
+            {
+                foreach (DataRow row in datos.Rows)
+                {
+                    string? nombre = row["nombre"]?.ToString();
+                    if (!string.IsNullOrWhiteSpace(nombre))
+                        nombres.Add(nombre);
+                }
+            }
+            return nombres;
+        }
+
+        /// <summary>
+        /// Busca sugerencias ortográficas cuando la búsqueda no tiene resultados
+        /// </summary>
+        /// <param name="query">Término buscado por el usuario</param>
+        /// <returns>Lista de sugerencias con similitud</returns>
+        public List<SugerenciaBusqueda> ObtenerSugerenciasOrtograficas(string query)
+        {
+            if (string.IsNullOrWhiteSpace(query) || query.Length < 3)
+                return new List<SugerenciaBusqueda>();
+
+            // Obtener todos los términos candidatos
+            var candidatos = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            // Agregar nombres de productos
+            var productos = ObtenerNombresProductos();
+            foreach (var p in productos)
+                candidatos.Add(p);
+
+            // Agregar nombres de negocios
+            var negocios = ObtenerNombresNegocios();
+            foreach (var n in negocios)
+                candidatos.Add(n);
+
+            // Buscar mejores coincidencias
+            var sugerencias = StringSimilarity.FindBestMatches(
+                query,
+                candidatos,
+                minSimilarity: 45, // Umbral de similitud mínima
+                maxResults: 3
+            );
+
+            return sugerencias;
         }
 
         #endregion

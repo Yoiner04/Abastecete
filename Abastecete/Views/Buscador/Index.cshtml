@@ -316,6 +316,30 @@
 
     @if (!string.IsNullOrEmpty(query) && totalResultados > 0)
     {
+        var sugerenciasPocos = ViewBag.Sugerencias as List<BusinessLogic.Utilidades.SugerenciaBusqueda> ?? new List<BusinessLogic.Utilidades.SugerenciaBusqueda>();
+
+        if (sugerenciasPocos.Any() && totalResultados < 3)
+        {
+            <!-- Sugerencias cuando hay pocos resultados -->
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+                <div class="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 flex flex-wrap items-center gap-3">
+                    <span class="text-amber-800 text-sm font-medium flex items-center gap-2">
+                        <i class="fas fa-lightbulb text-amber-500"></i>
+                        ¿Quizás quisiste decir?
+                    </span>
+                    <div class="flex flex-wrap gap-2">
+                        @foreach (var sug in sugerenciasPocos)
+                        {
+                            <a href="@Url.Action("Index", "Buscador", new { query = sug.Termino })"
+                               class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-amber-300 text-amber-700 font-medium text-sm hover:bg-amber-100 transition-colors shadow-sm">
+                                @sug.Termino
+                            </a>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+
         <!-- Tabs de filtro -->
         <div class="bg-white border-b shadow-sm sticky top-0 z-20">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -531,15 +555,39 @@
     }
     else if (!string.IsNullOrEmpty(query))
     {
+        var sugerencias = ViewBag.Sugerencias as List<BusinessLogic.Utilidades.SugerenciaBusqueda> ?? new List<BusinessLogic.Utilidades.SugerenciaBusqueda>();
+
         <!-- Estado vacío -->
         <div class="flex flex-col items-center justify-center py-20 px-4">
             <div class="w-24 h-24 rounded-full bg-gray-100 flex items-center justify-center mb-6">
                 <i class="fas fa-search text-4xl text-gray-300"></i>
             </div>
             <h3 class="text-xl font-bold text-gray-700 mb-2">No encontramos resultados</h3>
-            <p class="text-gray-500 text-center max-w-md mb-6">
+            <p class="text-gray-500 text-center max-w-md mb-4">
                 No hay productos, ofertas ni locales que coincidan con "<span class="font-medium">@query</span>"
             </p>
+
+            @if (sugerencias.Any())
+            {
+                <!-- Sugerencias "Quizás quisiste decir" -->
+                <div class="bg-amber-50 border border-amber-200 rounded-xl px-6 py-4 mb-6 max-w-md w-full">
+                    <p class="text-amber-800 text-sm font-medium mb-3 flex items-center gap-2">
+                        <i class="fas fa-lightbulb text-amber-500"></i>
+                        Quizás quisiste decir:
+                    </p>
+                    <div class="flex flex-wrap gap-2">
+                        @foreach (var sugerencia in sugerencias)
+                        {
+                            <a href="@Url.Action("Index", "Buscador", new { query = sugerencia.Termino })"
+                               class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-amber-300 text-amber-700 font-medium text-sm hover:bg-amber-100 hover:border-amber-400 transition-all duration-200 shadow-sm">
+                                <i class="fas fa-search text-xs"></i>
+                                @sugerencia.Termino
+                            </a>
+                        }
+                    </div>
+                </div>
+            }
+
             <div class="flex flex-col sm:flex-row gap-3">
                 <a href="@Url.Action("Index", "Home")" class="px-6 py-3 rounded-xl bg-[#23916A] text-white font-medium hover:bg-emerald-600 transition-colors flex items-center gap-2">
                     <i class="fas fa-home"></i>

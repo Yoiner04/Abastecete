@@ -37,6 +37,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="icon" type="image/x-icon" href="~/images/Logo A naranja.png">
     <script src="https://unpkg.com/boxicons@2.1.4/dist/boxicons.js"></script>
+    @RenderSection("Styles", required: false)
 </head>
 
 <partial name="_SupportBubble" />
@@ -64,10 +65,10 @@
             <!-- Logo y botón móvil -->
             <div class="flex items-center gap-4 w-full lg:w-auto justify-between">
                 <a href="@Url.Action("Principal", "Home")" class="flex items-center group">
-                    <img src="~/images/LOGO FINAL.png" alt="Abastecete Logo"
+                    <img src="~/images/logo-final.png" alt="Abastecete Logo"
                          class="h-12 lg:h-14 w-auto transition-transform duration-300 group-hover:scale-105">
                 </a>
-                <button id="menu-toggle" class="lg:hidden flex items-center justify-center w-10 h-10 rounded-lg hover:bg-[#23916A]/10 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#23916A]">
+                <button id="menu-toggle" class="lg:hidden flex items-center justify-center w-11 h-11 sm:w-10 sm:h-10 rounded-lg hover:bg-[#23916A]/10 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#23916A]">
                     <i class="fas fa-bars text-xl text-gray-700"></i>
                 </button>
             </div>
@@ -75,7 +76,7 @@
             <!-- Contenedor del menú -->
             <div id="menu-container" class="hidden lg:flex w-full flex-col lg:flex-row items-center gap-4 lg:gap-6">
                 <!-- Barra de búsqueda con autocompletado -->
-                <form id="search-form-md" action="@Url.Action("Index", "Buscador")" method="get" class="w-full lg:w-auto lg:flex-1 lg:max-w-md order-1">
+                <form id="search-form-md" action="@Url.Action("Index", "Buscador")" method="get" class="w-full sm:w-5/6 md:w-auto lg:flex-1 lg:max-w-md order-1 mx-auto lg:mx-0">
                     <div class="relative group">
                         <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
                             <i class="fa fa-search text-gray-400 group-focus-within:text-[#23916A] transition-colors duration-200"></i>
@@ -504,15 +505,42 @@
 
             // Renderizar sugerencias
             function renderSugerencias(data, query) {
-                const { locales, productos, ofertas, totalResultados } = data;
+                const { locales, productos, ofertas, totalResultados, quizasQuisistDecir } = data;
 
                 if (totalResultados === 0) {
-                    suggestionsContent.innerHTML = `
+                    let noResultsHtml = `
                         <div class="p-4 text-center text-gray-500">
                             <i class="fas fa-search text-2xl mb-2 opacity-50"></i>
                             <p class="text-sm">No se encontraron resultados para "<strong>${escapeHtml(query)}</strong>"</p>
                         </div>
                     `;
+
+                    // Mostrar "Quizás quisiste decir" si hay sugerencias
+                    if (quizasQuisistDecir && quizasQuisistDecir.length > 0) {
+                        noResultsHtml += `
+                            <div class="px-4 pb-4">
+                                <p class="text-xs text-gray-500 mb-2">
+                                    <i class="fas fa-lightbulb text-yellow-500 mr-1"></i>Quizás quisiste decir:
+                                </p>
+                                <div class="flex flex-wrap gap-2">
+                        `;
+                        quizasQuisistDecir.forEach(s => {
+                            noResultsHtml += `
+                                <a href="/Buscador?query=${encodeURIComponent(s.termino)}"
+                                   class="inline-flex items-center gap-1 px-3 py-1.5 bg-[#23916A]/10 hover:bg-[#23916A]/20 text-[#23916A] rounded-full text-sm font-medium transition-colors"
+                                   onclick="document.getElementById('search-input-md').value='${escapeHtml(s.termino)}'">
+                                    <i class="fas fa-search text-xs"></i>
+                                    ${escapeHtml(s.termino)}
+                                </a>
+                            `;
+                        });
+                        noResultsHtml += `
+                                </div>
+                            </div>
+                        `;
+                    }
+
+                    suggestionsContent.innerHTML = noResultsHtml;
                     return;
                 }
 
