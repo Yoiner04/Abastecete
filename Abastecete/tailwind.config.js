@@ -1,7 +1,8 @@
 module.exports = {
     content: [
         './Pages/**/*.cshtml',
-        './Views/**/*.cshtml'
+        './Views/**/*.cshtml',
+        './Views/Shared/_Footer.cshtml'
     ],
     theme: {
         extend: {
