@@ -10,7 +10,7 @@ namespace BusinessLogic
     /// <summary>
     /// Manejador para la relación muchos a muchos entre productos y marcas por local
     /// </summary>
-    public class ManejadorProductoMarca
+    public class ManejadorProductoMarca : Interfaces.IManejadorProductoMarca
     {
         private readonly Connection conexion;
 

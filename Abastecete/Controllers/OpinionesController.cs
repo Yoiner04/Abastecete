@@ -1,18 +1,21 @@
 using Microsoft.AspNetCore.Mvc;
 using BusinessLogic;
+using BusinessLogic.Interfaces;
 using BusinessLogic.Models;
 
 namespace Abastecete.Controllers
 {
     public class OpinionesController : Controller
     {
-        private readonly ManejadorOpiniones _manejadorOpiniones;
-        private readonly ManejadorNegocios _manejadorNegocios;
+        private readonly IManejadorOpiniones _manejadorOpiniones;
+        private readonly IManejadorNegocios _manejadorNegocios;
 
-        public OpinionesController()
+        public OpinionesController(
+            IManejadorOpiniones manejadorOpiniones,
+            IManejadorNegocios manejadorNegocios)
         {
-            _manejadorOpiniones = new ManejadorOpiniones();
-            _manejadorNegocios = new ManejadorNegocios();
+            _manejadorOpiniones = manejadorOpiniones;
+            _manejadorNegocios = manejadorNegocios;
         }
 
         /// <summary>

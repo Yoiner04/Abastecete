@@ -6,7 +6,7 @@ using System.Data;
 
 namespace BusinessLogic
 {
-    public class ManejadorUnidad
+    public class ManejadorUnidad : Interfaces.IManejadorUnidad
     {
         private Connection conexion = new Connection();
 

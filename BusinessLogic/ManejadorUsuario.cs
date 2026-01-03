@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace BusinessLogic
 {
-    public class ManejadorUsuario
+    public class ManejadorUsuario : Interfaces.IManejadorUsuario
     {
         private Connection conexion = new Connection();
 

@@ -7,7 +7,7 @@ namespace BusinessLogic
     /// <summary>
     /// Manejador para operaciones CRUD de marcas
     /// </summary>
-    public class ManejadorMarcas
+    public class ManejadorMarcas : Interfaces.IManejadorMarcas
     {
         private readonly Connection conexion;
 

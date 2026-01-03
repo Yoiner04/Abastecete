@@ -8,7 +8,7 @@ using System.Linq;
 
 namespace BusinessLogic
 {
-    public class ManejadorMembresias
+    public class ManejadorMembresias : Interfaces.IManejadorMembresias
     {
         private Connection conexion;
         private ManejadorPermisos manejadorPermisos;

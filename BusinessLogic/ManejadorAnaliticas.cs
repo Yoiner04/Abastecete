@@ -6,7 +6,7 @@ using System.Data;
 
 namespace BusinessLogic
 {
-    public class ManejadorAnaliticas
+    public class ManejadorAnaliticas : Interfaces.IManejadorAnaliticas
     {
         private Connection conexion = new Connection();
 

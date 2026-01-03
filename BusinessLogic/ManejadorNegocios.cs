@@ -11,7 +11,7 @@ using Microsoft.AspNetCore.Http;
 
 namespace BusinessLogic
 {
-    public class ManejadorNegocios
+    public class ManejadorNegocios : Interfaces.IManejadorNegocios
     {
         private Connection conexion;
         private readonly ManejadorImagenes _manejadorMongo;

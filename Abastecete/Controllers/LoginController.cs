@@ -1,5 +1,6 @@
 using BusinessLogic;
 using BusinessLogic.Models;
+using BusinessLogic.Interfaces;
 using BusinessLogic.Utilidades;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -17,18 +18,24 @@ namespace Abastecete.Controllers
 {
     public class LoginController : Controller
     {
-        private readonly ManejadorUsuario _manejadorUsuario;
-        private readonly ManejadorImagenes manejadorImagenes;
-        private readonly EmailService _emailService;
-        private readonly ManejadorLogs _manejadorLogs;
-        public static int rol = 0;
+        private readonly IManejadorUsuario _manejadorUsuario;
+        private readonly IManejadorImagenes _manejadorImagenes;
+        private readonly IEmailService _emailService;
+        private readonly IManejadorLogs _manejadorLogs;
+        private readonly IManejadorPermisos _manejadorPermisos;
 
-        public LoginController()
+        public LoginController(
+            IManejadorUsuario manejadorUsuario,
+            IManejadorImagenes manejadorImagenes,
+            IEmailService emailService,
+            IManejadorLogs manejadorLogs,
+            IManejadorPermisos manejadorPermisos)
         {
-            _manejadorUsuario = new ManejadorUsuario();
-            manejadorImagenes = new ManejadorImagenes();
-            _emailService = new EmailService();
-            _manejadorLogs = new ManejadorLogs();
+            _manejadorUsuario = manejadorUsuario;
+            _manejadorImagenes = manejadorImagenes;
+            _emailService = emailService;
+            _manejadorLogs = manejadorLogs;
+            _manejadorPermisos = manejadorPermisos;
         }
 
         /// <summary>
@@ -48,7 +55,7 @@ namespace Abastecete.Controllers
             {
                 try
                 {
-                    var manejadorLogs = new ManejadorLogs();
+                    var manejadorLogs = _manejadorLogs;
                     manejadorLogs.RegistrarLog(
                         usuarioId,
                         nombreUsuario ?? "Anonimo",
@@ -93,7 +100,7 @@ namespace Abastecete.Controllers
         {
             try
             {
-                var bannersSesion = manejadorImagenes.ListarBannersSesion();
+                var bannersSesion = _manejadorImagenes.ListarBannersSesion();
                 var bannerSesion = bannersSesion.Select(b => new {
                     Id = b.Id,
                     Nombre = b.Nombre ?? "",
@@ -227,10 +234,8 @@ namespace Abastecete.Controllers
         /// </summary>
         private void GuardarTodosLosPermisos(int idUsuario)
         {
-            ManejadorPermisos manejadorP = new ManejadorPermisos();
-
             // Cargar permisos del sistema por membresía (UNA sola llamada a DB)
-            var permisos = manejadorP.ObtenerDiccionarioPermisos(idUsuario);
+            var permisos = _manejadorPermisos.ObtenerDiccionarioPermisos(idUsuario);
             HttpContext.Session.SetString("permisosSistema", JsonConvert.SerializeObject(permisos));
         }
 

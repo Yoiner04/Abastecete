@@ -6,7 +6,7 @@ namespace BusinessLogic
     /// <summary>
     /// Manejador de imágenes usando Cloudinary
     /// </summary>
-    public class ManejadorImagenes
+    public class ManejadorImagenes : Interfaces.IManejadorImagenes
     {
         private readonly ManejadorCloudinary _cloudinary;
         private readonly ManejadorBanners _banners;

@@ -1,4 +1,5 @@
 using BusinessLogic;
+using BusinessLogic.Interfaces;
 using BusinessLogic.Models;
 using BusinessLogic.Utilidades;
 using Microsoft.AspNetCore.Mvc;
@@ -7,11 +8,11 @@ namespace Abastecete.Controllers
 {
     public class ReferidosController : Controller
     {
-        private readonly ManejadorReferidos manejadorReferidos;
+        private readonly IManejadorReferidos _manejadorReferidos;
 
-        public ReferidosController()
+        public ReferidosController(IManejadorReferidos manejadorReferidos)
         {
-            manejadorReferidos = new ManejadorReferidos();
+            _manejadorReferidos = manejadorReferidos;
         }
 
         #region Configuración (Admin)
@@ -22,7 +23,7 @@ namespace Abastecete.Controllers
         [RequierePermiso("ADMIN_REFERIDOS")]
         public IActionResult Configuracion()
         {
-            var config = manejadorReferidos.ObtenerConfiguracion();
+            var config = _manejadorReferidos.ObtenerConfiguracion();
             return View(config);
         }
 
@@ -35,7 +36,7 @@ namespace Abastecete.Controllers
         {
             try
             {
-                var config = manejadorReferidos.ObtenerConfiguracion();
+                var config = _manejadorReferidos.ObtenerConfiguracion();
                 return Json(new
                 {
                     success = true,
@@ -79,7 +80,7 @@ namespace Abastecete.Controllers
                     LimiteUsosCodigo = request.LimiteUsosCodigo
                 };
 
-                bool resultado = manejadorReferidos.ActualizarConfiguracion(config, usuarioId);
+                bool resultado = _manejadorReferidos.ActualizarConfiguracion(config, usuarioId);
 
                 if (resultado)
                 {
@@ -113,7 +114,7 @@ namespace Abastecete.Controllers
                 }
 
                 int? idUsuarioActual = HttpContext.Session.GetInt32("idUser");
-                var validacion = manejadorReferidos.ValidarCodigo(codigo.Trim(), idUsuarioActual);
+                var validacion = _manejadorReferidos.ValidarCodigo(codigo.Trim(), idUsuarioActual);
 
                 return Json(new
                 {
@@ -144,8 +145,8 @@ namespace Abastecete.Controllers
                 return RedirectToAction("Index", "Login");
             }
 
-            var resumen = manejadorReferidos.ObtenerResumen(idUsuario.Value);
-            var referidos = manejadorReferidos.ObtenerMisReferidos(idUsuario.Value);
+            var resumen = _manejadorReferidos.ObtenerResumen(idUsuario.Value);
+            var referidos = _manejadorReferidos.ObtenerMisReferidos(idUsuario.Value);
 
             ViewBag.Resumen = resumen;
             return View(referidos);
@@ -165,7 +166,7 @@ namespace Abastecete.Controllers
                     return Unauthorized(new { success = false, mensaje = "No autenticado" });
                 }
 
-                var resumen = manejadorReferidos.ObtenerResumen(idUsuario.Value);
+                var resumen = _manejadorReferidos.ObtenerResumen(idUsuario.Value);
 
                 return Json(new
                 {
@@ -207,7 +208,7 @@ namespace Abastecete.Controllers
                     });
                 }
 
-                var calculo = manejadorReferidos.CalcularDescuento(idUsuario.Value, monto);
+                var calculo = _manejadorReferidos.CalcularDescuento(idUsuario.Value, monto);
 
                 return Json(new
                 {
