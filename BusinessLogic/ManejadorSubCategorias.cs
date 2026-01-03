@@ -6,7 +6,7 @@ using BusinessLogic.Models;
 
 namespace BusinessLogic
 {
-    public class ManejadorSubCategorias
+    public class ManejadorSubCategorias : Interfaces.IManejadorSubCategorias
     {
         private Connection conexion;
 

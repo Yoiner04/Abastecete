@@ -9,7 +9,7 @@ namespace BusinessLogic
     /// <summary>
     /// Manejador para operaciones administrativas de addons
     /// </summary>
-    public class ManejadorAddonsAdmin
+    public class ManejadorAddonsAdmin : Interfaces.IManejadorAddonsAdmin
     {
         private Connection conexion = new Connection();
 

@@ -9,7 +9,7 @@ namespace BusinessLogic.Utilidades
     /// <summary>
     /// Servicio de envío de correos electrónicos con plantillas HTML profesionales
     /// </summary>
-    public class EmailService
+    public class EmailService : Interfaces.IEmailService
     {
         private readonly string _smtpHost;
         private readonly int _smtpPort;

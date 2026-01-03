@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using BusinessLogic;
+using BusinessLogic.Interfaces;
 using BusinessLogic.Models;
 using BusinessLogic.Utilidades;
 using System.Collections.Generic;
@@ -9,9 +10,19 @@ namespace Abastecete.Controllers
 {
     public class BuscadorController : Controller
     {
-        private readonly ManejadorBuscador _manejadorBuscador = new ManejadorBuscador();
-        private readonly ManejadorAnaliticas _manejadorAnaliticas = new ManejadorAnaliticas();
-        private readonly ManejadorImagenes _manejadorImagenes = new ManejadorImagenes();
+        private readonly IManejadorBuscador _manejadorBuscador;
+        private readonly IManejadorAnaliticas _manejadorAnaliticas;
+        private readonly IManejadorImagenes _manejadorImagenes;
+
+        public BuscadorController(
+            IManejadorBuscador manejadorBuscador,
+            IManejadorImagenes manejadorImagenes,
+            IManejadorAnaliticas manejadorAnaliticas)
+        {
+            _manejadorBuscador = manejadorBuscador;
+            _manejadorImagenes = manejadorImagenes;
+            _manejadorAnaliticas = manejadorAnaliticas;
+        }
 
         public IActionResult Index(string query)
         {

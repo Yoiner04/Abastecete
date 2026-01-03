@@ -1,4 +1,5 @@
 using BusinessLogic;
+using BusinessLogic.Interfaces;
 using BusinessLogic.Models;
 using BusinessLogic.Utilidades;
 using Microsoft.AspNetCore.Mvc;
@@ -9,11 +10,11 @@ namespace Abastecete.Controllers
 {
     public class LogsController : Controller
     {
-        private readonly ManejadorLogs _manejadorLogs;
+        private readonly IManejadorLogs _manejadorLogs;
 
-        public LogsController()
+        public LogsController(IManejadorLogs manejadorLogs)
         {
-            _manejadorLogs = new ManejadorLogs();
+            _manejadorLogs = manejadorLogs;
         }
 
         /// <summary>

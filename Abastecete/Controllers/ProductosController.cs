@@ -1,4 +1,5 @@
 using BusinessLogic;
+using BusinessLogic.Interfaces;
 using BusinessLogic.Models;
 using BusinessLogic.Utilidades;
 using Microsoft.AspNetCore.Mvc;
@@ -9,35 +10,51 @@ namespace Abastecete.Controllers
 {
     public class ProductosController : Controller
     {
-        private readonly ManejadorNegocios manejadorNegocios;
-        private readonly ManejadorProductos manejadorProductos;
-        private readonly ManejadorCategorias manejadorCategorias;
-        private readonly ManejadorUsuario manejadorUsuario;
-        private readonly ManejadorMarcas manejadorMarcas;
-        private readonly ManejadorImagenes manejadorImagenes;
-        private readonly ManejadorTipoUnidad manejadorTipoUnidad;
-        private readonly ManejadorUnidad manejadorUnidad;
-        private readonly ManejadorGaleriaLocal manejadorGaleria;
-        private readonly ManejadorSuscripciones manejadorSuscripciones;
-        private readonly ManejadorProductoMarca manejadorProductoMarca;
-        private readonly ManejadorOpiniones manejadorOpiniones;
+        private readonly IManejadorNegocios _manejadorNegocios;
+        private readonly IManejadorProductos _manejadorProductos;
+        private readonly IManejadorCategorias _manejadorCategorias;
+        private readonly IManejadorUsuario _manejadorUsuario;
+        private readonly IManejadorMarcas _manejadorMarcas;
+        private readonly IManejadorImagenes _manejadorImagenes;
+        private readonly IManejadorTipoUnidad _manejadorTipoUnidad;
+        private readonly IManejadorUnidad _manejadorUnidad;
+        private readonly IManejadorGaleriaLocal _manejadorGaleria;
+        private readonly IManejadorSuscripciones _manejadorSuscripciones;
+        private readonly IManejadorProductoMarca _manejadorProductoMarca;
+        private readonly IManejadorOpiniones _manejadorOpiniones;
+        private readonly IManejadorSubCategorias _manejadorSubCategorias;
         private readonly IConfiguration _configuration;
 
-        public ProductosController(IConfiguration configuration)
+        public ProductosController(
+            IConfiguration configuration,
+            IManejadorNegocios manejadorNegocios,
+            IManejadorProductos manejadorProductos,
+            IManejadorCategorias manejadorCategorias,
+            IManejadorUsuario manejadorUsuario,
+            IManejadorMarcas manejadorMarcas,
+            IManejadorImagenes manejadorImagenes,
+            IManejadorTipoUnidad manejadorTipoUnidad,
+            IManejadorUnidad manejadorUnidad,
+            IManejadorGaleriaLocal manejadorGaleria,
+            IManejadorSuscripciones manejadorSuscripciones,
+            IManejadorProductoMarca manejadorProductoMarca,
+            IManejadorOpiniones manejadorOpiniones,
+            IManejadorSubCategorias manejadorSubCategorias)
         {
-            manejadorNegocios = new ManejadorNegocios();
-            manejadorProductos = new ManejadorProductos();
-            manejadorCategorias = new ManejadorCategorias();
-            manejadorUsuario = new ManejadorUsuario();
-            manejadorMarcas = new ManejadorMarcas();
-            manejadorImagenes = new ManejadorImagenes();
-            manejadorTipoUnidad = new ManejadorTipoUnidad();
-            manejadorUnidad = new ManejadorUnidad();
-            manejadorGaleria = new ManejadorGaleriaLocal();
-            manejadorSuscripciones = new ManejadorSuscripciones();
-            manejadorProductoMarca = new ManejadorProductoMarca();
-            manejadorOpiniones = new ManejadorOpiniones();
             _configuration = configuration;
+            _manejadorNegocios = manejadorNegocios;
+            _manejadorProductos = manejadorProductos;
+            _manejadorCategorias = manejadorCategorias;
+            _manejadorUsuario = manejadorUsuario;
+            _manejadorMarcas = manejadorMarcas;
+            _manejadorImagenes = manejadorImagenes;
+            _manejadorTipoUnidad = manejadorTipoUnidad;
+            _manejadorUnidad = manejadorUnidad;
+            _manejadorGaleria = manejadorGaleria;
+            _manejadorSuscripciones = manejadorSuscripciones;
+            _manejadorProductoMarca = manejadorProductoMarca;
+            _manejadorOpiniones = manejadorOpiniones;
+            _manejadorSubCategorias = manejadorSubCategorias;
         }
 
         public IActionResult Consultar()
@@ -58,18 +75,18 @@ namespace Abastecete.Controllers
                 return RedirectToAction("Index", "Login");
             }
 
-            Negocio? negocio = manejadorNegocios.ConsultarNegocioPorUsuario(usuarioId.Value);
+            Negocio? negocio = _manejadorNegocios.ConsultarNegocioPorUsuario(usuarioId.Value);
             if (negocio == null)
             {
                 return View("ErrorNegocioNoEncontrado");
             }
 
-            var usuarios = manejadorUsuario.ConsultarUsuarios(usuarioId.Value);
-            List<Producto> productos = manejadorProductos.ConsultarProductosLocal(negocio.Id);
+            var usuarios = _manejadorUsuario.ConsultarUsuarios(usuarioId.Value);
+            List<Producto> productos = _manejadorProductos.ConsultarProductosLocal(negocio.Id);
 
             // Cargar información de marcas para todos los productos en una sola consulta (evita N+1)
             var idsProductos = productos.Select(p => p.Id).ToList();
-            var marcasPorProducto = manejadorProductoMarca.ListarMarcasProductosBulk(negocio.Id, idsProductos);
+            var marcasPorProducto = _manejadorProductoMarca.ListarMarcasProductosBulk(negocio.Id, idsProductos);
 
             foreach (var producto in productos)
             {
@@ -83,18 +100,18 @@ namespace Abastecete.Controllers
             }
 
             // Cargar galería aprobada del local
-            negocio.Galeria = manejadorGaleria.ListarGaleriaAprobada(negocio.Id);
+            negocio.Galeria = _manejadorGaleria.ListarGaleriaAprobada(negocio.Id);
 
             // Obtener límites de membresía para mostrar en la UI
-            var limites = manejadorSuscripciones.ObtenerLimitesMembresia(negocio.Id);
+            var limites = _manejadorSuscripciones.ObtenerLimitesMembresia(negocio.Id);
             ViewBag.LimitesMembresia = limites;
 
             // Obtener resumen de opiniones del negocio
-            var resumenOpiniones = manejadorOpiniones.ObtenerResumenOpiniones(negocio.Id);
+            var resumenOpiniones = _manejadorOpiniones.ObtenerResumenOpiniones(negocio.Id);
             ViewBag.ResumenOpiniones = resumenOpiniones;
 
             // Obtener lista de opiniones para mostrar en modal
-            var opiniones = manejadorOpiniones.ObtenerOpinionesLocal(negocio.Id, 1, 50);
+            var opiniones = _manejadorOpiniones.ObtenerOpinionesLocal(negocio.Id, 1, 50);
             ViewBag.Opiniones = opiniones;
 
             ViewBag.productos = productos;
@@ -110,18 +127,18 @@ namespace Abastecete.Controllers
 
         public IActionResult ProductDetailLocal(int idlocal, int idProducto)
         {
-            Negocio? neg = manejadorNegocios.ConsultarNegocioPoId(idlocal);
+            Negocio? neg = _manejadorNegocios.ConsultarNegocioPoId(idlocal);
 
             if (neg == null)
             {
                 return View("ErrorNegocioNoEncontrado");
             }
 
-            Producto? producto = manejadorNegocios.ConsultarProductoNegocio(idProducto, neg.Id);
+            Producto? producto = _manejadorNegocios.ConsultarProductoNegocio(idProducto, neg.Id);
             ViewBag.SelectedProduct = producto;
 
             // Obtener productos relacionados (otros productos del mismo local)
-            var todosProductos = manejadorProductos.ConsultarProductosLocal(neg.Id);
+            var todosProductos = _manejadorProductos.ConsultarProductosLocal(neg.Id);
             var productosRelacionados = todosProductos?
                 .Where(p => p.Id != idProducto)
                 .Take(8)
@@ -134,7 +151,7 @@ namespace Abastecete.Controllers
         public IActionResult ListaNegocios()
         {
 
-            List<Negocio> negocios = manejadorNegocios.ConsultarTodosLosNegocios();
+            List<Negocio> negocios = _manejadorNegocios.ConsultarTodosLosNegocios();
             return View(negocios);
         }
 
@@ -147,14 +164,14 @@ namespace Abastecete.Controllers
                 return RedirectToAction("Index", "Login");
             }
 
-            Negocio? negocio = manejadorNegocios.ConsultarNegocioPorUsuario(usuarioId.Value);
+            Negocio? negocio = _manejadorNegocios.ConsultarNegocioPorUsuario(usuarioId.Value);
             if (negocio == null)
             {
                 return RedirectToAction("Crear", "Negocios");
             }
 
             // Validar límites de membresía
-            var limites = manejadorSuscripciones.ObtenerLimitesMembresia(negocio.Id);
+            var limites = _manejadorSuscripciones.ObtenerLimitesMembresia(negocio.Id);
             ViewBag.LimitesMembresia = limites;
 
             // Si no tiene membresía activa, redirigir a Mi Membresía
@@ -171,22 +188,21 @@ namespace Abastecete.Controllers
                 return RedirectToAction("Index");
             }
 
-            List<Categoria> categorias = manejadorCategorias.ConsultarCategorias();
+            List<Categoria> categorias = _manejadorCategorias.ConsultarCategorias();
             ViewBag.categorias = categorias;
             return View();
         }
 
         public IActionResult CRUDProductos()
         {
-            List<Producto> productos = manejadorProductos.ConsultarProductos();
+            List<Producto> productos = _manejadorProductos.ConsultarProductos();
             return View(productos);
         }
 
         [HttpGet]
         public IActionResult ObtenerSubCategorias(int idCategoria)
         {
-            ManejadorSubCategorias manejadorSubCategorias = new ManejadorSubCategorias();
-            List<SubCategoria> subCategorias = manejadorSubCategorias.ConsultarSubCategorias(idCategoria);
+            List<SubCategoria> subCategorias = _manejadorSubCategorias.ConsultarSubCategorias(idCategoria);
             return Json(subCategorias);
         }
 
@@ -201,7 +217,7 @@ namespace Abastecete.Controllers
                     return Json(new { success = false, mensaje = "Sesión expirada. Por favor inicia sesión nuevamente." });
                 }
 
-                var negocio = manejadorNegocios.ConsultarNegocioPorUsuario(usuarioId.Value);
+                var negocio = _manejadorNegocios.ConsultarNegocioPorUsuario(usuarioId.Value);
                 if (negocio == null)
                 {
                     return Json(new { success = false, mensaje = "No se encontró tu negocio." });
@@ -215,7 +231,7 @@ namespace Abastecete.Controllers
                 }
 
                 // Validar límites de membresía antes de agregar
-                var limites = manejadorSuscripciones.ObtenerLimitesMembresia(negocio.Id);
+                var limites = _manejadorSuscripciones.ObtenerLimitesMembresia(negocio.Id);
 
                 if (!limites.TieneSuscripcionActiva)
                 {
@@ -239,7 +255,7 @@ namespace Abastecete.Controllers
                 foreach (var producto in productos)
                 {
                     producto.Local = negocio.Id;
-                    bool resultado = manejadorNegocios.AgregarProductosLocal(producto);
+                    bool resultado = _manejadorNegocios.AgregarProductosLocal(producto);
                     if (resultado)
                     {
                         productosAgregados++;
@@ -263,17 +279,17 @@ namespace Abastecete.Controllers
         {
             string imagenUrl = GuardarImagen(Imagen);
             var producto = new Producto { IdSubCategoria = IdSubCategoria, Nombre = Nombre, Precio = Precio, ImagenUrl = imagenUrl };
-            var (id, mensaje) = manejadorProductos.CrearProducto(producto);
+            var (id, mensaje) = _manejadorProductos.CrearProducto(producto);
             return Json(new { mensaje, id });
         }
 
         [HttpPost]
         public IActionResult EditarProducto(int Id, IFormFile? Imagen, int IdSubCategoria, string Nombre, string Precio)
         {
-            string? imagenUrl = Imagen != null ? GuardarImagen(Imagen) : manejadorProductos.ConsultarProductos().FirstOrDefault(p => p.Id == Id)?.ImagenUrl;
+            string? imagenUrl = Imagen != null ? GuardarImagen(Imagen) : _manejadorProductos.ConsultarProductos().FirstOrDefault(p => p.Id == Id)?.ImagenUrl;
 
             var producto = new Producto { Id = Id, IdSubCategoria = IdSubCategoria, Nombre = Nombre, Precio = Precio, ImagenUrl = imagenUrl ?? "" };
-            var (success, mensaje) = manejadorProductos.EditarProducto(producto);
+            var (success, mensaje) = _manejadorProductos.EditarProducto(producto);
             return Json(new { mensaje, success });
         }
 
@@ -303,14 +319,14 @@ namespace Abastecete.Controllers
         [HttpPost]
         public IActionResult EliminarProducto(int Id)
         {
-            var (success, mensaje) = manejadorProductos.EliminarProducto(Id);
+            var (success, mensaje) = _manejadorProductos.EliminarProducto(Id);
             return Json(new { mensaje, success });
         }
 
         [HttpGet]
         public IActionResult obtenerProductosSubcategoria(int subCategoriaId)
         {
-            List<Producto> productos = manejadorProductos.ObtenerProductosSubCategoria(subCategoriaId);
+            List<Producto> productos = _manejadorProductos.ObtenerProductosSubCategoria(subCategoriaId);
             return Json(productos);
         }
 
@@ -327,16 +343,16 @@ namespace Abastecete.Controllers
             // Si hay filtros, buscar con filtros
             if (!string.IsNullOrEmpty(termino) || idCategoria.HasValue || idSubCategoria.HasValue || idMarca.HasValue)
             {
-                productos = manejadorProductos.BuscarProductos(termino, idCategoria, idSubCategoria, idMarca);
+                productos = _manejadorProductos.BuscarProductos(termino ?? "", idCategoria, idSubCategoria, idMarca);
             }
             else
             {
-                productos = manejadorProductos.ConsultarProductosTodos();
+                productos = _manejadorProductos.ConsultarProductosTodos();
             }
 
-            ViewBag.Categorias = manejadorCategorias.ConsultarCategorias();
-            ViewBag.Marcas = manejadorMarcas.ConsultarMarcas();
-            ViewBag.TiposUnidad = manejadorTipoUnidad.ConsultarTiposUnidad();
+            ViewBag.Categorias = _manejadorCategorias.ConsultarCategorias();
+            ViewBag.Marcas = _manejadorMarcas.ConsultarMarcas();
+            ViewBag.TiposUnidad = _manejadorTipoUnidad.ConsultarTiposUnidad();
 
             return View(productos);
         }
@@ -350,7 +366,7 @@ namespace Abastecete.Controllers
         {
             try
             {
-                var producto = manejadorProductos.ObtenerProducto(id);
+                var producto = _manejadorProductos.ObtenerProducto(id);
                 if (producto == null)
                     return NotFound(new { mensaje = "Producto no encontrado" });
 
@@ -399,7 +415,7 @@ namespace Abastecete.Controllers
                 if (imagen != null && imagen.Length > 0)
                 {
                     Console.WriteLine("Subiendo imagen a Cloudinary...");
-                    var resultado = manejadorImagenes.SubirImagenCompleto(imagen, "productos");
+                    var resultado = _manejadorImagenes.SubirImagenCompleto(imagen, "productos");
                     Console.WriteLine($"Resultado: Success={resultado.Success}, Error={resultado.Error}");
 
                     if (resultado.Success)
@@ -427,7 +443,7 @@ namespace Abastecete.Controllers
                     CloudinaryPublicId = cloudinaryPublicId
                 };
 
-                var (id, mensaje) = manejadorProductos.CrearProducto(producto);
+                var (id, mensaje) = _manejadorProductos.CrearProducto(producto);
 
                 if (id > 0)
                 {
@@ -441,13 +457,13 @@ namespace Abastecete.Controllers
 
                         if (marcasList.Count > 0)
                         {
-                            manejadorProductos.GuardarMarcasDisponiblesProducto(id, marcasList);
+                            _manejadorProductos.GuardarMarcasDisponiblesProducto(id, marcasList);
                         }
                     }
                     else if (idMarca > 0)
                     {
                         // Si solo se selecciono una marca (compatibilidad)
-                        manejadorProductos.GuardarMarcasDisponiblesProducto(id, new List<int> { idMarca });
+                        _manejadorProductos.GuardarMarcasDisponiblesProducto(id, new List<int> { idMarca });
                     }
 
                     return Json(new { success = true, mensaje, id });
@@ -478,7 +494,7 @@ namespace Abastecete.Controllers
 
             try
             {
-                var productoActual = manejadorProductos.ObtenerProducto(id);
+                var productoActual = _manejadorProductos.ObtenerProducto(id);
                 if (productoActual == null)
                     return NotFound(new { success = false, mensaje = "Producto no encontrado" });
 
@@ -491,10 +507,10 @@ namespace Abastecete.Controllers
                     // Eliminar imagen anterior de Cloudinary
                     if (!string.IsNullOrEmpty(productoActual.CloudinaryPublicId))
                     {
-                        manejadorImagenes.EliminarImagenCloudinary(productoActual.CloudinaryPublicId);
+                        _manejadorImagenes.EliminarImagenCloudinary(productoActual.CloudinaryPublicId);
                     }
 
-                    var resultado = manejadorImagenes.SubirImagenCompleto(imagen, "productos");
+                    var resultado = _manejadorImagenes.SubirImagenCompleto(imagen, "productos");
                     if (resultado.Success)
                     {
                         imagenUrl = resultado.SecureUrl;
@@ -515,7 +531,7 @@ namespace Abastecete.Controllers
                     CloudinaryPublicId = nuevoCloudinaryPublicId
                 };
 
-                var (success, mensaje) = manejadorProductos.EditarProducto(producto);
+                var (success, mensaje) = _manejadorProductos.EditarProducto(producto);
 
                 if (success)
                 {
@@ -527,12 +543,12 @@ namespace Abastecete.Controllers
                             .Where(m => m > 0)
                             .ToList();
 
-                        manejadorProductos.GuardarMarcasDisponiblesProducto(id, marcasList);
+                        _manejadorProductos.GuardarMarcasDisponiblesProducto(id, marcasList);
                     }
                     else if (idMarca > 0)
                     {
                         // Si solo se selecciono una marca (compatibilidad)
-                        manejadorProductos.GuardarMarcasDisponiblesProducto(id, new List<int> { idMarca });
+                        _manejadorProductos.GuardarMarcasDisponiblesProducto(id, new List<int> { idMarca });
                     }
 
                     return Json(new { success = true, mensaje });
@@ -555,7 +571,7 @@ namespace Abastecete.Controllers
         {
             try
             {
-                var marcas = manejadorProductos.ObtenerMarcasDisponiblesProducto(id);
+                var marcas = _manejadorProductos.ObtenerMarcasDisponiblesProducto(id);
                 return Json(new { success = true, marcas });
             }
             catch (Exception ex)
@@ -578,7 +594,7 @@ namespace Abastecete.Controllers
 
             try
             {
-                var (success, mensaje) = manejadorProductos.EliminarProducto(id);
+                var (success, mensaje) = _manejadorProductos.EliminarProducto(id);
 
                 if (success)
                     return Json(new { success = true, mensaje });
@@ -604,7 +620,7 @@ namespace Abastecete.Controllers
         {
             try
             {
-                var marcas = manejadorProductoMarca.ListarMarcasProducto(idLocal, idProducto);
+                var marcas = _manejadorProductoMarca.ListarMarcasProducto(idLocal, idProducto);
                 return Json(marcas.Select(m => new
                 {
                     id = m.Id,
@@ -635,7 +651,7 @@ namespace Abastecete.Controllers
         {
             try
             {
-                var marcas = manejadorProductoMarca.ListarTodasLasMarcas();
+                var marcas = _manejadorProductoMarca.ListarTodasLasMarcas();
                 return Json(marcas.Select(m => new
                 {
                     id = m.Id,
@@ -659,7 +675,7 @@ namespace Abastecete.Controllers
         {
             try
             {
-                var id = manejadorProductoMarca.AgregarMarcaProducto(idLocal, idProducto, idMarca, precio, stock, disponible, idUnidad);
+                var id = _manejadorProductoMarca.AgregarMarcaProducto(idLocal, idProducto, idMarca, precio, stock, disponible, idUnidad);
                 if (id > 0)
                     return Json(new { success = true, id, mensaje = "Presentación agregada correctamente" });
 
@@ -680,7 +696,7 @@ namespace Abastecete.Controllers
         {
             try
             {
-                var success = manejadorProductoMarca.ActualizarMarcaProducto(id, precio, stock, disponible, idUnidad);
+                var success = _manejadorProductoMarca.ActualizarMarcaProducto(id, precio, stock, disponible, idUnidad);
                 if (success)
                     return Json(new { success = true, mensaje = "Presentación actualizada correctamente" });
 
@@ -701,7 +717,7 @@ namespace Abastecete.Controllers
         {
             try
             {
-                var success = manejadorProductoMarca.EliminarMarcaProducto(id);
+                var success = _manejadorProductoMarca.EliminarMarcaProducto(id);
                 if (success)
                     return Json(new { success = true, mensaje = "Marca eliminada correctamente" });
 
@@ -730,7 +746,7 @@ namespace Abastecete.Controllers
                     Disponible = m.Disponible
                 }).ToList();
 
-                var success = manejadorProductoMarca.GuardarMarcasProducto(idLocal, idProducto, listaProductoMarca);
+                var success = _manejadorProductoMarca.GuardarMarcasProducto(idLocal, idProducto, listaProductoMarca);
                 if (success)
                     return Json(new { success = true, mensaje = "Marcas guardadas correctamente" });
 
@@ -760,7 +776,7 @@ namespace Abastecete.Controllers
         {
             try
             {
-                var unidades = manejadorUnidad.ConsultarTodasUnidades();
+                var unidades = _manejadorUnidad.ConsultarTodasUnidades();
                 return Json(unidades.Select(u => new
                 {
                     id = u.Id,
@@ -789,13 +805,13 @@ namespace Abastecete.Controllers
                     return Unauthorized(new { success = false, mensaje = "Sesión expirada" });
                 }
 
-                var negocio = manejadorNegocios.ConsultarNegocioPorUsuario(usuarioId.Value);
+                var negocio = _manejadorNegocios.ConsultarNegocioPorUsuario(usuarioId.Value);
                 if (negocio == null)
                 {
                     return BadRequest(new { success = false, mensaje = "No se encontró tu negocio" });
                 }
 
-                var success = manejadorNegocios.ActualizarPrecioProductoLocal(negocio.Id, idProducto, precio);
+                var success = _manejadorNegocios.ActualizarPrecioProductoLocal(negocio.Id, idProducto, precio);
                 if (success)
                     return Json(new { success = true, mensaje = "Precio actualizado correctamente" });
 

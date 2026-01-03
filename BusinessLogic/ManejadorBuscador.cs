@@ -10,7 +10,7 @@ using DataAccess;
 
 namespace BusinessLogic
 {
-    public class ManejadorBuscador
+    public class ManejadorBuscador : Interfaces.IManejadorBuscador
     {
         private Connection conexion;
         private readonly ManejadorImagenes _manejadorMongo;

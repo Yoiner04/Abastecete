@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace BusinessLogic
 {
-    public class ManejadorTipoDocumento
+    public class ManejadorTipoDocumento : Interfaces.IManejadorTipoDocumento
     {
         private Connection conexion = new Connection();
 

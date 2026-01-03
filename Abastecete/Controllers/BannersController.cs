@@ -6,6 +6,7 @@ using System.IO;
 using System.Threading.Tasks;
 using BusinessLogic.Models;
 using BusinessLogic;
+using BusinessLogic.Interfaces;
 using BusinessLogic.Utilidades;
 
 namespace Abastecete.Controllers
@@ -13,19 +14,23 @@ namespace Abastecete.Controllers
     public class BannersController : Controller
     {
         private readonly IWebHostEnvironment _webHostEnvironment;
-        private readonly ManejadorImagenes _manejadorImagenes;
+        private readonly IManejadorImagenes _manejadorImagenes;
+        private readonly IManejadorCategorias _manejadorCategorias;
 
-        public BannersController(IWebHostEnvironment webHostEnvironment)
+        public BannersController(
+            IWebHostEnvironment webHostEnvironment,
+            IManejadorImagenes manejadorImagenes,
+            IManejadorCategorias manejadorCategorias)
         {
             _webHostEnvironment = webHostEnvironment;
-            _manejadorImagenes = new ManejadorImagenes();
+            _manejadorImagenes = manejadorImagenes;
+            _manejadorCategorias = manejadorCategorias;
         }
 
         [RequierePermiso("ADMIN_BANNERS")]
         public IActionResult Editar()
         {
-            ManejadorCategorias manejadorCategorias = new ManejadorCategorias();
-            List<Categoria> categorias = manejadorCategorias.ConsultarCategorias();
+            List<Categoria> categorias = _manejadorCategorias.ConsultarCategorias();
 
             return View(categorias);
         }

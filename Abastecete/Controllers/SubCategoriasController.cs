@@ -1,4 +1,5 @@
 ﻿using BusinessLogic;
+using BusinessLogic.Interfaces;
 using BusinessLogic.Models;
 using BusinessLogic.Utilidades;
 using Microsoft.AspNetCore.Mvc;
@@ -8,17 +9,17 @@ namespace Abastecete.Controllers
 {
     public class SubCategoriasController : Controller
     {
-        private readonly ManejadorSubCategorias manejadorSubCategorias;
+        private readonly IManejadorSubCategorias _manejadorSubCategorias;
 
-        public SubCategoriasController()
+        public SubCategoriasController(IManejadorSubCategorias manejadorSubCategorias)
         {
-            manejadorSubCategorias = new ManejadorSubCategorias();
+            _manejadorSubCategorias = manejadorSubCategorias;
         }
 
         [HttpGet]
         public IActionResult ObtenerSubCategorias(int idCategoria)
         {
-            List<SubCategoria> subCategorias = manejadorSubCategorias.ConsultarSubCategorias(idCategoria);
+            List<SubCategoria> subCategorias = _manejadorSubCategorias.ConsultarSubCategorias(idCategoria);
             return Json(subCategorias);
         }
 
@@ -27,7 +28,7 @@ namespace Abastecete.Controllers
         public IActionResult CrearSubCategoria(string Nombre, int Estado, int IdCategoria)
         {
             var subCategoria = new SubCategoria { Nombre = Nombre, Estado = Estado, IdCategoria = IdCategoria };
-            string mensaje = manejadorSubCategorias.CrearSubCategoria(subCategoria);
+            string mensaje = _manejadorSubCategorias.CrearSubCategoria(subCategoria);
             return Json(new { mensaje });
         }
 
@@ -36,7 +37,7 @@ namespace Abastecete.Controllers
         public IActionResult EditarSubCategoria(int Id, string Nombre, int Estado, int IdCategoria)
         {
             var subCategoria = new SubCategoria { Id = Id, Nombre = Nombre, Estado = Estado, IdCategoria = IdCategoria };
-            string mensaje = manejadorSubCategorias.EditarSubCategoria(subCategoria);
+            string mensaje = _manejadorSubCategorias.EditarSubCategoria(subCategoria);
             return Json(new { mensaje });
         }
 
@@ -44,7 +45,7 @@ namespace Abastecete.Controllers
         [Auditar(ModulosAuditoria.SUBCATEGORIAS, TiposAccionAuditoria.DELETE, ParametroId = "Id")]
         public IActionResult EliminarSubCategoria(int Id)
         {
-            bool resultado = manejadorSubCategorias.EliminarSubCategoria(Id);
+            bool resultado = _manejadorSubCategorias.EliminarSubCategoria(Id);
             return Json(new { mensaje = resultado ? "Subcategoría eliminada" : "Error al eliminar" });
         }
     }

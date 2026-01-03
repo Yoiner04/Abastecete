@@ -293,11 +293,11 @@
                             {
                                 <form method="post" action="@Url.Action("Consultar", "Negocios")" class="flex-shrink-0">
                                     <input type="hidden" name="idCategoria" value="@categoria.Id" />
-                                    <button type="submit" class="group flex flex-col items-center gap-1 px-2 py-2 border-b-2 border-transparent hover:border-gray-900 transition-all min-w-[48px]">
-                                        <div class="w-7 h-7 sm:w-6 sm:h-6 flex items-center justify-center opacity-60 group-hover:opacity-100 transition-opacity">
+                                    <button type="submit" class="group flex flex-col items-center gap-2 px-3 py-2 border-b-2 border-transparent hover:border-gray-900 transition-all min-w-[60px]">
+                                        <div class="w-10 h-10 sm:w-9 sm:h-9 flex items-center justify-center opacity-70 group-hover:opacity-100 transition-opacity">
                                             <img src="@(categoria.Imagen?.Base64 ?? "/images/default.webp")" alt="@categoria.Nombre" class="w-full h-full object-contain">
                                         </div>
-                                        <span class="text-[10px] sm:text-[11px] font-medium text-gray-500 group-hover:text-gray-900 whitespace-nowrap transition-colors">@categoria.Nombre</span>
+                                        <span class="text-[11px] sm:text-xs font-medium text-gray-600 group-hover:text-gray-900 whitespace-nowrap transition-colors">@categoria.Nombre</span>
                                     </button>
                                 </form>
                             }
@@ -315,8 +315,8 @@
                             <p class="text-sm text-gray-500 mt-1">en el área del mapa</p>
                         </div>
                         <button onclick="resetearFiltros()" class="flex items-center gap-2 px-4 py-2 rounded-full border border-gray-300 hover:border-gray-900 hover:shadow-md transition-all text-sm font-medium">
-                            <i class="fas fa-sliders-h"></i>
-                            Filtros
+                            <i class="fas fa-redo-alt"></i>
+                            Ver todos
                         </button>
                     </div>
                 </div>

@@ -1,4 +1,5 @@
 ﻿using BusinessLogic;
+using BusinessLogic.Interfaces;
 using BusinessLogic.Models;
 using BusinessLogic.Utilidades;
 using Microsoft.AspNetCore.Mvc;
@@ -10,21 +11,24 @@ namespace Abastecete.Controllers
 {
     public class MembresiasController : Controller
     {
-        private readonly ManejadorMembresias manejadorMembresias;
-        private readonly ManejadorPermisos manejadorPermisos;
+        private readonly IManejadorMembresias _manejadorMembresias;
+        private readonly IManejadorPermisos _manejadorPermisos;
         private readonly IConfiguration _configuration;
 
-        public MembresiasController(IConfiguration configuration)
+        public MembresiasController(
+            IConfiguration configuration,
+            IManejadorMembresias manejadorMembresias,
+            IManejadorPermisos manejadorPermisos)
         {
             _configuration = configuration;
-            manejadorMembresias = new ManejadorMembresias();
-            manejadorPermisos = new ManejadorPermisos();
+            _manejadorMembresias = manejadorMembresias;
+            _manejadorPermisos = manejadorPermisos;
         }
 
         [RequierePermiso("ADMIN_MEMBRESIAS")]
         public IActionResult Consultar()
         {
-            List<Membresia> membresias = manejadorMembresias.ConsultarMembresias("");
+            List<Membresia> membresias = _manejadorMembresias.ConsultarMembresias("");
             return View(membresias);
         }
 
@@ -32,7 +36,7 @@ namespace Abastecete.Controllers
         [HttpGet]
         public IActionResult Tipos()
         {
-            List<Membresia> membresias = manejadorMembresias.consultarTiposMembresia();
+            List<Membresia> membresias = _manejadorMembresias.consultarTiposMembresia();
             return View(membresias);
         }
 
@@ -56,13 +60,13 @@ namespace Abastecete.Controllers
                 {
                     return BadRequest("Nombre inválido");
                 }
-                membresias = manejadorMembresias.ConsultarMembresias(nombreSanitizado);
+                membresias = _manejadorMembresias.ConsultarMembresias(nombreSanitizado);
                 ViewBag.nombre = "/images/" + nombreSanitizado + ".png";
             }
             else
             {
                 // Sistema nuevo: mostrar todas las membresías disponibles
-                membresias = manejadorMembresias.ObtenerTodasMembresias();
+                membresias = _manejadorMembresias.ObtenerTodasMembresias();
                 ViewBag.nombre = null;
             }
 
@@ -89,7 +93,7 @@ namespace Abastecete.Controllers
                 CostoSemestral = CostoSemestral,
                 CostoAnual = CostoAnual
             };
-            string mensaje = manejadorMembresias.EditarMembresia(membresia);
+            string mensaje = _manejadorMembresias.EditarMembresia(membresia);
             return Json(new { mensaje });
         }
 
@@ -97,7 +101,7 @@ namespace Abastecete.Controllers
         [Route("Membresias/ObtenerMembresia")]
         public IActionResult ObtenerMembresia([FromQuery] int id)
         {
-            Membresia? membresia = manejadorMembresias.ObtenerMembresia(id);
+            Membresia? membresia = _manejadorMembresias.ObtenerMembresia(id);
 
             if (membresia != null)
             {
@@ -119,7 +123,7 @@ namespace Abastecete.Controllers
         {
             try
             {
-                var permisos = manejadorPermisos.ObtenerTodosPermisosSistema();
+                var permisos = _manejadorPermisos.ObtenerTodosPermisosSistema();
                 var agrupados = permisos
                     .GroupBy(p => p.Categoria)
                     .Select(g => new
@@ -154,7 +158,7 @@ namespace Abastecete.Controllers
         {
             try
             {
-                var permisos = manejadorPermisos.ObtenerPermisosMembresia(id);
+                var permisos = _manejadorPermisos.ObtenerPermisosMembresia(id);
                 var idsPermisos = permisos.Select(p => p.Id).ToList();
                 return Json(new { success = true, permisos = idsPermisos });
             }
@@ -178,7 +182,7 @@ namespace Abastecete.Controllers
                 if (request.IdMembresia <= 0)
                     return BadRequest(new { success = false, mensaje = "ID de membresía inválido" });
 
-                int permisosAsignados = manejadorMembresias.ActualizarPermisosMembresia(
+                int permisosAsignados = _manejadorMembresias.ActualizarPermisosMembresia(
                     request.IdMembresia,
                     request.IdsPermisos ?? new List<int>()
                 );
@@ -206,7 +210,7 @@ namespace Abastecete.Controllers
         {
             try
             {
-                var membresia = manejadorMembresias.ObtenerMembresiaConPermisos(id);
+                var membresia = _manejadorMembresias.ObtenerMembresiaConPermisos(id);
                 if (membresia == null)
                     return NotFound(new { success = false, mensaje = "Membresía no encontrada" });
 

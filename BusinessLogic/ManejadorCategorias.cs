@@ -8,7 +8,7 @@ using System.Linq;
 
 namespace BusinessLogic
 {
-    public class ManejadorCategorias
+    public class ManejadorCategorias : Interfaces.IManejadorCategorias
     {
         private readonly Connection conexion;
         private readonly ManejadorImagenes manejadorMongo;

@@ -1,4 +1,5 @@
 using BusinessLogic;
+using BusinessLogic.Interfaces;
 using BusinessLogic.Models;
 using BusinessLogic.Utilidades;
 using Microsoft.AspNetCore.Mvc;
@@ -7,13 +8,15 @@ namespace Abastecete.Controllers
 {
     public class GaleriaAdminController : Controller
     {
-        private readonly ManejadorGaleriaLocal _manejadorGaleria;
-        private readonly ManejadorImagenes _manejadorImagenes;
+        private readonly IManejadorGaleriaLocal _manejadorGaleria;
+        private readonly IManejadorImagenes _manejadorImagenes;
 
-        public GaleriaAdminController()
+        public GaleriaAdminController(
+            IManejadorGaleriaLocal manejadorGaleria,
+            IManejadorImagenes manejadorImagenes)
         {
-            _manejadorGaleria = new ManejadorGaleriaLocal();
-            _manejadorImagenes = new ManejadorImagenes();
+            _manejadorGaleria = manejadorGaleria;
+            _manejadorImagenes = manejadorImagenes;
         }
 
         /// <summary>

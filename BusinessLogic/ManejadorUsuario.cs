@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace BusinessLogic
 {
-    public class ManejadorUsuario
+    public class ManejadorUsuario : Interfaces.IManejadorUsuario
     {
         private Connection conexion = new Connection();
 
@@ -108,18 +108,23 @@ namespace BusinessLogic
 
         private void LimpiarIntentosFallidos(int idUsuario)
         {
-            try
+            // Fire-and-forget: limpiar intentos en background para no bloquear login
+            Task.Run(() =>
             {
-                var parametros = new List<Parametro>()
+                try
                 {
-                    new Parametro("p_id_usuario", idUsuario)
-                };
-                conexion.EjecutarTransaccion("limpiar_intentos_fallidos", parametros);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[LOGIN] Error limpiando intentos fallidos: {ex.Message}");
-            }
+                    var conn = new Connection();
+                    var parametros = new List<Parametro>()
+                    {
+                        new Parametro("p_id_usuario", idUsuario)
+                    };
+                    conn.EjecutarTransaccion("limpiar_intentos_fallidos", parametros);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[LOGIN] Error limpiando intentos fallidos: {ex.Message}");
+                }
+            });
         }
 
 

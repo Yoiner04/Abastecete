@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using Abastecete.Models;
 using BusinessLogic;
+using BusinessLogic.Interfaces;
 using BusinessLogic.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -15,19 +16,25 @@ namespace Abastecete.Controllers
     {
         private readonly ILogger<HomeController> _logger;
         private readonly IConfiguration _configuration;
-        private readonly ManejadorCategorias manejadorCategorias;
-        private readonly ManejadorNegocios manejadorNegocios;
-        private readonly ManejadorOfertasFlash manejadorOfertasFlash;
-        private readonly ManejadorImagenes manejadorImagenes;
+        private readonly IManejadorCategorias _manejadorCategorias;
+        private readonly IManejadorNegocios _manejadorNegocios;
+        private readonly IManejadorOfertasFlash _manejadorOfertasFlash;
+        private readonly IManejadorImagenes _manejadorImagenes;
 
-        public HomeController(ILogger<HomeController> logger, IConfiguration configuration)
+        public HomeController(
+            ILogger<HomeController> logger,
+            IConfiguration configuration,
+            IManejadorCategorias manejadorCategorias,
+            IManejadorNegocios manejadorNegocios,
+            IManejadorOfertasFlash manejadorOfertasFlash,
+            IManejadorImagenes manejadorImagenes)
         {
             _logger = logger;
             _configuration = configuration;
-            manejadorImagenes = new ManejadorImagenes();
-            manejadorCategorias = new ManejadorCategorias();
-            manejadorNegocios = new ManejadorNegocios();
-            manejadorOfertasFlash = new ManejadorOfertasFlash();
+            _manejadorCategorias = manejadorCategorias;
+            _manejadorNegocios = manejadorNegocios;
+            _manejadorOfertasFlash = manejadorOfertasFlash;
+            _manejadorImagenes = manejadorImagenes;
         }
 
         public IActionResult Index()
@@ -46,27 +53,74 @@ namespace Abastecete.Controllers
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
 
-        public IActionResult Principal()
+        public async Task<IActionResult> Principal()
         {
-            // Ejecutar consultas principales en paralelo
-            List<Categoria> categorias = new List<Categoria>();
-            List<Negocio> negocios = new List<Negocio>();
-            List<Negocio> localesAleatorios = new List<Negocio>();
-            List<OfertaFlash> ofertasFlash = new List<OfertaFlash>();
-            List<Banner> bannersInicio = new List<Banner>();
-            Dictionary<int, List<Banner>> todosBannersCategorias = new Dictionary<int, List<Banner>>();
+            // ===== DEBUG: Medición de tiempos de Principal =====
+            var swTotal = Stopwatch.StartNew();
+            var tiempos = new Dictionary<string, long>();
 
-            var tasks = new List<Task>
+            // Ejecutar consultas principales en paralelo (async) con medición individual
+            var categoriasTask = Task.Run(() => {
+                var sw = Stopwatch.StartNew();
+                var result = _manejadorCategorias.ConsultarCategorias();
+                sw.Stop();
+                tiempos["Categorias"] = sw.ElapsedMilliseconds;
+                return result;
+            });
+            var negociosTask = Task.Run(() => {
+                var sw = Stopwatch.StartNew();
+                var result = _manejadorNegocios.ConsultarTodosLosNegocios();
+                sw.Stop();
+                tiempos["Negocios"] = sw.ElapsedMilliseconds;
+                return result;
+            });
+            var localesAleatoriosTask = Task.Run(() => {
+                var sw = Stopwatch.StartNew();
+                var result = _manejadorNegocios.ObtenerLocalesAleatorios();
+                sw.Stop();
+                tiempos["LocalesAleatorios"] = sw.ElapsedMilliseconds;
+                return result;
+            });
+            var ofertasFlashTask = Task.Run(() => {
+                var sw = Stopwatch.StartNew();
+                var result = _manejadorOfertasFlash.ConsultarOfertasFlash();
+                sw.Stop();
+                tiempos["OfertasFlash"] = sw.ElapsedMilliseconds;
+                return result;
+            });
+            var bannersInicioTask = Task.Run(() => {
+                var sw = Stopwatch.StartNew();
+                var result = _manejadorImagenes.ListarBannersInicio();
+                sw.Stop();
+                tiempos["BannersInicio"] = sw.ElapsedMilliseconds;
+                return result;
+            });
+            var bannersCategoriaTask = Task.Run(() => {
+                var sw = Stopwatch.StartNew();
+                var result = _manejadorImagenes.ListarTodosBannersCategorias();
+                sw.Stop();
+                tiempos["BannersCategoria"] = sw.ElapsedMilliseconds;
+                return result;
+            });
+
+            await Task.WhenAll(categoriasTask, negociosTask, localesAleatoriosTask,
+                              ofertasFlashTask, bannersInicioTask, bannersCategoriaTask);
+
+            var categorias = await categoriasTask;
+            var negocios = await negociosTask;
+            var localesAleatorios = await localesAleatoriosTask;
+            var ofertasFlash = await ofertasFlashTask;
+            var bannersInicio = await bannersInicioTask;
+            var todosBannersCategorias = await bannersCategoriaTask;
+
+            // Log de tiempos individuales
+            Console.WriteLine($"[PRINCIPAL PERF] ========================================");
+            Console.WriteLine($"[PRINCIPAL PERF] Tiempos de consultas (paralelo):");
+            foreach (var t in tiempos.OrderByDescending(x => x.Value))
             {
-                Task.Run(() => categorias = manejadorCategorias.ConsultarCategorias()),
-                Task.Run(() => negocios = manejadorNegocios.ConsultarTodosLosNegocios()),
-                Task.Run(() => localesAleatorios = manejadorNegocios.ObtenerLocalesAleatorios()),
-                Task.Run(() => ofertasFlash = manejadorOfertasFlash.ConsultarOfertasFlash()),
-                Task.Run(() => bannersInicio = manejadorImagenes.ListarBannersInicio()),
-                Task.Run(() => todosBannersCategorias = manejadorImagenes.ListarTodosBannersCategorias())
-            };
-
-            Task.WaitAll(tasks.ToArray());
+                Console.WriteLine($"[PRINCIPAL PERF]   - {t.Key}: {t.Value}ms");
+            }
+            Console.WriteLine($"[PRINCIPAL PERF] Consulta más lenta: {tiempos.MaxBy(x => x.Value).Key} ({tiempos.MaxBy(x => x.Value).Value}ms)");
 
             // Banners de inicio
             if (bannersInicio != null && bannersInicio.Count > 0)
@@ -106,7 +160,6 @@ namespace Abastecete.Controllers
                 }
             }
 
-            ViewBag.rol = LoginController.rol;
             ViewBag.Negocios = negocios ?? new List<Negocio>();
             ViewBag.LocalesAleatoriosJson = JsonConvert.SerializeObject(localesAleatorios ?? new List<Negocio>());
             ViewBag.OfertasFlash = ofertasFlash ?? new List<OfertaFlash>();
@@ -150,6 +203,10 @@ namespace Abastecete.Controllers
                 };
             });
             ViewBag.NegociosJson = JsonConvert.SerializeObject(negociosParaMapa);
+
+            swTotal.Stop();
+            Console.WriteLine($"[PRINCIPAL PERF] TOTAL Principal(): {swTotal.ElapsedMilliseconds}ms");
+            Console.WriteLine($"[PRINCIPAL PERF] ========================================");
 
             return View(categorias);
         }

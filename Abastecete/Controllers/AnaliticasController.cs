@@ -1,4 +1,5 @@
 using BusinessLogic;
+using BusinessLogic.Interfaces;
 using BusinessLogic.Models;
 using BusinessLogic.Utilidades;
 using Microsoft.AspNetCore.Mvc;
@@ -8,8 +9,16 @@ namespace Abastecete.Controllers
 {
     public class AnaliticasController : Controller
     {
-        private readonly ManejadorAnaliticas manejadorAnaliticas = new ManejadorAnaliticas();
-        private readonly ManejadorNegocios manejadorNegocios = new ManejadorNegocios();
+        private readonly IManejadorAnaliticas _manejadorAnaliticas;
+        private readonly IManejadorNegocios _manejadorNegocios;
+
+        public AnaliticasController(
+            IManejadorAnaliticas manejadorAnaliticas,
+            IManejadorNegocios manejadorNegocios)
+        {
+            _manejadorAnaliticas = manejadorAnaliticas;
+            _manejadorNegocios = manejadorNegocios;
+        }
 
         /// <summary>
         /// Dashboard de administrador - Estadísticas globales del sistema
@@ -35,7 +44,7 @@ namespace Abastecete.Controllers
             // Calcular rango de fechas según el período
             var (fechaInicio, fechaFin) = CalcularRangoFechas(periodo);
 
-            var dashboard = manejadorAnaliticas.ObtenerDashboardAdmin(fechaInicio, fechaFin);
+            var dashboard = _manejadorAnaliticas.ObtenerDashboardAdmin(fechaInicio, fechaFin);
 
             ViewBag.PeriodoSeleccionado = periodo;
 
@@ -61,7 +70,7 @@ namespace Abastecete.Controllers
             }
 
             var (fechaInicio, fechaFin) = CalcularRangoFechas(periodo);
-            var dashboard = manejadorAnaliticas.ObtenerDashboardAdmin(fechaInicio, fechaFin);
+            var dashboard = _manejadorAnaliticas.ObtenerDashboardAdmin(fechaInicio, fechaFin);
 
             return Json(new
             {
@@ -118,7 +127,7 @@ namespace Abastecete.Controllers
             }
 
             // Obtener el local del usuario
-            var local = manejadorNegocios.ConsultarNegocioPorUsuario(idUsuario.Value);
+            var local = _manejadorNegocios.ConsultarNegocioPorUsuario(idUsuario.Value);
             if (local == null)
             {
                 TempData["mensaje"] = "No tienes un local registrado.";
@@ -129,7 +138,7 @@ namespace Abastecete.Controllers
             // Calcular rango de fechas según el período
             var (fechaInicio, fechaFin) = CalcularRangoFechas(periodo);
 
-            var dashboard = manejadorAnaliticas.ObtenerDashboard(local.Id, fechaInicio, fechaFin);
+            var dashboard = _manejadorAnaliticas.ObtenerDashboard(local.Id, fechaInicio, fechaFin);
 
             ViewBag.Local = local;
             ViewBag.PeriodoSeleccionado = periodo;
@@ -149,14 +158,14 @@ namespace Abastecete.Controllers
                 return Json(new { success = false, mensaje = "Sesión expirada" });
             }
 
-            var local = manejadorNegocios.ConsultarNegocioPorUsuario(idUsuario.Value);
+            var local = _manejadorNegocios.ConsultarNegocioPorUsuario(idUsuario.Value);
             if (local == null)
             {
                 return Json(new { success = false, mensaje = "No tienes un local registrado" });
             }
 
             var (fechaInicio, fechaFin) = CalcularRangoFechas(periodo);
-            var dashboard = manejadorAnaliticas.ObtenerDashboard(local.Id, fechaInicio, fechaFin);
+            var dashboard = _manejadorAnaliticas.ObtenerDashboard(local.Id, fechaInicio, fechaFin);
 
             return Json(new
             {
@@ -211,7 +220,7 @@ namespace Abastecete.Controllers
                 return Json(new { success = false });
             }
 
-            var resultado = manejadorAnaliticas.RegistrarEvento(
+            var resultado = _manejadorAnaliticas.RegistrarEvento(
                 request.IdLocal,
                 tipoEvento,
                 request.IdProducto,

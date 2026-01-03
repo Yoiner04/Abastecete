@@ -1,5 +1,6 @@
 using BusinessLogic;
 using BusinessLogic.Models;
+using BusinessLogic.Interfaces;
 using BusinessLogic.Utilidades;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -11,24 +12,31 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Google;
 using System.Security.Claims;
 using System.Text.RegularExpressions;
+using System.Diagnostics;
 using Abastecete.Models;
 
 namespace Abastecete.Controllers
 {
     public class LoginController : Controller
     {
-        private readonly ManejadorUsuario _manejadorUsuario;
-        private readonly ManejadorImagenes manejadorImagenes;
-        private readonly EmailService _emailService;
-        private readonly ManejadorLogs _manejadorLogs;
-        public static int rol = 0;
+        private readonly IManejadorUsuario _manejadorUsuario;
+        private readonly IManejadorImagenes _manejadorImagenes;
+        private readonly IEmailService _emailService;
+        private readonly IManejadorLogs _manejadorLogs;
+        private readonly IManejadorPermisos _manejadorPermisos;
 
-        public LoginController()
+        public LoginController(
+            IManejadorUsuario manejadorUsuario,
+            IManejadorImagenes manejadorImagenes,
+            IEmailService emailService,
+            IManejadorLogs manejadorLogs,
+            IManejadorPermisos manejadorPermisos)
         {
-            _manejadorUsuario = new ManejadorUsuario();
-            manejadorImagenes = new ManejadorImagenes();
-            _emailService = new EmailService();
-            _manejadorLogs = new ManejadorLogs();
+            _manejadorUsuario = manejadorUsuario;
+            _manejadorImagenes = manejadorImagenes;
+            _emailService = emailService;
+            _manejadorLogs = manejadorLogs;
+            _manejadorPermisos = manejadorPermisos;
         }
 
         /// <summary>
@@ -48,7 +56,7 @@ namespace Abastecete.Controllers
             {
                 try
                 {
-                    var manejadorLogs = new ManejadorLogs();
+                    var manejadorLogs = _manejadorLogs;
                     manejadorLogs.RegistrarLog(
                         usuarioId,
                         nombreUsuario ?? "Anonimo",
@@ -93,7 +101,7 @@ namespace Abastecete.Controllers
         {
             try
             {
-                var bannersSesion = manejadorImagenes.ListarBannersSesion();
+                var bannersSesion = _manejadorImagenes.ListarBannersSesion();
                 var bannerSesion = bannersSesion.Select(b => new {
                     Id = b.Id,
                     Nombre = b.Nombre ?? "",
@@ -113,11 +121,21 @@ namespace Abastecete.Controllers
         [HttpPost]
         public IActionResult Index(Usuario usuario)
         {
-            // Reutilizar el manejador existente en lugar de crear uno nuevo
+            // ===== DEBUG: Medición de tiempos de login =====
+            var swTotal = Stopwatch.StartNew();
+            var swParcial = new Stopwatch();
+
+            // 1. Tiempo de consulta a BD (Login)
+            swParcial.Start();
             DataTable data = _manejadorUsuario.Login(usuario.Correo, usuario.Contrasenia);
+            swParcial.Stop();
+            var tiempoLogin = swParcial.ElapsedMilliseconds;
+            Console.WriteLine($"[LOGIN PERF] 1. Consulta Login BD: {tiempoLogin}ms");
 
             if (data.Rows.Count == 0)
             {
+                swTotal.Stop();
+                Console.WriteLine($"[LOGIN PERF] TOTAL (credenciales incorrectas): {swTotal.ElapsedMilliseconds}ms");
                 RegistrarLogAutenticacion(null, usuario.Correo, TiposAccionAuditoria.LOGIN, "ERROR", "Credenciales incorrectas");
                 TempData["Error"] = "Credenciales incorrectas. Por favor, verifica tu usuario y contraseña.";
                 return View(usuario);
@@ -152,6 +170,10 @@ namespace Abastecete.Controllers
                 // Solo si el login fue exitoso, obtener los demás datos
                 int idUsuario = Convert.ToInt32(data.Rows[0]["PK_ID_USUARIO"]);
 
+                // OPTIMIZACIÓN: Iniciar carga de permisos en paralelo ANTES de configurar sesión
+                swParcial.Restart();
+                var permisosTask = Task.Run(() => _manejadorPermisos.ObtenerDiccionarioPermisos(idUsuario));
+
                 // Obtener tipo de membresía de forma segura
                 int idTipoMembresia = 0;
                 var membresiaValue = data.Rows[0]["FK_ID_TIPOMEMBRESIA"];
@@ -183,11 +205,23 @@ namespace Abastecete.Controllers
                 // Login exitoso
                 HttpContext.Session.Remove("LastLoginError");
 
-                // Cargar permisos (unificado - evita llamadas duplicadas a DB)
-                GuardarTodosLosPermisos(idUsuario);
+                // Esperar permisos (ya se ejecutó en paralelo con config de sesión)
+                var permisos = permisosTask.Result;
+                HttpContext.Session.SetString("permisosSistema", JsonConvert.SerializeObject(permisos));
+                swParcial.Stop();
+                var tiempoPermisos = swParcial.ElapsedMilliseconds;
+                Console.WriteLine($"[LOGIN PERF] 2. Config sesión + Permisos (paralelo): {tiempoPermisos}ms");
 
-                // Registrar login exitoso
+                // Registrar login exitoso (fire-and-forget, no bloquea)
                 RegistrarLogAutenticacion(idUsuario, usuario.Correo, TiposAccionAuditoria.LOGIN, "EXITO");
+
+                swTotal.Stop();
+                Console.WriteLine($"[LOGIN PERF] ========================================");
+                Console.WriteLine($"[LOGIN PERF] RESUMEN LOGIN EXITOSO:");
+                Console.WriteLine($"[LOGIN PERF]   - BD Login + BCrypt: {tiempoLogin}ms");
+                Console.WriteLine($"[LOGIN PERF]   - Sesión + Permisos (paralelo): {tiempoPermisos}ms");
+                Console.WriteLine($"[LOGIN PERF]   - TOTAL: {swTotal.ElapsedMilliseconds}ms");
+                Console.WriteLine($"[LOGIN PERF] ========================================");
 
                 return Redirect("~/Home/Principal");
             }
@@ -227,10 +261,8 @@ namespace Abastecete.Controllers
         /// </summary>
         private void GuardarTodosLosPermisos(int idUsuario)
         {
-            ManejadorPermisos manejadorP = new ManejadorPermisos();
-
             // Cargar permisos del sistema por membresía (UNA sola llamada a DB)
-            var permisos = manejadorP.ObtenerDiccionarioPermisos(idUsuario);
+            var permisos = _manejadorPermisos.ObtenerDiccionarioPermisos(idUsuario);
             HttpContext.Session.SetString("permisosSistema", JsonConvert.SerializeObject(permisos));
         }
 

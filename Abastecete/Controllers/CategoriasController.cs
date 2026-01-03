@@ -1,4 +1,5 @@
 using BusinessLogic;
+using BusinessLogic.Interfaces;
 using BusinessLogic.Models;
 using BusinessLogic.Utilidades;
 using Microsoft.AspNetCore.Mvc;
@@ -9,26 +10,28 @@ namespace Abastecete.Controllers
 {
     public class CategoriasController : Controller
     {
-        private readonly ManejadorCategorias manejadorCategorias;
-        private readonly ManejadorImagenes manejadorImagenes;
+        private readonly IManejadorCategorias _manejadorCategorias;
+        private readonly IManejadorImagenes _manejadorImagenes;
 
-        public CategoriasController()
+        public CategoriasController(
+            IManejadorCategorias manejadorCategorias,
+            IManejadorImagenes manejadorImagenes)
         {
-            manejadorImagenes = new ManejadorImagenes();
-            manejadorCategorias = new ManejadorCategorias();
+            _manejadorCategorias = manejadorCategorias;
+            _manejadorImagenes = manejadorImagenes;
         }
 
         [RequierePermiso("ADMIN_CATEGORIAS")]
         public IActionResult Consultar()
         {
-            List<Categoria> categorias = manejadorCategorias.ConsultarCategorias();
+            List<Categoria> categorias = _manejadorCategorias.ConsultarCategorias();
 
             return View(categorias);
         }
 
         public IActionResult Listar()
         {
-            List<Categoria> categorias = manejadorCategorias.ConsultarCategorias();
+            List<Categoria> categorias = _manejadorCategorias.ConsultarCategorias();
             return View(categorias);
         }
 
@@ -45,7 +48,7 @@ namespace Abastecete.Controllers
             // Subir imagen
             if (Imagen != null && Imagen.Length > 0)
             {
-                var resultado = manejadorImagenes.SubirImagenCompleto(Imagen, "categorias");
+                var resultado = _manejadorImagenes.SubirImagenCompleto(Imagen, "categorias");
                 if (resultado.Success)
                 {
                     imagenUrl = resultado.SecureUrl;
@@ -56,7 +59,7 @@ namespace Abastecete.Controllers
             // Subir banner
             if (Banner != null && Banner.Length > 0)
             {
-                var resultado = manejadorImagenes.SubirImagenCompleto(Banner, "categorias/banners");
+                var resultado = _manejadorImagenes.SubirImagenCompleto(Banner, "categorias/banners");
                 if (resultado.Success)
                 {
                     bannerUrl = resultado.SecureUrl;
@@ -73,7 +76,7 @@ namespace Abastecete.Controllers
                 BannerId = bannerUrl,
                 CloudinaryPublicIdBanner = cloudinaryPublicIdBanner
             };
-            string mensaje = manejadorCategorias.CrearCategoria(categoria);
+            string mensaje = _manejadorCategorias.CrearCategoria(categoria);
             return Json(new { mensaje });
         }
 
@@ -83,7 +86,7 @@ namespace Abastecete.Controllers
         [Auditar(ModulosAuditoria.CATEGORIAS, TiposAccionAuditoria.UPDATE, ParametroId = "Id", ParametroDescripcion = "Nombre")]
         public IActionResult EditarCategoria(int Id, IFormFile Imagen, string Nombre, int Estado, IFormFile Banner)
         {
-            Categoria? categoriaActual = manejadorCategorias.ObtenerCategoria(Id);
+            Categoria? categoriaActual = _manejadorCategorias.ObtenerCategoria(Id);
             if (categoriaActual == null)
             {
                 return NotFound(new { mensaje = "Categoría no encontrada" });
@@ -100,11 +103,11 @@ namespace Abastecete.Controllers
                 // Eliminar imagen anterior de Cloudinary
                 if (!string.IsNullOrEmpty(categoriaActual.CloudinaryPublicIdImagen))
                 {
-                    manejadorImagenes.EliminarImagenCloudinary(categoriaActual.CloudinaryPublicIdImagen);
+                    _manejadorImagenes.EliminarImagenCloudinary(categoriaActual.CloudinaryPublicIdImagen);
                 }
 
                 // Subir nueva imagen
-                var resultado = manejadorImagenes.SubirImagenCompleto(Imagen, "categorias");
+                var resultado = _manejadorImagenes.SubirImagenCompleto(Imagen, "categorias");
                 if (resultado.Success)
                 {
                     imagenUrl = resultado.SecureUrl;
@@ -118,11 +121,11 @@ namespace Abastecete.Controllers
                 // Eliminar banner anterior de Cloudinary
                 if (!string.IsNullOrEmpty(categoriaActual.CloudinaryPublicIdBanner))
                 {
-                    manejadorImagenes.EliminarImagenCloudinary(categoriaActual.CloudinaryPublicIdBanner);
+                    _manejadorImagenes.EliminarImagenCloudinary(categoriaActual.CloudinaryPublicIdBanner);
                 }
 
                 // Subir nuevo banner
-                var resultado = manejadorImagenes.SubirImagenCompleto(Banner, "categorias/banners");
+                var resultado = _manejadorImagenes.SubirImagenCompleto(Banner, "categorias/banners");
                 if (resultado.Success)
                 {
                     bannerUrl = resultado.SecureUrl;
@@ -141,7 +144,7 @@ namespace Abastecete.Controllers
                 CloudinaryPublicIdBanner = cloudinaryPublicIdBanner
             };
 
-            string mensaje = manejadorCategorias.EditarCategoria(categoria);
+            string mensaje = _manejadorCategorias.EditarCategoria(categoria);
 
             return Json(mensaje);
         }
@@ -152,7 +155,7 @@ namespace Abastecete.Controllers
         [Route("Categorias/ObtenerCategoria")]
         public IActionResult ObtenerCategoria([FromQuery] int id)
         {
-            Categoria? categoria = manejadorCategorias.ObtenerCategoria(id);
+            Categoria? categoria = _manejadorCategorias.ObtenerCategoria(id);
             if (categoria != null)
             {
                 return Json(categoria);
