@@ -1,4 +1,5 @@
 using BusinessLogic;
+using BusinessLogic.Interfaces;
 using BusinessLogic.Models;
 using BusinessLogic.Utilidades;
 using Microsoft.AspNetCore.Mvc;
@@ -7,13 +8,18 @@ namespace Abastecete.Controllers
 {
     public class AddonsController : Controller
     {
-        private readonly ManejadorAddons _manejadorAddons;
+        private readonly IManejadorAddons _manejadorAddons;
+        private readonly IManejadorAddonsAdmin _manejadorAddonsAdmin;
         private readonly IConfiguration _configuration;
 
-        public AddonsController(IConfiguration configuration)
+        public AddonsController(
+            IConfiguration configuration,
+            IManejadorAddons manejadorAddons,
+            IManejadorAddonsAdmin manejadorAddonsAdmin)
         {
-            _manejadorAddons = new ManejadorAddons();
             _configuration = configuration;
+            _manejadorAddons = manejadorAddons;
+            _manejadorAddonsAdmin = manejadorAddonsAdmin;
         }
 
         #region Admin - Gestión de Addons
@@ -81,8 +87,7 @@ namespace Abastecete.Controllers
                     return BadRequest(new { success = false, mensaje = "Código y nombre son requeridos" });
                 }
 
-                var manejadorAddons = new ManejadorAddonsAdmin();
-                var resultado = manejadorAddons.CrearAddon(addon);
+                var resultado = _manejadorAddonsAdmin.CrearAddon(addon);
 
                 if (resultado > 0)
                 {
@@ -112,8 +117,7 @@ namespace Abastecete.Controllers
                     return BadRequest(new { success = false, mensaje = "ID de addon inválido" });
                 }
 
-                var manejadorAddons = new ManejadorAddonsAdmin();
-                var resultado = manejadorAddons.ActualizarAddon(addon);
+                var resultado = _manejadorAddonsAdmin.ActualizarAddon(addon);
 
                 if (resultado)
                 {
@@ -138,8 +142,7 @@ namespace Abastecete.Controllers
         {
             try
             {
-                var manejadorAddons = new ManejadorAddonsAdmin();
-                var resultado = manejadorAddons.CambiarEstadoAddon(id, estado);
+                var resultado = _manejadorAddonsAdmin.CambiarEstadoAddon(id, estado);
 
                 if (resultado)
                 {

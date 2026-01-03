@@ -1,4 +1,5 @@
 using BusinessLogic;
+using BusinessLogic.Interfaces;
 using BusinessLogic.Models;
 using BusinessLogic.Utilidades;
 using Microsoft.AspNetCore.Authentication;
@@ -11,32 +12,46 @@ namespace Abastecete.Controllers
 {
     public class NegociosController : Controller
     {
-        private readonly ManejadorNegocios _manejadorNegocios;
-        private readonly ManejadorMembresias _manejadorMembresias;
-        private readonly ManejadorProductos _manejadorProductos;
-        private readonly ManejadorCategorias _manejadorCategorias;
-        private readonly ManejadorImagenes _manejadorImagenes;
-        private readonly ManejadorGaleriaLocal _manejadorGaleria;
-        private readonly ManejadorSuscripciones _manejadorSuscripciones;
-        private readonly ManejadorPermisos _manejadorPermisos;
-        private readonly ManejadorAddons _manejadorAddons;
-        private readonly ManejadorReferidos _manejadorReferidos;
+        private readonly IManejadorNegocios _manejadorNegocios;
+        private readonly IManejadorMembresias _manejadorMembresias;
+        private readonly IManejadorProductos _manejadorProductos;
+        private readonly IManejadorCategorias _manejadorCategorias;
+        private readonly IManejadorImagenes _manejadorImagenes;
+        private readonly IManejadorGaleriaLocal _manejadorGaleria;
+        private readonly IManejadorSuscripciones _manejadorSuscripciones;
+        private readonly IManejadorPermisos _manejadorPermisos;
+        private readonly IManejadorAddons _manejadorAddons;
+        private readonly IManejadorReferidos _manejadorReferidos;
+        private readonly IManejadorProductoMarca _manejadorProductoMarca;
         private readonly IConfiguration _configuration;
 
 
-        public NegociosController(IConfiguration configuration)
+        public NegociosController(
+            IConfiguration configuration,
+            IManejadorNegocios manejadorNegocios,
+            IManejadorMembresias manejadorMembresias,
+            IManejadorProductos manejadorProductos,
+            IManejadorCategorias manejadorCategorias,
+            IManejadorImagenes manejadorImagenes,
+            IManejadorGaleriaLocal manejadorGaleria,
+            IManejadorSuscripciones manejadorSuscripciones,
+            IManejadorPermisos manejadorPermisos,
+            IManejadorAddons manejadorAddons,
+            IManejadorReferidos manejadorReferidos,
+            IManejadorProductoMarca manejadorProductoMarca)
         {
-            _manejadorNegocios = new ManejadorNegocios();
-            _manejadorMembresias = new ManejadorMembresias();
-            _manejadorProductos = new ManejadorProductos();
-            _manejadorCategorias = new ManejadorCategorias();
-            _manejadorImagenes = new ManejadorImagenes();
-            _manejadorGaleria = new ManejadorGaleriaLocal();
-            _manejadorSuscripciones = new ManejadorSuscripciones();
-            _manejadorPermisos = new ManejadorPermisos();
-            _manejadorAddons = new ManejadorAddons();
-            _manejadorReferidos = new ManejadorReferidos();
             _configuration = configuration;
+            _manejadorNegocios = manejadorNegocios;
+            _manejadorMembresias = manejadorMembresias;
+            _manejadorProductos = manejadorProductos;
+            _manejadorCategorias = manejadorCategorias;
+            _manejadorImagenes = manejadorImagenes;
+            _manejadorGaleria = manejadorGaleria;
+            _manejadorSuscripciones = manejadorSuscripciones;
+            _manejadorPermisos = manejadorPermisos;
+            _manejadorAddons = manejadorAddons;
+            _manejadorReferidos = manejadorReferidos;
+            _manejadorProductoMarca = manejadorProductoMarca;
         }
 
         [HttpGet]
@@ -108,9 +123,8 @@ namespace Abastecete.Controllers
             }
 
             // Cargar marcas para todos los productos en una sola consulta (evita N+1)
-            var manejadorProductoMarca = new ManejadorProductoMarca();
             var idsProductos = productos.Select(p => p.Id).ToList();
-            var marcasPorProducto = manejadorProductoMarca.ListarMarcasProductosBulk(idLocal, idsProductos);
+            var marcasPorProducto = _manejadorProductoMarca.ListarMarcasProductosBulk(idLocal, idsProductos);
 
             foreach (var producto in productos)
             {

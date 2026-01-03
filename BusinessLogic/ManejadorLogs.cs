@@ -9,7 +9,7 @@ namespace BusinessLogic
     /// <summary>
     /// Manejador para operaciones de logs de auditoría
     /// </summary>
-    public class ManejadorLogs
+    public class ManejadorLogs : Interfaces.IManejadorLogs
     {
         private readonly Connection conexion;
 

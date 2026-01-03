@@ -6,7 +6,7 @@ using BusinessLogic.Models;
 
 namespace BusinessLogic
 {
-    public class ManejadorGaleriaLocal
+    public class ManejadorGaleriaLocal : Interfaces.IManejadorGaleriaLocal
     {
         private readonly Connection conexion;
         private readonly ManejadorCloudinary _cloudinary;

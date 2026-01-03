@@ -1,4 +1,5 @@
 using BusinessLogic;
+using BusinessLogic.Interfaces;
 using BusinessLogic.Models;
 using Microsoft.AspNetCore.Mvc;
 
@@ -6,8 +7,16 @@ namespace Abastecete.Controllers
 {
     public class UnidadController : Controller
     {
-        private readonly ManejadorUnidad _manejadorUnidad = new ManejadorUnidad();
-        private readonly ManejadorTipoUnidad _manejadorTipoUnidad = new ManejadorTipoUnidad();
+        private readonly IManejadorUnidad _manejadorUnidad;
+        private readonly IManejadorTipoUnidad _manejadorTipoUnidad;
+
+        public UnidadController(
+            IManejadorUnidad manejadorUnidad,
+            IManejadorTipoUnidad manejadorTipoUnidad)
+        {
+            _manejadorUnidad = manejadorUnidad;
+            _manejadorTipoUnidad = manejadorTipoUnidad;
+        }
 
         /// <summary>
         /// Vista principal de gestión de unidades

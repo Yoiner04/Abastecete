@@ -6,7 +6,7 @@ using BusinessLogic.Models;
 
 namespace BusinessLogic
 {
-    public class ManejadorProductos
+    public class ManejadorProductos : Interfaces.IManejadorProductos
     {
         private readonly Connection conexion;
         private readonly ManejadorImagenes _manejadorImagenes;

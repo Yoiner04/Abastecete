@@ -6,7 +6,7 @@ using System.Data;
 
 namespace BusinessLogic
 {
-    public class ManejadorSuscripciones
+    public class ManejadorSuscripciones : Interfaces.IManejadorSuscripciones
     {
         private readonly Connection conexion;
 

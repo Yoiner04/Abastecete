@@ -1,7 +1,8 @@
+using BusinessLogic;
 using BusinessLogic.Utilidades;
+using BusinessLogic.Interfaces;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
-using BusinessLogic.Interfaces;
 using BusinessLogic.Models;
 using DataAccess;
 using MongoDB.Driver;
@@ -56,12 +57,33 @@ builder.Services.AddAuthentication(options =>
 });
 
 builder.Services.AddScoped<IEpaycoService, EpaycoService>();
-
 builder.Services.AddScoped<IMongoConnection, MongoConnection>();
 
-
-builder.Services.AddDistributedMemoryCache();
-
+// Registrar Manejadores con DI
+builder.Services.AddScoped<IManejadorUsuario, ManejadorUsuario>();
+builder.Services.AddScoped<IManejadorNegocios, ManejadorNegocios>();
+builder.Services.AddScoped<IManejadorCategorias, ManejadorCategorias>();
+builder.Services.AddScoped<IManejadorImagenes, ManejadorImagenes>();
+builder.Services.AddScoped<IManejadorOfertasFlash, ManejadorOfertasFlash>();
+builder.Services.AddScoped<IManejadorBuscador, ManejadorBuscador>();
+builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IManejadorProductos, ManejadorProductos>();
+builder.Services.AddScoped<IManejadorAnaliticas, ManejadorAnaliticas>();
+builder.Services.AddScoped<IManejadorLogs, ManejadorLogs>();
+builder.Services.AddScoped<IManejadorPermisos, ManejadorPermisos>();
+builder.Services.AddScoped<IManejadorMembresias, ManejadorMembresias>();
+builder.Services.AddScoped<IManejadorMarcas, ManejadorMarcas>();
+builder.Services.AddScoped<IManejadorOpiniones, ManejadorOpiniones>();
+builder.Services.AddScoped<IManejadorSuscripciones, ManejadorSuscripciones>();
+builder.Services.AddScoped<IManejadorGaleriaLocal, ManejadorGaleriaLocal>();
+builder.Services.AddScoped<IManejadorProductoMarca, ManejadorProductoMarca>();
+builder.Services.AddScoped<IManejadorSubCategorias, ManejadorSubCategorias>();
+builder.Services.AddScoped<IManejadorTipoUnidad, ManejadorTipoUnidad>();
+builder.Services.AddScoped<IManejadorUnidad, ManejadorUnidad>();
+builder.Services.AddScoped<IManejadorTipoDocumento, ManejadorTipoDocumento>();
+builder.Services.AddScoped<IManejadorAddons, ManejadorAddons>();
+builder.Services.AddScoped<IManejadorAddonsAdmin, ManejadorAddonsAdmin>();
+builder.Services.AddScoped<IManejadorReferidos, ManejadorReferidos>();
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddControllersWithViews();

@@ -1,4 +1,5 @@
 using BusinessLogic;
+using BusinessLogic.Interfaces;
 using BusinessLogic.Models;
 using Microsoft.AspNetCore.Mvc;
 
@@ -6,7 +7,12 @@ namespace Abastecete.Controllers
 {
     public class TipoUnidadController : Controller
     {
-        private readonly ManejadorTipoUnidad _manejadorTipoUnidad = new ManejadorTipoUnidad();
+        private readonly IManejadorTipoUnidad _manejadorTipoUnidad;
+
+        public TipoUnidadController(IManejadorTipoUnidad manejadorTipoUnidad)
+        {
+            _manejadorTipoUnidad = manejadorTipoUnidad;
+        }
 
         /// <summary>
         /// Consulta todos los tipos de unidad (JSON)

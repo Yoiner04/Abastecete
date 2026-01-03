@@ -1,4 +1,5 @@
 ﻿using BusinessLogic;
+using BusinessLogic.Interfaces;
 using BusinessLogic.Models;
 using BusinessLogic.Utilidades;
 using Microsoft.AspNetCore.Mvc;
@@ -10,15 +11,18 @@ namespace Abastecete.Controllers
 {
     public class OfertasFlashController : Controller
     {
-        private readonly ManejadorOfertasFlash _manejadorOfertas;
-        private readonly ManejadorNegocios _manejadorNegocios;
-        private readonly ManejadorSuscripciones _manejadorSuscripciones;
+        private readonly IManejadorOfertasFlash _manejadorOfertas;
+        private readonly IManejadorNegocios _manejadorNegocios;
+        private readonly IManejadorSuscripciones _manejadorSuscripciones;
 
-        public OfertasFlashController()
+        public OfertasFlashController(
+            IManejadorOfertasFlash manejadorOfertas,
+            IManejadorNegocios manejadorNegocios,
+            IManejadorSuscripciones manejadorSuscripciones)
         {
-            _manejadorOfertas = new ManejadorOfertasFlash();
-            _manejadorNegocios = new ManejadorNegocios();
-            _manejadorSuscripciones = new ManejadorSuscripciones();
+            _manejadorOfertas = manejadorOfertas;
+            _manejadorNegocios = manejadorNegocios;
+            _manejadorSuscripciones = manejadorSuscripciones;
         }
 
         public IActionResult ConsultarTodo()

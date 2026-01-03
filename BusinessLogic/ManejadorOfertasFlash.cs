@@ -7,7 +7,7 @@ using BusinessLogic.Utilidades;
 
 namespace BusinessLogic
 {
-    public class ManejadorOfertasFlash
+    public class ManejadorOfertasFlash : Interfaces.IManejadorOfertasFlash
     {
         private Connection conexion;
         private readonly ManejadorImagenes _manejadorMongo;

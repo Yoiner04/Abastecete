@@ -4,7 +4,7 @@ using DataAccess;
 
 namespace BusinessLogic
 {
-    public class ManejadorOpiniones
+    public class ManejadorOpiniones : Interfaces.IManejadorOpiniones
     {
         private readonly Connection conexion;
 

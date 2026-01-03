@@ -1,4 +1,5 @@
 ﻿using BusinessLogic;
+using BusinessLogic.Interfaces;
 using BusinessLogic.Models;
 using BusinessLogic.Utilidades;
 using Microsoft.AspNetCore.Mvc;
@@ -7,14 +8,24 @@ namespace Abastecete.Controllers
 {
     public class UsuariosController : Controller
     {
-        ManejadorUsuario manejadorU = new ManejadorUsuario();
-        ManejadorTipoDocumento TipoDocumento = new ManejadorTipoDocumento();
-        ManejadorSuscripciones manejadorSuscripciones = new ManejadorSuscripciones();
-        ManejadorMembresias manejadorMembresias = new ManejadorMembresias();
+        private readonly IManejadorUsuario _manejadorUsuario;
+        private readonly IManejadorTipoDocumento _manejadorTipoDocumento;
+        private readonly IManejadorSuscripciones _manejadorSuscripciones;
+        private readonly IManejadorMembresias _manejadorMembresias;
+        private readonly IManejadorPermisos _manejadorPermisos;
 
-        public UsuariosController()
+        public UsuariosController(
+            IManejadorUsuario manejadorUsuario,
+            IManejadorTipoDocumento manejadorTipoDocumento,
+            IManejadorSuscripciones manejadorSuscripciones,
+            IManejadorMembresias manejadorMembresias,
+            IManejadorPermisos manejadorPermisos)
         {
-
+            _manejadorUsuario = manejadorUsuario;
+            _manejadorTipoDocumento = manejadorTipoDocumento;
+            _manejadorSuscripciones = manejadorSuscripciones;
+            _manejadorMembresias = manejadorMembresias;
+            _manejadorPermisos = manejadorPermisos;
         }
 
         [RequierePermiso("ADMIN_USUARIOS")]
@@ -24,7 +35,7 @@ namespace Abastecete.Controllers
             ViewBag.administrar = RolPermisos.TienePermiso("ADMIN_USUARIOS", permisos);
 
             // Usar paginación para evitar traer todos los registros
-            var resultado = manejadorU.ConsultarUsuariosPaginado(pagina, registrosPorPagina, busqueda);
+            var resultado = _manejadorUsuario.ConsultarUsuariosPaginado(pagina, registrosPorPagina, busqueda);
 
             ViewBag.Busqueda = busqueda;
 
@@ -60,7 +71,7 @@ namespace Abastecete.Controllers
             try
             {
 
-                bool resultado = manejadorU.EditarEstadoUsuario(data.IdUsuario, data.NuevoEstado);
+                bool resultado = _manejadorUsuario.EditarEstadoUsuario(data.IdUsuario, data.NuevoEstado);
 
                 if (resultado)
                 {
@@ -87,7 +98,7 @@ namespace Abastecete.Controllers
                 // Calcular el monto según el período (0 porque es extensión manual del admin)
                 decimal monto = 0;
 
-                var resultado = manejadorSuscripciones.RenovarSuscripcion(
+                var resultado = _manejadorSuscripciones.RenovarSuscripcion(
                     data.IdSuscripcion,
                     data.Periodo,
                     monto,
@@ -120,7 +131,7 @@ namespace Abastecete.Controllers
         {
             try
             {
-                var suscripcion = manejadorSuscripciones.ObtenerSuscripcionActiva(idLocal);
+                var suscripcion = _manejadorSuscripciones.ObtenerSuscripcionActiva(idLocal);
 
                 if (suscripcion != null)
                 {
@@ -158,7 +169,7 @@ namespace Abastecete.Controllers
             try
             {
                 // Crear nueva suscripción con el nuevo tipo de membresía
-                var resultado = manejadorSuscripciones.CrearSuscripcion(
+                var resultado = _manejadorSuscripciones.CrearSuscripcion(
                     data.IdLocal,
                     data.IdTipoMembresia,
                     data.Periodo,
@@ -169,7 +180,7 @@ namespace Abastecete.Controllers
 
                 if (resultado.IdSuscripcion > 0)
                 {
-                    var membresia = manejadorMembresias.ObtenerMembresia(data.IdTipoMembresia);
+                    var membresia = _manejadorMembresias.ObtenerMembresia(data.IdTipoMembresia);
                     return Json(new
                     {
                         success = true,
@@ -195,7 +206,7 @@ namespace Abastecete.Controllers
             try
             {
                 // Obtener TODAS las membresías activas directamente
-                var todasMembresias = manejadorMembresias.ObtenerTodasMembresias();
+                var todasMembresias = _manejadorMembresias.ObtenerTodasMembresias();
                 var membresias = todasMembresias.Select(m => new
                 {
                     id = m.Id,
@@ -218,15 +229,13 @@ namespace Abastecete.Controllers
         // PERMISOS DE USUARIO
         // ========================================
 
-        private readonly ManejadorPermisos manejadorPermisos = new ManejadorPermisos();
-
         [HttpGet]
         [RequierePermiso("ADMIN_USUARIOS")]
         public IActionResult ObtenerTodosPermisos()
         {
             try
             {
-                var permisos = manejadorPermisos.ObtenerTodosPermisosSistema();
+                var permisos = _manejadorPermisos.ObtenerTodosPermisosSistema();
                 return Json(new
                 {
                     success = true,
@@ -253,7 +262,7 @@ namespace Abastecete.Controllers
         {
             try
             {
-                var permisos = manejadorPermisos.ObtenerPermisosUsuario(idUsuario);
+                var permisos = _manejadorPermisos.ObtenerPermisosUsuario(idUsuario);
                 return Json(new
                 {
                     success = true,
@@ -289,7 +298,7 @@ namespace Abastecete.Controllers
             try
             {
                 // Obtener permisos actuales del usuario
-                var permisosActuales = manejadorPermisos.ObtenerPermisosUsuario(data.IdUsuario);
+                var permisosActuales = _manejadorPermisos.ObtenerPermisosUsuario(data.IdUsuario);
                 var idsActuales = permisosActuales.Where(p => p.Estado).Select(p => p.Id).ToHashSet();
                 var idsNuevos = data.IdsPermisos.ToHashSet();
 
@@ -297,14 +306,14 @@ namespace Abastecete.Controllers
                 var permisosAgregar = idsNuevos.Except(idsActuales);
                 foreach (var idPermiso in permisosAgregar)
                 {
-                    manejadorPermisos.AsignarPermisoUsuario(data.IdUsuario, idPermiso, "ADMIN");
+                    _manejadorPermisos.AsignarPermisoUsuario(data.IdUsuario, idPermiso, "ADMIN");
                 }
 
                 // Permisos a remover
                 var permisosRemover = idsActuales.Except(idsNuevos);
                 foreach (var idPermiso in permisosRemover)
                 {
-                    manejadorPermisos.RemoverPermisoUsuario(data.IdUsuario, idPermiso);
+                    _manejadorPermisos.RemoverPermisoUsuario(data.IdUsuario, idPermiso);
                 }
 
                 return Json(new
@@ -371,7 +380,7 @@ namespace Abastecete.Controllers
                 var urlRelativa = $"/uploads/perfiles/{nombreArchivo}";
 
                 // Actualizar en la base de datos
-                var resultado = manejadorU.ActualizarFotoPerfil(idUsuario.Value, urlRelativa);
+                var resultado = _manejadorUsuario.ActualizarFotoPerfil(idUsuario.Value, urlRelativa);
 
                 if (resultado)
                 {
@@ -398,7 +407,7 @@ namespace Abastecete.Controllers
 
         public IActionResult Registrar()
         {
-            List<TipoDocumento> tiposDocumento = TipoDocumento.ObtenerTipoDocumentos();
+            List<TipoDocumento> tiposDocumento = _manejadorTipoDocumento.ObtenerTipoDocumentos();
             ViewBag.TiposDocumento = tiposDocumento;
             return View();
         }
@@ -412,14 +421,14 @@ namespace Abastecete.Controllers
                 return RedirectToAction("Index", "Login"); // Redirigir al login si no hay usuario autenticado
             }
 
-            Usuario? usuario = manejadorU.ObtenerUsuarios(idUsuario.Value).FirstOrDefault();
+            Usuario? usuario = _manejadorUsuario.ObtenerUsuarios(idUsuario.Value).FirstOrDefault();
 
             //if (usuario == null)
             //{
             //    return RedirectToAction("Index", "Login"); // Redirigir si el usuario no existe
             //}
 
-            List<TipoDocumento> tiposDocumento = TipoDocumento.ObtenerTipoDocumentos();
+            List<TipoDocumento> tiposDocumento = _manejadorTipoDocumento.ObtenerTipoDocumentos();
             ViewBag.TiposDocumento = tiposDocumento;
 
             return View(usuario);
@@ -428,7 +437,7 @@ namespace Abastecete.Controllers
         [HttpPost]
         public IActionResult EditarUsuario(Usuario usuario)
         {
-            bool resultado = manejadorU.EditarUsuario(usuario);
+            bool resultado = _manejadorUsuario.EditarUsuario(usuario);
 
             if (resultado)
             {
@@ -482,7 +491,7 @@ namespace Abastecete.Controllers
                 return Json(new { success = false, mensaje = "Las contraseñas no coinciden." });
             }
 
-            var resultado = manejadorU.CambiarContraseniaVerificada(
+            var resultado = _manejadorUsuario.CambiarContraseniaVerificada(
                 idUsuario.Value,
                 request.ContraseniaActual,
                 request.NuevaContrasenia
@@ -494,7 +503,7 @@ namespace Abastecete.Controllers
         [HttpPost]
         public IActionResult Registrar(Usuario usuario)
         {
-            var resultado = manejadorU.RegistrarUsuarioConMensaje(usuario);
+            var resultado = _manejadorUsuario.RegistrarUsuarioConMensaje(usuario);
 
             if (resultado.exito)
             {
@@ -507,7 +516,7 @@ namespace Abastecete.Controllers
                 ModelState.AddModelError("", resultado.mensaje ?? "No se pudo registrar el usuario. Intente nuevamente.");
 
                 // Recargar tipos de documento para la vista
-                List<TipoDocumento> tiposDocumento = TipoDocumento.ObtenerTipoDocumentos();
+                List<TipoDocumento> tiposDocumento = _manejadorTipoDocumento.ObtenerTipoDocumentos();
                 ViewBag.TiposDocumento = tiposDocumento;
 
                 return View(usuario);

@@ -1,4 +1,5 @@
 using BusinessLogic;
+using BusinessLogic.Interfaces;
 using BusinessLogic.Models;
 using BusinessLogic.Utilidades;
 using Microsoft.AspNetCore.Mvc;
@@ -7,13 +8,15 @@ namespace Abastecete.Controllers
 {
     public class MarcasController : Controller
     {
-        private readonly ManejadorMarcas _manejadorMarcas;
-        private readonly ManejadorImagenes _manejadorImagenes;
+        private readonly IManejadorMarcas _manejadorMarcas;
+        private readonly IManejadorImagenes _manejadorImagenes;
 
-        public MarcasController()
+        public MarcasController(
+            IManejadorMarcas manejadorMarcas,
+            IManejadorImagenes manejadorImagenes)
         {
-            _manejadorMarcas = new ManejadorMarcas();
-            _manejadorImagenes = new ManejadorImagenes();
+            _manejadorMarcas = manejadorMarcas;
+            _manejadorImagenes = manejadorImagenes;
         }
 
         /// <summary>
